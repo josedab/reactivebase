@@ -1,15 +1,19 @@
 /**
- * create-reactivebase - Project scaffolding tool.
+ * create-reactivebase - Project scaffolding tool with interactive wizard.
  * Usage: npx create-reactivebase my-app
+ *        npx create-reactivebase my-app --yes (skip wizard, use defaults)
  */
 
 import { mkdirSync, writeFileSync, existsSync } from "node:fs"
 import { join, resolve } from "node:path"
+import { runWizard, generateDependencies, generateConfigFile, generateEnvFile, type WizardOptions } from "./wizard.js"
 
 const projectName = process.argv[2]
+const skipWizard = process.argv.includes("--yes") || process.argv.includes("-y")
 
 if (!projectName) {
   console.error("Usage: npx create-reactivebase <project-name>")
+  console.error("       npx create-reactivebase <project-name> --yes  (skip wizard)")
   process.exit(1)
 }
 
@@ -21,6 +25,25 @@ if (existsSync(projectDir)) {
 }
 
 console.log(`\n  Creating ReactiveBase project: ${projectName}\n`)
+
+// Run wizard or use defaults
+let wizardOptions: WizardOptions = {
+  projectName,
+  framework: "react",
+  auth: "jwt",
+  database: "pglite",
+  template: "blank",
+}
+
+if (!skipWizard && process.stdin.isTTY) {
+  try {
+    wizardOptions = await runWizard(projectName)
+  } catch {
+    // If wizard fails (e.g., non-interactive), use defaults
+  }
+}
+
+const { dependencies, devDependencies } = generateDependencies(wizardOptions)
 
 // Create directory structure
 const dirs = [
@@ -280,6 +303,9 @@ console.log(`  ✓ Created project structure`)
 console.log(`  ✓ Generated schema.ts with example schema`)
 console.log(`  ✓ Generated tasks.ts with example queries/mutations`)
 console.log(`  ✓ Generated reactivebase.config.ts`)
+console.log(`  ✓ Framework: ${wizardOptions.framework}`)
+console.log(`  ✓ Auth: ${wizardOptions.auth}`)
+console.log(`  ✓ Database: ${wizardOptions.database}`)
 console.log(`
   Next steps:
 
