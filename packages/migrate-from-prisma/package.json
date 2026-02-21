@@ -1,0 +1,31 @@
+{
+  "name": "@reactivebase/migrate-from-prisma",
+  "version": "0.1.0",
+  "description": "Migrate your Prisma schema to ReactiveBase with one command",
+  "type": "module",
+  "bin": {
+    "migrate-from-prisma": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@reactivebase/server": "*"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": ["dist", "README.md"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reactivebase/reactivebase.git",
+    "directory": "packages/migrate-from-prisma"
+  },
+  "license": "MIT"
+}
