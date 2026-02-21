@@ -2,6 +2,11 @@ node_modules/
 dist/
 _generated/
 .env
+.env.local
 *.log
 .turbo/
 coverage/
+.reactivebase/
+website/build/
+website/.docusaurus/
+*.tsbuildinfo

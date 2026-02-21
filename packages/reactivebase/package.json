@@ -34,6 +34,12 @@
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
-  "keywords": ["reactive", "backend", "postgres", "realtime", "typescript"],
+  "keywords": [
+    "reactive",
+    "backend",
+    "postgres",
+    "realtime",
+    "typescript"
+  ],
   "license": "MIT"
 }
