@@ -122,8 +122,8 @@ export class ReactivityEngine {
    * Process changes from a committed mutation.
    * Evaluates which subscriptions are affected and re-executes them.
    */
-  async processChanges(modifiedTables: string[]): Promise<void> {
-    const changes: ChangeEvent[] = modifiedTables.map((table) => ({
+  async processChanges(modifiedTables: string[], changeEvents?: ChangeEvent[]): Promise<void> {
+    const changes: ChangeEvent[] = changeEvents ?? modifiedTables.map((table) => ({
       table,
       operation: "update" as const,
     }))

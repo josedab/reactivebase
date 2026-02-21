@@ -1,7 +1,7 @@
 export { SubscriptionRegistry } from "./subscription-registry.js"
 export type { Subscription } from "./subscription-registry.js"
 export { InvalidationEvaluator } from "./invalidation-evaluator.js"
-export type { ChangeEvent, InvalidationResult } from "./invalidation-evaluator.js"
+export type { ChangeEvent, InvalidationResult, InvalidationLevel } from "./invalidation-evaluator.js"
 export { hashResult, hasResultChanged, computeDiff } from "./result-differ.js"
 export type { ResultDiff } from "./result-differ.js"
 export { ReactivityEngine } from "./reactivity-engine.js"
