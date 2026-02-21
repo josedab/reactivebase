@@ -9,9 +9,12 @@ import { useReactiveBaseClient } from "../provider/provider.js"
  * A function reference to a server query/mutation/action.
  * In a real implementation, this would be generated from the schema.
  */
-export interface FunctionReference {
+export interface FunctionReference<_TArgs = unknown, _TReturn = unknown> {
   _name: string
   _type: "query" | "mutation" | "action"
+  /** Phantom types for inference — do not use at runtime */
+  _args?: _TArgs
+  _return?: _TReturn
 }
 
 export interface OptimisticUpdateConfig<TArgs = unknown> {
@@ -22,16 +25,23 @@ export interface OptimisticUpdateConfig<TArgs = unknown> {
 }
 
 export interface LocalStore {
-  update(table: string, id: string, changes: Record<string, unknown>): void
+  /** Update a specific query's cached data */
+  updateQuery(queryName: string, updater: (data: unknown, args: unknown) => unknown): void
+  /** Update a specific subscription by ID */
+  update(subscriptionId: string, updater: (data: unknown) => unknown): void
 }
 
 /**
  * Subscribe to a reactive query. Returns `undefined` during loading,
  * then the typed result. Re-renders when server pushes updates.
+ *
+ * When used with a typed FunctionReference, TResult is inferred automatically:
+ *   const tasks = useQuery(api.tasks.listTasks, { userId: "u1" })
+ *   // tasks is Task[] | undefined
  */
-export function useQuery<TResult = unknown>(
-  queryRef: FunctionReference | string,
-  args?: unknown,
+export function useQuery<TResult = unknown, TArgs = unknown>(
+  queryRef: FunctionReference<TArgs, TResult> | string,
+  args?: TArgs,
 ): TResult | undefined {
   const client = useReactiveBaseClient()
   const [data, setData] = useState<TResult | undefined>(undefined)
@@ -70,10 +80,10 @@ export function useQuery<TResult = unknown>(
 
 /**
  * Returns a function that calls a server mutation.
- * Supports optimistic updates with automatic rollback.
+ * Supports optimistic updates with automatic rollback on failure.
  */
 export function useMutation<TArgs = unknown, TResult = unknown>(
-  mutationRef: FunctionReference | string,
+  mutationRef: FunctionReference<TArgs, TResult> | string,
   config?: OptimisticUpdateConfig<TArgs>,
 ): (args: TArgs) => Promise<TResult> {
   const client = useReactiveBaseClient()
@@ -81,14 +91,19 @@ export function useMutation<TArgs = unknown, TResult = unknown>(
 
   return useCallback(
     async (args: TArgs): Promise<TResult> => {
+      const rollbacks: (() => void)[] = []
+
       // Apply optimistic update if configured
-      let rollback: (() => void) | undefined
       if (config?.optimisticUpdate) {
         const cache = client.getCache()
         const localStore: LocalStore = {
-          update(_table, _id, _changes) {
-            // In a full implementation, this would update specific cache entries
-            // by finding subscriptions that include the affected table/id
+          updateQuery(queryName, updater) {
+            const rollback = cache.applyOptimisticUpdateByQuery(queryName, updater)
+            rollbacks.push(rollback)
+          },
+          update(subscriptionId, updater) {
+            const rollback = cache.applyOptimisticUpdate(subscriptionId, updater)
+            rollbacks.push(rollback)
           },
         }
         config.optimisticUpdate(localStore, args)
@@ -98,7 +113,10 @@ export function useMutation<TArgs = unknown, TResult = unknown>(
         const result = await client.mutate(mutationName, args)
         return result as TResult
       } catch (error) {
-        rollback?.()
+        // Rollback all optimistic updates on failure
+        for (const rollback of rollbacks) {
+          rollback()
+        }
         throw error
       }
     },
@@ -110,7 +128,7 @@ export function useMutation<TArgs = unknown, TResult = unknown>(
  * Returns a function that triggers a background action.
  */
 export function useAction<TArgs = unknown, TResult = unknown>(
-  actionRef: FunctionReference | string,
+  actionRef: FunctionReference<TArgs, TResult> | string,
 ): (args: TArgs) => Promise<TResult> {
   const client = useReactiveBaseClient()
   const actionName = typeof actionRef === "string" ? actionRef : actionRef._name
