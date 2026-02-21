@@ -10,6 +10,8 @@ import { createDatabaseContext } from "./database-context.js"
 import type { Schema } from "../schema/index.js"
 import { executeTransaction, executeReadOnly } from "../transaction/index.js"
 import type { QueryDependency } from "../query-builder/index.js"
+import { enforceAccess, type AccessRule } from "../permissions/index.js"
+import { validateArgs, type ValidationSchema } from "../validation/index.js"
 
 export interface FunctionContext {
   db: TrackedDatabaseContext
@@ -32,11 +34,16 @@ export interface LogContext {
 
 export interface QueryOptions {
   reactive?: boolean
+  access?: AccessRule
+  /** Argument validation schema — auto-validated before handler */
+  validate?: ValidationSchema
 }
 
 export interface MutationOptions {
   args?: Record<string, unknown>
   auth?: (ctx: FunctionContext) => void
+  access?: AccessRule
+  validate?: ValidationSchema
 }
 
 export interface ActionOptions {
@@ -44,6 +51,8 @@ export interface ActionOptions {
   timezone?: string
   retries?: number
   timeout?: number
+  access?: AccessRule
+  validate?: ValidationSchema
 }
 
 export interface RegisteredFunction {
@@ -146,6 +155,13 @@ export async function executeQueryFunction(
   args: unknown,
   auth: AuthContext,
 ): Promise<QueryExecutionResult> {
+  // Enforce access control
+  const opts = fn.options as QueryOptions
+  await enforceAccess(opts.access, auth, fn.name)
+
+  // Validate arguments
+  if (opts.validate) validateArgs(args, opts.validate)
+
   return executeReadOnly(pool, async (client: PoolClient) => {
     const db = createDatabaseContext(client, schema, "read")
     const ctx = createFunctionContext(db, auth)
@@ -172,13 +188,20 @@ export async function executeMutationFunction(
   args: unknown,
   auth: AuthContext,
 ): Promise<MutationExecutionResult> {
+  // Enforce access control
+  const fnOpts = fn.options as MutationOptions
+  await enforceAccess(fnOpts.access, auth, fn.name)
+
+  // Validate arguments
+  if (fnOpts.validate) validateArgs(args, fnOpts.validate)
+
   const scheduledActions: ScheduledAction[] = []
 
   const txResult = await executeTransaction(pool, async (client: PoolClient) => {
     const db = createDatabaseContext(client, schema, "readwrite")
     const ctx = createFunctionContext(db, auth, scheduledActions)
 
-    // Run auth check if defined
+    // Run legacy auth check if defined
     const opts = fn.options as MutationOptions
     if (opts.auth) {
       opts.auth(ctx)
@@ -205,6 +228,13 @@ export async function executeActionFunction(
   args: unknown,
   auth: AuthContext,
 ): Promise<unknown> {
+  // Enforce access control
+  const opts = fn.options as ActionOptions
+  await enforceAccess(opts.access, auth, fn.name)
+
+  // Validate arguments
+  if (opts.validate) validateArgs(args, opts.validate)
+
   const client = await pool.connect()
   try {
     const db = createDatabaseContext(client, schema, "readwrite")
