@@ -25,6 +25,13 @@ export interface JoinClause {
   type: "INNER" | "LEFT" | "RIGHT"
 }
 
+export interface VectorSearchClause {
+  column: string
+  embedding: number[]
+  metric: "cosine" | "l2" | "inner_product"
+  topK: number
+}
+
 export interface QueryPlan {
   table: string
   selectedColumns: string[]
@@ -35,6 +42,7 @@ export interface QueryPlan {
   limitValue?: number
   offsetValue?: number
   includes: Record<string, IncludeConfig>
+  vectorSearch?: VectorSearchClause
 }
 
 export interface IncludeConfig {
@@ -167,6 +175,25 @@ export class QueryBuilder<TRow = Record<string, unknown>> {
   }
 
   /**
+   * Add vector similarity search.
+   * Orders results by distance to the given embedding vector.
+   */
+  whereVectorSimilar(
+    column: string,
+    embedding: number[],
+    options: { topK?: number; metric?: "cosine" | "l2" | "inner_product" } = {},
+  ): QueryBuilder<TRow> {
+    const clone = this.clone()
+    clone.plan.vectorSearch = {
+      column,
+      embedding,
+      metric: options.metric ?? "cosine",
+      topK: options.topK ?? 10,
+    }
+    return clone
+  }
+
+  /**
    * Build the SQL query and parameters.
    */
   build(): BuiltQuery {
@@ -208,8 +235,25 @@ export class QueryBuilder<TRow = Record<string, unknown>> {
       parts.push(`GROUP BY ${this.plan.groupByColumns.map((c) => `"${c}"`).join(", ")}`)
     }
 
-    // ORDER BY
-    if (this.plan.orderByClauses.length > 0) {
+    // ORDER BY (vector search overrides if present)
+    if (this.plan.vectorSearch) {
+      const vs = this.plan.vectorSearch
+      params.push(`[${vs.embedding.join(",")}]`)
+      const paramRef = `$${params.length}`
+
+      const distanceOp: Record<string, string> = {
+        cosine: "<=>",
+        l2: "<->",
+        inner_product: "<#>",
+      }
+      const op = distanceOp[vs.metric] ?? "<=>"
+      parts.push(`ORDER BY "${vs.column}" ${op} ${paramRef}`)
+
+      // Vector search implies a limit
+      if (this.plan.limitValue === undefined) {
+        parts.push(`LIMIT ${vs.topK}`)
+      }
+    } else if (this.plan.orderByClauses.length > 0) {
       const orders = this.plan.orderByClauses.map(
         (o) => `"${o.column}" ${o.direction.toUpperCase()}`,
       )
@@ -266,6 +310,7 @@ export class QueryBuilder<TRow = Record<string, unknown>> {
       joinClauses: [...this.plan.joinClauses],
       groupByColumns: [...this.plan.groupByColumns],
       includes: { ...this.plan.includes },
+      vectorSearch: this.plan.vectorSearch ? { ...this.plan.vectorSearch } : undefined,
     }
     return cloned
   }

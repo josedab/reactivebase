@@ -9,4 +9,7 @@ export type {
   IncludeConfig,
   BuiltQuery,
   QueryDependency,
+  VectorSearchClause,
 } from "./query-builder.js"
+export { resolveRelations, buildQueryWithIncludes, buildIncludeSubquery } from "./relation-resolver.js"
+export type { ResolvedRelation } from "./relation-resolver.js"
