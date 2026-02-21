@@ -11,6 +11,8 @@ import type { RegisteredFunction } from "../functions/index.js"
 import { executeMutationFunction, executeActionFunction } from "../functions/index.js"
 import { createAuthContext, type AuthContext, type AuthProvider } from "../auth/index.js"
 import { ReactivityEngine, type SubscriptionUpdate } from "../reactivity/index.js"
+import { MiddlewareManager, type MiddlewareContext } from "../middleware/index.js"
+import { MetricsCollector } from "../metrics/index.js"
 import {
   parseClientMessage,
   serializeServerMessage,
@@ -46,13 +48,19 @@ export class TransportServer {
   private authProviders: AuthProvider[] = []
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null
   private options: TransportServerOptions
+  private middleware: MiddlewareManager
+  private metrics: MetricsCollector | null
 
   constructor(
     private pool: Pool,
     private schema: Schema,
     options: Partial<TransportServerOptions> = {},
+    middleware?: MiddlewareManager,
+    metrics?: MetricsCollector,
   ) {
     this.options = { ...DEFAULT_OPTIONS, ...options }
+    this.middleware = middleware ?? new MiddlewareManager()
+    this.metrics = metrics ?? null
     this.engine = new ReactivityEngine(pool, schema)
 
     // Wire up reactivity updates to WebSocket delivery
@@ -134,7 +142,7 @@ export class TransportServer {
   }
 
   private handleConnection(ws: WebSocket): void {
-    const connectionId = generateConnectionId()
+    const connectionId = this.generateConnectionId()
 
     const state: ConnectionState = {
       id: connectionId,
@@ -145,6 +153,7 @@ export class TransportServer {
     }
 
     this.connections.set(connectionId, state)
+    this.metrics?.setConnections(this.connections.size)
 
     ws.on("message", (data) => {
       this.handleMessage(state, data.toString())
@@ -153,6 +162,7 @@ export class TransportServer {
     ws.on("close", () => {
       this.engine.removeConnection(connectionId)
       this.connections.delete(connectionId)
+      this.metrics?.setConnections(this.connections.size)
     })
 
     ws.on("pong", () => {
@@ -235,6 +245,7 @@ export class TransportServer {
     }
 
     try {
+      const startTime = performance.now()
       const { result, version } = await this.engine.subscribe(
         subscriptionId,
         conn.id,
@@ -242,8 +253,12 @@ export class TransportServer {
         args,
         conn.auth,
       )
+      const latencyMs = performance.now() - startTime
 
       conn.subscriptionCount++
+      this.metrics?.recordSubscription("created")
+      this.metrics?.recordQuery(`query:${queryName}`, latencyMs)
+      this.metrics?.setConnections(this.connections.size)
 
       this.send(conn, {
         type: "subscription_data",
@@ -252,6 +267,7 @@ export class TransportServer {
         version,
       })
     } catch (error) {
+      this.metrics?.recordQuery(`query:${queryName}`, 0, true)
       this.send(conn, {
         type: "subscription_error",
         subscriptionId,
@@ -266,6 +282,7 @@ export class TransportServer {
   private handleUnsubscribe(conn: ConnectionState, subscriptionId: string): void {
     this.engine.unsubscribe(subscriptionId)
     conn.subscriptionCount = Math.max(0, conn.subscriptionCount - 1)
+    this.metrics?.recordSubscription("removed")
   }
 
   private async handleMutate(
@@ -285,24 +302,49 @@ export class TransportServer {
     }
 
     try {
+      const startTime = performance.now()
+      const mwCtx: MiddlewareContext = {
+        functionName: mutationName,
+        functionType: "mutation",
+        args,
+        auth: conn.auth,
+        state: new Map(),
+      }
+
+      const beforeResult = await this.middleware.runBefore(mwCtx)
+      if (beforeResult.shortCircuit !== undefined) {
+        this.send(conn, { type: "mutation_result", requestId, data: beforeResult.shortCircuit })
+        return
+      }
+
       const result = await executeMutationFunction(
         this.pool,
         this.schema,
         fn,
-        args,
+        beforeResult.args,
         conn.auth,
       )
+      const latencyMs = performance.now() - startTime
+
+      const finalResult = await this.middleware.runAfter(mwCtx, result.result)
+
+      this.metrics?.recordMutation(`mutation:${mutationName}`, latencyMs)
 
       // Send mutation result to caller
       this.send(conn, {
         type: "mutation_result",
         requestId,
-        data: result.result,
+        data: finalResult,
       })
 
       // Process reactivity (invalidate affected subscriptions)
       await this.engine.processChanges(result.modifiedTables)
     } catch (error) {
+      const mwCtx: MiddlewareContext = {
+        functionName: mutationName, functionType: "mutation", args, auth: conn.auth, state: new Map(),
+      }
+      await this.middleware.runOnError(mwCtx, error instanceof Error ? error : new Error(String(error)))
+      this.metrics?.recordMutation(`mutation:${mutationName}`, 0, true)
       this.send(conn, {
         type: "mutation_error",
         requestId,
@@ -331,9 +373,24 @@ export class TransportServer {
     }
 
     try {
-      const result = await executeActionFunction(this.pool, this.schema, fn, args, conn.auth)
-      this.send(conn, { type: "action_result", requestId, data: result })
+      const mwCtx: MiddlewareContext = {
+        functionName: actionName, functionType: "action", args, auth: conn.auth, state: new Map(),
+      }
+
+      const beforeResult = await this.middleware.runBefore(mwCtx)
+      if (beforeResult.shortCircuit !== undefined) {
+        this.send(conn, { type: "action_result", requestId, data: beforeResult.shortCircuit })
+        return
+      }
+
+      const result = await executeActionFunction(this.pool, this.schema, fn, beforeResult.args, conn.auth)
+      const finalResult = await this.middleware.runAfter(mwCtx, result)
+      this.send(conn, { type: "action_result", requestId, data: finalResult })
     } catch (error) {
+      const mwCtx: MiddlewareContext = {
+        functionName: actionName, functionType: "action", args, auth: conn.auth, state: new Map(),
+      }
+      await this.middleware.runOnError(mwCtx, error instanceof Error ? error : new Error(String(error)))
       this.send(conn, {
         type: "action_error",
         requestId,
@@ -375,9 +432,9 @@ export class TransportServer {
       conn.ws.ping()
     }
   }
-}
 
-let connectionCounter = 0
-function generateConnectionId(): string {
-  return `conn_${++connectionCounter}_${Date.now().toString(36)}`
+  private connectionCounter = 0
+  private generateConnectionId(): string {
+    return `conn_${++this.connectionCounter}_${Date.now().toString(36)}`
+  }
 }
