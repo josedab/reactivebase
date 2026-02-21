@@ -1,0 +1,25 @@
+{
+  "name": "@reactivebase/cli",
+  "version": "0.1.0",
+  "description": "ReactiveBase CLI - dev server, generate, migrate",
+  "type": "module",
+  "bin": {
+    "reactivebase": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@reactivebase/server": "*"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "license": "MIT"
+}

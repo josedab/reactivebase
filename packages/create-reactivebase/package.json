@@ -1,0 +1,19 @@
+{
+  "name": "create-reactivebase",
+  "version": "0.1.0",
+  "description": "Create a new ReactiveBase project",
+  "type": "module",
+  "bin": {
+    "create-reactivebase": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0"
+  },
+  "license": "MIT"
+}

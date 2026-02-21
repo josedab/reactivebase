@@ -1,0 +1,7 @@
+node_modules/
+dist/
+_generated/
+.env
+*.log
+.turbo/
+coverage/
