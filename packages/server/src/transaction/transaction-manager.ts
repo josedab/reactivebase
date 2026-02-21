@@ -47,7 +47,9 @@ export async function executeTransaction<T>(
         tablesModified: new Set(),
       }
     } catch (error: unknown) {
-      await client.query("ROLLBACK").catch(() => {})
+      await client.query("ROLLBACK").catch((rollbackErr) => {
+        console.warn("Failed to rollback transaction:", rollbackErr)
+      })
 
       const pgError = error as { code?: string }
       if (pgError.code === "40001" && retries < opts.maxRetries) {
@@ -77,7 +79,9 @@ export async function executeReadOnly<T>(
     await client.query("COMMIT")
     return result
   } catch (error) {
-    await client.query("ROLLBACK").catch(() => {})
+    await client.query("ROLLBACK").catch((rollbackErr) => {
+      console.warn("Failed to rollback read-only transaction:", rollbackErr)
+    })
     throw error
   } finally {
     client.release()
