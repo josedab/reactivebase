@@ -1,5 +1,6 @@
 /**
  * Local query cache for storing subscription results on the client.
+ * Supports optimistic updates with versioned rollback.
  */
 
 export interface CacheEntry {
@@ -11,9 +12,16 @@ export interface CacheEntry {
   isStale: boolean
 }
 
+interface OptimisticLayer {
+  subscriptionId: string
+  originalData: unknown
+  originalVersion: number
+}
+
 export class QueryCache {
   private cache = new Map<string, CacheEntry>()
   private listeners = new Map<string, Set<(entry: CacheEntry) => void>>()
+  private optimisticLayers: OptimisticLayer[] = []
 
   /**
    * Get cached data for a subscription.
@@ -81,7 +89,8 @@ export class QueryCache {
   }
 
   /**
-   * Apply an optimistic update.
+   * Apply an optimistic update to a subscription's cache.
+   * Returns a rollback function to revert the change.
    */
   applyOptimisticUpdate(
     subscriptionId: string,
@@ -90,15 +99,56 @@ export class QueryCache {
     const entry = this.cache.get(subscriptionId)
     if (!entry) return () => {}
 
-    const originalData = entry.data
-    const optimisticData = updater(structuredClone(originalData))
+    const layer: OptimisticLayer = {
+      subscriptionId,
+      originalData: structuredClone(entry.data),
+      originalVersion: entry.version,
+    }
+    this.optimisticLayers.push(layer)
 
+    const optimisticData = updater(structuredClone(entry.data))
     this.update(subscriptionId, optimisticData, entry.version)
 
     // Return rollback function
     return () => {
-      this.update(subscriptionId, originalData, entry.version)
+      const idx = this.optimisticLayers.indexOf(layer)
+      if (idx >= 0) {
+        this.optimisticLayers.splice(idx, 1)
+      }
+      this.update(subscriptionId, layer.originalData, layer.originalVersion)
     }
+  }
+
+  /**
+   * Apply an optimistic update across all subscriptions matching a query name.
+   */
+  applyOptimisticUpdateByQuery(
+    queryName: string,
+    updater: (data: unknown, args: unknown) => unknown,
+  ): () => void {
+    const rollbacks: (() => void)[] = []
+
+    for (const [subId, entry] of this.cache.entries()) {
+      if (entry.queryName === queryName) {
+        const rollback = this.applyOptimisticUpdate(subId, (data) =>
+          updater(data, entry.args),
+        )
+        rollbacks.push(rollback)
+      }
+    }
+
+    return () => {
+      for (const rollback of rollbacks) {
+        rollback()
+      }
+    }
+  }
+
+  /**
+   * Get the number of pending optimistic layers.
+   */
+  get pendingOptimisticUpdates(): number {
+    return this.optimisticLayers.length
   }
 
   /**
@@ -118,6 +168,7 @@ export class QueryCache {
   clear(): void {
     this.cache.clear()
     this.listeners.clear()
+    this.optimisticLayers = []
   }
 
   private notifyListeners(subscriptionId: string, entry: CacheEntry): void {

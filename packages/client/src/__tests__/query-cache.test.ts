@@ -100,8 +100,48 @@ describe("query cache", () => {
     })
 
     expect((cache.get("sub1")!.data as Array<{ done: boolean }>)[0].done).toBe(true)
+    expect(cache.pendingOptimisticUpdates).toBe(1)
 
     rollback()
     expect((cache.get("sub1")!.data as Array<{ done: boolean }>)[0].done).toBe(false)
+    expect(cache.pendingOptimisticUpdates).toBe(0)
+  })
+
+  it("applies optimistic updates by query name", () => {
+    const cache = new QueryCache()
+
+    cache.set("sub1", {
+      queryName: "listTasks",
+      args: { userId: "u1" },
+      data: [{ id: "1", title: "Old" }],
+      version: 1,
+    })
+    cache.set("sub2", {
+      queryName: "listTasks",
+      args: { userId: "u2" },
+      data: [{ id: "2", title: "Old" }],
+      version: 1,
+    })
+    cache.set("sub3", {
+      queryName: "getUser",
+      args: {},
+      data: { name: "test" },
+      version: 1,
+    })
+
+    const rollback = cache.applyOptimisticUpdateByQuery("listTasks", (data) => {
+      return (data as Array<{ id: string; title: string }>).map((t) => ({
+        ...t,
+        title: "Updated",
+      }))
+    })
+
+    expect((cache.get("sub1")!.data as Array<{ title: string }>)[0].title).toBe("Updated")
+    expect((cache.get("sub2")!.data as Array<{ title: string }>)[0].title).toBe("Updated")
+    expect((cache.get("sub3")!.data as { name: string }).name).toBe("test")
+
+    rollback()
+    expect((cache.get("sub1")!.data as Array<{ title: string }>)[0].title).toBe("Old")
+    expect((cache.get("sub2")!.data as Array<{ title: string }>)[0].title).toBe("Old")
   })
 })
