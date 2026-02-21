@@ -75,7 +75,14 @@ export function generateIndexSQL(
   indexName: string,
   columns: string[],
   unique: boolean,
+  indexType?: string,
+  opclass?: string,
 ): string {
+  if (indexType === "hnsw" || indexType === "ivfflat") {
+    const col = columns[0]
+    const ops = opclass ?? "vector_cosine_ops"
+    return `CREATE INDEX IF NOT EXISTS "${indexName}" ON "${tableName}" USING ${indexType} ("${col}" ${ops});`
+  }
   const uniqueStr = unique ? "UNIQUE " : ""
   const cols = columns.map((c) => `"${c}"`).join(", ")
   return `CREATE ${uniqueStr}INDEX IF NOT EXISTS "${indexName}" ON "${tableName}" (${cols});`
@@ -95,11 +102,34 @@ export function generateMigrationSQL(schema: Schema): Migration {
 
     for (const index of table.indexes) {
       upStatements.push(
-        generateIndexSQL(tableName, `${tableName}_${index.name}`, index.columns, index.unique),
+        generateIndexSQL(
+          tableName,
+          `${tableName}_${index.name}`,
+          index.columns,
+          index.unique,
+          index.type,
+          index.opclass,
+        ),
       )
     }
 
     downStatements.unshift(`DROP TABLE IF EXISTS "${tableName}" CASCADE;`)
+  }
+
+  // Check if any table uses vector columns, and add pgvector extension
+  let hasVectorColumns = false
+  for (const tableName of schema.tableNames) {
+    const table = schema.tables[tableName]
+    for (const validator of Object.values(table.columns)) {
+      const actual = validator.type === "optional" && validator.innerValidator
+        ? validator.innerValidator
+        : validator
+      if (actual.type === "vector") {
+        hasVectorColumns = true
+        break
+      }
+    }
+    if (hasVectorColumns) break
   }
 
   // Add migrations tracking table
@@ -110,6 +140,11 @@ export function generateMigrationSQL(schema: Schema): Migration {
   applied_at timestamptz NOT NULL DEFAULT now()
 );`,
   )
+
+  // Add pgvector extension if needed
+  if (hasVectorColumns) {
+    upStatements.unshift(`CREATE EXTENSION IF NOT EXISTS vector;`)
+  }
 
   const timestamp = Date.now()
   const version = String(timestamp)

@@ -8,6 +8,8 @@ export interface IndexDefinition {
   name: string
   columns: string[]
   unique: boolean
+  type?: "btree" | "ivfflat" | "hnsw"
+  opclass?: string
 }
 
 export interface RelationDefinition {
@@ -28,6 +30,12 @@ export interface TableDefinition<TColumns extends ColumnDefinitions = ColumnDefi
     name: string,
     columns: (keyof TColumns & string)[],
     options?: { unique?: boolean },
+  ): TableDefinition<TColumns>
+
+  vectorIndex(
+    name: string,
+    column: keyof TColumns & string,
+    options?: { type?: "ivfflat" | "hnsw"; metric?: "cosine" | "l2" | "inner_product" },
   ): TableDefinition<TColumns>
 
   relation(
@@ -63,6 +71,26 @@ class TableDefinitionImpl<TColumns extends ColumnDefinitions> implements TableDe
       name,
       columns: columns as string[],
       unique: options.unique ?? false,
+    })
+    return this
+  }
+
+  vectorIndex(
+    name: string,
+    column: keyof TColumns & string,
+    options: { type?: "ivfflat" | "hnsw"; metric?: "cosine" | "l2" | "inner_product" } = {},
+  ): TableDefinition<TColumns> {
+    const metricToOpclass: Record<string, string> = {
+      cosine: "vector_cosine_ops",
+      l2: "vector_l2_ops",
+      inner_product: "vector_ip_ops",
+    }
+    this.indexes.push({
+      name,
+      columns: [column as string],
+      unique: false,
+      type: options.type ?? "hnsw",
+      opclass: metricToOpclass[options.metric ?? "cosine"],
     })
     return this
   }

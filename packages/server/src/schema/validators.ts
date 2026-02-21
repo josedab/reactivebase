@@ -15,6 +15,7 @@ export type ValidatorType =
   | "id"
   | "optional"
   | "custom"
+  | "vector"
 
 export interface ValidatorOptions {
   default?: unknown
@@ -34,6 +35,7 @@ export interface Validator<T = unknown> {
   readonly enumValues?: readonly string[]
   readonly referencedTable?: string
   readonly innerValidator?: Validator
+  readonly dimensions?: number
 }
 
 function createValidator<T>(
@@ -102,5 +104,13 @@ export const v = {
 
   custom<T>(pgType: string): Validator<T> {
     return createValidator("custom", pgType)
+  },
+
+  vector(dimensions: number): Validator<number[]> {
+    return createValidator("vector", `vector(${dimensions})`, {}, { dimensions })
+  },
+
+  storageId(): Validator<string> {
+    return createValidator("id", "text", {})
   },
 } as const
