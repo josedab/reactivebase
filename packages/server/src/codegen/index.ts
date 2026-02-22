@@ -18,3 +18,17 @@ export type {
   TypedGenerateResult,
   WatchEvent,
 } from "./typed-codegen.js"
+
+// RPC Type Generator
+export { RpcTypeGenerator, schemaToTypeScript, schemaToValidationCode } from "./rpc-types.js"
+export type {
+  RpcFunctionDef,
+  RpcSchema,
+  RpcGenerateOutput,
+  RpcClientSdkConfig,
+  FileHashEntry,
+} from "./rpc-types.js"
+
+// Schema Completion Provider (TS Language Server)
+export { SchemaCompletionProvider } from "./schema-completion.js"
+export type { CompletionItem, HoverInfo, DiagnosticInfo, DefinitionLocation } from "./schema-completion.js"
