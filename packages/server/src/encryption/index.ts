@@ -15,3 +15,7 @@ export type {
   FieldEncryptionConfig,
   EncryptionStats,
 } from "./encryption.js"
+
+// Compliance Toolkit
+export { ComplianceToolkit, generateAccessLogTableSQL, generateErasureRequestTableSQL, buildRetentionPruneSQL } from "./compliance.js"
+export type { PiiDetection, PiiType, AccessLogEntry, RetentionPolicy, ErasureRequest, ComplianceReport, ComplianceSection, ComplianceToolkitOptions } from "./compliance.js"
