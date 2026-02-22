@@ -17,6 +17,7 @@ import { toPrometheusFormat } from "./metrics/index.js"
 import { schemaToVisualModel, generateDashboardHTML } from "./dashboard/index.js"
 import { generateFullDashboardHTML } from "./dashboard/index.js"
 import { TransportServer } from "./transport/index.js"
+import { ReactiveCdcAdapter } from "./cdc/index.js"
 
 export interface ReactiveBaseServer {
   /** Register server functions (queries, mutations, actions) */
@@ -29,6 +30,8 @@ export interface ReactiveBaseServer {
   stop(): Promise<void>
   /** Get the transport server for testing */
   getTransport(): TransportServer
+  /** Get the CDC adapter for feeding external WAL changes (when cdc.mode is "logical-replication") */
+  getCdcAdapter(): ReactiveCdcAdapter | null
 }
 
 export function createReactiveBaseServer(
@@ -49,6 +52,21 @@ export function createReactiveBaseServer(
 
   const functions = new Map<string, RegisteredFunction>()
   const authProviders: AuthProvider[] = []
+
+  // Initialize CDC adapter if logical replication mode is configured
+  const cdcAdapter = config.cdc?.mode === "logical-replication"
+    ? new ReactiveCdcAdapter(
+        async (tables, events) => {
+          await transport.getEngine().processChanges(tables, events)
+        },
+        {
+          tables: config.cdc?.tables ?? schema.tableNames,
+          batchSize: config.cdc?.batchSize ?? 100,
+          flushIntervalMs: config.cdc?.flushIntervalMs ?? 10,
+          rowLevelTracking: true,
+        },
+      )
+    : null
 
   // Register auth providers
   if (config.auth?.providers) {
@@ -154,6 +172,11 @@ export function createReactiveBaseServer(
     async start() {
       const port = config.server?.port ?? 4000
 
+      // Start CDC adapter buffering if in logical replication mode
+      if (cdcAdapter) {
+        cdcAdapter.startBuffering()
+      }
+
       httpServer = createServer((req, res) => {
         // CORS headers for cross-origin SSR fetches
         res.setHeader("Access-Control-Allow-Origin", "*")
@@ -222,6 +245,9 @@ export function createReactiveBaseServer(
     },
 
     async stop() {
+      if (cdcAdapter) {
+        await cdcAdapter.stopBuffering()
+      }
       await transport.close()
       await pool.end()
       if (httpServer) {
@@ -231,6 +257,10 @@ export function createReactiveBaseServer(
 
     getTransport() {
       return transport
+    },
+
+    getCdcAdapter() {
+      return cdcAdapter
     },
   }
 }

@@ -57,11 +57,14 @@ export { ReactivityEngine } from "./reactivity/index.js"
 export type { SubscriptionUpdate } from "./reactivity/index.js"
 export { RowLevelTracker, BloomFilter, generateRowTrackingTableSQL, buildUpsertRowTrackingSQL, buildDeleteRowTrackingSQL, buildGetAffectedSubscriptionsSQL } from "./reactivity/index.js"
 export type { RowLevelTrackerOptions, RowTrackingState, RowInvalidationResult, RowLevelStats } from "./reactivity/index.js"
+export { EdgePrefetchCache } from "./reactivity/index.js"
+export type { EdgePrefetchOptions, CachedQueryResult, EdgeCacheStats } from "./reactivity/index.js"
 
 // Metrics
 export { MetricsCollector } from "./metrics/index.js"
 export { toPrometheusFormat } from "./metrics/index.js"
 export { NoopTracer, ConsoleTracer, createOtelTracerAdapter, traced } from "./metrics/index.js"
+export { PerformanceProfiler } from "./metrics/index.js"
 export type {
   MetricsSnapshot,
   ServerMetrics,
@@ -72,6 +75,18 @@ export type {
   FunctionMetrics,
   Tracer,
   Span,
+} from "./metrics/index.js"
+export type {
+  ProfilerOptions,
+  SlowQueryEntry,
+  NPlusOneDetection,
+  SubscriptionFanout,
+  QueryProfile,
+  ProfilerAlert,
+  AlertRule,
+  ProfilerStats,
+  GrafanaDashboard,
+  GrafanaPanel,
 } from "./metrics/index.js"
 
 // Embedded Postgres
@@ -127,8 +142,10 @@ export type { PresenceData, PresenceOptions, PresenceListener } from "./presence
 // Dashboard & Schema Visualizer
 export { schemaToVisualModel, visualModelToCode, generateDashboardHTML, generateFullDashboardHTML, generateAdminPanelHTML, generateAdminRoutes } from "./dashboard/index.js"
 export { DashboardV2Engine, generateDashboardV2HTML, generateDashboardV2TableSQL, buildInsertMutationLogSQL, buildQueryMutationLogSQL, buildUpdateQueryStatsSQL, buildDataBrowserQuerySQL } from "./dashboard/index.js"
+export { AdminStudio, buildDataBrowserSQL, buildCountSQL } from "./dashboard/index.js"
 export type { SchemaVisualModel, VisualTable, VisualColumn, VisualRelation, AdminPanelOptions, AdminRoute } from "./dashboard/index.js"
 export type { QueryInspectorEntry, SubscriptionHeatmapEntry, DataBrowserOptions, DataBrowserFilter, DataBrowserResult, MutationReplayEntry, MutationReplayOptions, DashboardV2Metrics, DashboardV2Options } from "./dashboard/index.js"
+export type { AdminStudioOptions, SchemaChange, MigrationPreview, DataBrowserQuery, DataBrowserFilterEntry, DataBrowserResponse, SubscriptionInspectorEntry, StudioMetricsSummary } from "./dashboard/index.js"
 export type {
   Middleware,
   MiddlewareContext,
@@ -145,12 +162,16 @@ export type { AccessRule, RoleRule, CustomRule } from "./permissions/index.js"
 // Code Generation
 export { scanFunctions, generateApiModule, generateServerModule, generate } from "./codegen/index.js"
 export { TypedCodegen, extractFunctionTypes, parseSchemaSource, generateTypedApiModule, generateTypedDbContext } from "./codegen/index.js"
+export { RpcTypeGenerator, schemaToTypeScript, schemaToValidationCode } from "./codegen/index.js"
 export type { ScannedFunction, GenerateResult } from "./codegen/index.js"
 export type { TypedFunctionInfo, SchemaField, SchemaTable, ParsedSchema, TypedCodegenOptions, TypedGenerateResult, WatchEvent } from "./codegen/index.js"
+export type { RpcFunctionDef, RpcSchema, RpcGenerateOutput, RpcClientSdkConfig, FileHashEntry } from "./codegen/index.js"
 
 // Change Data Capture
 export { CdcListener, ChangeEventBuffer, deduplicateEvents } from "./cdc/index.js"
+export { ReactiveCdcAdapter } from "./cdc/index.js"
 export type { CdcOptions, CdcHandler, PgListenClient } from "./cdc/index.js"
+export type { ReactiveCdcOptions, WalChangeEvent, CdcAdapterStats, ProcessChangesCallback } from "./cdc/index.js"
 
 // Multi-Tenancy
 export {
@@ -161,7 +182,9 @@ export {
   generateSetSchemaSQL,
   generateDropTenantSQL,
 } from "./tenancy/index.js"
+export { SaasKit, DEFAULT_PLANS, generateSaasTablesSQL } from "./tenancy/index.js"
 export type { TenancyConfig, TenantContext } from "./tenancy/index.js"
+export type { SaasKitOptions, SaasPlan, SaasPlanLimits, SaasTenant, SaasTenantUsage, SaasBillingProvider, OnboardingConfig, PlanLimitCheck, SaasAdminOverview } from "./tenancy/index.js"
 
 // AI / RAG Pipeline
 export { openaiProvider, ollamaProvider, mockAiProvider, createAiContext } from "./ai/index.js"
@@ -170,6 +193,8 @@ export type { AiProvider, AiContext, EmbedOptions, GenerateOptions, SearchOption
 // REST/GraphQL API Generation
 export { generateRestRoutes, matchRoute, parseQueryFilters, generateGraphQLSchema } from "./api-gen/index.js"
 export type { RestApiOptions, RestRoute } from "./api-gen/index.js"
+export { ApiGateway, generateApiKeyTableSQL, buildInsertApiKeySQL, buildValidateApiKeySQL, buildRevokeApiKeySQL, buildIncrementRequestCountSQL } from "./api-gen/index.js"
+export type { ApiGatewayOptions, ApiKeyRecord, ApiPermission, ApiKeyValidationResult, OpenApiSpec, OpenApiOperation, OpenApiParameter, OpenApiSchema, OpenApiSchemaRef, OpenApiSecurityScheme, GraphQLSubscriptionField, GatewayRoute, GatewayStats } from "./api-gen/index.js"
 
 // Validation & Rate Limiting
 export { RateLimiter, RateLimitError, rateLimit } from "./validation/index.js"
@@ -180,7 +205,9 @@ export type { ValidationSchema } from "./validation/index.js"
 // Migration Manager
 export { MigrationManager } from "./migrations/index.js"
 export { diffSchema, generateDiffSQL, introspectionQueries } from "./migrations/index.js"
+export { MigrationPlanner } from "./migrations/index.js"
 export type { MigrationRecord, MigrationFile, ApplyResult, RollbackResult, MigrationStatus, DatabaseState, SchemaDiff } from "./migrations/index.js"
+export type { MigrationSchemaChange, ChangeAnalysis, AnalyzedChange, SafeMigrationPlan, MigrationPhase, DryRunResult } from "./migrations/index.js"
 
 // Type Inference Utilities
 export { typedRef } from "./types/index.js"
@@ -198,13 +225,19 @@ export type {
 
 // Benchmark
 export { bench, runSuite, formatResults, formatResultsJSON } from "./benchmark/index.js"
+export { StressTestSuite } from "./benchmark/index.js"
 export type { BenchmarkResult, BenchmarkSuite } from "./benchmark/index.js"
+export type { StressTestOptions, StressTestThresholds, StressTestReport, StressTestPhase, ChaosTestResult, StressTestSummary } from "./benchmark/index.js"
 
 // Plugins
 export { definePlugin, PluginRegistry, clerkPlugin, stripePlugin, PluginRegistryClient, BUILTIN_PLUGINS } from "./plugins/index.js"
 export { PluginMarketplace, PluginMarketplaceError, validatePluginConfig, MARKETPLACE_CATALOG } from "./plugins/index.js"
+export { computePluginQualityScore, checkPluginCompatibility, generatePluginTemplate, resendPlugin, sentryPlugin, vercelPlugin, FIRST_PARTY_PLUGINS } from "./plugins/index.js"
+export { PluginPortal } from "./plugins/index.js"
 export type { PluginDefinition, PluginContext, PluginManifest, RegistryEntry } from "./plugins/index.js"
 export type { PluginV2Definition, PluginV2Instance, PluginV2Context, PluginCategory, ConfigField, MarketplaceEntry, MarketplaceSearchOptions } from "./plugins/index.js"
+export type { PluginQualityInfo, PluginQualityScore, PluginCompatibility, PluginTemplate } from "./plugins/index.js"
+export type { PortalPlugin, PluginCompatibilityStatus, CompatibilityMatrix, PluginScaffold, PortalStats } from "./plugins/index.js"
 
 // Cloud
 export { CloudClient, CloudError, PLANS, REGIONS, generateDeployCommand, estimateMonthlyCost } from "./cloud/index.js"
@@ -345,6 +378,7 @@ export {
   generateUniqueIndexSQL,
   generateTimeBucketSQL,
 } from "./materialized-views/index.js"
+export { AnalyticsEngine, generateAnalyticsSQL } from "./materialized-views/index.js"
 export type {
   MaterializedViewDefinition,
   MaterializedViewState,
@@ -352,6 +386,7 @@ export type {
   RefreshStrategy,
   TimeBucket,
 } from "./materialized-views/index.js"
+export type { AnalyticsMetricDef, AggregationType, TimeBucketSize, AnalyticsQueryOptions, AnalyticsResult, TimeSeriesPoint, AnalyticsDimensionResult, AnalyticsSubscription, AnalyticsEngineStats } from "./materialized-views/index.js"
 
 // Multi-Database Federation
 export {
@@ -382,6 +417,7 @@ export {
   PLAYGROUND_TEMPLATES,
   BUILTIN_TUTORIALS,
 } from "./playground/index.js"
+export { TutorialManager, INTERACTIVE_TUTORIALS } from "./playground/index.js"
 export type {
   PlaygroundSession,
   ExecutionResult,
@@ -393,14 +429,19 @@ export type {
   PlaygroundTemplate,
   PlaygroundHTMLOptions,
 } from "./playground/index.js"
+export type { InteractiveTutorial, TutorialStepDef, ValidationRule, StepValidationResult, PlaygroundShareState, ExportConfig, ExportResult } from "./playground/index.js"
 
 // Horizontal Scaling
 export { ConsistentHashRing, ClusterManager } from "./scaling/index.js"
 export type { ClusterNode, ClusterManagerOptions, ClusterMessage, InvalidationBroadcast, SubscriptionRoute, ClusterStats, DrainResult } from "./scaling/index.js"
+export { SubscriptionShardManager } from "./scaling/index.js"
+export type { ShardInfo, ShardManagerOptions, MigrationBatch, ShardAssignment, ShardMigrationState, ShardMigrationError, ShardStats, ShardManagerNode } from "./scaling/index.js"
 
 // E2E Encryption
 export { EncryptionEngine, EncryptionError, localKeyProvider, rotatingKeyProvider, kmsKeyProvider, generateEncryptionTableSQL, buildInsertAuditSQL } from "./encryption/index.js"
+export { ComplianceToolkit, generateAccessLogTableSQL, generateErasureRequestTableSQL, buildRetentionPruneSQL } from "./encryption/index.js"
 export type { EncryptionEngineOptions, EncryptionMode, KeyProvider, EncryptedValue, FieldEncryptionConfig, EncryptionStats } from "./encryption/index.js"
+export type { PiiDetection, PiiType, AccessLogEntry, RetentionPolicy, ErasureRequest, ComplianceReport, ComplianceSection, ComplianceToolkitOptions } from "./encryption/index.js"
 
 // AI Query Assistant
 export { QueryAssistant } from "./ai-assistant/index.js"
@@ -412,7 +453,9 @@ export type { LogicalReplicatorOptions, ReplicatorStatus, WalChange, WalColumnIn
 
 // Cloud Platform
 export { CloudPlatform } from "./cloud-platform/index.js"
+export { CloudProvisioner, generatePreviewEnvTableSQL, generateCustomDomainTableSQL } from "./cloud-platform/index.js"
 export type { CloudPlatformOptions, ProjectPlan, CloudProjectConfig, CloudProjectRecord, EnvironmentConfig, EnvironmentRecord, DeploymentConfig, DeploymentRecord, TeamMember, UsageRecord, UsageLimits, CostEstimate, CostBreakdownItem, BillingProvider } from "./cloud-platform/index.js"
+export type { PreviewEnvironmentConfig, PreviewEnvironment, DeployManifest, ProvisioningStep, ProvisioningPipeline, CustomDomain, EnvironmentPromotion, LogStreamOptions } from "./cloud-platform/index.js"
 
 // Type Bridge (E2E Type Safety)
 export { TypeBridge } from "./type-bridge/index.js"
@@ -420,7 +463,11 @@ export type { TypeManifest, FunctionSignature, TypeDescriptor, PrimitiveType, Ob
 
 // Collaboration Primitives
 export { CollaborationManager } from "./collaboration/index.js"
+export { DocumentCollaboration, generateCollabDocTableSQL, buildInsertDocumentSQL, buildInsertUpdateSQL } from "./collaboration/index.js"
+export { writeVarUint, readVarUint, writeVarBytes, readVarBytes, writeVarString, readVarString, encodeStateVector, decodeStateVector, encodeUpdate, decodeUpdate, createSyncStep1, createSyncStep2, createUpdateMessage, parseSyncMessage, encodeAwarenessUpdate, decodeAwarenessUpdate, mergeUpdates, computeMissingUpdates, computeStateDiff, hashClientId, YjsSyncMessageType, YjsAwarenessMessageType } from "./collaboration/index.js"
 export type { CursorPosition, SelectionRange, UserAwareness, RoomAwarenessState, CollaborationOptions, AwarenessListener } from "./collaboration/index.js"
+export type { CollaborativeDocument, DocumentType, DocumentUpdate, DocumentSnapshot, UndoEntry, DocumentAwareness, DocumentCollaborationOptions, DocumentStats } from "./collaboration/index.js"
+export type { StateVector, YjsUpdate, SyncMessage, AwarenessMessage, AwarenessClientState, MergeResult } from "./collaboration/index.js"
 
 // SQL Playground
 export { SqlPlayground } from "./sql-playground/index.js"
