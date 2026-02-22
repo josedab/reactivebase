@@ -118,6 +118,31 @@ async function main(): Promise<void> {
       break
     }
 
+    case "deploy": {
+      const { deploy, deployPreview, destroyPreview, tailLogs } = await import("./commands/deploy.js")
+      const subcommand = args[1]
+
+      if (subcommand === "--preview") {
+        const prNumber = parseInt(getFlag("--pr", "0"), 10)
+        const branch = getFlag("--branch", "main")
+        await deployPreview({ projectDir: process.cwd(), prNumber, branch })
+      } else if (subcommand === "--destroy") {
+        const appName = args[2] ?? ""
+        await destroyPreview(appName)
+      } else if (subcommand === "--logs") {
+        const appName = args[2] ?? ""
+        await tailLogs(appName)
+      } else {
+        await deploy({
+          projectDir: process.cwd(),
+          provider: getFlag("--provider", "flyio") as "flyio" | "railway",
+          region: getFlag("--region", "iad"),
+          appName: args.includes("--name") ? getFlag("--name", "") : undefined,
+        })
+      }
+      break
+    }
+
     case "--help":
     case "-h":
     case undefined:
@@ -146,6 +171,7 @@ Commands:
   dev              Start development server
   generate         Generate types from schema
   migrate          Database migration commands
+  deploy           Deploy to cloud (Fly.io/Railway)
   functions list   List all defined functions
   dacl             Access control policy management
   ivm              Incremental view maintenance
