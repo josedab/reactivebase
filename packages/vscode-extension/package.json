@@ -1,0 +1,89 @@
+{
+  "name": "reactivebase-vscode",
+  "displayName": "ReactiveBase",
+  "description": "ReactiveBase development tools — type generation, schema validation, and live diagnostics",
+  "version": "0.1.0",
+  "publisher": "reactivebase",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reactivebase/reactivebase"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Programming Languages", "Linters", "Other"],
+  "keywords": ["reactivebase", "reactive", "postgres", "realtime", "typescript"],
+  "icon": "icon.png",
+  "activationEvents": [
+    "workspaceContains:**/reactivebase.config.ts",
+    "workspaceContains:**/convex/schema.ts"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "reactivebase.generate",
+        "title": "ReactiveBase: Generate Types"
+      },
+      {
+        "command": "reactivebase.watchStart",
+        "title": "ReactiveBase: Start Watch Mode"
+      },
+      {
+        "command": "reactivebase.watchStop",
+        "title": "ReactiveBase: Stop Watch Mode"
+      },
+      {
+        "command": "reactivebase.showStatus",
+        "title": "ReactiveBase: Show Status"
+      },
+      {
+        "command": "reactivebase.validateSchema",
+        "title": "ReactiveBase: Validate Schema"
+      }
+    ],
+    "configuration": {
+      "title": "ReactiveBase",
+      "properties": {
+        "reactivebase.functionsDir": {
+          "type": "string",
+          "default": "./convex",
+          "description": "Directory containing ReactiveBase function files"
+        },
+        "reactivebase.outputDir": {
+          "type": "string",
+          "default": "./_generated",
+          "description": "Output directory for generated type files"
+        },
+        "reactivebase.autoGenerate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically regenerate types on file save"
+        },
+        "reactivebase.watchDebounceMs": {
+          "type": "number",
+          "default": 300,
+          "description": "Debounce delay in ms for watch mode regeneration"
+        },
+        "reactivebase.showDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline diagnostics for schema and function issues"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup src/extension.ts --format cjs --external vscode",
+    "watch": "tsup src/extension.ts --format cjs --external vscode --watch",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0",
+    "@vscode/vsce": "^3.0.0"
+  }
+}
