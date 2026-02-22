@@ -34,3 +34,19 @@ export type {
   DashboardV2Metrics,
   DashboardV2Options,
 } from "./query-inspector.js"
+
+// Admin Studio: Schema Designer + Data Browser + Subscription Inspector
+export { AdminStudio, buildDataBrowserSQL, buildCountSQL } from "./admin-studio.js"
+export type {
+  AdminStudioOptions,
+  SchemaChange,
+  MigrationPreview,
+  DataBrowserQuery,
+  DataBrowserFilterEntry,
+  DataBrowserResponse,
+  SubscriptionInspectorEntry,
+  StudioMetricsSummary,
+} from "./admin-studio.js"
+
+// Migration Wizard UI
+export { generateMigrationWizardHTML } from "./migration-wizard.js"
