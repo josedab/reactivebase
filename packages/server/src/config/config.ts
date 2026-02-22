@@ -20,6 +20,17 @@ export interface ReactiveBaseConfig {
     hostname?: string
     heartbeatInterval?: number
   }
+  /** Change Data Capture mode for reactivity invalidation */
+  cdc?: {
+    /** CDC mode: "listen-notify" (default) or "logical-replication" (WAL streaming) */
+    mode?: "listen-notify" | "logical-replication"
+    /** Tables to track (default: all schema tables) */
+    tables?: string[]
+    /** Batch size for WAL event processing (default: 100) */
+    batchSize?: number
+    /** Batch flush interval in ms (default: 10) */
+    flushIntervalMs?: number
+  }
   dev?: {
     dashboardPort?: number
     logLevel?: "debug" | "info" | "warn" | "error"
