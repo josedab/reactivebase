@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReactiveBase Playground</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; height: 100vh; display: flex; flex-direction: column; }
+  .header { padding: 12px 24px; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 12px; }
+  .header h1 { font-size: 16px; }
+  .header a { color: #58a6ff; text-decoration: none; font-size: 14px; }
+  .playground { flex: 1; display: flex; }
+  .playground iframe { width: 100%; height: 100%; border: none; }
+  .fallback { flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
+  .fallback p { color: #8b949e; max-width: 500px; text-align: center; line-height: 1.6; }
+  .btn { background: #238636; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: 600; }
+  .btn:hover { background: #2ea043; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>⚡ ReactiveBase Playground</h1>
+  <a href="/docs/getting-started">Docs</a>
+  <a href="https://github.com/reactivebase/reactivebase">GitHub</a>
+</div>
+<div class="playground" id="playground">
+  <div class="fallback" id="fallback">
+    <h2>Try ReactiveBase in Your Browser</h2>
+    <p>
+      Launch a fully working ReactiveBase project with PGlite (in-browser Postgres).
+      Edit the schema, write queries, and see live reactive updates — zero installation required.
+    </p>
+    <a class="btn" href="https://stackblitz.com/github/reactivebase/reactivebase/tree/main/examples/basic-todo?file=convex/schema.ts&terminal=dev" target="_blank" id="launch-btn">
+      Open in StackBlitz →
+    </a>
+    <p style="font-size: 12px; margin-top: 16px;">
+      Or install locally: <code style="background: #161b22; padding: 4px 8px; border-radius: 4px;">npx create-reactivebase my-app</code>
+    </p>
+  </div>
+</div>
+<script>
+  // If StackBlitz SDK is available, embed directly
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('embed') === 'true') {
+    document.getElementById('fallback').innerHTML = '<iframe src="https://stackblitz.com/github/reactivebase/reactivebase/tree/main/examples/basic-todo?embed=1&file=convex/schema.ts&terminal=dev" style="width:100%;height:100%;border:none;"></iframe>';
+  }
+</script>
+</body>
+</html>
