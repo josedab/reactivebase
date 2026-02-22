@@ -1,0 +1,48 @@
+# Fly.io deployment configuration for ReactiveBase
+# Deploy: fly launch --config deploy/fly.toml
+
+app = "my-reactivebase-app"
+primary_region = "iad"
+
+[build]
+  dockerfile = "deploy/Dockerfile"
+
+[env]
+  PORT = "4000"
+  NODE_ENV = "production"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 800
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 4000
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.tcp_checks]]
+    grace_period = "10s"
+    interval = "15s"
+    timeout = "2s"
+
+# Attach a Postgres database:
+#   fly postgres create --name my-reactivebase-db
+#   fly postgres attach my-reactivebase-db
+
+# Attach Redis (Upstash):
+#   fly redis create
