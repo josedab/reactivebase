@@ -145,3 +145,12 @@ export function createCacheKey(queryName: string, args: unknown): string {
 export function createEdgeClient(options: EdgeClientOptions): EdgeClient {
   return new EdgeClient(options)
 }
+
+// Edge Query Router (read replica routing + caching)
+export { EdgeQueryRouter } from "./edge-router.js"
+export type {
+  ReplicaConfig,
+  EdgeQueryRouterOptions,
+  CachedEdgeResult,
+  ReplicaHealth,
+} from "./edge-router.js"
