@@ -22,3 +22,7 @@ export type {
   RowInvalidationResult,
   RowLevelStats,
 } from "./row-level-tracker.js"
+
+// Edge Prefetch Cache
+export { EdgePrefetchCache } from "./edge-prefetch.js"
+export type { EdgePrefetchOptions, CachedQueryResult, EdgeCacheStats, InvalidationEvent } from "./edge-prefetch.js"
