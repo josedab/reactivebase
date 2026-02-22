@@ -11,3 +11,16 @@ export type {
   ClusterStats,
   DrainResult,
 } from "./scaling.js"
+
+// Subscription Sharding
+export { SubscriptionShardManager } from "./subscription-sharding.js"
+export type {
+  ShardInfo,
+  ShardManagerOptions,
+  MigrationBatch,
+  ShardAssignment,
+  ShardMigrationState,
+  ShardMigrationError,
+  ShardStats,
+  ShardManagerNode,
+} from "./subscription-sharding.js"
