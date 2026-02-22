@@ -188,7 +188,7 @@ export function generateAdminPanelHTML(
         ${model.tables.map((t: VisualTable) => `
         <div class="schema-table-card">
           <div class="schema-table-header">${t.name}</div>
-          ${t.columns.map((c) => `<div class="schema-col"><span class="name">${c.name}</span><span class="type">${c.type}${c.isNullable ? "?" : ""}</span></div>`).join("")}
+          ${t.columns.map((c) => `<div class="schema-col"><span class="name">${c.name}</span><span class="type">${c.type}${c.isOptional ? "?" : ""}</span></div>`).join("")}
         </div>`).join("")}
       </div>
     </div>
@@ -209,7 +209,7 @@ export function generateAdminPanelHTML(
         ${model.tables.map((t: VisualTable) => `
         <div class="schema-table-card">
           <div class="schema-table-header">${t.name} <span style="font-size:11px;color:var(--muted)">${t.columns.length} cols</span></div>
-          ${t.columns.map((c) => `<div class="schema-col"><span class="name">${c.isPrimaryKey ? "🔑 " : c.isForeignKey ? "🔗 " : ""}${c.name}</span><span class="type">${c.type}</span></div>`).join("")}
+          ${t.columns.map((c) => `<div class="schema-col"><span class="name">${c.isId ? "🔑 " : c.referencedTable ? "🔗 " : ""}${c.name}</span><span class="type">${c.type}</span></div>`).join("")}
         </div>`).join("")}
       </div>
     </div>
