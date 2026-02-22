@@ -23,3 +23,18 @@ export type {
   OtelTracerLike,
   OtelSpanLike,
 } from "./tracing.js"
+
+// Performance Profiler
+export { PerformanceProfiler } from "./performance-profiler.js"
+export type {
+  ProfilerOptions,
+  SlowQueryEntry,
+  NPlusOneDetection,
+  SubscriptionFanout,
+  QueryProfile,
+  ProfilerAlert,
+  AlertRule,
+  ProfilerStats,
+  GrafanaDashboard,
+  GrafanaPanel,
+} from "./performance-profiler.js"
