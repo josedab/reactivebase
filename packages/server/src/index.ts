@@ -121,8 +121,8 @@ export {
 export type { PresenceData, PresenceOptions, PresenceListener } from "./presence/index.js"
 
 // Dashboard & Schema Visualizer
-export { schemaToVisualModel, visualModelToCode, generateDashboardHTML, generateFullDashboardHTML } from "./dashboard/index.js"
-export type { SchemaVisualModel, VisualTable, VisualColumn, VisualRelation } from "./dashboard/index.js"
+export { schemaToVisualModel, visualModelToCode, generateDashboardHTML, generateFullDashboardHTML, generateAdminPanelHTML, generateAdminRoutes } from "./dashboard/index.js"
+export type { SchemaVisualModel, VisualTable, VisualColumn, VisualRelation, AdminPanelOptions, AdminRoute } from "./dashboard/index.js"
 export type {
   Middleware,
   MiddlewareContext,
