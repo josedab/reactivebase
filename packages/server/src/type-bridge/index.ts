@@ -1,0 +1,27 @@
+export {
+  TypeBridge,
+} from "./type-bridge.js"
+
+export type {
+  TypeManifest,
+  FunctionSignature,
+  TypeDescriptor,
+  PrimitiveType,
+  ObjectType,
+  TypeProperty,
+  ArrayType,
+  UnionType,
+  LiteralType,
+  ReferenceType,
+  VoidType,
+  TableTypeInfo,
+  ColumnTypeInfo,
+  TypeBridgeOptions,
+  TypedFunctionReference,
+  ExtractArgs,
+  ExtractReturn,
+  ExtractKind,
+  ScannedFunction,
+  ScannedTable,
+  ManifestValidation,
+} from "./type-bridge.js"
