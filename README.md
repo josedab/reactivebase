@@ -3,6 +3,12 @@
 **Convex DX on Postgres.** A TypeScript-native reactive backend framework that provides live queries, automatic transactions, and built-in scheduling on infrastructure you control.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/reactivebase/reactivebase/actions/workflows/ci.yml/badge.svg)](https://github.com/reactivebase/reactivebase/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@reactivebase/server.svg)](https://www.npmjs.com/package/@reactivebase/server)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
+
+> **17,649 LOC · 30 server modules · 425+ tests · 11 packages · MIT license**
 
 ---
 
@@ -119,9 +125,12 @@ ReactiveBase Server
 
 | Package | Description |
 |---------|-------------|
-| `@reactivebase/server` | Server framework: queries, mutations, actions, reactivity engine |
+| `@reactivebase/server` | Server framework: queries, mutations, actions, reactivity engine, scheduler |
 | `@reactivebase/client` | Framework-agnostic client: subscriptions, cache, WebSocket transport |
 | `@reactivebase/react` | React hooks: `useQuery`, `useMutation`, `useAction` |
+| `@reactivebase/nextjs` | Next.js integration: `preloadQuery`, `usePreloadedQuery`, App Router support |
+| `@reactivebase/vue` | Vue 3 composables: `useQuery`, `useMutation`, `useAction` |
+| `@reactivebase/svelte` | Svelte stores: `queryStore`, `createMutation`, `createAction` |
 | `@reactivebase/cli` | CLI tooling: `dev`, `generate`, `migrate` |
 | `create-reactivebase` | Project scaffolding |
 
