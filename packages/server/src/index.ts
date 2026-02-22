@@ -55,6 +55,8 @@ export type { ClientMessage, ServerMessage } from "./transport/index.js"
 // Reactivity (for advanced usage)
 export { ReactivityEngine } from "./reactivity/index.js"
 export type { SubscriptionUpdate } from "./reactivity/index.js"
+export { RowLevelTracker, BloomFilter, generateRowTrackingTableSQL, buildUpsertRowTrackingSQL, buildDeleteRowTrackingSQL, buildGetAffectedSubscriptionsSQL } from "./reactivity/index.js"
+export type { RowLevelTrackerOptions, RowTrackingState, RowInvalidationResult, RowLevelStats } from "./reactivity/index.js"
 
 // Metrics
 export { MetricsCollector } from "./metrics/index.js"
@@ -90,6 +92,8 @@ export { MiddlewareManager } from "./middleware/index.js"
 // Schema Migration Tools
 export { convertPrismaToReactiveBase, parsePrismaSchema } from "./migrate-from/index.js"
 export { convertDrizzleToReactiveBase, parseDrizzleSchema } from "./migrate-from/index.js"
+export { MigrationWizard, discoverTrpcRoutes, discoverExpressRoutes, mapPrismaType, mapDrizzleType, analyzeFeatureGaps } from "./migrate-from/index.js"
+export type { ProjectAnalysis, MigrationTable, MigrationField, MigrationPlan, MigrationStep, MigrationDiff, DiscoveredRoute, MigrationWarning, FeatureGap } from "./migrate-from/index.js"
 
 // Storage
 export {
@@ -122,7 +126,9 @@ export type { PresenceData, PresenceOptions, PresenceListener } from "./presence
 
 // Dashboard & Schema Visualizer
 export { schemaToVisualModel, visualModelToCode, generateDashboardHTML, generateFullDashboardHTML, generateAdminPanelHTML, generateAdminRoutes } from "./dashboard/index.js"
+export { DashboardV2Engine, generateDashboardV2HTML, generateDashboardV2TableSQL, buildInsertMutationLogSQL, buildQueryMutationLogSQL, buildUpdateQueryStatsSQL, buildDataBrowserQuerySQL } from "./dashboard/index.js"
 export type { SchemaVisualModel, VisualTable, VisualColumn, VisualRelation, AdminPanelOptions, AdminRoute } from "./dashboard/index.js"
+export type { QueryInspectorEntry, SubscriptionHeatmapEntry, DataBrowserOptions, DataBrowserFilter, DataBrowserResult, MutationReplayEntry, MutationReplayOptions, DashboardV2Metrics, DashboardV2Options } from "./dashboard/index.js"
 export type {
   Middleware,
   MiddlewareContext,
@@ -138,7 +144,9 @@ export type { AccessRule, RoleRule, CustomRule } from "./permissions/index.js"
 
 // Code Generation
 export { scanFunctions, generateApiModule, generateServerModule, generate } from "./codegen/index.js"
+export { TypedCodegen, extractFunctionTypes, parseSchemaSource, generateTypedApiModule, generateTypedDbContext } from "./codegen/index.js"
 export type { ScannedFunction, GenerateResult } from "./codegen/index.js"
+export type { TypedFunctionInfo, SchemaField, SchemaTable, ParsedSchema, TypedCodegenOptions, TypedGenerateResult, WatchEvent } from "./codegen/index.js"
 
 // Change Data Capture
 export { CdcListener, ChangeEventBuffer, deduplicateEvents } from "./cdc/index.js"
@@ -194,11 +202,26 @@ export type { BenchmarkResult, BenchmarkSuite } from "./benchmark/index.js"
 
 // Plugins
 export { definePlugin, PluginRegistry, clerkPlugin, stripePlugin, PluginRegistryClient, BUILTIN_PLUGINS } from "./plugins/index.js"
+export { PluginMarketplace, PluginMarketplaceError, validatePluginConfig, MARKETPLACE_CATALOG } from "./plugins/index.js"
 export type { PluginDefinition, PluginContext, PluginManifest, RegistryEntry } from "./plugins/index.js"
+export type { PluginV2Definition, PluginV2Instance, PluginV2Context, PluginCategory, ConfigField, MarketplaceEntry, MarketplaceSearchOptions } from "./plugins/index.js"
 
 // Cloud
-export { CloudClient, CloudError, PLANS, generateDeployCommand } from "./cloud/index.js"
-export type { CloudConfig, CloudProject, CloudPlan } from "./cloud/index.js"
+export { CloudClient, CloudError, PLANS, REGIONS, generateDeployCommand, estimateMonthlyCost } from "./cloud/index.js"
+export type {
+  CloudConfig,
+  CloudProject,
+  CloudPlan,
+  CloudEnvironment,
+  CloudDeployment,
+  CloudTeamMember,
+  CloudApiKey,
+  CloudUsage,
+  CloudLogEntry,
+  ProvisioningOptions,
+  DeploymentBundle,
+  RegionId,
+} from "./cloud/index.js"
 
 // Query Builder (for advanced usage)
 export { QueryBuilder } from "./query-builder/index.js"
@@ -345,3 +368,40 @@ export type {
   CrossDatabaseQuery,
   FederatedQueryResult,
 } from "./multi-db/index.js"
+
+// Playground
+export {
+  PlaygroundEngine,
+  PlaygroundError,
+  generatePlaygroundHTML,
+  generatePlaygroundTableSQL,
+  buildSaveSessionSQL,
+  buildLoadSessionSQL,
+  buildListSessionsSQL,
+  buildDeleteSessionSQL,
+  PLAYGROUND_TEMPLATES,
+  BUILTIN_TUTORIALS,
+} from "./playground/index.js"
+export type {
+  PlaygroundSession,
+  ExecutionResult,
+  TutorialDefinition,
+  TutorialStep,
+  PlaygroundOptions,
+  PlaygroundContext,
+  LogEntry,
+  PlaygroundTemplate,
+  PlaygroundHTMLOptions,
+} from "./playground/index.js"
+
+// Horizontal Scaling
+export { ConsistentHashRing, ClusterManager } from "./scaling/index.js"
+export type { ClusterNode, ClusterManagerOptions, ClusterMessage, InvalidationBroadcast, SubscriptionRoute, ClusterStats, DrainResult } from "./scaling/index.js"
+
+// E2E Encryption
+export { EncryptionEngine, EncryptionError, localKeyProvider, rotatingKeyProvider, kmsKeyProvider, generateEncryptionTableSQL, buildInsertAuditSQL } from "./encryption/index.js"
+export type { EncryptionEngineOptions, EncryptionMode, KeyProvider, EncryptedValue, FieldEncryptionConfig, EncryptionStats } from "./encryption/index.js"
+
+// AI Query Assistant
+export { QueryAssistant } from "./ai-assistant/index.js"
+export type { QueryAssistantOptions, AiProviderAdapter, SchemaInfo, QueryGenerationResult, SchemaOptimization, QueryExplanation, AccessPattern } from "./ai-assistant/index.js"
