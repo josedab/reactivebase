@@ -65,6 +65,59 @@ async function main(): Promise<void> {
       break
     }
 
+    case "dacl": {
+      const { daclList, daclTest, daclGenerateRls, daclCoverage } = await import("./commands/dacl.js")
+      const subcommand = args[1] || "list"
+      const daclOptions = {
+        projectDir: process.cwd(),
+        connectionString: process.env.DATABASE_URL,
+      }
+
+      switch (subcommand) {
+        case "list":
+          await daclList(daclOptions)
+          break
+        case "test":
+          await daclTest(daclOptions)
+          break
+        case "generate-rls":
+          await daclGenerateRls(daclOptions)
+          break
+        case "coverage":
+          await daclCoverage(daclOptions)
+          break
+        default:
+          console.error(`Unknown dacl subcommand: ${subcommand}`)
+          showDaclHelp()
+      }
+      break
+    }
+
+    case "ivm": {
+      const { ivmList, ivmStats, ivmAnalyze } = await import("./commands/ivm.js")
+      const subcommand = args[1] || "list"
+      const ivmOptions = {
+        projectDir: process.cwd(),
+        connectionString: process.env.DATABASE_URL,
+      }
+
+      switch (subcommand) {
+        case "list":
+          await ivmList(ivmOptions)
+          break
+        case "stats":
+          await ivmStats(ivmOptions)
+          break
+        case "analyze":
+          await ivmAnalyze(ivmOptions)
+          break
+        default:
+          console.error(`Unknown ivm subcommand: ${subcommand}`)
+          showIvmHelp()
+      }
+      break
+    }
+
     case "--help":
     case "-h":
     case undefined:
@@ -94,6 +147,8 @@ Commands:
   generate         Generate types from schema
   migrate          Database migration commands
   functions list   List all defined functions
+  dacl             Access control policy management
+  ivm              Incremental view maintenance
 
 Options:
   --help, -h       Show this help message
@@ -122,6 +177,29 @@ Subcommands:
   --apply       Apply pending migrations to the database
   --status      Show current migration status
   --rollback    Rollback the last applied migration
+`)
+}
+
+function showDaclHelp(): void {
+  console.log(`
+Usage: reactivebase dacl [subcommand]
+
+Subcommands:
+  list           List defined access control policies
+  test           Run policy test cases
+  generate-rls   Generate Postgres RLS SQL from policies
+  coverage       Show policy coverage report
+`)
+}
+
+function showIvmHelp(): void {
+  console.log(`
+Usage: reactivebase ivm [subcommand]
+
+Subcommands:
+  list           List registered IVM views
+  stats          Show IVM runtime statistics
+  analyze        Analyze query patterns for IVM eligibility
 `)
 }
 

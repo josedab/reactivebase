@@ -405,3 +405,35 @@ export type { EncryptionEngineOptions, EncryptionMode, KeyProvider, EncryptedVal
 // AI Query Assistant
 export { QueryAssistant } from "./ai-assistant/index.js"
 export type { QueryAssistantOptions, AiProviderAdapter, SchemaInfo, QueryGenerationResult, SchemaOptimization, QueryExplanation, AccessPattern } from "./ai-assistant/index.js"
+
+// Logical Replication
+export { LogicalReplicator, WalDecoder, ChangeBatcher, parseLsn, formatLsn, compareLsn } from "./logical-replication/index.js"
+export type { LogicalReplicatorOptions, ReplicatorStatus, WalChange, WalColumnInfo, ReplicationSlotInfo, ReplicationStats as LogicalReplicationStats, ChangeHandler } from "./logical-replication/index.js"
+
+// Cloud Platform
+export { CloudPlatform } from "./cloud-platform/index.js"
+export type { CloudPlatformOptions, ProjectPlan, CloudProjectConfig, CloudProjectRecord, EnvironmentConfig, EnvironmentRecord, DeploymentConfig, DeploymentRecord, TeamMember, UsageRecord, UsageLimits, CostEstimate, CostBreakdownItem, BillingProvider } from "./cloud-platform/index.js"
+
+// Type Bridge (E2E Type Safety)
+export { TypeBridge } from "./type-bridge/index.js"
+export type { TypeManifest, FunctionSignature, TypeDescriptor, PrimitiveType, ObjectType, TypeProperty, ArrayType, UnionType, LiteralType, ReferenceType, VoidType, TableTypeInfo, ColumnTypeInfo as TypeBridgeColumnTypeInfo, TypeBridgeOptions, TypedFunctionReference as BridgedFunctionReference, ExtractArgs, ExtractReturn, ExtractKind, ScannedFunction as BridgeScannedFunction, ScannedTable, ManifestValidation } from "./type-bridge/index.js"
+
+// Collaboration Primitives
+export { CollaborationManager } from "./collaboration/index.js"
+export type { CursorPosition, SelectionRange, UserAwareness, RoomAwarenessState, CollaborationOptions, AwarenessListener } from "./collaboration/index.js"
+
+// SQL Playground
+export { SqlPlayground } from "./sql-playground/index.js"
+export type { SqlPlaygroundOptions, QueryResult, QueryPlan, PlanNode, IndexSuggestion, AiQueryProvider, AiQueryResult, QueryHistoryEntry, QueryAnalysis, SchemaInfo as PlaygroundSchemaInfo } from "./sql-playground/index.js"
+
+// Declarative Access Control Language (DACL)
+export { DaclEngine, PolicyBuilder, allow as daclAllow, deny as daclDeny } from "./dacl/index.js"
+export type { Action as DaclAction, PolicyDefinition, PolicyCondition, PolicyCheckContext, PolicyCheckResult, PolicyTestCase, PolicyTestResult, PolicyAuditEntry, RlsPolicy as DaclRlsPolicy, DaclEngineOptions, PolicyCoverageItem, PolicyCoverageReport } from "./dacl/index.js"
+
+// Incremental View Maintenance (IVM)
+export { IncrementalViewMaintainer, extractDependencies, isIvmEligible, evaluatePredicate } from "./ivm/index.js"
+export type { QueryAstNode, ScanNode, FilterNode, ProjectNode, JoinNode, AggregateNode, SortNode, LimitNode, FilterPredicate, AggregationSpec, Row, DataChange, ViewDelta, RegisteredView, IvmStats } from "./ivm/index.js"
+
+// Multi-Region Active-Active
+export { RegionManager, RegionRouter, mergeVectorClocks, incrementClock, happenedBefore, areConcurrent } from "./multi-region/index.js"
+export type { RegionConfig, RegionManagerOptions, ConflictStrategy, RegionTopology, RegionStatus, ReplicationEvent, VectorClock, ReplicationConflict, ConflictHandler, RegionRoutingDecision, ReplicationStats as MultiRegionReplicationStats } from "./multi-region/index.js"

@@ -14,3 +14,11 @@ export type { TabMessage, TabRole, BroadcastChannelLike } from "./multitab/index
 
 export { PersistentCache, MutationQueue, SyncManager, MemoryOfflineStorage } from "./offline/index.js"
 export type { OfflineStorage, OfflineOptions, PendingMutation, CachedQuery, SyncResult } from "./offline/index.js"
+
+// Optimistic Updates
+export { OptimisticUpdateManager } from "./optimistic/index.js"
+export type { OptimisticUpdate, OptimisticSnapshot, OptimisticManagerOptions, ConflictInfo, ConflictResolver, OptimisticCacheAdapter } from "./optimistic/index.js"
+
+// DevTools Instrumentation
+export { DevToolsInstrumentation } from "./devtools/index.js"
+export type { DevToolsEvent, DevToolsEventType, SubscriptionInfo, MutationInfo, CacheStats, WebSocketStats, PerformanceSnapshot, DevToolsEventHandler, DevToolsOptions, DevToolsSummary } from "./devtools/index.js"
