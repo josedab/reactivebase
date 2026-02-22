@@ -14,6 +14,8 @@ export type { TabMessage, TabRole, BroadcastChannelLike } from "./multitab/index
 
 export { PersistentCache, MutationQueue, SyncManager, MemoryOfflineStorage } from "./offline/index.js"
 export type { OfflineStorage, OfflineOptions, PendingMutation, CachedQuery, SyncResult } from "./offline/index.js"
+export { OfflineSyncEngine, createVectorClock, incrementClock, mergeClock, happensBefore, areConcurrent, clocksEqual } from "./offline/index.js"
+export type { SyncEngineOptions, ConflictStrategy, MergeFunction, VectorClock, SyncStatus, SyncConflict, SyncBatchResult, VersionedValue, DeltaChange } from "./offline/index.js"
 
 // Optimistic Updates
 export { OptimisticUpdateManager } from "./optimistic/index.js"
