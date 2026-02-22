@@ -10,6 +10,8 @@ import { runWizard, generateDependencies, generateConfigFile, generateEnvFile, t
 
 const projectName = process.argv[2]
 const skipWizard = process.argv.includes("--yes") || process.argv.includes("-y")
+const templateArg = process.argv.indexOf("--template")
+const selectedTemplate = templateArg !== -1 && process.argv[templateArg + 1] ? process.argv[templateArg + 1] : null
 
 if (!projectName) {
   console.error("Usage: npx create-reactivebase <project-name>")
@@ -54,6 +56,71 @@ const dirs = [
 
 for (const dir of dirs) {
   mkdirSync(join(projectDir, dir), { recursive: true })
+}
+
+// Handle --template saas
+if (selectedTemplate === "saas") {
+  const { generateSaasTemplate } = await import("./templates/saas.js")
+  const files = generateSaasTemplate(projectName)
+  for (const [filePath, content] of Object.entries(files)) {
+    const fullPath = join(projectDir, filePath)
+    mkdirSync(join(fullPath, ".."), { recursive: true })
+    writeFileSync(fullPath, content)
+  }
+
+  // Also write standard files (package.json, tsconfig, .gitignore)
+  writeFileSync(
+    join(projectDir, "package.json"),
+    JSON.stringify({
+      name: projectName,
+      version: "0.1.0",
+      private: true,
+      type: "module",
+      scripts: {
+        dev: "reactivebase dev",
+        build: "tsc",
+        generate: "reactivebase generate",
+        "migrate:generate": "reactivebase migrate --generate",
+        "migrate:apply": "reactivebase migrate --apply",
+        deploy: "reactivebase deploy",
+      },
+      dependencies: {
+        "@reactivebase/server": "^0.1.0",
+        "@reactivebase/client": "^0.1.0",
+        "@reactivebase/react": "^0.1.0",
+        "@reactivebase/cli": "^0.1.0",
+      },
+      devDependencies: { typescript: "^5.7.0", "@types/node": "^20.0.0" },
+    }, null, 2) + "\n",
+  )
+
+  writeFileSync(join(projectDir, "tsconfig.json"), JSON.stringify({
+    compilerOptions: {
+      target: "ES2022", module: "ESNext", moduleResolution: "bundler",
+      lib: ["ES2022"], strict: true, esModuleInterop: true,
+      skipLibCheck: true, outDir: "./dist", rootDir: "./",
+    },
+    include: ["convex/**/*.ts", "**/*.ts"],
+    exclude: ["node_modules", "dist"],
+  }, null, 2) + "\n")
+
+  writeFileSync(join(projectDir, ".gitignore"), "node_modules/\ndist/\n_generated/\n.env\n*.log\n")
+
+  console.log(`  ✓ Created SaaS template with tenant-aware schema`)
+  console.log(`  ✓ Generated tenants.ts with onboarding, billing, RBAC`)
+  console.log(`  ✓ Generated projects.ts with audit logging`)
+  console.log(`  ✓ Generated reactivebase.config.ts with JWT auth`)
+  console.log(`
+  Next steps:
+
+    cd ${projectName}
+    npm install
+    cp .env.example .env
+    npm run dev
+
+  Happy building your SaaS! 🚀
+`)
+  process.exit(0)
 }
 
 // package.json
