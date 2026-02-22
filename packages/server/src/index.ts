@@ -203,3 +203,145 @@ export type { CloudConfig, CloudProject, CloudPlan } from "./cloud/index.js"
 // Query Builder (for advanced usage)
 export { QueryBuilder } from "./query-builder/index.js"
 export type { BuiltQuery, QueryDependency } from "./query-builder/index.js"
+
+// CRDT Engine
+export {
+  CrdtEngine,
+  CrdtDocumentHandle,
+  CrdtError,
+  generateCrdtTableSQL,
+  buildUpsertDocumentSQL,
+  buildInsertOperationSQL,
+  buildGetDocumentSQL,
+  buildGetOperationsSinceSQL,
+  buildCompactOperationsSQL,
+} from "./crdt/index.js"
+export type {
+  CrdtOperation,
+  CrdtType,
+  CrdtDocument,
+  CrdtEngineOptions,
+  CrdtSnapshot,
+  LwwRegisterOp,
+  GCounterOp,
+  PnCounterOp,
+  OrSetOp,
+  RgaOp,
+} from "./crdt/index.js"
+
+// Declarative Authorization (Zanzibar-style)
+export {
+  AuthzEngine,
+  AuthzError,
+  definePermissions,
+  derived,
+  computed,
+  generateAuthzTableSQL,
+  buildAddRelationSQL,
+  buildRemoveRelationSQL,
+  buildCheckRelationSQL,
+  buildListRelationsSQL,
+  buildListUserPermissionsSQL,
+  permissionToWhereClause,
+} from "./authz/index.js"
+export type {
+  PermissionSchema,
+  ResourceDefinition,
+  PermissionRule,
+  DerivedPermission,
+  ComputedPermission,
+  AuthzCheckContext,
+  AuthzRelationTuple,
+  AuthzEvaluationResult,
+  AuthzEngineOptions,
+  PermissionConfig,
+} from "./authz/index.js"
+
+// Time-Travel Debugging
+export {
+  TimeTravelEngine,
+  generateTimeTravelTableSQL,
+  buildInsertEventSQL,
+  buildGetEventsInRangeSQL,
+  buildGetRowHistorySQL,
+  buildPruneEventsSQL,
+} from "./time-travel/index.js"
+export type {
+  MutationEvent,
+  TimeTravelSnapshot,
+  TimeTravelDiff,
+  DiffEntry,
+  TimeTravelOptions,
+} from "./time-travel/index.js"
+
+// Workflow Orchestration
+export {
+  WorkflowEngine,
+  WorkflowContext,
+  defineWorkflow,
+  WorkflowError,
+  WorkflowStepError,
+  WorkflowWaitingError,
+  WorkflowCancelledError,
+  generateWorkflowTableSQL,
+  buildInsertWorkflowSQL,
+  buildUpdateWorkflowSQL,
+  buildGetPendingWorkflowsSQL,
+  buildGetWaitingWorkflowsSQL,
+} from "./workflow/index.js"
+export type {
+  WorkflowDefinition,
+  WorkflowOptions,
+  WorkflowInstance,
+  WorkflowStatus,
+  StepRecord,
+  StepStatus,
+  StepOptions,
+} from "./workflow/index.js"
+
+// GraphQL Federation
+export {
+  generateFederatedSchema,
+  generateResolverSkeleton,
+  getSubscriptionMappings,
+} from "./api-gen/federation.js"
+export type {
+  FederationOptions,
+  FederatedSchema,
+  SubscriptionMapping,
+} from "./api-gen/federation.js"
+
+// Reactive Materialized Views
+export {
+  MaterializedViewEngine,
+  defineMaterializedView,
+  generateMaterializedViewSQL,
+  generateRefreshSQL,
+  generateDropViewSQL,
+  generateViewIndexSQL,
+  generateUniqueIndexSQL,
+  generateTimeBucketSQL,
+} from "./materialized-views/index.js"
+export type {
+  MaterializedViewDefinition,
+  MaterializedViewState,
+  AggregationDef,
+  RefreshStrategy,
+  TimeBucket,
+} from "./materialized-views/index.js"
+
+// Multi-Database Federation
+export {
+  DatabaseFederation,
+  FederationError as DatabaseFederationError,
+  buildHealthCheckSQL,
+  buildPoolStatsSQL,
+  buildDatabaseInfoSQL,
+} from "./multi-db/index.js"
+export type {
+  DatabaseConfig,
+  FederationConfig,
+  DatabaseInfo,
+  CrossDatabaseQuery,
+  FederatedQueryResult,
+} from "./multi-db/index.js"
