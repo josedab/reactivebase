@@ -1,0 +1,12 @@
+{
+  "name": "reactivebase-saas-dashboard",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "reactivebase dev", "build": "tsc", "generate": "reactivebase generate" },
+  "dependencies": {
+    "@reactivebase/server": "^0.1.0",
+    "@reactivebase/client": "^0.1.0",
+    "@reactivebase/react": "^0.1.0"
+  },
+  "devDependencies": { "typescript": "^5.7.0" }
+}
