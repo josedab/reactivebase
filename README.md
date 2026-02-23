@@ -8,7 +8,17 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
 
-> **17,649 LOC · 30 server modules · 425+ tests · 11 packages · MIT license**
+> **65,698 LOC · 48 server modules · 1,301 tests · 14 packages · MIT license**
+
+---
+
+<!-- BENCHMARK_START -->
+
+### Latest Benchmark Results
+
+*Run `npm run benchmark` or see CI workflow for live results.*
+
+<!-- BENCHMARK_END -->
 
 ---
 
