@@ -9,6 +9,10 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "test": "turbo run test",
+    "test:server": "turbo run test --filter=@reactivebase/server",
+    "test:client": "turbo run test --filter=@reactivebase/client",
+    "test:react": "turbo run test --filter=@reactivebase/react",
+    "test:coverage": "turbo run test:coverage",
     "test:watch": "turbo run test:watch",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
@@ -19,6 +23,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^10.0.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",

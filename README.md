@@ -4,6 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/reactivebase/reactivebase/actions/workflows/ci.yml/badge.svg)](https://github.com/reactivebase/reactivebase/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/reactivebase/reactivebase/branch/main/graph/badge.svg)](https://codecov.io/gh/reactivebase/reactivebase)
 [![npm version](https://img.shields.io/npm/v/@reactivebase/server.svg)](https://www.npmjs.com/package/@reactivebase/server)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
