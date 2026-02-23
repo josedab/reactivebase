@@ -112,7 +112,7 @@ export class FlyioClient {
       const result = await this.request<Record<string, unknown>>("GET", `/apps/${name}`)
       return {
         name: String(result.name ?? name),
-        organization: String(result.organization?.slug ?? this.orgSlug),
+        organization: String((result.organization as Record<string, unknown>)?.slug ?? this.orgSlug),
         status: String(result.status ?? "unknown"),
         hostname: `${name}.fly.dev`,
         createdAt: String(result.created_at ?? ""),
@@ -142,7 +142,10 @@ export class FlyioClient {
       guest: { cpu_kind: "shared", cpus: 1, memory_mb: 512 },
     }
 
-    const result = await this.request<Record<string, unknown>>("POST", `/apps/${appName}/machines`, { config, region: options.region ?? "iad" })
+    const result = await this.request<Record<string, unknown>>("POST", `/apps/${appName}/machines`, {
+      config,
+      region: options.region ?? "iad",
+    })
 
     return {
       id: String(result.id ?? `mach_${Date.now()}`),
@@ -182,7 +185,11 @@ export class FlyioClient {
 
   // ─── Postgres ───────────────────────────────────────────────────────────
 
-  async createPostgres(appName: string, region: string = "iad", volumeSize: number = 10): Promise<FlyioPostgresCluster> {
+  async createPostgres(
+    appName: string,
+    region: string = "iad",
+    volumeSize: number = 10,
+  ): Promise<FlyioPostgresCluster> {
     // Fly.io Postgres is created via flyctl, but we simulate the expected result
     return {
       appName: `${appName}-db`,
@@ -238,7 +245,7 @@ export class FlyioClient {
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
     const url = `${this.apiBase}${path}`
     const headers: Record<string, string> = {
-      "Authorization": `Bearer ${this.token}`,
+      Authorization: `Bearer ${this.token}`,
       "Content-Type": "application/json",
     }
 

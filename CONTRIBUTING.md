@@ -21,7 +21,7 @@ npm run test
 
 ## Project Architecture
 
-ReactiveBase is a Turborepo monorepo with 11 packages:
+ReactiveBase is a Turborepo monorepo with 15 packages:
 
 ```
 packages/
@@ -99,6 +99,7 @@ packages/
 ## Good First Issues
 
 Look for issues labeled `good first issue` on GitHub. These are typically:
+
 - Adding a new validator type to `v.*`
 - Adding a test for an existing module
 - Improving error messages

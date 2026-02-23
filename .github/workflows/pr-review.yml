@@ -47,9 +47,28 @@ jobs:
         with:
           script: |
             const status = '${{ job.status }}' === 'success' ? '✅' : '❌';
-            await github.rest.issues.createComment({
+            const body = `${status} **Automated Review**: Build and tests ${'${{ job.status }}'}\n\nChecklist:\n- [x] TypeScript compiles\n- [x] All tests pass\n- [x] Exports verified`;
+
+            // Find existing comment to update instead of creating duplicates
+            const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `${status} **Automated Review**: Build and tests ${'${{ job.status }}'}\n\nChecklist:\n- [x] TypeScript compiles\n- [x] All tests pass\n- [x] Exports verified`
             });
+            const existing = comments.find(c => c.body.includes('**Automated Review**'));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

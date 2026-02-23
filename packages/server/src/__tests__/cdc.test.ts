@@ -4,10 +4,10 @@ import { defineSchema, defineTable, v } from "../schema/index.js"
 import type { ChangeEvent } from "../reactivity/index.js"
 
 function createMockClient(): PgListenClient & { emit: (event: string, data: unknown) => void } {
-  const handlers = new Map<string, Function[]>()
+  const handlers = new Map<string, Array<(...args: unknown[]) => void>>()
   return {
     async query() {},
-    on(event: string, handler: Function) {
+    on(event: string, handler: (...args: unknown[]) => void) {
       if (!handlers.has(event)) handlers.set(event, [])
       handlers.get(event)!.push(handler)
     },
@@ -34,7 +34,9 @@ describe("CdcListener", () => {
     const listener = new CdcListener({ channel: "test_ch" })
     const received: ChangeEvent[][] = []
 
-    listener.onChanges((events) => { received.push(events) })
+    listener.onChanges((events) => {
+      received.push(events)
+    })
     await listener.start(client)
 
     client.emit("notification", {
@@ -51,7 +53,9 @@ describe("CdcListener", () => {
     const listener = new CdcListener({ channel: "my_channel" })
     const received: ChangeEvent[][] = []
 
-    listener.onChanges((events) => { received.push(events) })
+    listener.onChanges((events) => {
+      received.push(events)
+    })
     await listener.start(client)
 
     client.emit("notification", {
@@ -80,7 +84,9 @@ describe("CdcListener", () => {
 describe("ChangeEventBuffer", () => {
   it("batches events and flushes", async () => {
     const received: ChangeEvent[][] = []
-    const buffer = new ChangeEventBuffer((events) => { received.push([...events]) }, 10)
+    const buffer = new ChangeEventBuffer((events) => {
+      received.push([...events])
+    }, 10)
 
     buffer.push({ table: "tasks", operation: "insert" })
     buffer.push({ table: "tasks", operation: "update" })
@@ -98,7 +104,9 @@ describe("ChangeEventBuffer", () => {
 
   it("flushes immediately when stop is called", async () => {
     const received: ChangeEvent[][] = []
-    const buffer = new ChangeEventBuffer((events) => { received.push([...events]) }, 10000)
+    const buffer = new ChangeEventBuffer((events) => {
+      received.push([...events])
+    }, 10000)
 
     buffer.push({ table: "tasks", operation: "insert" })
     await buffer.stop()

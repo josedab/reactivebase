@@ -3,8 +3,9 @@
 ## Pre-Publish Verification
 
 ### Code Quality
-- [x] All 425 tests pass (`npm run test`)
-- [x] All 12 packages build (`npm run build`)
+
+- [x] All 1,515 tests pass (`npm run test`)
+- [x] All 15 packages build (`npm run build`)
 - [x] TypeScript strict mode, zero type errors
 - [x] No console.log in production code (only in dev/debug paths)
 - [x] All package.json have `publishConfig: { access: "public" }`
@@ -12,6 +13,7 @@
 - [x] All package.json have `repository` field
 
 ### Documentation
+
 - [x] README.md with badges, quickstart, architecture diagram
 - [x] CONTRIBUTING.md with architecture guide, coding conventions
 - [x] SECURITY.md with vulnerability reporting process
@@ -22,10 +24,12 @@
 - [x] .github/PULL_REQUEST_TEMPLATE.md
 
 ### CI/CD
+
 - [x] .github/workflows/ci.yml (Node 20/22 matrix)
 - [x] .github/workflows/release.yml (npm publish on tag)
 
 ### Website
+
 - [x] Docusaurus site builds (`cd website && npm run build`)
 - [x] 9 documentation pages
 - [x] 3 comparison guides (Convex, Supabase, Firebase)
@@ -34,10 +38,12 @@
 - [x] Cloud pricing page
 
 ### Examples
+
 - [x] basic-todo example app
 - [x] collaborative-board demo app
 
 ### Deployment
+
 - [x] Dockerfile
 - [x] docker-compose.yml (Postgres + Redis + ReactiveBase)
 - [x] fly.toml
@@ -82,6 +88,7 @@ done
 ## Post-Publish Actions
 
 ### Day 1
+
 - [ ] Verify all npm packages are accessible
 - [ ] Test `npx create-reactivebase test-app` works
 - [ ] Test `npx @reactivebase/migrate-from-prisma` works
@@ -90,6 +97,7 @@ done
 - [ ] Tweet announcement thread
 
 ### Week 1
+
 - [ ] Submit to DevHunt
 - [ ] Submit to Product Hunt
 - [ ] Post on dev.to and Hashnode
@@ -97,6 +105,7 @@ done
 - [ ] Monitor GitHub issues and respond within 24h
 
 ### Month 1
+
 - [ ] Deploy live demo on Fly.io
 - [ ] Record first tutorial video
 - [ ] Write "vs Convex" detailed comparison blog post

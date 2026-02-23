@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
 
-> **65,698 LOC · 48 server modules · 1,301 tests · 14 packages · MIT license**
+> **65,698 LOC · 48 server modules · 1,515 tests · 15 packages · MIT license**
 
 ---
 
@@ -16,7 +16,7 @@
 
 ### Latest Benchmark Results
 
-*Run `npm run benchmark` or see CI workflow for live results.*
+_Run `npm run benchmark` or see CI workflow for live results._
 
 <!-- BENCHMARK_END -->
 
@@ -77,9 +77,7 @@ import { query, mutation } from "@reactivebase/server"
 
 // Reactive query — clients auto-update when data changes
 export const listTasks = query(async (ctx, { userId }: { userId: string }) => {
-  return ctx.db.tasks
-    .where({ assigneeId: userId, done: false })
-    .orderBy("priority", "desc")
+  return ctx.db.tasks.where({ assigneeId: userId, done: false }).orderBy("priority", "desc")
 })
 
 // Mutation — runs in a serializable transaction
@@ -103,7 +101,7 @@ function TaskList({ userId }: { userId: string }) {
 
   return (
     <ul>
-      {tasks.map(task => (
+      {tasks.map((task) => (
         <li key={task.id}>
           {task.title}
           <button onClick={() => completeTask({ taskId: task.id })}>Done</button>
@@ -133,16 +131,23 @@ ReactiveBase Server
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
-| `@reactivebase/server` | Server framework: queries, mutations, actions, reactivity engine, scheduler |
-| `@reactivebase/client` | Framework-agnostic client: subscriptions, cache, WebSocket transport |
-| `@reactivebase/react` | React hooks: `useQuery`, `useMutation`, `useAction` |
-| `@reactivebase/nextjs` | Next.js integration: `preloadQuery`, `usePreloadedQuery`, App Router support |
-| `@reactivebase/vue` | Vue 3 composables: `useQuery`, `useMutation`, `useAction` |
-| `@reactivebase/svelte` | Svelte stores: `queryStore`, `createMutation`, `createAction` |
-| `@reactivebase/cli` | CLI tooling: `dev`, `generate`, `migrate` |
-| `create-reactivebase` | Project scaffolding |
+| Package                             | Description                                                                  |
+| ----------------------------------- | ---------------------------------------------------------------------------- |
+| `@reactivebase/server`              | Server framework: queries, mutations, actions, reactivity engine, scheduler  |
+| `@reactivebase/client`              | Framework-agnostic client: subscriptions, cache, WebSocket transport         |
+| `@reactivebase/react`               | React hooks: `useQuery`, `useMutation`, `useAction`                          |
+| `@reactivebase/nextjs`              | Next.js integration: `preloadQuery`, `usePreloadedQuery`, App Router support |
+| `@reactivebase/vue`                 | Vue 3 composables: `useQuery`, `useMutation`, `useAction`                    |
+| `@reactivebase/svelte`              | Svelte stores: `queryStore`, `createMutation`, `createAction`                |
+| `@reactivebase/cli`                 | CLI tooling: `dev`, `generate`, `migrate`                                    |
+| `@reactivebase/edge`                | Edge runtime adapter: query prefetching for edge workers                     |
+| `@reactivebase/graphql`             | GraphQL subscriptions gateway for Apollo, urql, or any GraphQL client        |
+| `@reactivebase/react-native`        | React Native SDK: offline-first reactive queries for mobile                  |
+| `@reactivebase/testing`             | Testing utilities: in-memory server, mock database, test helpers             |
+| `@reactivebase/migrate-from-prisma` | Migrate your Prisma schema to ReactiveBase with one command                  |
+| `reactivebase-vscode`               | VS Code extension: type generation, schema validation, live diagnostics      |
+| `reactivebase`                      | Meta package: imports server + client for quick setup                        |
+| `create-reactivebase`               | Project scaffolding                                                          |
 
 ## Core Concepts
 
@@ -188,19 +193,19 @@ export const sendWelcomeEmail = action(async (ctx, { userId }: { userId: string 
 
 ## Schema Types
 
-| Validator | Postgres Type | TypeScript Type |
-|-----------|---------------|-----------------|
-| `v.string()` | `text` | `string` |
-| `v.number()` | `double precision` | `number` |
-| `v.integer()` | `integer` | `number` |
-| `v.boolean()` | `boolean` | `boolean` |
-| `v.timestamp()` | `timestamptz` | `Date` |
-| `v.json()` | `jsonb` | `T` |
-| `v.array(v.string())` | `text[]` | `string[]` |
-| `v.enum("a", "b")` | `text + CHECK` | `"a" \| "b"` |
-| `v.id("table")` | `text` (FK) | `string` |
-| `v.optional(v.T())` | nullable | `T \| undefined` |
-| `v.custom<T>(pgType)` | custom | `T` |
+| Validator             | Postgres Type      | TypeScript Type  |
+| --------------------- | ------------------ | ---------------- |
+| `v.string()`          | `text`             | `string`         |
+| `v.number()`          | `double precision` | `number`         |
+| `v.integer()`         | `integer`          | `number`         |
+| `v.boolean()`         | `boolean`          | `boolean`        |
+| `v.timestamp()`       | `timestamptz`      | `Date`           |
+| `v.json()`            | `jsonb`            | `T`              |
+| `v.array(v.string())` | `text[]`           | `string[]`       |
+| `v.enum("a", "b")`    | `text + CHECK`     | `"a" \| "b"`     |
+| `v.id("table")`       | `text` (FK)        | `string`         |
+| `v.optional(v.T())`   | nullable           | `T \| undefined` |
+| `v.custom<T>(pgType)` | custom             | `T`              |
 
 ## Query Builder
 
@@ -214,9 +219,7 @@ ctx.db.tasks
   .limit(20)
 
 // Joins
-ctx.db.tasks
-  .join("users", "assigneeId")
-  .select("tasks.*", "users.name as assigneeName")
+ctx.db.tasks.join("users", "assigneeId").select("tasks.*", "users.name as assigneeName")
 
 // Raw SQL escape hatch
 ctx.db.raw<Task[]>(`SELECT * FROM tasks WHERE title ILIKE $1`, ["%bug%"])
@@ -260,23 +263,25 @@ export default defineConfig({
 ## Infrastructure Requirements
 
 **Minimum (single server):**
+
 - PostgreSQL 14+
 - Node.js 20+
 
 **Multi-server:**
+
 - Add Redis 7+ for cross-server reactivity via pub/sub
 
 ## Comparison
 
-| Feature | ReactiveBase | Convex | Supabase | Firebase |
-|---------|-------------|--------|----------|----------|
-| Reactive queries | ✅ Core | ✅ Core | ⚠️ Add-on | ✅ Firestore |
-| Auto transactions | ✅ Serializable | ✅ | ❌ Manual | ❌ Limited |
-| Background jobs | ✅ Built-in | ✅ | ❌ Separate | ✅ Functions |
-| Self-hosted | ✅ Primary | ❌ | ✅ | ❌ |
-| Postgres | ✅ Native | ❌ Proprietary | ✅ | ❌ Proprietary |
-| Raw SQL | ✅ | ❌ | ✅ | ❌ |
-| Vendor lock-in | None | Total | Low | Total |
+| Feature           | ReactiveBase    | Convex         | Supabase    | Firebase       |
+| ----------------- | --------------- | -------------- | ----------- | -------------- |
+| Reactive queries  | ✅ Core         | ✅ Core        | ⚠️ Add-on   | ✅ Firestore   |
+| Auto transactions | ✅ Serializable | ✅             | ❌ Manual   | ❌ Limited     |
+| Background jobs   | ✅ Built-in     | ✅             | ❌ Separate | ✅ Functions   |
+| Self-hosted       | ✅ Primary      | ❌             | ✅          | ❌             |
+| Postgres          | ✅ Native       | ❌ Proprietary | ✅          | ❌ Proprietary |
+| Raw SQL           | ✅              | ❌             | ✅          | ❌             |
+| Vendor lock-in    | None            | Total          | Low         | Total          |
 
 ## Development
 

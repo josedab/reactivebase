@@ -66,7 +66,11 @@ describe("ServerlessRuntime", () => {
 
   describe("connection pooling", () => {
     it("generates Neon pooler connection string", () => {
-      const connStr = runtime.getConnectionString()
+      const neonRuntime = new ServerlessRuntime({
+        databaseUrl: "postgresql://user:pass@ep-cool-rain-123456.us-east-1.neon.tech:5432/test",
+        pooler: "neon",
+      })
+      const connStr = neonRuntime.getConnectionString()
       expect(connStr).toContain("-pooler.neon.tech")
       expect(connStr).toContain("sslmode=require")
     })

@@ -165,7 +165,7 @@ export class ConsistentHashRing {
 
     const nodes: string[] = []
     const hash = this.hash(key)
-    let idx = this.findStartIndex(hash)
+    const idx = this.findStartIndex(hash)
 
     for (let i = 0; i < this.sortedPositions.length && nodes.length < count; i++) {
       const position = this.sortedPositions[(idx + i) % this.sortedPositions.length]
@@ -258,7 +258,13 @@ export class ClusterManager {
 
   // ─── Node Management ─────────────────────────────────────────────────────
 
-  addNode(node: { id: string; host: string; port: number; weight?: number; metadata?: Record<string, unknown> }): ClusterNode {
+  addNode(node: {
+    id: string
+    host: string
+    port: number
+    weight?: number
+    metadata?: Record<string, unknown>
+  }): ClusterNode {
     const clusterNode: ClusterNode = {
       id: node.id,
       host: node.host,

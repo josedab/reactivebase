@@ -75,10 +75,7 @@ export class BloomFilter {
 
   constructor(expectedItems: number, falsePositiveRate: number = 0.01) {
     // Calculate optimal size and hash count
-    this.size = Math.max(
-      64,
-      Math.ceil((-expectedItems * Math.log(falsePositiveRate)) / (Math.LN2 * Math.LN2)),
-    )
+    this.size = Math.max(64, Math.ceil((-expectedItems * Math.log(falsePositiveRate)) / (Math.LN2 * Math.LN2)))
     this.hashCount = Math.max(1, Math.round((this.size / expectedItems) * Math.LN2))
     this.bits = new Uint8Array(Math.ceil(this.size / 8))
   }
@@ -109,8 +106,8 @@ export class BloomFilter {
 
   private getPositions(value: string): number[] {
     const positions: number[] = []
-    let h1 = this.fnv1a(value)
-    let h2 = this.murmur3Like(value)
+    const h1 = this.fnv1a(value)
+    const h2 = this.murmur3Like(value)
 
     for (let i = 0; i < this.hashCount; i++) {
       positions.push(Math.abs((h1 + i * h2) % this.size))
@@ -173,19 +170,14 @@ ON CONFLICT (subscription_id, table_name) DO UPDATE SET
   }
 }
 
-export function buildDeleteRowTrackingSQL(
-  subscriptionId: string,
-): { sql: string; params: unknown[] } {
+export function buildDeleteRowTrackingSQL(subscriptionId: string): { sql: string; params: unknown[] } {
   return {
     sql: `DELETE FROM _reactivebase_row_tracking WHERE subscription_id = $1`,
     params: [subscriptionId],
   }
 }
 
-export function buildGetAffectedSubscriptionsSQL(
-  table: string,
-  rowIds: string[],
-): { sql: string; params: unknown[] } {
+export function buildGetAffectedSubscriptionsSQL(table: string, rowIds: string[]): { sql: string; params: unknown[] } {
   return {
     sql: `SELECT subscription_id FROM _reactivebase_row_tracking
 WHERE table_name = $1 AND (mode = 'fallback' OR row_ids && $2)`,
@@ -231,10 +223,7 @@ export class RowLevelTracker {
       mode = "fallback"
       trackedRows = new Set<string>()
       this.options.onFallback(subscriptionId, rowIds.length)
-    } else if (
-      this.options.useBloomFilters &&
-      rowIds.length > this.options.maxRowsPerSubscription / 2
-    ) {
+    } else if (this.options.useBloomFilters && rowIds.length > this.options.maxRowsPerSubscription / 2) {
       // Large row set — use bloom filter
       mode = "bloom"
       const bloom = new BloomFilter(rowIds.length, this.options.bloomFilterFpRate)

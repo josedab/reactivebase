@@ -52,7 +52,9 @@ export interface MutationQueueOptions {
   conflictResolver?: ConflictResolver
 }
 
-const DEFAULT_QUEUE_OPTIONS: Required<Omit<MutationQueueOptions, "conflictResolver">> & { conflictResolver?: ConflictResolver } = {
+const DEFAULT_QUEUE_OPTIONS: Required<Omit<MutationQueueOptions, "conflictResolver">> & {
+  conflictResolver?: ConflictResolver
+} = {
   maxRetries: 3,
   conflictStrategy: "last-write-wins",
   conflictResolver: undefined,
@@ -348,9 +350,7 @@ export class SyncEngine {
    * Replay pending mutations to the server.
    * Called when connection is re-established.
    */
-  async replayMutations(
-    executeMutation: (name: string, args: unknown) => Promise<unknown>,
-  ): Promise<number> {
+  async replayMutations(executeMutation: (name: string, args: unknown) => Promise<unknown>): Promise<number> {
     if (this.syncInProgress) return 0
     this.syncInProgress = true
     this.events.onSyncStart?.()
@@ -359,9 +359,11 @@ export class SyncEngine {
 
     try {
       let batch = 0
+      const attempted = new Set<string>()
       while (batch < this.syncBatchSize) {
         const mutation = await this.mutationQueue.dequeue()
-        if (!mutation) break
+        if (!mutation || attempted.has(mutation.id)) break
+        attempted.add(mutation.id)
 
         try {
           await executeMutation(mutation.mutationName, mutation.args)
@@ -425,10 +427,7 @@ export class SyncEngine {
     }
 
     // Schedule next attempt with exponential backoff
-    const delay = Math.min(
-      this.reconnectInterval * Math.pow(1.5, this.reconnectAttempts - 1),
-      30_000,
-    )
+    const delay = Math.min(this.reconnectInterval * Math.pow(1.5, this.reconnectAttempts - 1), 30_000)
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null

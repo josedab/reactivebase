@@ -272,6 +272,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
+    "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "benchmark": "vitest run src/__tests__/benchmark.test.ts",
