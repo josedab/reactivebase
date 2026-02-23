@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReactiveBase Terraform Resource Schemas",
+  "description": "Resource type definitions for the ReactiveBase Terraform provider",
+  "resources": {
+    "reactivebase_project": {
+      "description": "Manages a ReactiveBase Cloud project",
+      "attributes": {
+        "id": { "type": "string", "computed": true, "description": "Project ID" },
+        "name": { "type": "string", "required": true, "description": "Project name" },
+        "plan": { "type": "string", "required": true, "enum": ["free", "starter", "pro", "enterprise"], "description": "Billing plan" },
+        "region": { "type": "string", "required": true, "description": "Deployment region" },
+        "status": { "type": "string", "computed": true, "description": "Project status" },
+        "database_url": { "type": "string", "computed": true, "sensitive": true, "description": "PostgreSQL connection string" },
+        "url": { "type": "string", "computed": true, "description": "Project URL" }
+      }
+    },
+    "reactivebase_environment": {
+      "description": "Manages a project environment (staging, production, preview)",
+      "attributes": {
+        "id": { "type": "string", "computed": true },
+        "project_id": { "type": "string", "required": true, "description": "Parent project ID" },
+        "name": { "type": "string", "required": true },
+        "is_production": { "type": "boolean", "optional": true, "default": false },
+        "status": { "type": "string", "computed": true },
+        "url": { "type": "string", "computed": true },
+        "database_url": { "type": "string", "computed": true, "sensitive": true },
+        "variables": { "type": "map", "optional": true, "description": "Environment variables" }
+      }
+    },
+    "reactivebase_api_key": {
+      "description": "Manages an API key for a project",
+      "attributes": {
+        "id": { "type": "string", "computed": true },
+        "project_id": { "type": "string", "required": true },
+        "name": { "type": "string", "required": true },
+        "permissions": { "type": "list", "required": true, "elem": { "type": "string", "enum": ["read", "write", "admin", "subscribe"] } },
+        "key": { "type": "string", "computed": true, "sensitive": true },
+        "key_prefix": { "type": "string", "computed": true }
+      }
+    },
+    "reactivebase_custom_domain": {
+      "description": "Configures a custom domain for an environment",
+      "attributes": {
+        "domain": { "type": "string", "required": true },
+        "project_id": { "type": "string", "required": true },
+        "environment_id": { "type": "string", "required": true },
+        "status": { "type": "string", "computed": true },
+        "ssl_status": { "type": "string", "computed": true },
+        "verification_record": { "type": "object", "computed": true }
+      }
+    }
+  }
+}

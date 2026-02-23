@@ -1,0 +1,99 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "type": "datasource",
+      "pluginId": "prometheus"
+    }
+  ],
+  "description": "ReactiveBase client connection metrics — WebSocket health, subscription lifecycle, cache performance",
+  "editable": true,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 200,
+      "title": "Client Connections",
+      "type": "row"
+    },
+    {
+      "id": 21,
+      "title": "WebSocket Connections by State",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 1, "w": 12, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "targets": [
+        { "expr": "reactivebase_ws_connections_active", "legendFormat": "Active" },
+        { "expr": "rate(reactivebase_ws_connections_opened_total[5m])", "legendFormat": "Opened/s" },
+        { "expr": "rate(reactivebase_ws_connections_closed_total[5m])", "legendFormat": "Closed/s" }
+      ]
+    },
+    {
+      "id": 22,
+      "title": "Messages per Second",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 1, "w": 12, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": { "defaults": { "unit": "msg/s" } },
+      "targets": [
+        { "expr": "rate(reactivebase_ws_messages_sent_total[5m])", "legendFormat": "Sent/s" },
+        { "expr": "rate(reactivebase_ws_messages_received_total[5m])", "legendFormat": "Received/s" }
+      ]
+    },
+    {
+      "id": 23,
+      "title": "Subscription Lifecycle",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 9, "w": 12, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "targets": [
+        { "expr": "rate(reactivebase_subscriptions_created_total[5m])", "legendFormat": "Created/s" },
+        { "expr": "rate(reactivebase_subscriptions_removed_total[5m])", "legendFormat": "Removed/s" },
+        { "expr": "reactivebase_subscriptions_active", "legendFormat": "Active" }
+      ]
+    },
+    {
+      "id": 24,
+      "title": "Subscriptions per Connection",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 9, "w": 12, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "targets": [
+        { "expr": "reactivebase_subscriptions_active / (reactivebase_ws_connections_active + 0.001)", "legendFormat": "Avg Subs/Connection" }
+      ]
+    },
+    {
+      "id": 25,
+      "title": "Update Push Latency",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 17, "w": 12, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": { "defaults": { "unit": "ms" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, rate(reactivebase_update_push_duration_ms_bucket[5m]))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.99, rate(reactivebase_update_push_duration_ms_bucket[5m]))", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "id": 26,
+      "title": "Bandwidth",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 17, "w": 12, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": { "defaults": { "unit": "Bps" } },
+      "targets": [
+        { "expr": "rate(reactivebase_ws_bytes_sent_total[5m])", "legendFormat": "Sent" },
+        { "expr": "rate(reactivebase_ws_bytes_received_total[5m])", "legendFormat": "Received" }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["reactivebase", "clients"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "ReactiveBase — Client Connections",
+  "uid": "reactivebase-clients",
+  "version": 1
+}

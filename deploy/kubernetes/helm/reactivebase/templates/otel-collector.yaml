@@ -1,0 +1,81 @@
+{{- if .Values.otelCollector.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "reactivebase.fullname" . }}-otel-config
+  labels:
+    {{- include "reactivebase.labels" . | nindent 4 }}
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: "reactivebase"
+              scrape_interval: {{ .Values.otelCollector.scrapeInterval | default "15s" }}
+              static_configs:
+                - targets: ["localhost:{{ .Values.config.port }}"]
+
+    processors:
+      batch:
+        timeout: 10s
+        send_batch_size: 1024
+      memory_limiter:
+        check_interval: 5s
+        limit_mib: 256
+      resource:
+        attributes:
+          - key: service.name
+            value: reactivebase
+            action: upsert
+          - key: service.version
+            value: {{ .Chart.AppVersion | quote }}
+            action: upsert
+
+    exporters:
+      {{- if .Values.otelCollector.exporters.prometheus.enabled }}
+      prometheus:
+        endpoint: "0.0.0.0:8889"
+        namespace: reactivebase
+      {{- end }}
+      {{- if .Values.otelCollector.exporters.otlpHttp.enabled }}
+      otlphttp:
+        endpoint: {{ .Values.otelCollector.exporters.otlpHttp.endpoint | quote }}
+        {{- if .Values.otelCollector.exporters.otlpHttp.headers }}
+        headers:
+          {{- range $key, $value := .Values.otelCollector.exporters.otlpHttp.headers }}
+          {{ $key }}: {{ $value | quote }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+      logging:
+        loglevel: warn
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource]
+          exporters:
+            - logging
+            {{- if .Values.otelCollector.exporters.otlpHttp.enabled }}
+            - otlphttp
+            {{- end }}
+        metrics:
+          receivers: [otlp, prometheus]
+          processors: [memory_limiter, batch, resource]
+          exporters:
+            - logging
+            {{- if .Values.otelCollector.exporters.prometheus.enabled }}
+            - prometheus
+            {{- end }}
+            {{- if .Values.otelCollector.exporters.otlpHttp.enabled }}
+            - otlphttp
+            {{- end }}
+{{- end }}

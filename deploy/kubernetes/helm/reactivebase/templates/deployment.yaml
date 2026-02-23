@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "reactivebase.fullname" . }}
+  labels:
+    {{- include "reactivebase.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "reactivebase.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "reactivebase.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ .Values.serviceAccount.name | default (include "reactivebase.fullname" .) }}
+      {{- end }}
+      containers:
+        - name: reactivebase
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.config.port }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: {{ .Values.config.port | quote }}
+            - name: DATABASE_URL
+              value: {{ include "reactivebase.databaseUrl" . | quote }}
+            {{- if .Values.redis.enabled }}
+            - name: REDIS_URL
+              value: {{ include "reactivebase.redisUrl" . | quote }}
+            {{- end }}
+            - name: LOG_LEVEL
+              value: {{ .Values.config.logLevel | quote }}
+            - name: NODE_OPTIONS
+              value: {{ .Values.config.nodeOptions | quote }}
+            {{- if .Values.config.auth.jwtIssuer }}
+            - name: JWT_ISSUER
+              value: {{ .Values.config.auth.jwtIssuer | quote }}
+            {{- end }}
+            {{- if .Values.config.auth.jwtAudience }}
+            - name: JWT_AUDIENCE
+              value: {{ .Values.config.auth.jwtAudience | quote }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.health.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.health.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- if .Values.pgbouncer.enabled }}
+        - name: pgbouncer
+          image: "{{ .Values.pgbouncer.image.repository }}:{{ .Values.pgbouncer.image.tag }}"
+          ports:
+            - name: pgbouncer
+              containerPort: 6432
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              value: {{ include "reactivebase.databaseUrl" . | quote }}
+            - name: POOL_MODE
+              value: "transaction"
+            - name: DEFAULT_POOL_SIZE
+              value: {{ .Values.pgbouncer.poolSize | quote }}
+            - name: MAX_CLIENT_CONN
+              value: {{ .Values.pgbouncer.maxClientConn | quote }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.extraVolumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

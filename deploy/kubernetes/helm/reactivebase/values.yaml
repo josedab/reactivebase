@@ -1,0 +1,187 @@
+# ReactiveBase Helm Chart — Default Values
+# Override these in your values.yaml or with --set flags
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/reactivebase/reactivebase
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 4000
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: reactivebase.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  # Custom metric: scale based on active subscription count
+  customMetrics:
+    - type: Pods
+      pods:
+        metric:
+          name: reactivebase_subscriptions_active
+        target:
+          type: AverageValue
+          averageValue: "5000"
+
+# PostgreSQL (via Bitnami subchart)
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: ""  # Set via --set or secret
+    database: reactivebase
+  primary:
+    persistence:
+      size: 10Gi
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+# Redis (via Bitnami subchart)
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+  master:
+    persistence:
+      size: 1Gi
+
+# PgBouncer connection pooling sidecar
+pgbouncer:
+  enabled: true
+  poolSize: 20
+  maxClientConn: 200
+  image:
+    repository: edoburu/pgbouncer
+    tag: "1.22.0"
+
+# ReactiveBase server config
+config:
+  port: 4000
+  logLevel: "info"
+  # Database URL (auto-configured if postgresql.enabled)
+  databaseUrl: ""
+  # Redis URL (auto-configured if redis.enabled)
+  redisUrl: ""
+  # Auth configuration
+  auth:
+    jwtIssuer: ""
+    jwtAudience: ""
+  # Node.js options
+  nodeOptions: "--max-old-space-size=384"
+
+# Health checks
+health:
+  livenessProbe:
+    httpGet:
+      path: /api/v1/health
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /api/v1/health
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 3
+
+# Prometheus monitoring
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  path: /metrics
+  labels: {}
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Migration job (runs before deployment)
+migrations:
+  enabled: true
+  command: ["npx", "reactivebase", "migrate", "--apply"]
+
+# Service account
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# Pod annotations and labels
+podAnnotations: {}
+podLabels: {}
+
+# Node selection
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Extra environment variables
+extraEnv: []
+
+# Extra volumes and volume mounts
+extraVolumes: []
+extraVolumeMounts: []
+
+# OpenTelemetry Collector sidecar
+otelCollector:
+  enabled: false
+  image:
+    repository: otel/opentelemetry-collector-contrib
+    tag: "0.96.0"
+  scrapeInterval: "15s"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  exporters:
+    prometheus:
+      enabled: true
+    otlpHttp:
+      enabled: false
+      endpoint: ""
+      headers: {}
+    # Vendor-specific shortcuts:
+    # grafanaCloud:
+    #   endpoint: "https://otlp-gateway-prod-us-east-0.grafana.net/otlp"
+    #   headers:
+    #     Authorization: "Basic <base64>"
+    # datadog:
+    #   endpoint: "https://http-intake.logs.datadoghq.com"
+    #   headers:
+    #     DD-API-KEY: "<key>"

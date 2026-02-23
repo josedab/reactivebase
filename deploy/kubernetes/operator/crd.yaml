@@ -1,0 +1,136 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: reactivebaseclusters.reactivebase.dev
+spec:
+  group: reactivebase.dev
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: ["replicas"]
+              properties:
+                replicas:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 2
+                image:
+                  type: string
+                  default: "ghcr.io/reactivebase/reactivebase:0.1.0"
+                postgres:
+                  type: object
+                  properties:
+                    version:
+                      type: string
+                      default: "16"
+                    storage:
+                      type: string
+                      default: "10Gi"
+                    connectionPoolSize:
+                      type: integer
+                      default: 20
+                redis:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: true
+                    storage:
+                      type: string
+                      default: "1Gi"
+                scaling:
+                  type: object
+                  properties:
+                    minReplicas:
+                      type: integer
+                      default: 2
+                    maxReplicas:
+                      type: integer
+                      default: 10
+                    targetSubscriptions:
+                      type: integer
+                      description: "Target subscriptions per pod for auto-scaling"
+                      default: 5000
+                    targetCPU:
+                      type: integer
+                      default: 70
+                migrations:
+                  type: object
+                  properties:
+                    autoApply:
+                      type: boolean
+                      default: true
+                    beforeDeployment:
+                      type: boolean
+                      default: true
+                monitoring:
+                  type: object
+                  properties:
+                    prometheus:
+                      type: boolean
+                      default: true
+                    metricsPath:
+                      type: string
+                      default: "/metrics"
+                    scrapeInterval:
+                      type: string
+                      default: "30s"
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum: ["Pending", "Provisioning", "Running", "Scaling", "Migrating", "Error"]
+                readyReplicas:
+                  type: integer
+                totalSubscriptions:
+                  type: integer
+                databaseStatus:
+                  type: string
+                  enum: ["Provisioning", "Ready", "Error"]
+                lastMigration:
+                  type: string
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Ready
+          type: integer
+          jsonPath: .status.readyReplicas
+        - name: Subscriptions
+          type: integer
+          jsonPath: .status.totalSubscriptions
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+  scope: Namespaced
+  names:
+    plural: reactivebaseclusters
+    singular: reactivebasecluster
+    kind: ReactiveBaseCluster
+    shortNames:
+      - rbc

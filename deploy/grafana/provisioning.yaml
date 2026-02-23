@@ -1,0 +1,16 @@
+# Grafana provisioning config for ReactiveBase dashboards
+# Copy this file to /etc/grafana/provisioning/dashboards/reactivebase.yaml
+
+apiVersion: 1
+
+providers:
+  - name: "ReactiveBase"
+    orgId: 1
+    folder: "ReactiveBase"
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards/reactivebase
+      foldersFromFilesStructure: false
