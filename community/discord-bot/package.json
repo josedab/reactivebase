@@ -1,0 +1,8 @@
+{
+  "name": "reactivebase-discord-bot",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "tsx src/faq-bot.ts", "test": "vitest run" },
+  "dependencies": {},
+  "devDependencies": { "typescript": "^5.7.0", "tsx": "^4.0.0", "vitest": "^3.0.0" }
+}
