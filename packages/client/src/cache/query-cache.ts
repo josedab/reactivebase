@@ -92,10 +92,7 @@ export class QueryCache {
    * Apply an optimistic update to a subscription's cache.
    * Returns a rollback function to revert the change.
    */
-  applyOptimisticUpdate(
-    subscriptionId: string,
-    updater: (data: unknown) => unknown,
-  ): () => void {
+  applyOptimisticUpdate(subscriptionId: string, updater: (data: unknown) => unknown): () => void {
     const entry = this.cache.get(subscriptionId)
     if (!entry) return () => {}
 
@@ -122,17 +119,12 @@ export class QueryCache {
   /**
    * Apply an optimistic update across all subscriptions matching a query name.
    */
-  applyOptimisticUpdateByQuery(
-    queryName: string,
-    updater: (data: unknown, args: unknown) => unknown,
-  ): () => void {
+  applyOptimisticUpdateByQuery(queryName: string, updater: (data: unknown, args: unknown) => unknown): () => void {
     const rollbacks: (() => void)[] = []
 
     for (const [subId, entry] of this.cache.entries()) {
       if (entry.queryName === queryName) {
-        const rollback = this.applyOptimisticUpdate(subId, (data) =>
-          updater(data, entry.args),
-        )
+        const rollback = this.applyOptimisticUpdate(subId, (data) => updater(data, entry.args))
         rollbacks.push(rollback)
       }
     }

@@ -1,13 +1,24 @@
 import { describe, it, expect } from "vitest"
 import {
-  writeVarUint, readVarUint,
-  writeVarBytes, readVarBytes,
-  writeVarString, readVarString,
-  encodeStateVector, decodeStateVector,
-  encodeUpdate, decodeUpdate,
-  createSyncStep1, createSyncStep2, createUpdateMessage, parseSyncMessage,
-  encodeAwarenessUpdate, decodeAwarenessUpdate,
-  mergeUpdates, computeMissingUpdates, computeStateDiff,
+  writeVarUint,
+  readVarUint,
+  writeVarBytes,
+  readVarBytes,
+  writeVarString,
+  readVarString,
+  encodeStateVector,
+  decodeStateVector,
+  encodeUpdate,
+  decodeUpdate,
+  createSyncStep1,
+  createSyncStep2,
+  createUpdateMessage,
+  parseSyncMessage,
+  encodeAwarenessUpdate,
+  decodeAwarenessUpdate,
+  mergeUpdates,
+  computeMissingUpdates,
+  computeStateDiff,
   hashClientId,
   YjsSyncMessageType,
 } from "../collaboration/yjs-protocol.js"
@@ -97,7 +108,7 @@ describe("State Vector Encoding", () => {
   })
 
   it("handles single-client state vector", () => {
-    const encoded = encodeStateVector({ "solo": 42 })
+    const encoded = encodeStateVector({ solo: 42 })
     const decoded = decodeStateVector(encoded)
     expect(decoded.get(hashClientId("solo"))).toBe(42)
   })
@@ -125,7 +136,7 @@ describe("Update Encoding", () => {
 
 describe("Sync Protocol Messages", () => {
   it("creates and parses SyncStep1", () => {
-    const msg = createSyncStep1({ "c1": 5, "c2": 3 })
+    const msg = createSyncStep1({ c1: 5, c2: 3 })
     expect(msg.type).toBe(YjsSyncMessageType.SyncStep1)
     expect(msg.data[0]).toBe(YjsSyncMessageType.SyncStep1)
 
@@ -226,19 +237,14 @@ describe("computeMissingUpdates", () => {
   })
 
   it("returns all updates when remote has empty state", () => {
-    const updates = [
-      encodeUpdate("c1", 1, new Uint8Array([1])),
-      encodeUpdate("c2", 1, new Uint8Array([2])),
-    ]
+    const updates = [encodeUpdate("c1", 1, new Uint8Array([1])), encodeUpdate("c2", 1, new Uint8Array([2]))]
 
     const missing = computeMissingUpdates(updates, new Map())
     expect(missing).toHaveLength(2)
   })
 
   it("returns empty when remote is up to date", () => {
-    const updates = [
-      encodeUpdate("c1", 1, new Uint8Array([1])),
-    ]
+    const updates = [encodeUpdate("c1", 1, new Uint8Array([1]))]
 
     const remoteSV = new Map<number, number>()
     remoteSV.set(hashClientId("c1"), 5) // Remote is ahead
@@ -250,8 +256,8 @@ describe("computeMissingUpdates", () => {
 
 describe("computeStateDiff", () => {
   it("identifies missing updates on both sides", () => {
-    const local = { "c1": 5, "c2": 3 }
-    const remote = { "c1": 3, "c2": 5, "c3": 2 }
+    const local = { c1: 5, c2: 3 }
+    const remote = { c1: 3, c2: 5, c3: 2 }
 
     const diff = computeStateDiff(local, remote)
     expect(diff.missingOnLocal).toContain("c2")
@@ -260,7 +266,7 @@ describe("computeStateDiff", () => {
   })
 
   it("handles identical state vectors", () => {
-    const sv = { "c1": 5, "c2": 3 }
+    const sv = { c1: 5, c2: 3 }
     const diff = computeStateDiff(sv, sv)
     expect(diff.missingOnLocal).toHaveLength(0)
     expect(diff.missingOnRemote).toHaveLength(0)
@@ -283,7 +289,7 @@ describe("hashClientId", () => {
   it("produces unsigned 32-bit integers", () => {
     const hash = hashClientId("test-client")
     expect(hash).toBeGreaterThanOrEqual(0)
-    expect(hash).toBeLessThanOrEqual(0xFFFFFFFF)
+    expect(hash).toBeLessThanOrEqual(0xffffffff)
   })
 })
 

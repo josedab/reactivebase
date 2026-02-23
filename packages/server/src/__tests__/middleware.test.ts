@@ -17,7 +17,7 @@ describe("MiddlewareManager", () => {
     const mgr = new MiddlewareManager()
     mgr.use({
       name: "modify-args",
-      before: (ctx) => ({ args: { ...ctx.args as object, injected: true } }),
+      before: (ctx) => ({ args: { ...(ctx.args as object), injected: true } }),
     })
 
     const result = await mgr.runBefore(createTestContext())
@@ -50,8 +50,18 @@ describe("MiddlewareManager", () => {
     const mgr = new MiddlewareManager()
     const order: string[] = []
 
-    mgr.use({ name: "first", before: () => { order.push("first") } })
-    mgr.use({ name: "second", before: () => { order.push("second") } })
+    mgr.use({
+      name: "first",
+      before: () => {
+        order.push("first")
+      },
+    })
+    mgr.use({
+      name: "second",
+      before: () => {
+        order.push("second")
+      },
+    })
 
     await mgr.runBefore(createTestContext())
     expect(order).toEqual(["first", "second"])
@@ -63,7 +73,9 @@ describe("MiddlewareManager", () => {
 
     mgr.use({
       name: "logger",
-      onError: (_ctx, err) => { errors.push(err.message) },
+      onError: (_ctx, err) => {
+        errors.push(err.message)
+      },
     })
 
     await mgr.runOnError(createTestContext(), new Error("test error"))

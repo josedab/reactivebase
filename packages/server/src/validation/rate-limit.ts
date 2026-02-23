@@ -87,9 +87,7 @@ export class RateLimitError extends Error {
   readonly code = "RATE_LIMITED"
   readonly statusCode = 429
 
-  constructor(
-    public readonly retryAfterMs: number,
-  ) {
+  constructor(public readonly retryAfterMs: number) {
     super(`Rate limit exceeded. Retry after ${Math.ceil(retryAfterMs / 1000)}s`)
     this.name = "RateLimitError"
   }
@@ -107,9 +105,7 @@ export function rateLimit(options: RateLimitOptions): Middleware {
     before(ctx) {
       if (!types.includes(ctx.functionType)) return
 
-      const key = options.keyBy
-        ? options.keyBy(ctx)
-        : ctx.auth.userId ?? "anonymous"
+      const key = options.keyBy ? options.keyBy(ctx) : (ctx.auth.userId ?? "anonymous")
 
       const result = limiter.check(key)
       if (!result.allowed) {

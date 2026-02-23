@@ -227,9 +227,7 @@ export class DaclEngine {
 
     // Find applicable policies for this table and action
     const applicable = this.policies.filter(
-      (p) =>
-        (p.table === context.table || p.table === "*") &&
-        (p.action === context.action || p.action === "*"),
+      (p) => (p.table === context.table || p.table === "*") && (p.action === context.action || p.action === "*"),
     )
 
     // Check DENY policies first (in priority order)
@@ -286,9 +284,7 @@ export class DaclEngine {
     let evaluatedCount = 0
 
     const applicable = this.policies.filter(
-      (p) =>
-        (p.table === context.table || p.table === "*") &&
-        (p.action === context.action || p.action === "*"),
+      (p) => (p.table === context.table || p.table === "*") && (p.action === context.action || p.action === "*"),
     )
 
     for (const policy of applicable.filter((p) => p.effect === "deny")) {
@@ -366,9 +362,10 @@ export class DaclEngine {
       if (policy.table === "*") continue // Can't create RLS for wildcard tables
 
       const command = this.actionToRlsCommand(policy.action)
-      const roleCheck = policy.roles.length > 0
-        ? `current_setting('app.user_role') IN (${policy.roles.map((r) => `'${r}'`).join(", ")})`
-        : "true"
+      const roleCheck =
+        policy.roles.length > 0
+          ? `current_setting('app.user_role') IN (${policy.roles.map((r) => `'${r}'`).join(", ")})`
+          : "true"
 
       const using = policy.effect === "allow" ? roleCheck : `NOT (${roleCheck})`
 
@@ -397,9 +394,7 @@ export class DaclEngine {
 
     // Create policies
     for (const rls of this.generateRlsPolicies()) {
-      sqls.push(
-        `CREATE POLICY "${rls.name}" ON "${rls.table}" FOR ${rls.command} USING (${rls.usingExpression});`,
-      )
+      sqls.push(`CREATE POLICY "${rls.name}" ON "${rls.table}" FOR ${rls.command} USING (${rls.usingExpression});`)
     }
 
     return sqls
@@ -436,9 +431,7 @@ export class DaclEngine {
     for (const table of tables) {
       for (const action of actions) {
         const matching = this.policies.filter(
-          (p) =>
-            (p.table === table || p.table === "*") &&
-            (p.action === action || p.action === "*"),
+          (p) => (p.table === table || p.table === "*") && (p.action === action || p.action === "*"),
         )
         const isCovered = matching.length > 0
         if (isCovered) coveredCount++
@@ -498,12 +491,18 @@ export class DaclEngine {
 
   private actionToRlsCommand(action: Action): RlsPolicy["command"] {
     switch (action) {
-      case "read": return "SELECT"
-      case "create": return "INSERT"
-      case "update": return "UPDATE"
-      case "delete": return "DELETE"
-      case "write": return "ALL"
-      case "*": return "ALL"
+      case "read":
+        return "SELECT"
+      case "create":
+        return "INSERT"
+      case "update":
+        return "UPDATE"
+      case "delete":
+        return "DELETE"
+      case "write":
+        return "ALL"
+      case "*":
+        return "ALL"
     }
   }
 

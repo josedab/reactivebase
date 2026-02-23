@@ -65,18 +65,14 @@ function createMockPool() {
     // SELECT pending for cron check
     if (sqlTrimmed.startsWith("SELECT") && sqlTrimmed.includes("cron_name")) {
       const cronName = params?.[0]
-      const pending = rows.filter(
-        (r) => r.cron_name === cronName && r.status === "pending",
-      )
+      const pending = rows.filter((r) => r.cron_name === cronName && r.status === "pending")
       return { rows: pending, rowCount: pending.length }
     }
 
     // UPDATE ... SET status = 'running' ... RETURNING * (claim jobs for polling)
     if (sqlTrimmed.includes("SET status = 'running'") && sqlTrimmed.includes("RETURNING *")) {
-      const limit = params?.[0] as number ?? 10
-      const ready = rows
-        .filter((r) => r.status === "pending")
-        .slice(0, limit)
+      const limit = (params?.[0] as number) ?? 10
+      const ready = rows.filter((r) => r.status === "pending").slice(0, limit)
 
       for (const r of ready) {
         r.status = "running"
@@ -208,7 +204,7 @@ describe("JobScheduler integration", () => {
     await (scheduler as any).poll()
 
     // Check if the row was processed (status should be "completed" after successful execution)
-    const processedRows = pool._rows.filter(r => r.action_ref === "instantAction")
+    const processedRows = pool._rows.filter((r) => r.action_ref === "instantAction")
     expect(processedRows.length).toBe(1)
     expect(processedRows[0].status).toBe("completed")
 
@@ -232,7 +228,7 @@ describe("JobScheduler integration", () => {
     // Verify job was rescheduled (status back to pending with incremented retries)
     const pending = pool._rows.filter((r) => r.action_ref === "flakyAction" && r.status === "pending")
     expect(pending.length).toBe(1)
-    expect((pending[0].retries as number)).toBe(1)
+    expect(pending[0].retries as number).toBe(1)
   })
 
   it("marks jobs as dead after max retries", async () => {

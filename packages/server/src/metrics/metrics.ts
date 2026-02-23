@@ -184,20 +184,15 @@ export class MetricsCollector {
         totalCreated: this.subscriptionsCreated,
         totalRemoved: this.subscriptionsRemoved,
         currentActive: this.currentSubscriptions,
-        avgPerConnection: this.currentConnections > 0
-          ? this.currentSubscriptions / this.currentConnections
-          : 0,
+        avgPerConnection: this.currentConnections > 0 ? this.currentSubscriptions / this.currentConnections : 0,
       },
       invalidations: {
         totalEvaluations: this.invalidationEvals,
         totalInvalidated: this.invalidationHits,
         totalSkipped: this.invalidationSkips,
-        avgEvaluationTimeMs: this.invalidationEvals > 0
-          ? this.invalidationTotalTimeMs / this.invalidationEvals
-          : 0,
-        falseInvalidationRate: this.invalidationHits > 0
-          ? this.invalidationSkips / (this.invalidationHits + this.invalidationSkips)
-          : 0,
+        avgEvaluationTimeMs: this.invalidationEvals > 0 ? this.invalidationTotalTimeMs / this.invalidationEvals : 0,
+        falseInvalidationRate:
+          this.invalidationHits > 0 ? this.invalidationSkips / (this.invalidationHits + this.invalidationSkips) : 0,
       },
       uptime: Date.now() - this.startTime,
     }

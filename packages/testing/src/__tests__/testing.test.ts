@@ -138,24 +138,18 @@ describe("TestServer", () => {
       server.expectMutationToModify(createTask, { title: "T", userId: "u1" }, ["tasks"]),
     ).resolves.not.toThrow()
 
-    await expect(
-      server.expectMutationToModify(createTask, { title: "T", userId: "u1" }, ["users"]),
-    ).rejects.toThrow("missing")
+    await expect(server.expectMutationToModify(createTask, { title: "T", userId: "u1" }, ["users"])).rejects.toThrow(
+      "missing",
+    )
   })
 
   it("snapshots reactive updates across mutations", async () => {
-    server.db.seed("tasks", [
-      { title: "Existing", assigneeId: "u1", done: false },
-    ])
+    server.db.seed("tasks", [{ title: "Existing", assigneeId: "u1", done: false }])
 
-    const snapshots = await server.snapshotReactiveUpdates(
-      listTasks,
-      { userId: "u1" },
-      [
-        { fn: createTask, args: { title: "New", userId: "u1" } },
-        { fn: completeTask, args: { taskId: server.db.table("tasks").all()[0].id } },
-      ],
-    )
+    const snapshots = await server.snapshotReactiveUpdates(listTasks, { userId: "u1" }, [
+      { fn: createTask, args: { title: "New", userId: "u1" } },
+      { fn: completeTask, args: { taskId: server.db.table("tasks").all()[0].id } },
+    ])
 
     expect(snapshots).toHaveLength(3)
     expect(snapshots[0].data).toHaveLength(1) // initial

@@ -150,10 +150,7 @@ ORDER BY timestamp_ms ASC`,
   }
 }
 
-export function buildGetRowHistorySQL(
-  table: string,
-  rowId: string,
-): { sql: string; params: unknown[] } {
+export function buildGetRowHistorySQL(table: string, rowId: string): { sql: string; params: unknown[] } {
   return {
     sql: `SELECT * FROM _reactivebase_mutation_events
 WHERE "table" = $1 AND row_id = $2
@@ -295,13 +292,14 @@ export class TimeTravelEngine {
       changes.push({
         table: first.table,
         rowId: first.rowId,
-        operation: first.operation === "insert" && last.operation === "delete"
-          ? "delete"
-          : first.operation === "insert"
-            ? "insert"
-            : last.operation === "delete"
-              ? "delete"
-              : "update",
+        operation:
+          first.operation === "insert" && last.operation === "delete"
+            ? "delete"
+            : first.operation === "insert"
+              ? "insert"
+              : last.operation === "delete"
+                ? "delete"
+                : "update",
         before: first.before,
         after: last.after,
         changedFields: changedFields.length > 0 ? changedFields : undefined,

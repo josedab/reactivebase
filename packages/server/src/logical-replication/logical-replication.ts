@@ -43,13 +43,7 @@ export interface LogicalReplicatorOptions {
   onStatusChange?: (status: ReplicatorStatus) => void
 }
 
-export type ReplicatorStatus =
-  | "disconnected"
-  | "connecting"
-  | "streaming"
-  | "catchingUp"
-  | "error"
-  | "stopped"
+export type ReplicatorStatus = "disconnected" | "connecting" | "streaming" | "catchingUp" | "error" | "stopped"
 
 export interface WalChange {
   /** Log Sequence Number */
@@ -115,7 +109,7 @@ export function parseLsn(lsn: string): bigint {
  */
 export function formatLsn(lsn: bigint): string {
   const high = Number(lsn >> 32n)
-  const low = Number(lsn & 0xFFFFFFFFn)
+  const low = Number(lsn & 0xffffffffn)
   return `${high.toString(16).toUpperCase()}/${low.toString(16).toUpperCase().padStart(1, "0")}`
 }
 
@@ -133,15 +127,15 @@ export function compareLsn(a: string, b: string): number {
 
 /** pgoutput protocol message type identifiers */
 const enum PgOutputMessageType {
-  Begin = 0x42,       // 'B'
-  Commit = 0x43,      // 'C'
-  Origin = 0x4F,      // 'O'
-  Relation = 0x52,    // 'R'
-  Type = 0x59,        // 'Y'
-  Insert = 0x49,      // 'I'
-  Update = 0x55,      // 'U'
-  Delete = 0x44,      // 'D'
-  Truncate = 0x54,    // 'T'
+  Begin = 0x42, // 'B'
+  Commit = 0x43, // 'C'
+  Origin = 0x4f, // 'O'
+  Relation = 0x52, // 'R'
+  Type = 0x59, // 'Y'
+  Insert = 0x49, // 'I'
+  Update = 0x55, // 'U'
+  Delete = 0x44, // 'D'
+  Truncate = 0x54, // 'T'
 }
 
 interface RelationInfo {
@@ -190,9 +184,7 @@ export class WalDecoder {
   private decodeBegin(lsn: string, buffer: Buffer): WalChange {
     // Begin: [B][finalLSN:8][commitTimestamp:8][xid:4]
     const xid = buffer.length >= 21 ? buffer.readUInt32BE(17) : 0
-    const timestamp = buffer.length >= 17
-      ? this.pgTimestampToDate(buffer.readBigInt64BE(9))
-      : new Date()
+    const timestamp = buffer.length >= 17 ? this.pgTimestampToDate(buffer.readBigInt64BE(9)) : new Date()
 
     this.currentXid = xid
     this.currentTimestamp = timestamp
@@ -259,9 +251,12 @@ export class WalDecoder {
     }
 
     const replicaIdentity: RelationInfo["replicaIdentity"] =
-      replicaIdentityByte === 0x66 ? "full"
-        : replicaIdentityByte === 0x69 ? "index"
-          : replicaIdentityByte === 0x6E ? "nothing"
+      replicaIdentityByte === 0x66
+        ? "full"
+        : replicaIdentityByte === 0x69
+          ? "index"
+          : replicaIdentityByte === 0x6e
+            ? "nothing"
             : "default"
 
     const info: RelationInfo = { relationId, schema, table, columns, replicaIdentity }
@@ -315,7 +310,7 @@ export class WalDecoder {
     const marker = buffer[offset]
 
     // 'K' = key columns of old tuple, 'O' = full old tuple
-    if (marker === 0x4B || marker === 0x4F) {
+    if (marker === 0x4b || marker === 0x4f) {
       offset += 1
       const result = this.decodeTupleWithOffset(buffer, offset, relation.columns)
       oldRow = result.row
@@ -323,7 +318,7 @@ export class WalDecoder {
     }
 
     // 'N' marker for new tuple
-    if (buffer[offset] === 0x4E) {
+    if (buffer[offset] === 0x4e) {
       offset += 1
     }
 
@@ -354,7 +349,7 @@ export class WalDecoder {
     offset += 1
 
     let oldRow: Record<string, unknown> | undefined
-    if (marker === 0x4B || marker === 0x4F) {
+    if (marker === 0x4b || marker === 0x4f) {
       oldRow = this.decodeTuple(buffer, offset, relation.columns)
     }
 
@@ -387,7 +382,7 @@ export class WalDecoder {
       const colType = buffer[offset]
       offset += 1
 
-      if (colType === 0x6E) {
+      if (colType === 0x6e) {
         // 'n' = NULL
         row[columns[i].name] = null
       } else if (colType === 0x75) {
@@ -409,22 +404,26 @@ export class WalDecoder {
   private parseColumnValue(value: string, typeOid: number): unknown {
     // Common Postgres type OIDs
     switch (typeOid) {
-      case 16:   // bool
+      case 16: // bool
         return value === "t" || value === "true"
-      case 20:   // int8
-      case 21:   // int2
-      case 23:   // int4
+      case 20: // int8
+      case 21: // int2
+      case 23: // int4
         return parseInt(value, 10)
-      case 700:  // float4
-      case 701:  // float8
+      case 700: // float4
+      case 701: // float8
       case 1700: // numeric
         return parseFloat(value)
       case 1114: // timestamp
       case 1184: // timestamptz
         return new Date(value)
       case 3802: // jsonb
-      case 114:  // json
-        try { return JSON.parse(value) } catch { return value }
+      case 114: // json
+        try {
+          return JSON.parse(value)
+        } catch {
+          return value
+        }
       default:
         return value
     }
@@ -445,10 +444,21 @@ export class WalDecoder {
 
   private oidToTypeName(oid: number): string {
     const map: Record<number, string> = {
-      16: "boolean", 20: "bigint", 21: "smallint", 23: "integer",
-      25: "text", 700: "real", 701: "double precision", 1043: "varchar",
-      1082: "date", 1114: "timestamp", 1184: "timestamptz",
-      1700: "numeric", 2950: "uuid", 3802: "jsonb", 114: "json",
+      16: "boolean",
+      20: "bigint",
+      21: "smallint",
+      23: "integer",
+      25: "text",
+      700: "real",
+      701: "double precision",
+      1043: "varchar",
+      1082: "date",
+      1114: "timestamp",
+      1184: "timestamptz",
+      1700: "numeric",
+      2950: "uuid",
+      3802: "jsonb",
+      114: "json",
     }
     return map[oid] ?? `oid:${oid}`
   }
@@ -650,10 +660,7 @@ export class LogicalReplicator {
    * Generate full setup SQL for logical replication.
    */
   generateSetupSQL(tables?: string[]): string[] {
-    const sqls: string[] = [
-      this.generatePublicationSQL(),
-      this.generateSlotSQL(),
-    ]
+    const sqls: string[] = [this.generatePublicationSQL(), this.generateSlotSQL()]
     const targetTables = tables ?? this.options.tables
     if (targetTables.length > 0 && this.options.includeOldTuples) {
       sqls.push(...this.generateReplicaIdentitySQL(targetTables))
@@ -665,10 +672,7 @@ export class LogicalReplicator {
    * Generate full teardown SQL.
    */
   generateTeardownSQL(): string[] {
-    return [
-      this.generateDropSlotSQL(),
-      this.generateDropPublicationSQL(),
-    ]
+    return [this.generateDropSlotSQL(), this.generateDropPublicationSQL()]
   }
 
   /**

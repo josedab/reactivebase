@@ -28,9 +28,9 @@ describe("CollaborationManager", () => {
       for (let i = 0; i < 5; i++) {
         collab.join("room-1", `conn-${i}`, { userId: `u${i}`, userName: `User ${i}` })
       }
-      expect(() =>
-        collab.join("room-1", "conn-extra", { userId: "extra", userName: "Extra" }),
-      ).toThrow("maximum of 5 users")
+      expect(() => collab.join("room-1", "conn-extra", { userId: "extra", userName: "Extra" })).toThrow(
+        "maximum of 5 users",
+      )
     })
 
     it("leaves a room", () => {

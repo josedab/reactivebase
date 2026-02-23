@@ -110,8 +110,14 @@ export function computePluginQualityScore(info: PluginQualityInfo): PluginQualit
 
   // Reliability (15 points)
   let reliability = 0
-  if (info.isVerified) { reliability += 7; badges.push("verified") }
-  if (info.isFirstParty) { reliability += 5; badges.push("first-party") }
+  if (info.isVerified) {
+    reliability += 7
+    badges.push("verified")
+  }
+  if (info.isFirstParty) {
+    reliability += 5
+    badges.push("first-party")
+  }
   if (info.dependencies <= 3) reliability += 3
   else if (info.dependencies <= 10) reliability += 1
   else warnings.push("High dependency count")
@@ -174,12 +180,15 @@ function parseSemver(version: string): { major: number; minor: number; patch: nu
   return { major: Number(match[1]), minor: Number(match[2]), patch: Number(match[3]) }
 }
 
-function parseSemverRange(range: string): { check: (v: { major: number; minor: number; patch: number }) => boolean } | null {
+function parseSemverRange(
+  range: string,
+): { check: (v: { major: number; minor: number; patch: number }) => boolean } | null {
   if (range.startsWith("^")) {
     const base = parseSemver(range.substring(1))
     if (!base) return null
     return {
-      check: (v) => v.major === base.major && (v.minor > base.minor || (v.minor === base.minor && v.patch >= base.patch)),
+      check: (v) =>
+        v.major === base.major && (v.minor > base.minor || (v.minor === base.minor && v.patch >= base.patch)),
     }
   }
   if (range.startsWith(">=")) {
@@ -209,7 +218,12 @@ export const resendPlugin: PluginV2Definition = {
   category: "email" as PluginCategory,
   configSchema: {
     apiKey: { type: "string", required: true, description: "Resend API key" },
-    defaultFrom: { type: "string", required: false, default: "noreply@example.com", description: "Default sender email" },
+    defaultFrom: {
+      type: "string",
+      required: false,
+      default: "noreply@example.com",
+      description: "Default sender email",
+    },
   },
   onInstall: async (ctx) => {
     ctx.logger.info("Resend plugin installed")
@@ -305,15 +319,19 @@ const ${name}Plugin: PluginV2Definition = {
 export default ${name}Plugin
 `
 
-  const packageJson = JSON.stringify({
-    name: `@reactivebase/plugin-${name}`,
-    version: "0.1.0",
-    main: "dist/index.js",
-    types: "dist/index.d.ts",
-    files: ["dist"],
-    peerDependencies: { "@reactivebase/server": "^0.1.0" },
-    scripts: { build: "tsup src/index.ts --format esm --dts", test: "vitest run" },
-  }, null, 2)
+  const packageJson = JSON.stringify(
+    {
+      name: `@reactivebase/plugin-${name}`,
+      version: "0.1.0",
+      main: "dist/index.js",
+      types: "dist/index.d.ts",
+      files: ["dist"],
+      peerDependencies: { "@reactivebase/server": "^0.1.0" },
+      scripts: { build: "tsup src/index.ts --format esm --dts", test: "vitest run" },
+    },
+    null,
+    2,
+  )
 
   const testFile = `import { describe, it, expect } from "vitest"
 import plugin from "../src/index.js"

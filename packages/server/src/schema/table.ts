@@ -26,11 +26,7 @@ export interface TableDefinition<TColumns extends ColumnDefinitions = ColumnDefi
   readonly indexes: IndexDefinition[]
   readonly relations: RelationDefinition[]
 
-  index(
-    name: string,
-    columns: (keyof TColumns & string)[],
-    options?: { unique?: boolean },
-  ): TableDefinition<TColumns>
+  index(name: string, columns: (keyof TColumns & string)[], options?: { unique?: boolean }): TableDefinition<TColumns>
 
   vectorIndex(
     name: string,
@@ -38,10 +34,7 @@ export interface TableDefinition<TColumns extends ColumnDefinitions = ColumnDefi
     options?: { type?: "ivfflat" | "hnsw"; metric?: "cosine" | "l2" | "inner_product" },
   ): TableDefinition<TColumns>
 
-  relation(
-    name: string,
-    config: { from: string; to: string },
-  ): TableDefinition<TColumns>
+  relation(name: string, config: { from: string; to: string }): TableDefinition<TColumns>
 }
 
 /**
@@ -95,17 +88,12 @@ class TableDefinitionImpl<TColumns extends ColumnDefinitions> implements TableDe
     return this
   }
 
-  relation(
-    name: string,
-    config: { from: string; to: string },
-  ): TableDefinition<TColumns> {
+  relation(name: string, config: { from: string; to: string }): TableDefinition<TColumns> {
     this.relations.push({ name, from: config.from, to: config.to })
     return this
   }
 }
 
-export function defineTable<TColumns extends ColumnDefinitions>(
-  columns: TColumns,
-): TableDefinition<TColumns> {
+export function defineTable<TColumns extends ColumnDefinitions>(columns: TColumns): TableDefinition<TColumns> {
   return new TableDefinitionImpl("", columns)
 }

@@ -1,10 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import {
-  IncrementalViewMaintainer,
-  extractDependencies,
-  isIvmEligible,
-  evaluatePredicate,
-} from "../ivm/ivm.js"
+import { IncrementalViewMaintainer, extractDependencies, isIvmEligible, evaluatePredicate } from "../ivm/ivm.js"
 import type { QueryAstNode, Row, FilterPredicate } from "../ivm/ivm.js"
 
 describe("IVM Utilities", () => {
@@ -43,39 +38,47 @@ describe("IVM Utilities", () => {
     })
 
     it("filter is eligible", () => {
-      expect(isIvmEligible({
-        type: "filter",
-        source: { type: "scan", table: "tasks" },
-        predicate: { field: "done", operator: "=", value: false },
-      })).toBe(true)
+      expect(
+        isIvmEligible({
+          type: "filter",
+          source: { type: "scan", table: "tasks" },
+          predicate: { field: "done", operator: "=", value: false },
+        }),
+      ).toBe(true)
     })
 
     it("aggregate is eligible", () => {
-      expect(isIvmEligible({
-        type: "aggregate",
-        source: { type: "scan", table: "tasks" },
-        groupBy: ["priority"],
-        aggregations: [{ fn: "count", field: "*", alias: "count" }],
-      })).toBe(true)
+      expect(
+        isIvmEligible({
+          type: "aggregate",
+          source: { type: "scan", table: "tasks" },
+          groupBy: ["priority"],
+          aggregations: [{ fn: "count", field: "*", alias: "count" }],
+        }),
+      ).toBe(true)
     })
 
     it("limit is NOT eligible", () => {
-      expect(isIvmEligible({
-        type: "limit",
-        source: { type: "scan", table: "tasks" },
-        limit: 10,
-      })).toBe(false)
+      expect(
+        isIvmEligible({
+          type: "limit",
+          source: { type: "scan", table: "tasks" },
+          limit: 10,
+        }),
+      ).toBe(false)
     })
 
     it("join is eligible", () => {
-      expect(isIvmEligible({
-        type: "join",
-        joinType: "inner",
-        left: { type: "scan", table: "tasks" },
-        right: { type: "scan", table: "users" },
-        leftKey: "assigneeId",
-        rightKey: "id",
-      })).toBe(true)
+      expect(
+        isIvmEligible({
+          type: "join",
+          joinType: "inner",
+          left: { type: "scan", table: "tasks" },
+          right: { type: "scan", table: "users" },
+          leftKey: "assigneeId",
+          rightKey: "id",
+        }),
+      ).toBe(true)
     })
   })
 

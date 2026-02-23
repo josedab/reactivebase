@@ -27,7 +27,7 @@ export async function daclList(options: DaclCommandOptions): Promise<void> {
     console.log("Example:")
     console.log('  import { allow, deny } from "@reactivebase/server"')
     console.log("")
-    console.log('  export const policies = [')
+    console.log("  export const policies = [")
     console.log('    allow("tasks", "read").roles("admin", "developer"),')
     console.log('    deny("tasks", "delete").describe("No deletes allowed"),')
     console.log("  ]")
@@ -137,20 +137,14 @@ export async function daclCoverage(options: DaclCommandOptions): Promise<void> {
   console.log("To generate a coverage report, use DaclEngine.getCoverage() in your code:")
   console.log("")
   console.log('  import { DaclEngine } from "@reactivebase/server"')
-  console.log('  const engine = new DaclEngine()')
+  console.log("  const engine = new DaclEngine()")
   console.log("  // ... define policies ...")
   console.log('  const report = engine.getCoverage(["tasks", "users"], ["read", "write", "delete"])')
-  console.log('  console.log(`Coverage: ${report.coveragePercentage.toFixed(1)}%`)')
+  console.log("  console.log(`Coverage: ${report.coveragePercentage.toFixed(1)}%`)")
 }
 
 function findPoliciesFile(projectDir: string): string | null {
-  const candidates = [
-    "convex/policies.ts",
-    "src/policies.ts",
-    "policies.ts",
-    "convex/access.ts",
-    "src/access.ts",
-  ]
+  const candidates = ["convex/policies.ts", "src/policies.ts", "policies.ts", "convex/access.ts", "src/access.ts"]
   for (const candidate of candidates) {
     const filePath = join(projectDir, candidate)
     if (existsSync(filePath)) return filePath
@@ -159,11 +153,7 @@ function findPoliciesFile(projectDir: string): string | null {
 }
 
 function findPolicyTestFile(projectDir: string): string | null {
-  const candidates = [
-    "convex/policies.test.ts",
-    "src/policies.test.ts",
-    "policies.test.ts",
-  ]
+  const candidates = ["convex/policies.test.ts", "src/policies.test.ts", "policies.test.ts"]
   for (const candidate of candidates) {
     const filePath = join(projectDir, candidate)
     if (existsSync(filePath)) return filePath

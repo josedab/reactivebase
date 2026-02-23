@@ -67,10 +67,7 @@ export async function executeTransaction<T>(
 /**
  * Execute a read-only query with READ COMMITTED isolation.
  */
-export async function executeReadOnly<T>(
-  pool: Pool,
-  fn: (client: PoolClient) => Promise<T>,
-): Promise<T> {
+export async function executeReadOnly<T>(pool: Pool, fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await pool.connect()
 
   try {

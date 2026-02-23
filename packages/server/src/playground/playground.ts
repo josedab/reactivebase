@@ -120,9 +120,7 @@ CREATE INDEX IF NOT EXISTS idx_playground_sessions_updated
 `.trim()
 }
 
-export function buildSaveSessionSQL(
-  session: PlaygroundSession,
-): { sql: string; params: unknown[] } {
+export function buildSaveSessionSQL(session: PlaygroundSession): { sql: string; params: unknown[] } {
   return {
     sql: `INSERT INTO _reactivebase_playground_sessions (id, title, schema_code, query_code, mutation_code, results)
 VALUES ($1, $2, $3, $4, $5, $6::jsonb)
@@ -145,27 +143,21 @@ RETURNING *`,
   }
 }
 
-export function buildLoadSessionSQL(
-  sessionId: string,
-): { sql: string; params: unknown[] } {
+export function buildLoadSessionSQL(sessionId: string): { sql: string; params: unknown[] } {
   return {
     sql: `SELECT * FROM _reactivebase_playground_sessions WHERE id = $1`,
     params: [sessionId],
   }
 }
 
-export function buildListSessionsSQL(
-  limit: number = 20,
-): { sql: string; params: unknown[] } {
+export function buildListSessionsSQL(limit: number = 20): { sql: string; params: unknown[] } {
   return {
     sql: `SELECT id, title, created_at, updated_at FROM _reactivebase_playground_sessions ORDER BY updated_at DESC LIMIT $1`,
     params: [limit],
   }
 }
 
-export function buildDeleteSessionSQL(
-  sessionId: string,
-): { sql: string; params: unknown[] } {
+export function buildDeleteSessionSQL(sessionId: string): { sql: string; params: unknown[] } {
   return {
     sql: `DELETE FROM _reactivebase_playground_sessions WHERE id = $1`,
     params: [sessionId],
@@ -371,7 +363,8 @@ export default defineSchema({
       {
         id: "step-2-query",
         title: "2. Write a Reactive Query",
-        description: "Create a query that lists incomplete tasks. This query is live — clients get updates automatically.",
+        description:
+          "Create a query that lists incomplete tasks. This query is live — clients get updates automatically.",
         code: `import { query } from "@reactivebase/server"
 
 export const listTasks = query(async (ctx) => {
@@ -418,10 +411,7 @@ console.log("Created:", task)
 const tasks = await listTasks()
 console.log("Active tasks:", tasks)`,
         expectedOutput: "Created:",
-        hints: [
-          "Mutations return the result of the operation",
-          "Queries re-execute automatically after mutations",
-        ],
+        hints: ["Mutations return the result of the operation", "Queries re-execute automatically after mutations"],
         validation: "has-output",
       },
       {
@@ -564,9 +554,7 @@ export class PlaygroundEngine {
 
   createSession(title?: string, templateId?: string): PlaygroundSession {
     const id = `pg-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
-    const template = templateId
-      ? PLAYGROUND_TEMPLATES.find((t) => t.id === templateId)
-      : undefined
+    const template = templateId ? PLAYGROUND_TEMPLATES.find((t) => t.id === templateId) : undefined
 
     if (templateId && !template) {
       throw new PlaygroundError(`Template not found: ${templateId}`)
@@ -622,9 +610,7 @@ export class PlaygroundEngine {
   }
 
   listSessions(): PlaygroundSession[] {
-    return Array.from(this.sessions.values()).sort(
-      (a, b) => b.updatedAt - a.updatedAt,
-    )
+    return Array.from(this.sessions.values()).sort((a, b) => b.updatedAt - a.updatedAt)
   }
 
   // ─── Code Execution ──────────────────────────────────────────────────────
@@ -645,10 +631,7 @@ export class PlaygroundEngine {
         timestamp: Date.now(),
       }
 
-      session.results = [
-        ...session.results.filter((r) => r.blockId !== blockId),
-        result,
-      ]
+      session.results = [...session.results.filter((r) => r.blockId !== blockId), result]
       session.updatedAt = Date.now()
       return result
     } catch (err) {
@@ -661,10 +644,7 @@ export class PlaygroundEngine {
         timestamp: Date.now(),
       }
 
-      session.results = [
-        ...session.results.filter((r) => r.blockId !== blockId),
-        result,
-      ]
+      session.results = [...session.results.filter((r) => r.blockId !== blockId), result]
       session.updatedAt = Date.now()
       return result
     }
@@ -747,10 +727,7 @@ export class PlaygroundEngine {
     }
   }
 
-  getNextStep(
-    sessionId: string,
-    tutorialId: string,
-  ): TutorialStep | null {
+  getNextStep(sessionId: string, tutorialId: string): TutorialStep | null {
     const tutorial = this.getTutorial(tutorialId)
     const progress = this.getTutorialProgress(sessionId, tutorialId)
 
@@ -793,11 +770,7 @@ export class PlaygroundEngine {
 
   // ─── Internal Helpers ────────────────────────────────────────────────────
 
-  private markStepComplete(
-    sessionId: string,
-    tutorialId: string,
-    stepId: string,
-  ): void {
+  private markStepComplete(sessionId: string, tutorialId: string, stepId: string): void {
     if (!this.tutorialProgress.has(sessionId)) {
       this.tutorialProgress.set(sessionId, new Map())
     }
@@ -953,14 +926,14 @@ export function generatePlaygroundHTML(options: PlaygroundHTMLOptions = {}): str
     <div class="sidebar">
       <h3>Templates</h3>
 ${PLAYGROUND_TEMPLATES.map(
-    (t, i) =>
-      `      <div class="template-item${i === 0 ? " active" : ""}" onclick="loadTemplate('${t.id}')">${t.name}<br><small style="color:#8b949e">${t.description}</small></div>`,
-  ).join("\n")}
+  (t, i) =>
+    `      <div class="template-item${i === 0 ? " active" : ""}" onclick="loadTemplate('${t.id}')">${t.name}<br><small style="color:#8b949e">${t.description}</small></div>`,
+).join("\n")}
       <h3 style="margin-top:16px">Tutorials</h3>
 ${BUILTIN_TUTORIALS.map(
-    (t) =>
-      `      <div class="template-item" onclick="startTutorial('${t.id}')">📖 ${t.title}<br><small style="color:#8b949e">${t.estimatedMinutes} min</small></div>`,
-  ).join("\n")}
+  (t) =>
+    `      <div class="template-item" onclick="startTutorial('${t.id}')">📖 ${t.title}<br><small style="color:#8b949e">${t.estimatedMinutes} min</small></div>`,
+).join("\n")}
     </div>
     <div class="editor-area">
       <div class="tabs">

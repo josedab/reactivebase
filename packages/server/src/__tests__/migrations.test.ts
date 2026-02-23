@@ -65,7 +65,7 @@ describe("migration generation", () => {
     expect(migration.up).toContain("_reactivebase_migrations")
     expect(migration.up).toContain('CREATE TABLE IF NOT EXISTS "users"')
     expect(migration.up).toContain('CREATE TABLE IF NOT EXISTS "tasks"')
-    expect(migration.up).toContain('CREATE UNIQUE INDEX')
+    expect(migration.up).toContain("CREATE UNIQUE INDEX")
     expect(migration.down).toContain('DROP TABLE IF EXISTS "users"')
     expect(migration.down).toContain('DROP TABLE IF EXISTS "tasks"')
   })

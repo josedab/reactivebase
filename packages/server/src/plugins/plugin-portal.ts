@@ -69,7 +69,9 @@ export class PluginPortal {
 
   // ─── Portal Listing ─────────────────────────────────────────────────────
 
-  listPlugins(options: { category?: PluginCategory; query?: string; sortBy?: "name" | "rating" | "downloads" } = {}): PortalPlugin[] {
+  listPlugins(
+    options: { category?: PluginCategory; query?: string; sortBy?: "name" | "rating" | "downloads" } = {},
+  ): PortalPlugin[] {
     let plugins = this.catalog.map((entry) => this.enrichPlugin(entry))
 
     if (options.category) {
@@ -77,10 +79,11 @@ export class PluginPortal {
     }
     if (options.query) {
       const q = options.query.toLowerCase()
-      plugins = plugins.filter((p) =>
-        p.entry.name.includes(q) ||
-        p.entry.description.toLowerCase().includes(q) ||
-        p.entry.keywords.some((k) => k.includes(q)),
+      plugins = plugins.filter(
+        (p) =>
+          p.entry.name.includes(q) ||
+          p.entry.description.toLowerCase().includes(q) ||
+          p.entry.keywords.some((k) => k.includes(q)),
       )
     }
 
@@ -116,7 +119,9 @@ export class PluginPortal {
         name: entry.name,
         version: entry.version,
         compatible,
-        issues: compatible ? [] : [`Plugin ${entry.name}@${entry.version} may not be compatible with ReactiveBase ${reactivebaseVersion}`],
+        issues: compatible
+          ? []
+          : [`Plugin ${entry.name}@${entry.version} may not be compatible with ReactiveBase ${reactivebaseVersion}`],
       }
     })
 
@@ -199,7 +204,9 @@ export class PluginPortal {
     ${categories.map((c) => `<div class="cat-item">${c.category} (${c.count})</div>`).join("\n    ")}
   </div>
   <div class="grid">
-    ${plugins.map((p) => `<div class="card">
+    ${plugins
+      .map(
+        (p) => `<div class="card">
       <div class="card-header">
         <span class="card-name">${p.entry.name}</span>
         <span class="card-version">v${p.entry.version}</span>
@@ -212,7 +219,9 @@ export class PluginPortal {
         <span>⭐ ${p.qualityScore.toFixed(1)}</span>
       </div>
       <div class="install-cmd">${p.entry.installCommand}</div>
-    </div>`).join("\n    ")}
+    </div>`,
+      )
+      .join("\n    ")}
   </div>
 </div>
 </body>

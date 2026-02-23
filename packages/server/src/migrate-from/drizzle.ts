@@ -45,10 +45,15 @@ function parseDrizzleColumns(columnsStr: string): DrizzleColumn[] {
   const columns: DrizzleColumn[] = []
 
   // Parse line by line for reliable matching
-  const lines = columnsStr.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("//"))
+  const lines = columnsStr
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("//"))
 
   for (const line of lines) {
-    const colMatch = line.match(/^(\w+)\s*:\s*(text|integer|boolean|timestamp|real|doublePrecision|serial|bigint|varchar|jsonb?|uuid)\s*\(/)
+    const colMatch = line.match(
+      /^(\w+)\s*:\s*(text|integer|boolean|timestamp|real|doublePrecision|serial|bigint|varchar|jsonb?|uuid)\s*\(/,
+    )
     if (!colMatch) continue
 
     const [, name, type] = colMatch

@@ -176,14 +176,16 @@ const PLAN_LIMITS: Record<ProjectPlan, UsageLimits> = {
 
 const PLAN_BASE_COST_CENTS: Record<ProjectPlan, number> = {
   free: 0,
-  starter: 2500,    // $25/mo
-  pro: 9900,        // $99/mo
+  starter: 2500, // $25/mo
+  pro: 9900, // $99/mo
   enterprise: 49900, // $499/mo
 }
 
 // ─── Cloud Platform ──────────────────────────────────────────────────────────
 
-const DEFAULT_OPTIONS: Required<Omit<CloudPlatformOptions, "billingProvider">> & { billingProvider: BillingProvider | null } = {
+const DEFAULT_OPTIONS: Required<Omit<CloudPlatformOptions, "billingProvider">> & {
+  billingProvider: BillingProvider | null
+} = {
   region: "us-east-1",
   billingProvider: null,
   maxProjectsPerOrg: 50,
@@ -290,7 +292,9 @@ export class CloudPlatform {
     const projectEnvs = [...this.environments.values()].filter((e) => e.projectId === projectId)
     const limits = this.getPlanLimits(project.plan)
     if (projectEnvs.length >= limits.maxEnvironments) {
-      throw new Error(`Project has reached the maximum of ${limits.maxEnvironments} environments for ${project.plan} plan`)
+      throw new Error(
+        `Project has reached the maximum of ${limits.maxEnvironments} environments for ${project.plan} plan`,
+      )
     }
 
     const env: EnvironmentRecord = {

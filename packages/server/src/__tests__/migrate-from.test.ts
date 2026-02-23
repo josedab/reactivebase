@@ -81,7 +81,7 @@ describe("Prisma to ReactiveBase conversion", () => {
   it("generates valid ReactiveBase schema code", () => {
     const output = convertPrismaToReactiveBase(PRISMA_SCHEMA)
 
-    expect(output).toContain('import { defineSchema, defineTable, v }')
+    expect(output).toContain("import { defineSchema, defineTable, v }")
     expect(output).toContain("defineSchema({")
     expect(output).toContain("user: defineTable({")
     expect(output).toContain("post: defineTable({")
@@ -94,7 +94,7 @@ describe("Prisma to ReactiveBase conversion", () => {
 
     // Indexes
     expect(output).toContain(".index(")
-    expect(output).toContain('{ unique: true }')
+    expect(output).toContain("{ unique: true }")
   })
 
   it("maps Prisma types correctly", () => {

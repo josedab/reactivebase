@@ -28,10 +28,13 @@ export class ReactiveBaseClient {
   private cache: QueryCache
   private subscriptions = new Map<string, SubscriptionHandle>()
   private queryListeners = new Map<string, Set<QueryListener>>()
-  private mutationCallbacks = new Map<string, {
-    resolve: (data: unknown) => void
-    reject: (error: Error) => void
-  }>()
+  private mutationCallbacks = new Map<
+    string,
+    {
+      resolve: (data: unknown) => void
+      reject: (error: Error) => void
+    }
+  >()
   private subscriptionCounter = 0
 
   constructor(options: ReactiveBaseClientOptions) {
@@ -55,11 +58,7 @@ export class ReactiveBaseClient {
   /**
    * Subscribe to a reactive query.
    */
-  subscribe(
-    queryName: string,
-    args: unknown,
-    listener: QueryListener,
-  ): () => void {
+  subscribe(queryName: string, args: unknown, listener: QueryListener): () => void {
     const subscriptionId = `sub_${++this.subscriptionCounter}`
 
     // Register listener
@@ -163,26 +162,32 @@ export class ReactiveBaseClient {
   private handleMessage(msg: Record<string, unknown>): void {
     switch (msg.type) {
       case "subscription_data":
-        this.handleSubscriptionData(msg as {
-          subscriptionId: string
-          data: unknown
-          version: number
-        })
+        this.handleSubscriptionData(
+          msg as {
+            subscriptionId: string
+            data: unknown
+            version: number
+          },
+        )
         break
 
       case "subscription_update":
-        this.handleSubscriptionUpdate(msg as {
-          subscriptionId: string
-          data: unknown
-          version: number
-        })
+        this.handleSubscriptionUpdate(
+          msg as {
+            subscriptionId: string
+            data: unknown
+            version: number
+          },
+        )
         break
 
       case "subscription_error":
-        this.handleSubscriptionError(msg as {
-          subscriptionId: string
-          error: { code: string; message: string }
-        })
+        this.handleSubscriptionError(
+          msg as {
+            subscriptionId: string
+            error: { code: string; message: string }
+          },
+        )
         break
 
       case "mutation_result":
@@ -190,10 +195,12 @@ export class ReactiveBaseClient {
         break
 
       case "mutation_error":
-        this.handleMutationError(msg as {
-          requestId: string
-          error: { code: string; message: string }
-        })
+        this.handleMutationError(
+          msg as {
+            requestId: string
+            error: { code: string; message: string }
+          },
+        )
         break
 
       case "action_result":
@@ -201,19 +208,17 @@ export class ReactiveBaseClient {
         break
 
       case "action_error":
-        this.handleMutationError(msg as {
-          requestId: string
-          error: { code: string; message: string }
-        })
+        this.handleMutationError(
+          msg as {
+            requestId: string
+            error: { code: string; message: string }
+          },
+        )
         break
     }
   }
 
-  private handleSubscriptionData(msg: {
-    subscriptionId: string
-    data: unknown
-    version: number
-  }): void {
+  private handleSubscriptionData(msg: { subscriptionId: string; data: unknown; version: number }): void {
     const handle = this.subscriptions.get(msg.subscriptionId)
     if (!handle) return
 
@@ -227,19 +232,12 @@ export class ReactiveBaseClient {
     this.notifyListeners(msg.subscriptionId, msg.data)
   }
 
-  private handleSubscriptionUpdate(msg: {
-    subscriptionId: string
-    data: unknown
-    version: number
-  }): void {
+  private handleSubscriptionUpdate(msg: { subscriptionId: string; data: unknown; version: number }): void {
     this.cache.update(msg.subscriptionId, msg.data, msg.version)
     this.notifyListeners(msg.subscriptionId, msg.data)
   }
 
-  private handleSubscriptionError(msg: {
-    subscriptionId: string
-    error: { code: string; message: string }
-  }): void {
+  private handleSubscriptionError(msg: { subscriptionId: string; error: { code: string; message: string } }): void {
     const error = new Error(msg.error.message)
     this.notifyListeners(msg.subscriptionId, undefined, error)
   }
@@ -252,10 +250,7 @@ export class ReactiveBaseClient {
     }
   }
 
-  private handleMutationError(msg: {
-    requestId: string
-    error: { code: string; message: string }
-  }): void {
+  private handleMutationError(msg: { requestId: string; error: { code: string; message: string } }): void {
     const cb = this.mutationCallbacks.get(msg.requestId)
     if (cb) {
       this.mutationCallbacks.delete(msg.requestId)

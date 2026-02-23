@@ -13,33 +13,20 @@ export interface ReactiveBaseProviderProps {
   children: ReactNode
 }
 
-export function ReactiveBaseProvider({
-  url,
-  token,
-  children,
-}: ReactiveBaseProviderProps) {
-  const client = useMemo(
-    () => new ReactiveBaseClient({ url, token }),
-    [url, token],
-  )
+export function ReactiveBaseProvider({ url, token, children }: ReactiveBaseProviderProps) {
+  const client = useMemo(() => new ReactiveBaseClient({ url, token }), [url, token])
 
   useEffect(() => {
     return () => client.disconnect()
   }, [client])
 
-  return (
-    <ReactiveBaseContext.Provider value={client}>
-      {children}
-    </ReactiveBaseContext.Provider>
-  )
+  return <ReactiveBaseContext.Provider value={client}>{children}</ReactiveBaseContext.Provider>
 }
 
 export function useReactiveBaseClient(): ReactiveBaseClient {
   const client = useContext(ReactiveBaseContext)
   if (!client) {
-    throw new Error(
-      "useReactiveBaseClient must be used within a <ReactiveBaseProvider>",
-    )
+    throw new Error("useReactiveBaseClient must be used within a <ReactiveBaseProvider>")
   }
   return client
 }

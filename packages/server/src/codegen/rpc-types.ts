@@ -110,20 +110,31 @@ export function schemaToValidationCode(schema: RpcSchema, varName: string = "val
   switch (schema.kind) {
     case "string":
       checks.push(`if (typeof ${varName} !== "string") throw new ValidationError("Expected string")`)
-      if (schema.minLength) checks.push(`if (${varName}.length < ${schema.minLength}) throw new ValidationError("String too short")`)
-      if (schema.maxLength) checks.push(`if (${varName}.length > ${schema.maxLength}) throw new ValidationError("String too long")`)
-      if (schema.pattern) checks.push(`if (!/${schema.pattern}/.test(${varName})) throw new ValidationError("String does not match pattern")`)
+      if (schema.minLength)
+        checks.push(`if (${varName}.length < ${schema.minLength}) throw new ValidationError("String too short")`)
+      if (schema.maxLength)
+        checks.push(`if (${varName}.length > ${schema.maxLength}) throw new ValidationError("String too long")`)
+      if (schema.pattern)
+        checks.push(
+          `if (!/${schema.pattern}/.test(${varName})) throw new ValidationError("String does not match pattern")`,
+        )
       break
     case "number":
-      checks.push(`if (typeof ${varName} !== "number" || isNaN(${varName})) throw new ValidationError("Expected number")`)
-      if (schema.min !== undefined) checks.push(`if (${varName} < ${schema.min}) throw new ValidationError("Number too small")`)
-      if (schema.max !== undefined) checks.push(`if (${varName} > ${schema.max}) throw new ValidationError("Number too large")`)
+      checks.push(
+        `if (typeof ${varName} !== "number" || isNaN(${varName})) throw new ValidationError("Expected number")`,
+      )
+      if (schema.min !== undefined)
+        checks.push(`if (${varName} < ${schema.min}) throw new ValidationError("Number too small")`)
+      if (schema.max !== undefined)
+        checks.push(`if (${varName} > ${schema.max}) throw new ValidationError("Number too large")`)
       break
     case "boolean":
       checks.push(`if (typeof ${varName} !== "boolean") throw new ValidationError("Expected boolean")`)
       break
     case "object":
-      checks.push(`if (typeof ${varName} !== "object" || ${varName} === null) throw new ValidationError("Expected object")`)
+      checks.push(
+        `if (typeof ${varName} !== "object" || ${varName} === null) throw new ValidationError("Expected object")`,
+      )
       break
     case "enum":
       if (schema.values) {
@@ -279,7 +290,9 @@ export class RpcTypeGenerator {
     lines.push("  query<TArgs, TReturn>(ref: FunctionReference<TArgs, TReturn>, args: TArgs): Promise<TReturn>")
     lines.push("  mutation<TArgs, TReturn>(ref: FunctionReference<TArgs, TReturn>, args: TArgs): Promise<TReturn>")
     lines.push("  action<TArgs, TReturn>(ref: FunctionReference<TArgs, TReturn>, args: TArgs): Promise<TReturn>")
-    lines.push("  subscribe<TArgs, TReturn>(ref: FunctionReference<TArgs, TReturn>, args: TArgs, callback: (result: TReturn) => void): () => void")
+    lines.push(
+      "  subscribe<TArgs, TReturn>(ref: FunctionReference<TArgs, TReturn>, args: TArgs, callback: (result: TReturn) => void): () => void",
+    )
     lines.push("}")
     lines.push("")
 
@@ -337,7 +350,9 @@ export class RpcTypeGenerator {
     for (const fn of this.functions.values()) {
       const pyName = fn.exportName.replace(/([A-Z])/g, "_$1").toLowerCase()
       lines.push(`    def ${fn.module}_${pyName}(self, **kwargs) -> Any:`)
-      lines.push(`        return self.client.post("/api/v1/${fn.type}", json={"name": "${fn.name}", "args": kwargs}).json()`)
+      lines.push(
+        `        return self.client.post("/api/v1/${fn.type}", json={"name": "${fn.name}", "args": kwargs}).json()`,
+      )
       lines.push("")
     }
 

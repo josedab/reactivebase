@@ -1,6 +1,4 @@
-export {
-  OptimisticUpdateManager,
-} from "./optimistic.js"
+export { OptimisticUpdateManager } from "./optimistic.js"
 
 export type {
   OptimisticUpdate,

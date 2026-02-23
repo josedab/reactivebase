@@ -159,7 +159,8 @@ export class SqlPlayground {
     const trimmed = sql.trim()
     const upperSql = trimmed.toUpperCase()
 
-    const isReadOnly = !upperSql.startsWith("INSERT") &&
+    const isReadOnly =
+      !upperSql.startsWith("INSERT") &&
       !upperSql.startsWith("UPDATE") &&
       !upperSql.startsWith("DELETE") &&
       !upperSql.startsWith("DROP") &&
@@ -200,10 +201,33 @@ export class SqlPlayground {
    */
   formatSql(sql: string): string {
     const keywords = [
-      "SELECT", "FROM", "WHERE", "AND", "OR", "JOIN", "LEFT JOIN", "RIGHT JOIN",
-      "INNER JOIN", "OUTER JOIN", "ON", "GROUP BY", "ORDER BY", "HAVING",
-      "LIMIT", "OFFSET", "INSERT INTO", "VALUES", "UPDATE", "SET", "DELETE FROM",
-      "CREATE TABLE", "ALTER TABLE", "DROP TABLE", "AS", "UNION", "DISTINCT",
+      "SELECT",
+      "FROM",
+      "WHERE",
+      "AND",
+      "OR",
+      "JOIN",
+      "LEFT JOIN",
+      "RIGHT JOIN",
+      "INNER JOIN",
+      "OUTER JOIN",
+      "ON",
+      "GROUP BY",
+      "ORDER BY",
+      "HAVING",
+      "LIMIT",
+      "OFFSET",
+      "INSERT INTO",
+      "VALUES",
+      "UPDATE",
+      "SET",
+      "DELETE FROM",
+      "CREATE TABLE",
+      "ALTER TABLE",
+      "DROP TABLE",
+      "AS",
+      "UNION",
+      "DISTINCT",
     ]
 
     let formatted = sql.trim()
@@ -224,12 +248,8 @@ export class SqlPlayground {
     let executionTime: number | undefined
 
     for (const line of lines) {
-      const nodeMatch = line.match(
-        /^(\s*)->\s*(.+?)\s+\(cost=(\d+\.?\d*)\.\.([\d.]+)\s+rows=(\d+)\s+width=(\d+)\)/,
-      )
-      const rootMatch = line.match(
-        /^(\s*)(.+?)\s+\(cost=(\d+\.?\d*)\.\.([\d.]+)\s+rows=(\d+)\s+width=(\d+)\)/,
-      )
+      const nodeMatch = line.match(/^(\s*)->\s*(.+?)\s+\(cost=(\d+\.?\d*)\.\.([\d.]+)\s+rows=(\d+)\s+width=(\d+)\)/)
+      const rootMatch = line.match(/^(\s*)(.+?)\s+\(cost=(\d+\.?\d*)\.\.([\d.]+)\s+rows=(\d+)\s+width=(\d+)\)/)
 
       const match = nodeMatch ?? rootMatch
       if (match) {

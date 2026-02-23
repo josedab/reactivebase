@@ -7,14 +7,7 @@
 
 "use client"
 
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react"
+import { createContext, useContext, useMemo, useEffect, useState, type ReactNode } from "react"
 import { ReactiveBaseClient, type ReactiveBaseClientOptions } from "@reactivebase/client"
 
 // --- Preloaded Query Types ---
@@ -72,24 +65,18 @@ export async function preloadQuery<T = unknown>(
  * Initially returns the SSR-fetched data, then seamlessly transitions to
  * real-time updates via WebSocket.
  */
-export function usePreloadedQuery<T = unknown>(
-  preloaded: PreloadedQueryResult<T>,
-): T {
+export function usePreloadedQuery<T = unknown>(preloaded: PreloadedQueryResult<T>): T {
   const client = useNextjsClient()
   const [data, setData] = useState<T>(preloaded.data)
   const argsJson = JSON.stringify(preloaded.args)
 
   useEffect(() => {
     // Subscribe for live updates, starting from preloaded data
-    const unsubscribe = client.subscribe(
-      preloaded.queryName,
-      preloaded.args,
-      (result, error) => {
-        if (!error && result !== undefined) {
-          setData(result as T)
-        }
-      },
-    )
+    const unsubscribe = client.subscribe(preloaded.queryName, preloaded.args, (result, error) => {
+      if (!error && result !== undefined) {
+        setData(result as T)
+      }
+    })
 
     return unsubscribe
   }, [client, preloaded.queryName, argsJson])
@@ -111,33 +98,20 @@ export interface ReactiveBaseNextjsProviderProps {
  * ReactiveBase provider for Next.js apps.
  * Wraps the standard client with Next.js-specific handling.
  */
-export function ReactiveBaseNextjsProvider({
-  url,
-  token,
-  children,
-}: ReactiveBaseNextjsProviderProps) {
-  const client = useMemo(
-    () => new ReactiveBaseClient({ url, token }),
-    [url, token],
-  )
+export function ReactiveBaseNextjsProvider({ url, token, children }: ReactiveBaseNextjsProviderProps) {
+  const client = useMemo(() => new ReactiveBaseClient({ url, token }), [url, token])
 
   useEffect(() => {
     return () => client.disconnect()
   }, [client])
 
-  return (
-    <NextjsClientContext.Provider value={client}>
-      {children}
-    </NextjsClientContext.Provider>
-  )
+  return <NextjsClientContext.Provider value={client}>{children}</NextjsClientContext.Provider>
 }
 
 function useNextjsClient(): ReactiveBaseClient {
   const client = useContext(NextjsClientContext)
   if (!client) {
-    throw new Error(
-      "usePreloadedQuery must be used within a <ReactiveBaseNextjsProvider>",
-    )
+    throw new Error("usePreloadedQuery must be used within a <ReactiveBaseNextjsProvider>")
   }
   return client
 }
@@ -147,10 +121,7 @@ function useNextjsClient(): ReactiveBaseClient {
  */
 export function isPreloadedQuery(value: unknown): value is PreloadedQueryResult {
   return (
-    typeof value === "object" &&
-    value !== null &&
-    "_tag" in value &&
-    (value as { _tag: string })._tag === "preloaded"
+    typeof value === "object" && value !== null && "_tag" in value && (value as { _tag: string })._tag === "preloaded"
   )
 }
 
@@ -171,8 +142,14 @@ export function createQueryResource<T>(
   let error: Error
 
   const promise = preloadQuery<T>(serverUrl, queryName, args, options).then(
-    (r) => { status = "success"; result = r.data },
-    (e) => { status = "error"; error = e },
+    (r) => {
+      status = "success"
+      result = r.data
+    },
+    (e) => {
+      status = "error"
+      error = e
+    },
   )
 
   return {
@@ -232,16 +209,12 @@ export function useStreamingQuery<T = unknown>(
     }
 
     // Upgrade to live subscription
-    const unsubscribe = client.subscribe(
-      queryRef,
-      args ?? preloaded?.args,
-      (result, error) => {
-        if (!error && result !== undefined) {
-          setData(result as T)
-          setIsLive(true)
-        }
-      },
-    )
+    const unsubscribe = client.subscribe(queryRef, args ?? preloaded?.args, (result, error) => {
+      if (!error && result !== undefined) {
+        setData(result as T)
+        setIsLive(true)
+      }
+    })
 
     return unsubscribe
   }, [client, queryRef, argsJson])

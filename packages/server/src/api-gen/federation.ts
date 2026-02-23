@@ -50,10 +50,7 @@ export interface SubscriptionMapping {
 /**
  * Generate a federated GraphQL schema from a ReactiveBase schema.
  */
-export function generateFederatedSchema(
-  schema: Schema,
-  options: FederationOptions = {},
-): FederatedSchema {
+export function generateFederatedSchema(schema: Schema, options: FederationOptions = {}): FederatedSchema {
   const federation = options.federation !== false
   const subscriptions = options.subscriptions !== false
   const relayPagination = options.relayPagination !== false
@@ -66,7 +63,9 @@ export function generateFederatedSchema(
 
   // Federation v2 schema extension
   if (federation) {
-    lines.push('extend schema @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable", "@external"])')
+    lines.push(
+      'extend schema @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable", "@external"])',
+    )
     lines.push("")
   }
 
@@ -86,10 +85,9 @@ export function generateFederatedSchema(
 
     entityTypes.push(typeName)
 
-    const directives = [
-      federation ? `@key(fields: "id")` : "",
-      shareableByDefault ? "@shareable" : "",
-    ].filter(Boolean).join(" ")
+    const directives = [federation ? `@key(fields: "id")` : "", shareableByDefault ? "@shareable" : ""]
+      .filter(Boolean)
+      .join(" ")
 
     lines.push(`type ${typeName} ${directives}{`.trim())
     lines.push("  id: ID!")
@@ -147,7 +145,9 @@ export function generateFederatedSchema(
     const singular = singularize(tableName)
 
     if (relayPagination) {
-      lines.push(`  ${tableName}(first: Int, after: String, last: Int, before: String, filter: ${typeName}Input): ${typeName}Connection!`)
+      lines.push(
+        `  ${tableName}(first: Int, after: String, last: Int, before: String, filter: ${typeName}Input): ${typeName}Connection!`,
+      )
     } else {
       lines.push(`  ${tableName}(limit: Int, offset: Int, filter: ${typeName}Input): [${typeName}!]!`)
     }
@@ -223,7 +223,9 @@ export function generateResolverSkeleton(schema: Schema): string {
 
   for (const tableName of schema.tableNames) {
     const singular = singularize(tableName)
-    lines.push(`    ${tableName}: async (_parent, args, ctx) => ctx.db.${tableName}.where(args.filter ?? {}).limit(args.first ?? 50),`)
+    lines.push(
+      `    ${tableName}: async (_parent, args, ctx) => ctx.db.${tableName}.where(args.filter ?? {}).limit(args.first ?? 50),`,
+    )
     lines.push(`    ${singular}: async (_parent, { id }, ctx) => ctx.db.${tableName}.get(id),`)
   }
 
@@ -234,7 +236,9 @@ export function generateResolverSkeleton(schema: Schema): string {
     const typeName = pascalCase(tableName)
     lines.push(`    create${typeName}: async (_parent, { input }, ctx) => ctx.db.${tableName}.insert(input),`)
     lines.push(`    update${typeName}: async (_parent, { id, input }, ctx) => ctx.db.${tableName}.update(id, input),`)
-    lines.push(`    delete${typeName}: async (_parent, { id }, ctx) => { await ctx.db.${tableName}.delete(id); return true },`)
+    lines.push(
+      `    delete${typeName}: async (_parent, { id }, ctx) => { await ctx.db.${tableName}.delete(id); return true },`,
+    )
   }
 
   lines.push("  },")
@@ -264,22 +268,35 @@ export function getSubscriptionMappings(schema: Schema): SubscriptionMapping[] {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function validatorToGraphQLType(validator: { type: string; isOptional: boolean; innerValidator?: { type: string } }): string {
-  const actual = validator.type === "optional" && validator.innerValidator
-    ? validator.innerValidator
-    : validator
+function validatorToGraphQLType(validator: {
+  type: string
+  isOptional: boolean
+  innerValidator?: { type: string }
+}): string {
+  const actual = validator.type === "optional" && validator.innerValidator ? validator.innerValidator : validator
   const required = !validator.isOptional ? "!" : ""
 
   switch (actual.type) {
-    case "string": case "id": case "enum": return `String${required}`
-    case "number": return `Float${required}`
-    case "integer": return `Int${required}`
-    case "boolean": return `Boolean${required}`
-    case "timestamp": return `DateTime${required}`
-    case "json": return `JSON${required}`
-    case "vector": return `[Float!]${required}`
-    case "array": return `[String!]${required}`
-    default: return `String${required}`
+    case "string":
+    case "id":
+    case "enum":
+      return `String${required}`
+    case "number":
+      return `Float${required}`
+    case "integer":
+      return `Int${required}`
+    case "boolean":
+      return `Boolean${required}`
+    case "timestamp":
+      return `DateTime${required}`
+    case "json":
+      return `JSON${required}`
+    case "vector":
+      return `[Float!]${required}`
+    case "array":
+      return `[String!]${required}`
+    default:
+      return `String${required}`
   }
 }
 

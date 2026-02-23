@@ -16,10 +16,7 @@ export interface Migration {
 /**
  * Generate CREATE TABLE SQL from a schema definition.
  */
-export function generateCreateTableSQL(
-  tableName: string,
-  columns: Record<string, Validator>,
-): string {
+export function generateCreateTableSQL(tableName: string, columns: Record<string, Validator>): string {
   const lines: string[] = []
 
   // Always add id column
@@ -34,9 +31,8 @@ export function generateCreateTableSQL(
 }
 
 function columnToSQL(name: string, validator: Validator): string {
-  const actualValidator = validator.type === "optional" && validator.innerValidator
-    ? validator.innerValidator
-    : validator
+  const actualValidator =
+    validator.type === "optional" && validator.innerValidator ? validator.innerValidator : validator
   const pgType = actualValidator.pgType
   const nullable = validator.isOptional ? "" : " NOT NULL"
   let defaultVal = ""
@@ -121,9 +117,7 @@ export function generateMigrationSQL(schema: Schema): Migration {
   for (const tableName of schema.tableNames) {
     const table = schema.tables[tableName]
     for (const validator of Object.values(table.columns)) {
-      const actual = validator.type === "optional" && validator.innerValidator
-        ? validator.innerValidator
-        : validator
+      const actual = validator.type === "optional" && validator.innerValidator ? validator.innerValidator : validator
       if (actual.type === "vector") {
         hasVectorColumns = true
         break

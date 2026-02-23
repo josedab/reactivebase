@@ -1,9 +1,6 @@
 export { TransportServer } from "./websocket-server.js"
 export type { TransportServerOptions } from "./websocket-server.js"
-export {
-  parseClientMessage,
-  serializeServerMessage,
-} from "./protocol.js"
+export { parseClientMessage, serializeServerMessage } from "./protocol.js"
 export type {
   ClientMessage,
   ServerMessage,

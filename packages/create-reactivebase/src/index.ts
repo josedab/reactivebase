@@ -48,11 +48,7 @@ if (!skipWizard && process.stdin.isTTY) {
 const { dependencies, devDependencies } = generateDependencies(wizardOptions)
 
 // Create directory structure
-const dirs = [
-  "",
-  "convex",
-  "_generated",
-]
+const dirs = ["", "convex", "_generated"]
 
 for (const dir of dirs) {
   mkdirSync(join(projectDir, dir), { recursive: true })
@@ -71,38 +67,55 @@ if (selectedTemplate === "saas") {
   // Also write standard files (package.json, tsconfig, .gitignore)
   writeFileSync(
     join(projectDir, "package.json"),
-    JSON.stringify({
-      name: projectName,
-      version: "0.1.0",
-      private: true,
-      type: "module",
-      scripts: {
-        dev: "reactivebase dev",
-        build: "tsc",
-        generate: "reactivebase generate",
-        "migrate:generate": "reactivebase migrate --generate",
-        "migrate:apply": "reactivebase migrate --apply",
-        deploy: "reactivebase deploy",
+    JSON.stringify(
+      {
+        name: projectName,
+        version: "0.1.0",
+        private: true,
+        type: "module",
+        scripts: {
+          dev: "reactivebase dev",
+          build: "tsc",
+          generate: "reactivebase generate",
+          "migrate:generate": "reactivebase migrate --generate",
+          "migrate:apply": "reactivebase migrate --apply",
+          deploy: "reactivebase deploy",
+        },
+        dependencies: {
+          "@reactivebase/server": "^0.1.0",
+          "@reactivebase/client": "^0.1.0",
+          "@reactivebase/react": "^0.1.0",
+          "@reactivebase/cli": "^0.1.0",
+        },
+        devDependencies: { typescript: "^5.7.0", "@types/node": "^20.0.0" },
       },
-      dependencies: {
-        "@reactivebase/server": "^0.1.0",
-        "@reactivebase/client": "^0.1.0",
-        "@reactivebase/react": "^0.1.0",
-        "@reactivebase/cli": "^0.1.0",
-      },
-      devDependencies: { typescript: "^5.7.0", "@types/node": "^20.0.0" },
-    }, null, 2) + "\n",
+      null,
+      2,
+    ) + "\n",
   )
 
-  writeFileSync(join(projectDir, "tsconfig.json"), JSON.stringify({
-    compilerOptions: {
-      target: "ES2022", module: "ESNext", moduleResolution: "bundler",
-      lib: ["ES2022"], strict: true, esModuleInterop: true,
-      skipLibCheck: true, outDir: "./dist", rootDir: "./",
-    },
-    include: ["convex/**/*.ts", "**/*.ts"],
-    exclude: ["node_modules", "dist"],
-  }, null, 2) + "\n")
+  writeFileSync(
+    join(projectDir, "tsconfig.json"),
+    JSON.stringify(
+      {
+        compilerOptions: {
+          target: "ES2022",
+          module: "ESNext",
+          moduleResolution: "bundler",
+          lib: ["ES2022"],
+          strict: true,
+          esModuleInterop: true,
+          skipLibCheck: true,
+          outDir: "./dist",
+          rootDir: "./",
+        },
+        include: ["convex/**/*.ts", "**/*.ts"],
+        exclude: ["node_modules", "dist"],
+      },
+      null,
+      2,
+    ) + "\n",
+  )
 
   writeFileSync(join(projectDir, ".gitignore"), "node_modules/\ndist/\n_generated/\n.env\n*.log\n")
 

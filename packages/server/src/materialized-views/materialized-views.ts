@@ -34,9 +34,9 @@ export interface MaterializedViewDefinition {
 }
 
 export type RefreshStrategy =
-  | "on-mutation"        // Refresh when source table mutates
-  | "periodic"           // Refresh on a timer
-  | "manual"             // Only refresh when explicitly called
+  | "on-mutation" // Refresh when source table mutates
+  | "periodic" // Refresh on a timer
+  | "manual" // Only refresh when explicitly called
 
 export interface AggregationDef {
   fn: "count" | "sum" | "avg" | "min" | "max" | "percentile"

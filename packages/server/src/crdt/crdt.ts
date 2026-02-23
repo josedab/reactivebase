@@ -184,15 +184,7 @@ export function buildInsertOperationSQL(op: CrdtOperation): { sql: string; param
     sql: `INSERT INTO _reactivebase_crdt_operations (id, doc_id, node_id, clock, timestamp, type, data)
 VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
 ON CONFLICT (id) DO NOTHING`,
-    params: [
-      op.operationId,
-      op.docId,
-      op.nodeId,
-      op.clock,
-      op.timestamp,
-      op.type,
-      JSON.stringify(op.data),
-    ],
+    params: [op.operationId, op.docId, op.nodeId, op.clock, op.timestamp, op.type, JSON.stringify(op.data)],
   }
 }
 
@@ -203,20 +195,14 @@ export function buildGetDocumentSQL(docId: string): { sql: string; params: unkno
   }
 }
 
-export function buildGetOperationsSinceSQL(
-  docId: string,
-  sinceClock: number,
-): { sql: string; params: unknown[] } {
+export function buildGetOperationsSinceSQL(docId: string, sinceClock: number): { sql: string; params: unknown[] } {
   return {
     sql: `SELECT * FROM _reactivebase_crdt_operations WHERE doc_id = $1 AND clock > $2 ORDER BY clock ASC`,
     params: [docId, sinceClock],
   }
 }
 
-export function buildCompactOperationsSQL(
-  docId: string,
-  beforeClock: number,
-): { sql: string; params: unknown[] } {
+export function buildCompactOperationsSQL(docId: string, beforeClock: number): { sql: string; params: unknown[] } {
   return {
     sql: `DELETE FROM _reactivebase_crdt_operations WHERE doc_id = $1 AND clock < $2`,
     params: [docId, beforeClock],
@@ -442,11 +428,7 @@ export class CrdtEngine {
     }
   }
 
-  private applyLwwRegister(
-    doc: CrdtDocument<LwwRegisterState>,
-    data: LwwRegisterOp,
-    op: CrdtOperation,
-  ): void {
+  private applyLwwRegister(doc: CrdtDocument<LwwRegisterState>, data: LwwRegisterOp, op: CrdtOperation): void {
     const existing = doc.state.values.get(data.key)
     if (
       !existing ||
@@ -461,20 +443,12 @@ export class CrdtEngine {
     }
   }
 
-  private applyGCounter(
-    doc: CrdtDocument<GCounterState>,
-    data: GCounterOp,
-    op: CrdtOperation,
-  ): void {
+  private applyGCounter(doc: CrdtDocument<GCounterState>, data: GCounterOp, op: CrdtOperation): void {
     const current = doc.state.counts.get(op.nodeId) ?? 0
     doc.state.counts.set(op.nodeId, current + data.amount)
   }
 
-  private applyPnCounter(
-    doc: CrdtDocument<PnCounterState>,
-    data: PnCounterOp,
-    op: CrdtOperation,
-  ): void {
+  private applyPnCounter(doc: CrdtDocument<PnCounterState>, data: PnCounterOp, op: CrdtOperation): void {
     if (data.kind === "pn-increment") {
       const current = doc.state.positive.get(op.nodeId) ?? 0
       doc.state.positive.set(op.nodeId, current + data.amount)
@@ -588,7 +562,8 @@ export class CrdtEngine {
       }
       case "pn-counter": {
         const state = doc.state as PnCounterState
-        let pos = 0, neg = 0
+        let pos = 0,
+          neg = 0
         for (const v of state.positive.values()) pos += v
         for (const v of state.negative.values()) neg += v
         return pos - neg

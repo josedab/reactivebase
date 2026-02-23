@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest"
 import { CloudPlatform } from "../cloud-platform/cloud-platform.js"
-import { CloudProvisioner, generatePreviewEnvTableSQL, generateCustomDomainTableSQL } from "../cloud-platform/cloud-provisioner.js"
+import {
+  CloudProvisioner,
+  generatePreviewEnvTableSQL,
+  generateCustomDomainTableSQL,
+} from "../cloud-platform/cloud-provisioner.js"
 
 function createPlatformWithProject() {
   const platform = new CloudPlatform({ region: "us-east-1" })

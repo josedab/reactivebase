@@ -395,8 +395,25 @@ export class DevToolsInstrumentation {
     this.mutations = []
     this.events = []
     this.snapshots = []
-    this.cacheStats = { entries: 0, hitCount: 0, missCount: 0, hitRate: 0, totalSizeEstimate: 0, oldestEntry: null, newestEntry: null }
-    this.wsStats = { messagesSent: 0, messagesReceived: 0, bytesSent: 0, bytesReceived: 0, connectionUptime: 0, reconnectCount: 0, lastMessageAt: null, status: "disconnected" }
+    this.cacheStats = {
+      entries: 0,
+      hitCount: 0,
+      missCount: 0,
+      hitRate: 0,
+      totalSizeEstimate: 0,
+      oldestEntry: null,
+      newestEntry: null,
+    }
+    this.wsStats = {
+      messagesSent: 0,
+      messagesReceived: 0,
+      bytesSent: 0,
+      bytesReceived: 0,
+      connectionUptime: 0,
+      reconnectCount: 0,
+      lastMessageAt: null,
+      status: "disconnected",
+    }
     this.connectionStartTime = null
   }
 

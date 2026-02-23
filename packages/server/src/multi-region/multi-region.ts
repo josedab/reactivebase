@@ -207,9 +207,7 @@ export class RegionRouter {
     }
 
     // If primary is down, find best healthy region
-    const healthy = this.regions
-      .filter((r) => r.status === "healthy")
-      .sort((a, b) => a.latencyMs - b.latencyMs)
+    const healthy = this.regions.filter((r) => r.status === "healthy").sort((a, b) => a.latencyMs - b.latencyMs)
 
     if (healthy.length > 0) {
       return {

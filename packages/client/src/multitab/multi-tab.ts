@@ -53,13 +53,16 @@ export class MultiTabCoordinator {
 
     // Wait for competing claims
     return new Promise((resolve) => {
-      this.electionTimer = setTimeout(() => {
-        if (this.role === "electing") {
-          this.role = "leader"
-          this.broadcast({ type: "leader_ack", tabId: this.tabId })
-        }
-        resolve(this.role)
-      }, 100 + Math.random() * 50)
+      this.electionTimer = setTimeout(
+        () => {
+          if (this.role === "electing") {
+            this.role = "leader"
+            this.broadcast({ type: "leader_ack", tabId: this.tabId })
+          }
+          resolve(this.role)
+        },
+        100 + Math.random() * 50,
+      )
     })
   }
 
@@ -88,7 +91,7 @@ export class MultiTabCoordinator {
   close(): void {
     if (this.electionTimer) clearTimeout(this.electionTimer)
     if (this.channel && "close" in this.channel) {
-      (this.channel as { close(): void }).close()
+      ;(this.channel as { close(): void }).close()
     }
     this.channel = null
   }

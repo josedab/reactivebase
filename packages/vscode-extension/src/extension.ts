@@ -116,17 +116,13 @@ async function cmdGenerate(): Promise<void> {
     updateStatusBar("idle")
     state.outputChannel.appendLine(
       `[${timestamp()}] Generated types for ${result.functions.length} functions` +
-      (result.errors.length > 0 ? ` (${result.errors.length} errors)` : ""),
+        (result.errors.length > 0 ? ` (${result.errors.length} errors)` : ""),
     )
 
     if (result.errors.length === 0) {
-      vscode.window.showInformationMessage(
-        `ReactiveBase: Generated types for ${result.functions.length} functions`,
-      )
+      vscode.window.showInformationMessage(`ReactiveBase: Generated types for ${result.functions.length} functions`)
     } else {
-      vscode.window.showWarningMessage(
-        `ReactiveBase: Generated types with ${result.errors.length} error(s)`,
-      )
+      vscode.window.showWarningMessage(`ReactiveBase: Generated types with ${result.errors.length} error(s)`)
     }
   } catch (error) {
     updateStatusBar("error")
@@ -225,12 +221,13 @@ async function cmdValidateSchema(): Promise<void> {
     if (errors.length === 0) {
       vscode.window.showInformationMessage("ReactiveBase: Schema is valid ✅")
     } else {
-      const diagnostics: vscode.Diagnostic[] = errors.map((e) =>
-        new vscode.Diagnostic(
-          new vscode.Range(e.line - 1, 0, e.line - 1, 100),
-          e.message,
-          vscode.DiagnosticSeverity.Error,
-        ),
+      const diagnostics: vscode.Diagnostic[] = errors.map(
+        (e) =>
+          new vscode.Diagnostic(
+            new vscode.Range(e.line - 1, 0, e.line - 1, 100),
+            e.message,
+            vscode.DiagnosticSeverity.Error,
+          ),
       )
       state.diagnosticCollection.set(vscode.Uri.file(schemaFile), diagnostics)
       vscode.window.showWarningMessage(`ReactiveBase: Schema has ${errors.length} error(s)`)
@@ -295,11 +292,7 @@ async function scanAndGenerate(): Promise<ScanResult> {
   return { functions, errors }
 }
 
-function scanFunctionSource(
-  source: string,
-  moduleName: string,
-  filePath: string,
-): ScanResult {
+function scanFunctionSource(source: string, moduleName: string, filePath: string): ScanResult {
   const functions: ScanResult["functions"] = []
   const errors: ScanResult["errors"] = []
 
@@ -493,13 +486,15 @@ function reportDiagnostics(result: ScanResult): void {
   const diagsByFile = new Map<string, vscode.Diagnostic[]>()
   for (const error of result.errors) {
     if (!diagsByFile.has(error.file)) diagsByFile.set(error.file, [])
-    diagsByFile.get(error.file)!.push(
-      new vscode.Diagnostic(
-        new vscode.Range(error.line - 1, 0, error.line - 1, 100),
-        error.message,
-        vscode.DiagnosticSeverity.Error,
-      ),
-    )
+    diagsByFile
+      .get(error.file)!
+      .push(
+        new vscode.Diagnostic(
+          new vscode.Range(error.line - 1, 0, error.line - 1, 100),
+          error.message,
+          vscode.DiagnosticSeverity.Error,
+        ),
+      )
   }
 
   for (const [file, diags] of diagsByFile) {

@@ -163,9 +163,7 @@ export async function queryBuilderBenchmarks() {
       name: "QueryBuilder: vector similarity",
       fn: () => {
         const embedding = new Array(1536).fill(0.1)
-        new QueryBuilder("documents")
-          .whereVectorSimilar("embedding", embedding, { topK: 10 })
-          .build()
+        new QueryBuilder("documents").whereVectorSimilar("embedding", embedding, { topK: 10 }).build()
       },
       iterations: 1_000,
     },
@@ -239,12 +237,16 @@ export async function resultDifferBenchmarks() {
   return [
     {
       name: "hashResult: small (1 row)",
-      fn: () => { hashResult(smallResult) },
+      fn: () => {
+        hashResult(smallResult)
+      },
       iterations: 10_000,
     },
     {
       name: "hashResult: large (100 rows)",
-      fn: () => { hashResult(largeResult) },
+      fn: () => {
+        hashResult(largeResult)
+      },
       iterations: 1_000,
     },
   ]

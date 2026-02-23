@@ -260,9 +260,7 @@ export function buildDataBrowserQuerySQL(options: DataBrowserOptions): {
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
-  const orderBy = options.sortBy
-    ? `ORDER BY "${options.sortBy}" ${options.sortDirection ?? "asc"}`
-    : "ORDER BY 1"
+  const orderBy = options.sortBy ? `ORDER BY "${options.sortBy}" ${options.sortDirection ?? "asc"}` : "ORDER BY 1"
   const page = options.page ?? 1
   const pageSize = options.pageSize ?? 50
   const offset = (page - 1) * pageSize
@@ -451,12 +449,10 @@ export class DashboardV2Engine {
         activeSubscriptions: allQueries.reduce((a, q) => a + q.subscriberCount, 0),
         queriesPerSecond: 0, // Would need time window tracking
         mutationsPerSecond: 0,
-        avgQueryLatencyMs: allQueries.length > 0
-          ? allQueries.reduce((a, q) => a + q.avgLatencyMs, 0) / allQueries.length
-          : 0,
-        avgMutationLatencyMs: totalMutations > 0
-          ? this.mutationLog.reduce((a, m) => a + m.durationMs, 0) / totalMutations
-          : 0,
+        avgQueryLatencyMs:
+          allQueries.length > 0 ? allQueries.reduce((a, q) => a + q.avgLatencyMs, 0) / allQueries.length : 0,
+        avgMutationLatencyMs:
+          totalMutations > 0 ? this.mutationLog.reduce((a, m) => a + m.durationMs, 0) / totalMutations : 0,
         errorRate: totalMutations > 0 ? totalErrors / totalMutations : 0,
         uptime: 0,
       },

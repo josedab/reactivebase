@@ -63,7 +63,15 @@ export function schemaToVisualModel(schema: Schema): SchemaVisualModel {
     const table = schema.tables[tableName]
 
     const columns: VisualColumn[] = [
-      { name: "id", type: "string", pgType: "text", isOptional: false, hasDefault: true, defaultValue: "gen_random_uuid()", isId: true },
+      {
+        name: "id",
+        type: "string",
+        pgType: "text",
+        isOptional: false,
+        hasDefault: true,
+        defaultValue: "gen_random_uuid()",
+        isId: true,
+      },
     ]
 
     for (const [colName, validator] of Object.entries(table.columns)) {
@@ -117,9 +125,7 @@ export function schemaToVisualModel(schema: Schema): SchemaVisualModel {
 }
 
 function validatorToVisualColumn(name: string, validator: Validator): VisualColumn {
-  const actual = validator.type === "optional" && validator.innerValidator
-    ? validator.innerValidator
-    : validator
+  const actual = validator.type === "optional" && validator.innerValidator ? validator.innerValidator : validator
 
   return {
     name,
@@ -274,27 +280,43 @@ export function generateDashboardHTML(model: SchemaVisualModel): string {
   <span class="badge">${model.relations.length} relations</span>
 </div>
 <div class="canvas">
-${model.tables.map((t) => `
+${model.tables
+  .map(
+    (t) => `
   <div class="table-card">
     <div class="table-header">${t.name}</div>
-    ${t.columns.map((c) => `
+    ${t.columns
+      .map(
+        (c) => `
     <div class="column">
       <span class="name">${c.isId ? '<span class="pk">PK</span>' : ""}${c.referencedTable ? '<span class="fk">FK</span>' : ""}${c.name}${c.isOptional ? '<span class="opt">?</span>' : ""}</span>
       <span class="type">${c.pgType}</span>
-    </div>`).join("")}
+    </div>`,
+      )
+      .join("")}
     ${t.indexes.length > 0 ? `<div class="indexes">${t.indexes.map((idx) => `<div class="idx">${idx.unique ? "UNIQUE " : ""}INDEX ${idx.name} (${idx.columns.join(", ")})${idx.type ? " USING " + idx.type : ""}</div>`).join("")}</div>` : ""}
-  </div>`).join("")}
+  </div>`,
+  )
+  .join("")}
 </div>
-${model.relations.length > 0 ? `
+${
+  model.relations.length > 0
+    ? `
 <div class="relations">
   <h3 style="margin-bottom: 8px; font-size: 14px;">Relations</h3>
-  ${model.relations.map((r) => `
+  ${model.relations
+    .map(
+      (r) => `
   <div class="relation">
     <span class="arrow">${r.type === "has_many" ? "⇉" : "→"}</span>
     ${r.fromTable}.${r.fromColumn} → ${r.toTable}.${r.toColumn}
     <em>(${r.name})</em>
-  </div>`).join("")}
-</div>` : ""}
+  </div>`,
+    )
+    .join("")}
+</div>`
+    : ""
+}
 <script>const schema = ${modelJson};</script>
 </body>
 </html>`

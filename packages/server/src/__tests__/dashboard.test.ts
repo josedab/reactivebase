@@ -99,7 +99,7 @@ describe("visualModelToCode", () => {
     const model = schemaToVisualModel(schema)
     const code = visualModelToCode(model)
 
-    expect(code).toContain('import { defineSchema, defineTable, v }')
+    expect(code).toContain("import { defineSchema, defineTable, v }")
     expect(code).toContain("defineSchema({")
     expect(code).toContain("users: defineTable({")
     expect(code).toContain("tasks: defineTable({")

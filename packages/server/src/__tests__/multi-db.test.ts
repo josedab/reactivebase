@@ -31,12 +31,15 @@ describe("DatabaseFederation", () => {
     })
 
     it("throws on multiple defaults", () => {
-      expect(() => new DatabaseFederation({
-        databases: {
-          a: { connectionString: "x", default: true },
-          b: { connectionString: "y", default: true },
-        },
-      })).toThrow(FederationError)
+      expect(
+        () =>
+          new DatabaseFederation({
+            databases: {
+              a: { connectionString: "x", default: true },
+              b: { connectionString: "y", default: true },
+            },
+          }),
+      ).toThrow(FederationError)
     })
 
     it("auto-selects first as default when none specified", () => {

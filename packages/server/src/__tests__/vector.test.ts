@@ -21,13 +21,27 @@ describe("v.vector()", () => {
 
 describe("vector index", () => {
   it("generates HNSW vector index SQL", () => {
-    const sql = generateIndexSQL("documents", "documents_embedding_idx", ["embedding"], false, "hnsw", "vector_cosine_ops")
+    const sql = generateIndexSQL(
+      "documents",
+      "documents_embedding_idx",
+      ["embedding"],
+      false,
+      "hnsw",
+      "vector_cosine_ops",
+    )
     expect(sql).toContain("USING hnsw")
     expect(sql).toContain("vector_cosine_ops")
   })
 
   it("generates IVFFlat vector index SQL", () => {
-    const sql = generateIndexSQL("documents", "documents_embedding_idx", ["embedding"], false, "ivfflat", "vector_l2_ops")
+    const sql = generateIndexSQL(
+      "documents",
+      "documents_embedding_idx",
+      ["embedding"],
+      false,
+      "ivfflat",
+      "vector_l2_ops",
+    )
     expect(sql).toContain("USING ivfflat")
     expect(sql).toContain("vector_l2_ops")
   })
@@ -71,8 +85,10 @@ describe("vector migration generation", () => {
 
 describe("vector query builder", () => {
   it("generates cosine similarity ORDER BY", () => {
-    const builder = new QueryBuilder("documents")
-      .whereVectorSimilar("embedding", [0.1, 0.2, 0.3], { topK: 5, metric: "cosine" })
+    const builder = new QueryBuilder("documents").whereVectorSimilar("embedding", [0.1, 0.2, 0.3], {
+      topK: 5,
+      metric: "cosine",
+    })
 
     const { sql, params } = builder.build()
     expect(sql).toContain("ORDER BY")
@@ -83,16 +99,14 @@ describe("vector query builder", () => {
   })
 
   it("generates L2 distance ORDER BY", () => {
-    const builder = new QueryBuilder("documents")
-      .whereVectorSimilar("embedding", [1, 2, 3], { metric: "l2" })
+    const builder = new QueryBuilder("documents").whereVectorSimilar("embedding", [1, 2, 3], { metric: "l2" })
 
     const { sql } = builder.build()
     expect(sql).toContain("<->")
   })
 
   it("generates inner product ORDER BY", () => {
-    const builder = new QueryBuilder("documents")
-      .whereVectorSimilar("embedding", [1, 2], { metric: "inner_product" })
+    const builder = new QueryBuilder("documents").whereVectorSimilar("embedding", [1, 2], { metric: "inner_product" })
 
     const { sql } = builder.build()
     expect(sql).toContain("<#>")
@@ -111,8 +125,7 @@ describe("vector query builder", () => {
   })
 
   it("tracks vector table as dependency", () => {
-    const builder = new QueryBuilder("documents")
-      .whereVectorSimilar("embedding", [0.1], { topK: 5 })
+    const builder = new QueryBuilder("documents").whereVectorSimilar("embedding", [0.1], { topK: 5 })
 
     const deps = builder.getDependencies()
     expect(deps).toEqual([{ table: "documents", filters: {} }])

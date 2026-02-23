@@ -54,7 +54,7 @@ describe("MigrationManager with mock DB", () => {
     return async (sql: string, params?: unknown[]) => {
       executedSQL.push(sql)
 
-      if (sql.includes("CREATE TABLE IF NOT EXISTS \"_reactivebase_migrations\"")) {
+      if (sql.includes('CREATE TABLE IF NOT EXISTS "_reactivebase_migrations"')) {
         return { rows: [] }
       }
       if (sql.includes("SELECT version") && sql.includes("_reactivebase_migrations")) {
@@ -66,11 +66,11 @@ describe("MigrationManager with mock DB", () => {
           })),
         }
       }
-      if (sql.includes("INSERT INTO \"_reactivebase_migrations\"")) {
+      if (sql.includes('INSERT INTO "_reactivebase_migrations"')) {
         appliedVersions.push(params?.[0] as string)
         return { rows: [] }
       }
-      if (sql.includes("DELETE FROM \"_reactivebase_migrations\"")) {
+      if (sql.includes('DELETE FROM "_reactivebase_migrations"')) {
         const idx = appliedVersions.indexOf(params?.[0] as string)
         if (idx >= 0) appliedVersions.splice(idx, 1)
         return { rows: [] }

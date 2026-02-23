@@ -1,10 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import {
-  MutationQueue,
-  OfflineQueryCache,
-  SyncEngine,
-  InMemoryOfflineStorage,
-} from "../index.js"
+import { MutationQueue, OfflineQueryCache, SyncEngine, InMemoryOfflineStorage } from "../index.js"
 
 describe("MutationQueue", () => {
   let queue: MutationQueue
@@ -169,9 +164,14 @@ describe("SyncEngine", () => {
     await queue.enqueue("fail", {})
 
     const errors: Error[] = []
-    const eng = new SyncEngine(queue, cache, {}, {
-      onConflict: (_mut, err) => errors.push(err),
-    })
+    const eng = new SyncEngine(
+      queue,
+      cache,
+      {},
+      {
+        onConflict: (_mut, err) => errors.push(err),
+      },
+    )
 
     await eng.replayMutations(async () => {
       throw new Error("Server error")

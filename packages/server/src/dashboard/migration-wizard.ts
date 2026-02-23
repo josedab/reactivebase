@@ -14,7 +14,8 @@
 import type { ChangeAnalysis, SafeMigrationPlan } from "../migrations/migration-planner.js"
 
 export function generateMigrationWizardHTML(analysis: ChangeAnalysis, plan: SafeMigrationPlan): string {
-  const riskColor = analysis.overallRisk === "safe" ? "#238636" : analysis.overallRisk === "caution" ? "#d29922" : "#da3633"
+  const riskColor =
+    analysis.overallRisk === "safe" ? "#238636" : analysis.overallRisk === "caution" ? "#d29922" : "#da3633"
   const riskEmoji = analysis.overallRisk === "safe" ? "✅" : analysis.overallRisk === "caution" ? "⚠️" : "🔴"
 
   return `<!DOCTYPE html>
@@ -68,25 +69,41 @@ export function generateMigrationWizardHTML(analysis: ChangeAnalysis, plan: Safe
 
 <h2>Changes Detected</h2>
 <div class="change-list">
-${analysis.changes.map((c) => `  <div class="change-item">
+${analysis.changes
+  .map(
+    (c) => `  <div class="change-item">
     <div>
       <div class="change-desc"><code>${c.change.type}</code> on <strong>${c.change.table}</strong>${c.change.column ? `.<strong>${c.change.column}</strong>` : ""}</div>
       <div style="font-size:12px;color:var(--muted);margin-top:4px">${c.recommendation}</div>
     </div>
     <span class="change-risk risk-${c.risk}">${c.risk}</span>
-  </div>`).join("\n")}
+  </div>`,
+  )
+  .join("\n")}
 </div>
 
-${plan.warnings.length > 0 ? `<h2>⚠️ Warnings</h2>
-${plan.warnings.map((w) => `<div class="warning">${w}</div>`).join("\n")}` : ""}
+${
+  plan.warnings.length > 0
+    ? `<h2>⚠️ Warnings</h2>
+${plan.warnings.map((w) => `<div class="warning">${w}</div>`).join("\n")}`
+    : ""
+}
 
 <h2>Migration Plan</h2>
-${plan.phases.map((phase, i) => `<div class="phase">
+${plan.phases
+  .map(
+    (phase, i) => `<div class="phase">
   <div class="phase-header">Phase ${i + 1}: ${phase.name} ${phase.requiresLock ? "🔒" : "✅"}</div>
   <div class="phase-desc">${phase.description}</div>
-  ${phase.steps.map((step) => `<div class="sql-block">${escapeHtml(step.sql)}</div>
-  <p class="info">${step.description}${step.reversible ? " · Reversible ✅" : " · ⚠️ Irreversible"}</p>`).join("\n")}
-</div>`).join("\n")}
+  ${phase.steps
+    .map(
+      (step) => `<div class="sql-block">${escapeHtml(step.sql)}</div>
+  <p class="info">${step.description}${step.reversible ? " · Reversible ✅" : " · ⚠️ Irreversible"}</p>`,
+    )
+    .join("\n")}
+</div>`,
+  )
+  .join("\n")}
 
 <div class="actions">
   <button class="btn btn-primary" onclick="applyMigration()">Apply Migration</button>

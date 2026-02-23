@@ -21,14 +21,7 @@
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type QueryAstNode =
-  | ScanNode
-  | FilterNode
-  | ProjectNode
-  | JoinNode
-  | AggregateNode
-  | SortNode
-  | LimitNode
+export type QueryAstNode = ScanNode | FilterNode | ProjectNode | JoinNode | AggregateNode | SortNode | LimitNode
 
 export interface ScanNode {
   type: "scan"
@@ -189,14 +182,22 @@ export function evaluatePredicate(predicate: FilterPredicate, row: Row): boolean
   const value = row[predicate.field]
 
   switch (predicate.operator) {
-    case "=": return value === predicate.value
-    case "!=": return value !== predicate.value
-    case ">": return (value as number) > (predicate.value as number)
-    case "<": return (value as number) < (predicate.value as number)
-    case ">=": return (value as number) >= (predicate.value as number)
-    case "<=": return (value as number) <= (predicate.value as number)
-    case "in": return (predicate.value as unknown[]).includes(value)
-    case "not_in": return !(predicate.value as unknown[]).includes(value)
+    case "=":
+      return value === predicate.value
+    case "!=":
+      return value !== predicate.value
+    case ">":
+      return (value as number) > (predicate.value as number)
+    case "<":
+      return (value as number) < (predicate.value as number)
+    case ">=":
+      return (value as number) >= (predicate.value as number)
+    case "<=":
+      return (value as number) <= (predicate.value as number)
+    case "in":
+      return (predicate.value as unknown[]).includes(value)
+    case "not_in":
+      return !(predicate.value as unknown[]).includes(value)
   }
 }
 
@@ -367,11 +368,7 @@ export class IncrementalViewMaintainer {
   /**
    * Register a view for incremental maintenance.
    */
-  register(config: {
-    viewId: string
-    queryAst: QueryAstNode
-    currentResult: Row[]
-  }): RegisteredView {
+  register(config: { viewId: string; queryAst: QueryAstNode; currentResult: Row[] }): RegisteredView {
     const dependencies = extractDependencies(config.queryAst)
     const ivmEligible = isIvmEligible(config.queryAst)
 
@@ -498,12 +495,7 @@ export class IncrementalViewMaintainer {
     return this.computeNodeDelta(view.viewId, view.queryAst, change, view.currentResult)
   }
 
-  private computeNodeDelta(
-    viewId: string,
-    node: QueryAstNode,
-    change: DataChange,
-    currentResult: Row[],
-  ): ViewDelta {
+  private computeNodeDelta(viewId: string, node: QueryAstNode, change: DataChange, currentResult: Row[]): ViewDelta {
     switch (node.type) {
       case "scan": {
         if (node.table !== change.table) {
@@ -514,9 +506,10 @@ export class IncrementalViewMaintainer {
           viewId,
           inserts: change.type === "insert" && change.newRow ? [change.newRow] : [],
           deletes: change.type === "delete" && change.oldRow ? [change.oldRow] : [],
-          updates: change.type === "update" && change.oldRow && change.newRow
-            ? [{ old: change.oldRow, new: change.newRow }]
-            : [],
+          updates:
+            change.type === "update" && change.oldRow && change.newRow
+              ? [{ old: change.oldRow, new: change.newRow }]
+              : [],
           requiresFullRefresh: false,
         }
       }
@@ -557,13 +550,7 @@ export class IncrementalViewMaintainer {
         const inner = this.computeNodeDelta(viewId, node.source, change, currentResult)
         if (inner.requiresFullRefresh) return inner
 
-        const newResult = computeAggregateDelta(
-          node,
-          inner.inserts,
-          inner.deletes,
-          inner.updates,
-          currentResult,
-        )
+        const newResult = computeAggregateDelta(node, inner.inserts, inner.deletes, inner.updates, currentResult)
 
         return {
           viewId,
@@ -596,9 +583,7 @@ export class IncrementalViewMaintainer {
     // Apply deletes
     if (delta.deletes.length > 0) {
       const deleteIds = new Set(delta.deletes.map((r) => JSON.stringify(r)))
-      view.currentResult = view.currentResult.filter(
-        (r) => !deleteIds.has(JSON.stringify(r)),
-      )
+      view.currentResult = view.currentResult.filter((r) => !deleteIds.has(JSON.stringify(r)))
     }
 
     // Apply inserts
@@ -606,9 +591,7 @@ export class IncrementalViewMaintainer {
 
     // Apply updates
     for (const update of delta.updates) {
-      const idx = view.currentResult.findIndex(
-        (r) => JSON.stringify(r) === JSON.stringify(update.old),
-      )
+      const idx = view.currentResult.findIndex((r) => JSON.stringify(r) === JSON.stringify(update.old))
       if (idx >= 0) {
         view.currentResult[idx] = update.new
       }

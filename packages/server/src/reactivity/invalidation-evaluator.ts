@@ -98,10 +98,7 @@ export class InvalidationEvaluator {
   /**
    * Check if a set of filter predicates matches a row's values.
    */
-  private filtersMatch(
-    filters: Record<string, unknown>,
-    rowValues: Record<string, unknown>,
-  ): boolean {
+  private filtersMatch(filters: Record<string, unknown>, rowValues: Record<string, unknown>): boolean {
     for (const [column, filterValue] of Object.entries(filters)) {
       const rowValue = rowValues[column]
 

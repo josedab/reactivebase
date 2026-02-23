@@ -1,12 +1,17 @@
 import { describe, it, expect } from "vitest"
-import { typedRef, type TypedFunctionReference, type InferArgs, type InferReturn, type TypedDatabaseContext, type TableRow } from "../types/typed-api.js"
+import {
+  typedRef,
+  type TypedFunctionReference,
+  type InferArgs,
+  type InferReturn,
+  type TypedDatabaseContext,
+  type TableRow,
+} from "../types/typed-api.js"
 import { defineSchema, defineTable, v, type InferSchemaTypes } from "../schema/index.js"
 
 describe("typedRef", () => {
   it("creates a typed function reference", () => {
-    const ref = typedRef<{ userId: string }, { id: string; name: string }[], "query">(
-      "users.list", "query",
-    )
+    const ref = typedRef<{ userId: string }, { id: string; name: string }[], "query">("users.list", "query")
 
     expect(ref._name).toBe("users.list")
     expect(ref._type).toBe("query")
@@ -58,8 +63,14 @@ describe("InferArgs / InferReturn", () => {
 
 describe("Generated API type flow", () => {
   it("maintains types through ref creation and extraction", () => {
-    interface TaskArgs { userId: string }
-    interface TaskRow { id: string; title: string; done: boolean }
+    interface TaskArgs {
+      userId: string
+    }
+    interface TaskRow {
+      id: string
+      title: string
+      done: boolean
+    }
 
     const listTasks = typedRef<TaskArgs, TaskRow[], "query">("tasks.list", "query")
 

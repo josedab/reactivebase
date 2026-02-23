@@ -121,9 +121,15 @@ describe("OfflineSyncEngine", () => {
       await engine.queueMutation("tasks.create", { title: "Fail" })
 
       // Sync multiple times to exhaust retries
-      await engine.sync(async () => { throw new Error("fail") })
-      await engine.sync(async () => { throw new Error("fail") })
-      const result = await engine.sync(async () => { throw new Error("fail") })
+      await engine.sync(async () => {
+        throw new Error("fail")
+      })
+      await engine.sync(async () => {
+        throw new Error("fail")
+      })
+      const result = await engine.sync(async () => {
+        throw new Error("fail")
+      })
 
       // After maxRetries, mutation should be dropped
       expect(result.conflicts.some((c) => c.resolution === "dropped")).toBe(true)
@@ -226,7 +232,9 @@ describe("OfflineSyncEngine", () => {
       })
 
       await engine.queueMutation("tasks.update", { id: "t1" })
-      await engine.sync(async () => { throw new Error("conflict") })
+      await engine.sync(async () => {
+        throw new Error("conflict")
+      })
 
       expect(conflicts).toHaveLength(1)
     })

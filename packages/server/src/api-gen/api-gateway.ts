@@ -274,9 +274,7 @@ export class ApiGateway {
       spec.components.schemas[typeName] = { type: "object", properties, required }
       spec.components.schemas[`${typeName}Input`] = {
         type: "object",
-        properties: Object.fromEntries(
-          Object.entries(properties).filter(([k]) => k !== "id"),
-        ),
+        properties: Object.fromEntries(Object.entries(properties).filter(([k]) => k !== "id")),
       }
 
       // Generate paths
@@ -290,14 +288,22 @@ export class ApiGateway {
           tags: [tableName],
           parameters: [
             { name: "limit", in: "query", required: false, schema: { type: "integer" }, description: "Max results" },
-            { name: "offset", in: "query", required: false, schema: { type: "integer" }, description: "Offset for pagination" },
+            {
+              name: "offset",
+              in: "query",
+              required: false,
+              schema: { type: "integer" },
+              description: "Offset for pagination",
+            },
             { name: "sort", in: "query", required: false, schema: { type: "string" }, description: "Sort field" },
             { name: "order", in: "query", required: false, schema: { type: "string", enum: ["asc", "desc"] } },
           ],
           responses: {
             "200": {
               description: `List of ${tableName}`,
-              content: { "application/json": { schema: { type: "array", items: { $ref: `#/components/schemas/${typeName}` } } } },
+              content: {
+                "application/json": { schema: { type: "array", items: { $ref: `#/components/schemas/${typeName}` } } },
+              },
             },
           },
         },
@@ -372,7 +378,11 @@ export class ApiGateway {
         responses: {
           "200": {
             description: "API is healthy",
-            content: { "application/json": { schema: { type: "object", properties: { status: { type: "string" }, version: { type: "string" } } } } },
+            content: {
+              "application/json": {
+                schema: { type: "object", properties: { status: { type: "string" }, version: { type: "string" } } },
+              },
+            },
           },
         },
       },
@@ -386,7 +396,7 @@ export class ApiGateway {
   generateGraphQLWithSubscriptions(): string {
     const lines: string[] = []
     lines.push("# Auto-generated GraphQL schema from ReactiveBase")
-    lines.push('scalar JSON\nscalar DateTime\n')
+    lines.push("scalar JSON\nscalar DateTime\n")
 
     for (const tableName of this.schema.tableNames) {
       const table = this.schema.tables[tableName]
@@ -451,7 +461,9 @@ export class ApiGateway {
     lines.push("type HealthStatus {\n  status: String!\n  version: String!\n  uptime: Float!\n}\n")
     for (const tableName of this.schema.tableNames) {
       const typeName = this.pascalCase(tableName)
-      lines.push(`type ${typeName}Change {\n  type: ChangeType!\n  data: ${typeName}!\n  previousData: ${typeName}\n}\n`)
+      lines.push(
+        `type ${typeName}Change {\n  type: ChangeType!\n  data: ${typeName}!\n  previousData: ${typeName}\n}\n`,
+      )
     }
     lines.push("enum ChangeType { CREATED UPDATED DELETED }\n")
 
@@ -482,7 +494,11 @@ export class ApiGateway {
 
   // ─── API Key Management ─────────────────────────────────────────────────
 
-  createApiKey(name: string, permissions: ApiPermission[], expiresInMs?: number): { key: string; record: ApiKeyRecord } {
+  createApiKey(
+    name: string,
+    permissions: ApiPermission[],
+    expiresInMs?: number,
+  ): { key: string; record: ApiKeyRecord } {
     const id = `ak_${randomId()}`
     const rawKey = `rb_${randomId()}${randomId()}`
     const keyHash = simpleHash(rawKey)
@@ -544,7 +560,13 @@ export class ApiGateway {
 
       // System routes
       routes.push(
-        { method: "GET", path: `${basePath}/openapi.json`, version: ver, operationId: "getOpenApiSpec", action: "openapi" },
+        {
+          method: "GET",
+          path: `${basePath}/openapi.json`,
+          version: ver,
+          operationId: "getOpenApiSpec",
+          action: "openapi",
+        },
         { method: "ALL", path: `${basePath}/graphql`, version: ver, operationId: "graphqlEndpoint", action: "graphql" },
         { method: "GET", path: `${basePath}/health`, version: ver, operationId: "healthCheck", action: "health" },
       )
@@ -553,11 +575,46 @@ export class ApiGateway {
       for (const tableName of this.schema.tableNames) {
         const typeName = this.pascalCase(tableName)
         routes.push(
-          { method: "GET", path: `${basePath}/${tableName}`, version: ver, operationId: `list${typeName}`, table: tableName, action: "list" },
-          { method: "GET", path: `${basePath}/${tableName}/:id`, version: ver, operationId: `get${typeName}`, table: tableName, action: "get" },
-          { method: "POST", path: `${basePath}/${tableName}`, version: ver, operationId: `create${typeName}`, table: tableName, action: "create" },
-          { method: "PATCH", path: `${basePath}/${tableName}/:id`, version: ver, operationId: `update${typeName}`, table: tableName, action: "update" },
-          { method: "DELETE", path: `${basePath}/${tableName}/:id`, version: ver, operationId: `delete${typeName}`, table: tableName, action: "delete" },
+          {
+            method: "GET",
+            path: `${basePath}/${tableName}`,
+            version: ver,
+            operationId: `list${typeName}`,
+            table: tableName,
+            action: "list",
+          },
+          {
+            method: "GET",
+            path: `${basePath}/${tableName}/:id`,
+            version: ver,
+            operationId: `get${typeName}`,
+            table: tableName,
+            action: "get",
+          },
+          {
+            method: "POST",
+            path: `${basePath}/${tableName}`,
+            version: ver,
+            operationId: `create${typeName}`,
+            table: tableName,
+            action: "create",
+          },
+          {
+            method: "PATCH",
+            path: `${basePath}/${tableName}/:id`,
+            version: ver,
+            operationId: `update${typeName}`,
+            table: tableName,
+            action: "update",
+          },
+          {
+            method: "DELETE",
+            path: `${basePath}/${tableName}/:id`,
+            version: ver,
+            operationId: `delete${typeName}`,
+            table: tableName,
+            action: "delete",
+          },
         )
       }
     }
@@ -580,23 +637,36 @@ export class ApiGateway {
 
   // ─── Internal ────────────────────────────────────────────────────────────
 
-  private validatorToOpenApi(validator: { type: string; isOptional?: boolean; values?: string[]; innerValidator?: { type: string } }): OpenApiSchema {
-    const actual = validator.type === "optional" && validator.innerValidator
-      ? validator.innerValidator
-      : validator
+  private validatorToOpenApi(validator: {
+    type: string
+    isOptional?: boolean
+    values?: string[]
+    innerValidator?: { type: string }
+  }): OpenApiSchema {
+    const actual = validator.type === "optional" && validator.innerValidator ? validator.innerValidator : validator
 
     const base = (() => {
       switch (actual.type) {
-        case "string": return { type: "string" }
-        case "number": return { type: "number", format: "double" }
-        case "integer": return { type: "integer" }
-        case "boolean": return { type: "boolean" }
-        case "timestamp": return { type: "string", format: "date-time" }
-        case "json": return { type: "object" }
-        case "id": return { type: "string" }
-        case "enum": return { type: "string", enum: (validator as { values?: string[] }).values }
-        case "vector": return { type: "array", items: { type: "number" } }
-        default: return { type: "string" }
+        case "string":
+          return { type: "string" }
+        case "number":
+          return { type: "number", format: "double" }
+        case "integer":
+          return { type: "integer" }
+        case "boolean":
+          return { type: "boolean" }
+        case "timestamp":
+          return { type: "string", format: "date-time" }
+        case "json":
+          return { type: "object" }
+        case "id":
+          return { type: "string" }
+        case "enum":
+          return { type: "string", enum: (validator as { values?: string[] }).values }
+        case "vector":
+          return { type: "array", items: { type: "number" } }
+        default:
+          return { type: "string" }
       }
     })()
 
@@ -604,20 +674,28 @@ export class ApiGateway {
   }
 
   private validatorToGQL(validator: { type: string; isOptional?: boolean; innerValidator?: { type: string } }): string {
-    const actual = validator.type === "optional" && validator.innerValidator
-      ? validator.innerValidator
-      : validator
+    const actual = validator.type === "optional" && validator.innerValidator ? validator.innerValidator : validator
     const required = !validator.isOptional ? "!" : ""
 
     switch (actual.type) {
-      case "string": case "id": case "enum": return `String${required}`
-      case "number": return `Float${required}`
-      case "integer": return `Int${required}`
-      case "boolean": return `Boolean${required}`
-      case "timestamp": return `DateTime${required}`
-      case "json": return `JSON${required}`
-      case "vector": return `[Float!]${required}`
-      default: return `String${required}`
+      case "string":
+      case "id":
+      case "enum":
+        return `String${required}`
+      case "number":
+        return `Float${required}`
+      case "integer":
+        return `Int${required}`
+      case "boolean":
+        return `Boolean${required}`
+      case "timestamp":
+        return `DateTime${required}`
+      case "json":
+        return `JSON${required}`
+      case "vector":
+        return `[Float!]${required}`
+      default:
+        return `String${required}`
     }
   }
 

@@ -160,7 +160,7 @@ export function clerkPlugin(options: { secretKey: string; publishableKey?: strin
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${options.secretKey}`,
+              Authorization: `Bearer ${options.secretKey}`,
             },
             body: JSON.stringify({ token }),
           })
@@ -192,9 +192,7 @@ export function stripePlugin(options: {
         signatureHeader: "stripe-signature",
         async handler(payload) {
           const event = payload as { type: string; data: unknown }
-          const tables = options.onEvent
-            ? await options.onEvent(event)
-            : []
+          const tables = options.onEvent ? await options.onEvent(event) : []
           return { invalidateTables: tables }
         },
       },

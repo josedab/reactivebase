@@ -1,11 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { TypeBridge } from "../type-bridge/type-bridge.js"
-import type {
-  ScannedFunction,
-  ScannedTable,
-  TypeDescriptor,
-  TypeManifest,
-} from "../type-bridge/type-bridge.js"
+import type { ScannedFunction, ScannedTable, TypeDescriptor, TypeManifest } from "../type-bridge/type-bridge.js"
 
 const sampleTables: ScannedTable[] = [
   {
@@ -14,7 +9,13 @@ const sampleTables: ScannedTable[] = [
       id: { name: "id", pgType: "text", tsType: "string", nullable: false, hasDefault: true },
       title: { name: "title", pgType: "text", tsType: "string", nullable: false, hasDefault: false },
       done: { name: "done", pgType: "boolean", tsType: "boolean", nullable: false, hasDefault: true },
-      priority: { name: "priority", pgType: "text", tsType: '"low" | "medium" | "high"', nullable: false, hasDefault: false },
+      priority: {
+        name: "priority",
+        pgType: "text",
+        tsType: '"low" | "medium" | "high"',
+        nullable: false,
+        hasDefault: false,
+      },
     },
   },
   {
@@ -42,14 +43,23 @@ const sampleFunctions: ScannedFunction[] = [
     module: "tasks",
     kind: "mutation",
     args: { kind: "object", properties: { taskId: { type: { kind: "primitive", type: "string" }, optional: false } } },
-    returns: { kind: "object", properties: { success: { type: { kind: "primitive", type: "boolean" }, optional: false } } },
+    returns: {
+      kind: "object",
+      properties: { success: { type: { kind: "primitive", type: "boolean" }, optional: false } },
+    },
   },
   {
     name: "getUser",
     module: "users",
     kind: "query",
     args: { kind: "object", properties: { id: { type: { kind: "primitive", type: "string" }, optional: false } } },
-    returns: { kind: "union", members: [{ kind: "reference", table: "users", fullRow: true }, { kind: "primitive", type: "null" }] },
+    returns: {
+      kind: "union",
+      members: [
+        { kind: "reference", table: "users", fullRow: true },
+        { kind: "primitive", type: "null" },
+      ],
+    },
   },
 ]
 
@@ -151,7 +161,10 @@ describe("TypeBridge", () => {
       const manifest = bridge.generateManifest(sampleFunctions, sampleTables)
       const modifiedTables = [
         ...sampleTables,
-        { name: "comments", columns: { id: { name: "id", pgType: "text", tsType: "string", nullable: false, hasDefault: true } } },
+        {
+          name: "comments",
+          columns: { id: { name: "id", pgType: "text", tsType: "string", nullable: false, hasDefault: true } },
+        },
       ]
       const result = bridge.validateManifest(manifest, modifiedTables)
 

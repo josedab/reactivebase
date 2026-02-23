@@ -1,6 +1,4 @@
-export {
-  TypeBridge,
-} from "./type-bridge.js"
+export { TypeBridge } from "./type-bridge.js"
 
 export type {
   TypeManifest,

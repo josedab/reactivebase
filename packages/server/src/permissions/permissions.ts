@@ -11,11 +11,7 @@
 import type { AuthContext } from "../auth/index.js"
 import { AuthenticationError, AuthorizationError } from "../auth/index.js"
 
-export type AccessRule =
-  | "public"
-  | "authenticated"
-  | RoleRule
-  | CustomRule
+export type AccessRule = "public" | "authenticated" | RoleRule | CustomRule
 
 export interface RoleRule {
   _type: "roles"
@@ -38,10 +34,7 @@ export function roles(...requiredRoles: string[]): RoleRule {
 /**
  * Custom access predicate.
  */
-export function allow(
-  check: (auth: AuthContext) => boolean | Promise<boolean>,
-  label?: string,
-): CustomRule {
+export function allow(check: (auth: AuthContext) => boolean | Promise<boolean>, label?: string): CustomRule {
   return { _type: "custom", check, label }
 }
 
@@ -58,39 +51,29 @@ export async function enforceAccess(
 
   if (rule === "authenticated") {
     if (!auth.userId) {
-      throw new AuthenticationError(
-        `Function "${functionName}" requires authentication`,
-      )
+      throw new AuthenticationError(`Function "${functionName}" requires authentication`)
     }
     return
   }
 
   if (isRoleRule(rule)) {
     if (!auth.userId) {
-      throw new AuthenticationError(
-        `Function "${functionName}" requires authentication`,
-      )
+      throw new AuthenticationError(`Function "${functionName}" requires authentication`)
     }
     const userRole = auth.claims.role as string | undefined
     if (!userRole || !rule.roles.includes(userRole)) {
-      throw new AuthorizationError(
-        `Function "${functionName}" requires one of roles: [${rule.roles.join(", ")}]`,
-      )
+      throw new AuthorizationError(`Function "${functionName}" requires one of roles: [${rule.roles.join(", ")}]`)
     }
     return
   }
 
   if (isCustomRule(rule)) {
     if (!auth.userId) {
-      throw new AuthenticationError(
-        `Function "${functionName}" requires authentication`,
-      )
+      throw new AuthenticationError(`Function "${functionName}" requires authentication`)
     }
     const allowed = await rule.check(auth)
     if (!allowed) {
-      throw new AuthorizationError(
-        `Access denied to "${functionName}"${rule.label ? `: ${rule.label}` : ""}`,
-      )
+      throw new AuthorizationError(`Access denied to "${functionName}"${rule.label ? `: ${rule.label}` : ""}`)
     }
     return
   }

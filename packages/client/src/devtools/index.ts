@@ -1,6 +1,4 @@
-export {
-  DevToolsInstrumentation,
-} from "./devtools.js"
+export { DevToolsInstrumentation } from "./devtools.js"
 
 export type {
   DevToolsEvent,

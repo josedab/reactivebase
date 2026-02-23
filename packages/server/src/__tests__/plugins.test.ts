@@ -13,10 +13,18 @@ function createMockContext(): PluginContext & {
     functions: {} as Record<string, unknown>,
     webhooks: [] as unknown[],
     config: {},
-    useMiddleware(mw: unknown) { ctx.middlewares.push(mw) },
-    useAuth(provider: unknown) { ctx.authProviders.push(provider) },
-    useFunctions(fns: Record<string, unknown>) { Object.assign(ctx.functions, fns) },
-    useWebhook(wh: unknown) { ctx.webhooks.push(wh) },
+    useMiddleware(mw: unknown) {
+      ctx.middlewares.push(mw)
+    },
+    useAuth(provider: unknown) {
+      ctx.authProviders.push(provider)
+    },
+    useFunctions(fns: Record<string, unknown>) {
+      Object.assign(ctx.functions, fns)
+    },
+    useWebhook(wh: unknown) {
+      ctx.webhooks.push(wh)
+    },
   }
   return ctx
 }
@@ -88,10 +96,12 @@ describe("PluginRegistry", () => {
 
     const plugin = definePlugin({
       name: "stripe-test",
-      webhooks: [{
-        name: "stripe",
-        handler: async () => ({}),
-      }],
+      webhooks: [
+        {
+          name: "stripe",
+          handler: async () => ({}),
+        },
+      ],
     })
 
     await registry.install(plugin, ctx)
@@ -118,11 +128,14 @@ describe("PluginRegistry", () => {
     const started = vi.fn()
     const stopped = vi.fn()
 
-    await registry.install(definePlugin({
-      name: "lifecycle",
-      onStart: started,
-      onStop: stopped,
-    }), ctx)
+    await registry.install(
+      definePlugin({
+        name: "lifecycle",
+        onStart: started,
+        onStop: stopped,
+      }),
+      ctx,
+    )
 
     await registry.onStart()
     expect(started).toHaveBeenCalled()

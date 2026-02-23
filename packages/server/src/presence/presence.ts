@@ -23,10 +23,7 @@ const DEFAULT_OPTIONS: Required<PresenceOptions> = {
   maxPerRoom: 1000,
 }
 
-export type PresenceListener = (
-  roomId: string,
-  presenceList: PresenceData[],
-) => void
+export type PresenceListener = (roomId: string, presenceList: PresenceData[]) => void
 
 /**
  * In-memory presence tracker.

@@ -18,9 +18,7 @@ export class ValidationError extends Error {
   readonly code = "VALIDATION_ERROR"
   readonly statusCode = 400
 
-  constructor(
-    public readonly errors: Array<{ field: string; message: string }>,
-  ) {
+  constructor(public readonly errors: Array<{ field: string; message: string }>) {
     super(`Validation failed: ${errors.map((e) => `${e.field}: ${e.message}`).join(", ")}`)
     this.name = "ValidationError"
   }
@@ -29,10 +27,7 @@ export class ValidationError extends Error {
 /**
  * Validate args against a schema.
  */
-export function validateArgs(
-  args: unknown,
-  schema: ValidationSchema,
-): void {
+export function validateArgs(args: unknown, schema: ValidationSchema): void {
   if (typeof args !== "object" || args === null) {
     throw new ValidationError([{ field: "_root", message: "Args must be an object" }])
   }
@@ -97,37 +92,76 @@ export const s = {
   string() {
     const v = createFieldValidator("string", true)
     return Object.assign(v, {
-      optional() { v._required = false; return this },
-      min(n: number) { v._checks.push((val) => (val as string).length < n ? `Min length: ${n}` : null); return this },
-      max(n: number) { v._checks.push((val) => (val as string).length > n ? `Max length: ${n}` : null); return this },
-      email() { v._checks.push((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val as string) ? null : "Invalid email"); return this },
-      pattern(re: RegExp) { v._checks.push((val) => re.test(val as string) ? null : `Must match ${re}`); return this },
+      optional() {
+        v._required = false
+        return this
+      },
+      min(n: number) {
+        v._checks.push((val) => ((val as string).length < n ? `Min length: ${n}` : null))
+        return this
+      },
+      max(n: number) {
+        v._checks.push((val) => ((val as string).length > n ? `Max length: ${n}` : null))
+        return this
+      },
+      email() {
+        v._checks.push((val) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val as string) ? null : "Invalid email"))
+        return this
+      },
+      pattern(re: RegExp) {
+        v._checks.push((val) => (re.test(val as string) ? null : `Must match ${re}`))
+        return this
+      },
     })
   },
 
   number() {
     const v = createFieldValidator("number", true)
     return Object.assign(v, {
-      optional() { v._required = false; return this },
-      min(n: number) { v._checks.push((val) => (val as number) < n ? `Min: ${n}` : null); return this },
-      max(n: number) { v._checks.push((val) => (val as number) > n ? `Max: ${n}` : null); return this },
-      integer() { v._checks.push((val) => Number.isInteger(val) ? null : "Must be an integer"); return this },
+      optional() {
+        v._required = false
+        return this
+      },
+      min(n: number) {
+        v._checks.push((val) => ((val as number) < n ? `Min: ${n}` : null))
+        return this
+      },
+      max(n: number) {
+        v._checks.push((val) => ((val as number) > n ? `Max: ${n}` : null))
+        return this
+      },
+      integer() {
+        v._checks.push((val) => (Number.isInteger(val) ? null : "Must be an integer"))
+        return this
+      },
     })
   },
 
   boolean() {
     const v = createFieldValidator("boolean", true)
     return Object.assign(v, {
-      optional() { v._required = false; return this },
+      optional() {
+        v._required = false
+        return this
+      },
     })
   },
 
   array() {
     const v = createFieldValidator("array", true)
     return Object.assign(v, {
-      optional() { v._required = false; return this },
-      minLength(n: number) { v._checks.push((val) => (val as unknown[]).length < n ? `Min items: ${n}` : null); return this },
-      maxLength(n: number) { v._checks.push((val) => (val as unknown[]).length > n ? `Max items: ${n}` : null); return this },
+      optional() {
+        v._required = false
+        return this
+      },
+      minLength(n: number) {
+        v._checks.push((val) => ((val as unknown[]).length < n ? `Min items: ${n}` : null))
+        return this
+      },
+      maxLength(n: number) {
+        v._checks.push((val) => ((val as unknown[]).length > n ? `Max items: ${n}` : null))
+        return this
+      },
     })
   },
 }

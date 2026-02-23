@@ -35,27 +35,27 @@ describe("Vector Clocks", () => {
   })
 
   it("detects happened-before", () => {
-    const a: VectorClock = { "r1": 1, "r2": 1 }
-    const b: VectorClock = { "r1": 2, "r2": 2 }
+    const a: VectorClock = { r1: 1, r2: 1 }
+    const b: VectorClock = { r1: 2, r2: 2 }
     expect(happenedBefore(a, b)).toBe(true)
     expect(happenedBefore(b, a)).toBe(false)
   })
 
   it("detects equal clocks as not happened-before", () => {
-    const a: VectorClock = { "r1": 3 }
-    const b: VectorClock = { "r1": 3 }
+    const a: VectorClock = { r1: 3 }
+    const b: VectorClock = { r1: 3 }
     expect(happenedBefore(a, b)).toBe(false)
   })
 
   it("detects concurrent events", () => {
-    const a: VectorClock = { "r1": 2, "r2": 1 }
-    const b: VectorClock = { "r1": 1, "r2": 2 }
+    const a: VectorClock = { r1: 2, r2: 1 }
+    const b: VectorClock = { r1: 1, r2: 2 }
     expect(areConcurrent(a, b)).toBe(true)
   })
 
   it("non-concurrent events are not concurrent", () => {
-    const a: VectorClock = { "r1": 1 }
-    const b: VectorClock = { "r1": 2 }
+    const a: VectorClock = { r1: 1 }
+    const b: VectorClock = { r1: 2 }
     expect(areConcurrent(a, b)).toBe(false)
   })
 })
@@ -65,9 +65,36 @@ describe("Vector Clocks", () => {
 describe("RegionRouter", () => {
   let router: RegionRouter
   const regions: RegionStatus[] = [
-    { id: "us-east", host: "us-east.example.com", status: "healthy", latencyMs: 10, lagMs: 0, lastHealthCheck: Date.now(), isPrimary: true, connectionCount: 100 },
-    { id: "eu-west", host: "eu-west.example.com", status: "healthy", latencyMs: 80, lagMs: 5, lastHealthCheck: Date.now(), isPrimary: false, connectionCount: 50 },
-    { id: "ap-south", host: "ap-south.example.com", status: "unreachable", latencyMs: Infinity, lagMs: 0, lastHealthCheck: Date.now(), isPrimary: false, connectionCount: 0 },
+    {
+      id: "us-east",
+      host: "us-east.example.com",
+      status: "healthy",
+      latencyMs: 10,
+      lagMs: 0,
+      lastHealthCheck: Date.now(),
+      isPrimary: true,
+      connectionCount: 100,
+    },
+    {
+      id: "eu-west",
+      host: "eu-west.example.com",
+      status: "healthy",
+      latencyMs: 80,
+      lagMs: 5,
+      lastHealthCheck: Date.now(),
+      isPrimary: false,
+      connectionCount: 50,
+    },
+    {
+      id: "ap-south",
+      host: "ap-south.example.com",
+      status: "unreachable",
+      latencyMs: Infinity,
+      lagMs: 0,
+      lastHealthCheck: Date.now(),
+      isPrimary: false,
+      connectionCount: 0,
+    },
   ]
 
   beforeEach(() => {
@@ -97,11 +124,7 @@ describe("RegionRouter", () => {
   })
 
   it("fails over writes if primary is down", () => {
-    router.updateTopology([
-      { ...regions[0], status: "unreachable" },
-      regions[1],
-      regions[2],
-    ])
+    router.updateTopology([{ ...regions[0], status: "unreachable" }, regions[1], regions[2]])
     const decision = router.routeWrite()
     expect(decision.targetRegion).toBe("eu-west")
     expect(decision.reason).toContain("failover")

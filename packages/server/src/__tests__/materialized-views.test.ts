@@ -123,12 +123,14 @@ describe("MaterializedViewEngine", () => {
   })
 
   it("registers views", () => {
-    engine.register(defineMaterializedView({
-      name: "stats",
-      source: "tasks",
-      aggregations: { total: { fn: "count", field: "*" } },
-      refreshStrategy: "on-mutation",
-    }))
+    engine.register(
+      defineMaterializedView({
+        name: "stats",
+        source: "tasks",
+        aggregations: { total: { fn: "count", field: "*" } },
+        refreshStrategy: "on-mutation",
+      }),
+    )
 
     expect(engine.viewCount).toBe(1)
     expect(engine.getDefinition("stats")).toBeDefined()
@@ -143,14 +145,18 @@ describe("MaterializedViewEngine", () => {
 
   it("triggers refresh on mutation notification", () => {
     let refreshed = false
-    engine.register(defineMaterializedView({
-      name: "stats",
-      source: "tasks",
-      refreshStrategy: "on-mutation",
-      refreshDebounceMs: 0,
-    }))
+    engine.register(
+      defineMaterializedView({
+        name: "stats",
+        source: "tasks",
+        refreshStrategy: "on-mutation",
+        refreshDebounceMs: 0,
+      }),
+    )
 
-    engine.subscribe("stats", () => { refreshed = true })
+    engine.subscribe("stats", () => {
+      refreshed = true
+    })
     engine.notifyMutation("tasks")
 
     // Debounced, wait for next tick
@@ -164,13 +170,17 @@ describe("MaterializedViewEngine", () => {
 
   it("does not trigger for unrelated mutations", () => {
     let refreshed = false
-    engine.register(defineMaterializedView({
-      name: "stats",
-      source: "tasks",
-      refreshStrategy: "on-mutation",
-    }))
+    engine.register(
+      defineMaterializedView({
+        name: "stats",
+        source: "tasks",
+        refreshStrategy: "on-mutation",
+      }),
+    )
 
-    engine.subscribe("stats", () => { refreshed = true })
+    engine.subscribe("stats", () => {
+      refreshed = true
+    })
     engine.notifyMutation("users") // Different table
 
     return new Promise<void>((resolve) => {
@@ -194,8 +204,22 @@ describe("MaterializedViewEngine", () => {
   })
 
   it("generates SQL for all views", () => {
-    engine.register(defineMaterializedView({ name: "v1", source: "tasks", refreshStrategy: "manual", aggregations: { total: { fn: "count", field: "*" } } }))
-    engine.register(defineMaterializedView({ name: "v2", source: "users", refreshStrategy: "manual", aggregations: { total: { fn: "count", field: "*" } } }))
+    engine.register(
+      defineMaterializedView({
+        name: "v1",
+        source: "tasks",
+        refreshStrategy: "manual",
+        aggregations: { total: { fn: "count", field: "*" } },
+      }),
+    )
+    engine.register(
+      defineMaterializedView({
+        name: "v2",
+        source: "users",
+        refreshStrategy: "manual",
+        aggregations: { total: { fn: "count", field: "*" } },
+      }),
+    )
 
     const sql = engine.generateAllSQL()
     expect(sql).toContain('"v1"')

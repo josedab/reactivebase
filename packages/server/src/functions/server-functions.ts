@@ -287,7 +287,12 @@ function createFunctionContext(
  * If result is a QueryBuilder, execute it and return rows.
  */
 async function resolveQueryResult(client: PoolClient, result: unknown): Promise<unknown> {
-  if (result && typeof result === "object" && "build" in result && typeof (result as { build: unknown }).build === "function") {
+  if (
+    result &&
+    typeof result === "object" &&
+    "build" in result &&
+    typeof (result as { build: unknown }).build === "function"
+  ) {
     const built = (result as { build: () => { sql: string; params: unknown[] } }).build()
     const queryResult = await client.query(built.sql, built.params)
     return queryResult.rows

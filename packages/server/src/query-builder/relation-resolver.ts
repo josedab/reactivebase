@@ -81,11 +81,7 @@ function parseRelation(
 /**
  * Build a lateral join subquery for a relation.
  */
-export function buildIncludeSubquery(
-  resolved: ResolvedRelation,
-  parentAlias: string,
-  params: unknown[],
-): string {
+export function buildIncludeSubquery(resolved: ResolvedRelation, parentAlias: string, params: unknown[]): string {
   const { targetTable, sourceColumn, targetColumn, config } = resolved
 
   let subquery = `SELECT json_agg(sub.*) FROM (
@@ -135,9 +131,7 @@ export function buildQueryWithIncludes(
     const subquery = buildIncludeSubquery(resolved, "_base", params)
 
     selectParts.push(`COALESCE(${alias}.data, '[]'::json) as "${resolved.relation.name}"`)
-    lateralJoins.push(
-      `LEFT JOIN LATERAL (SELECT (${subquery}) as data) "${alias}" ON true`,
-    )
+    lateralJoins.push(`LEFT JOIN LATERAL (SELECT (${subquery}) as data) "${alias}" ON true`)
   }
 
   const sql = `SELECT ${selectParts.join(", ")}

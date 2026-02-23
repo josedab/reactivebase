@@ -352,10 +352,7 @@ export class PluginMarketplace {
 
   // ─── Installation ────────────────────────────────────────────────────────
 
-  async install(
-    definition: PluginV2Definition,
-    config: Record<string, unknown> = {},
-  ): Promise<PluginV2Instance> {
+  async install(definition: PluginV2Definition, config: Record<string, unknown> = {}): Promise<PluginV2Instance> {
     if (this.installed.has(definition.name)) {
       throw new PluginMarketplaceError(`Plugin already installed: ${definition.name}`)
     }
@@ -364,9 +361,7 @@ export class PluginMarketplace {
     if (definition.configSchema) {
       const validation = validatePluginConfig(definition.configSchema, config)
       if (!validation.valid) {
-        throw new PluginMarketplaceError(
-          `Invalid config for ${definition.name}: ${validation.errors.join(", ")}`,
-        )
+        throw new PluginMarketplaceError(`Invalid config for ${definition.name}: ${validation.errors.join(", ")}`)
       }
     }
 
@@ -374,9 +369,7 @@ export class PluginMarketplace {
     if (definition.dependencies) {
       for (const dep of definition.dependencies) {
         if (!this.installed.has(dep)) {
-          throw new PluginMarketplaceError(
-            `Missing dependency: ${dep} (required by ${definition.name})`,
-          )
+          throw new PluginMarketplaceError(`Missing dependency: ${dep} (required by ${definition.name})`)
         }
       }
     }
@@ -455,9 +448,7 @@ export class PluginMarketplace {
     // Check if other plugins depend on this one
     for (const [name, inst] of this.installed) {
       if (inst.definition.dependencies?.includes(pluginName)) {
-        throw new PluginMarketplaceError(
-          `Cannot uninstall ${pluginName}: ${name} depends on it`,
-        )
+        throw new PluginMarketplaceError(`Cannot uninstall ${pluginName}: ${name} depends on it`)
       }
     }
 

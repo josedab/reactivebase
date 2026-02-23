@@ -30,7 +30,16 @@ export interface AnalyticsMetricDef {
   description?: string
 }
 
-export type AggregationType = "count" | "sum" | "avg" | "min" | "max" | "count_distinct" | "percentile_90" | "percentile_95" | "percentile_99"
+export type AggregationType =
+  | "count"
+  | "sum"
+  | "avg"
+  | "min"
+  | "max"
+  | "count_distinct"
+  | "percentile_90"
+  | "percentile_95"
+  | "percentile_99"
 
 export type TimeBucketSize = "minute" | "hour" | "day" | "week" | "month"
 
@@ -118,16 +127,26 @@ export function generateAnalyticsSQL(metric: AnalyticsMetricDef): string {
 function buildAggregation(type: AggregationType, column?: string): string {
   const col = column ? `"${column.replace(/[^a-zA-Z0-9_]/g, "")}"` : "*"
   switch (type) {
-    case "count": return `COUNT(${col})`
-    case "sum": return `SUM(${col})`
-    case "avg": return `AVG(${col})`
-    case "min": return `MIN(${col})`
-    case "max": return `MAX(${col})`
-    case "count_distinct": return `COUNT(DISTINCT ${col})`
-    case "percentile_90": return `PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY ${col})`
-    case "percentile_95": return `PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY ${col})`
-    case "percentile_99": return `PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY ${col})`
-    default: return `COUNT(*)`
+    case "count":
+      return `COUNT(${col})`
+    case "sum":
+      return `SUM(${col})`
+    case "avg":
+      return `AVG(${col})`
+    case "min":
+      return `MIN(${col})`
+    case "max":
+      return `MAX(${col})`
+    case "count_distinct":
+      return `COUNT(DISTINCT ${col})`
+    case "percentile_90":
+      return `PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY ${col})`
+    case "percentile_95":
+      return `PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY ${col})`
+    case "percentile_99":
+      return `PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY ${col})`
+    default:
+      return `COUNT(*)`
   }
 }
 
@@ -169,15 +188,17 @@ export class AnalyticsEngine {
   /**
    * Apply a data change — incrementally update affected metrics.
    */
-  applyChange(change: { table: string; operation: "insert" | "update" | "delete"; row?: Record<string, unknown> }): void {
+  applyChange(change: {
+    table: string
+    operation: "insert" | "update" | "delete"
+    row?: Record<string, unknown>
+  }): void {
     for (const [name, metric] of this.metrics) {
       if (metric.table !== change.table) continue
 
       // Check filter match
       if (metric.filter && change.row) {
-        const matches = Object.entries(metric.filter).every(
-          ([k, v]) => change.row![k] === v,
-        )
+        const matches = Object.entries(metric.filter).every(([k, v]) => change.row![k] === v)
         if (!matches) continue
       }
 

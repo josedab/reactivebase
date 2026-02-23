@@ -18,7 +18,7 @@ class MockTable {
   private idCounter = 0
 
   insert(data: Record<string, unknown>): MockRow {
-    const id = data.id as string ?? `mock_${++this.idCounter}_${Date.now().toString(36)}`
+    const id = (data.id as string) ?? `mock_${++this.idCounter}_${Date.now().toString(36)}`
     const row: MockRow = { ...data, id }
     this.rows.set(id, row)
     return { ...row }
@@ -189,10 +189,14 @@ export class MockDatabase {
   }
 
   /** Get read log for assertions */
-  getReadLog() { return [...this.readLog] }
+  getReadLog() {
+    return [...this.readLog]
+  }
 
   /** Get write log for assertions */
-  getWriteLog() { return [...this.writeLog] }
+  getWriteLog() {
+    return [...this.writeLog]
+  }
 
   /** Clear all data and logs */
   reset(): void {

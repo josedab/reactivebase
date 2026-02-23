@@ -11,7 +11,14 @@ const mockSnapshot: MetricsSnapshot = {
     avgLatencyMs: 5.5,
     p99LatencyMs: 45,
     byFunction: {
-      listTasks: { name: "listTasks", calls: 80, errors: 1, totalLatencyMs: 400, avgLatencyMs: 5, lastCalledAt: Date.now() },
+      listTasks: {
+        name: "listTasks",
+        calls: 80,
+        errors: 1,
+        totalLatencyMs: 400,
+        avgLatencyMs: 5,
+        lastCalledAt: Date.now(),
+      },
     },
   },
   mutations: {

@@ -15,7 +15,14 @@
 
 export interface CloudDashboardData {
   projects: Array<{ id: string; name: string; plan: string; status: string; region: string; envCount: number }>
-  environments: Array<{ id: string; projectId: string; name: string; status: string; url: string | null; isProduction: boolean }>
+  environments: Array<{
+    id: string
+    projectId: string
+    name: string
+    status: string
+    url: string | null
+    isProduction: boolean
+  }>
   deployments: Array<{ id: string; envId: string; status: string; ref: string | null; startedAt: string }>
   usage?: { functionInvocations: number; storageMb: number; bandwidthMb: number; connections: number }
 }
@@ -24,7 +31,9 @@ export function generateCloudDashboardHTML(data: CloudDashboardData): string {
   const projectsJson = JSON.stringify(data.projects)
   const envsJson = JSON.stringify(data.environments)
   const deploymentsJson = JSON.stringify(data.deployments)
-  const usageJson = JSON.stringify(data.usage ?? { functionInvocations: 0, storageMb: 0, bandwidthMb: 0, connections: 0 })
+  const usageJson = JSON.stringify(
+    data.usage ?? { functionInvocations: 0, storageMb: 0, bandwidthMb: 0, connections: 0 },
+  )
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -78,10 +87,11 @@ export function generateCloudDashboardHTML(data: CloudDashboardData): string {
   </div>
 
   <h2>Projects</h2>
-  ${data.projects.map((p) => {
-    const envs = data.environments.filter((e) => e.projectId === p.id)
-    const deps = data.deployments.filter((d) => envs.some((e) => e.id === d.envId))
-    return `<div class="project-card">
+  ${data.projects
+    .map((p) => {
+      const envs = data.environments.filter((e) => e.projectId === p.id)
+      const deps = data.deployments.filter((d) => envs.some((e) => e.id === d.envId))
+      return `<div class="project-card">
     <div class="project-header">
       <span class="project-name">${p.name}</span>
       <span><span class="badge badge-active">${p.status}</span> <span class="badge badge-plan">${p.plan}</span></span>
@@ -92,30 +102,43 @@ export function generateCloudDashboardHTML(data: CloudDashboardData): string {
       <span>🚀 ${deps.length} deployments</span>
     </div>
     <div class="env-list">
-      ${envs.map((e) => `<div class="env-item${e.isProduction ? " prod" : ""}">
+      ${envs
+        .map(
+          (e) => `<div class="env-item${e.isProduction ? " prod" : ""}">
         <span>${e.isProduction ? "🔒" : "🔧"} ${e.name} <span class="badge badge-active">${e.status}</span></span>
         ${e.url ? `<a href="${e.url}" class="env-url" target="_blank">${e.url}</a>` : ""}
-      </div>`).join("")}
+      </div>`,
+        )
+        .join("")}
     </div>
   </div>`
-  }).join("")}
+    })
+    .join("")}
 
-  ${data.deployments.length > 0 ? `<h2>Recent Deployments</h2>
+  ${
+    data.deployments.length > 0
+      ? `<h2>Recent Deployments</h2>
   <table class="deploy-table">
     <thead><tr><th>Status</th><th>Environment</th><th>Ref</th><th>Started</th></tr></thead>
     <tbody>
-    ${data.deployments.slice(0, 10).map((d) => {
-      const env = data.environments.find((e) => e.id === d.envId)
-      const statusClass = d.status === "active" ? "status-active" : d.status === "failed" ? "status-failed" : "status-building"
-      return `<tr>
+    ${data.deployments
+      .slice(0, 10)
+      .map((d) => {
+        const env = data.environments.find((e) => e.id === d.envId)
+        const statusClass =
+          d.status === "active" ? "status-active" : d.status === "failed" ? "status-failed" : "status-building"
+        return `<tr>
         <td><span class="status-dot ${statusClass}"></span>${d.status}</td>
         <td>${env?.name ?? d.envId}</td>
         <td>${d.ref ?? "—"}</td>
         <td>${d.startedAt}</td>
       </tr>`
-    }).join("")}
+      })
+      .join("")}
     </tbody>
-  </table>` : ""}
+  </table>`
+      : ""
+  }
 </div>
 <script>
 const projects = ${projectsJson};

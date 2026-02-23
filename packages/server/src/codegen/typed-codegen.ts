@@ -145,9 +145,7 @@ export function extractFunctionTypes(source: string): {
 
 function extractReturnType(source: string, functionName: string): string | null {
   // Look for explicit Promise<T> return type
-  const returnPattern = new RegExp(
-    `export\\s+const\\s+${functionName}[\\s\\S]*?\\)\\s*:\\s*Promise<([^>]+)>`,
-  )
+  const returnPattern = new RegExp(`export\\s+const\\s+${functionName}[\\s\\S]*?\\)\\s*:\\s*Promise<([^>]+)>`)
   const match = returnPattern.exec(source)
   if (match) return match[1]
 
@@ -316,10 +314,7 @@ function extractBalancedExpression(source: string, start: number): string | null
   return null
 }
 
-function parseSchemaIndexes(
-  source: string,
-  tableName: string,
-): { name: string; columns: string[]; unique: boolean }[] {
+function parseSchemaIndexes(source: string, tableName: string): { name: string; columns: string[]; unique: boolean }[] {
   const indexes: { name: string; columns: string[]; unique: boolean }[] = []
   // Match .index("name", ["col1", "col2"], { unique: true })
   const indexPattern = new RegExp(
@@ -328,9 +323,7 @@ function parseSchemaIndexes(
   )
   let match: RegExpExecArray | null
   while ((match = indexPattern.exec(source)) !== null) {
-    const columns = match[2]
-      .split(",")
-      .map((c) => c.trim().replace(/["']/g, ""))
+    const columns = match[2].split(",").map((c) => c.trim().replace(/["']/g, ""))
     const unique = match[3]?.includes("unique: true") ?? false
     indexes.push({ name: match[1], columns, unique })
   }
@@ -378,10 +371,7 @@ function validatorToTsType(type: string, args: string): string {
 /**
  * Generate a fully typed API module from scanned functions and schema.
  */
-export function generateTypedApiModule(
-  functions: TypedFunctionInfo[],
-  schema?: ParsedSchema,
-): string {
+export function generateTypedApiModule(functions: TypedFunctionInfo[], schema?: ParsedSchema): string {
   const lines: string[] = []
 
   lines.push("/* eslint-disable */")
@@ -482,7 +472,9 @@ export function generateTypedDbContext(schema: ParsedSchema): string {
   lines.push("  get(id: string): Promise<T | null>")
   lines.push("  getOrThrow(id: string): Promise<T>")
   lines.push("  where(filter: Partial<T>): TypedQueryChain<T>")
-  lines.push('  where(column: keyof T, op: "=" | "!=" | ">" | "<" | ">=" | "<=" | "in" | "like", value: unknown): TypedQueryChain<T>')
+  lines.push(
+    '  where(column: keyof T, op: "=" | "!=" | ">" | "<" | ">=" | "<=" | "in" | "like", value: unknown): TypedQueryChain<T>',
+  )
   lines.push("  insert(data: Omit<T, '_id'>): Promise<T>")
   lines.push("  update(id: string, data: Partial<Omit<T, '_id'>>): Promise<T>")
   lines.push("  delete(id: string): Promise<void>")
@@ -493,7 +485,7 @@ export function generateTypedDbContext(schema: ParsedSchema): string {
   lines.push('  orderBy(column: keyof T, direction?: "asc" | "desc"): TypedQueryChain<T>')
   lines.push("  limit(n: number): TypedQueryChain<T>")
   lines.push("  offset(n: number): TypedQueryChain<T>")
-  lines.push('  select(...columns: (keyof T)[]): TypedQueryChain<Partial<T>>')
+  lines.push("  select(...columns: (keyof T)[]): TypedQueryChain<Partial<T>>")
   lines.push("  count(): Promise<number>")
   lines.push("  first(): Promise<T | null>")
   lines.push("}")

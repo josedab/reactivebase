@@ -55,10 +55,12 @@ describe("EncryptionEngine", () => {
         provider: localKeyProvider("different-master-key-32-chars!!"),
       })
 
-      await expect(otherEngine.decryptField("f", {
-        ...encrypted,
-        keyId: "local-key-1",
-      })).rejects.toThrow()
+      await expect(
+        otherEngine.decryptField("f", {
+          ...encrypted,
+          keyId: "local-key-1",
+        }),
+      ).rejects.toThrow()
     })
   })
 
@@ -134,10 +136,7 @@ describe("EncryptionEngine", () => {
 
 describe("rotatingKeyProvider", () => {
   it("supports multiple keys", async () => {
-    const provider = rotatingKeyProvider(
-      { "key-1": "secret-1", "key-2": "secret-2" },
-      "key-2",
-    )
+    const provider = rotatingKeyProvider({ "key-1": "secret-1", "key-2": "secret-2" }, "key-2")
     expect(await provider.getCurrentKeyId()).toBe("key-2")
     expect((await provider.listKeyIds()).length).toBe(2)
   })

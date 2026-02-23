@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import {
-  LogicalReplicator,
-  WalDecoder,
-  ChangeBatcher,
-} from "../logical-replication/logical-replication.js"
+import { LogicalReplicator, WalDecoder, ChangeBatcher } from "../logical-replication/logical-replication.js"
 import type { WalChange } from "../logical-replication/logical-replication.js"
 import type { ChangeEvent } from "../reactivity/invalidation-evaluator.js"
 
@@ -73,7 +69,14 @@ describe("Logical Replication → Reactivity Integration", () => {
     it("returns null for non-data WAL changes", () => {
       const begin: WalChange = { lsn: "0/0", xid: 1, timestamp: new Date(), type: "begin", schema: "", table: "" }
       const commit: WalChange = { lsn: "0/0", xid: 1, timestamp: new Date(), type: "commit", schema: "", table: "" }
-      const relation: WalChange = { lsn: "0/0", xid: 1, timestamp: new Date(), type: "relation", schema: "public", table: "tasks" }
+      const relation: WalChange = {
+        lsn: "0/0",
+        xid: 1,
+        timestamp: new Date(),
+        type: "relation",
+        schema: "public",
+        table: "tasks",
+      }
 
       expect(walChangeToChangeEvent(begin)).toBeNull()
       expect(walChangeToChangeEvent(commit)).toBeNull()
@@ -86,9 +89,34 @@ describe("Logical Replication → Reactivity Integration", () => {
   describe("batch to change events pipeline", () => {
     it("converts a batch of WAL changes to ChangeEvents", () => {
       const batch: WalChange[] = [
-        { lsn: "0/1", xid: 1, timestamp: new Date(), type: "insert", schema: "public", table: "tasks", newRow: { id: "t1" } },
-        { lsn: "0/2", xid: 1, timestamp: new Date(), type: "update", schema: "public", table: "users", newRow: { id: "u1", name: "Bob" }, oldRow: { id: "u1", name: "Alice" } },
-        { lsn: "0/3", xid: 1, timestamp: new Date(), type: "delete", schema: "public", table: "tasks", oldRow: { id: "t2" } },
+        {
+          lsn: "0/1",
+          xid: 1,
+          timestamp: new Date(),
+          type: "insert",
+          schema: "public",
+          table: "tasks",
+          newRow: { id: "t1" },
+        },
+        {
+          lsn: "0/2",
+          xid: 1,
+          timestamp: new Date(),
+          type: "update",
+          schema: "public",
+          table: "users",
+          newRow: { id: "u1", name: "Bob" },
+          oldRow: { id: "u1", name: "Alice" },
+        },
+        {
+          lsn: "0/3",
+          xid: 1,
+          timestamp: new Date(),
+          type: "delete",
+          schema: "public",
+          table: "tasks",
+          oldRow: { id: "t2" },
+        },
       ]
 
       const events = batchToChangeEvents(batch)
@@ -103,9 +131,33 @@ describe("Logical Replication → Reactivity Integration", () => {
 
     it("extracts unique modified tables from batch", () => {
       const batch: WalChange[] = [
-        { lsn: "0/1", xid: 1, timestamp: new Date(), type: "insert", schema: "public", table: "tasks", newRow: { id: "t1" } },
-        { lsn: "0/2", xid: 1, timestamp: new Date(), type: "update", schema: "public", table: "tasks", newRow: { id: "t2" } },
-        { lsn: "0/3", xid: 1, timestamp: new Date(), type: "insert", schema: "public", table: "users", newRow: { id: "u1" } },
+        {
+          lsn: "0/1",
+          xid: 1,
+          timestamp: new Date(),
+          type: "insert",
+          schema: "public",
+          table: "tasks",
+          newRow: { id: "t1" },
+        },
+        {
+          lsn: "0/2",
+          xid: 1,
+          timestamp: new Date(),
+          type: "update",
+          schema: "public",
+          table: "tasks",
+          newRow: { id: "t2" },
+        },
+        {
+          lsn: "0/3",
+          xid: 1,
+          timestamp: new Date(),
+          type: "insert",
+          schema: "public",
+          table: "users",
+          newRow: { id: "u1" },
+        },
       ]
 
       const tables = extractModifiedTables(batch)
@@ -117,7 +169,15 @@ describe("Logical Replication → Reactivity Integration", () => {
     it("filters out transaction boundary events", () => {
       const batch: WalChange[] = [
         { lsn: "0/0", xid: 1, timestamp: new Date(), type: "begin", schema: "", table: "" },
-        { lsn: "0/1", xid: 1, timestamp: new Date(), type: "insert", schema: "public", table: "tasks", newRow: { id: "t1" } },
+        {
+          lsn: "0/1",
+          xid: 1,
+          timestamp: new Date(),
+          type: "insert",
+          schema: "public",
+          table: "tasks",
+          newRow: { id: "t1" },
+        },
         { lsn: "0/2", xid: 1, timestamp: new Date(), type: "commit", schema: "", table: "" },
       ]
 
@@ -155,7 +215,7 @@ describe("Logical Replication → Reactivity Integration", () => {
         const insertBuf = Buffer.alloc(6 + tupleBuf.length)
         insertBuf[0] = 0x49 // 'I'
         insertBuf.writeUInt32BE(1, 1)
-        insertBuf[5] = 0x4E
+        insertBuf[5] = 0x4e
         tupleBuf.copy(insertBuf, 6)
         replicator.processWalData(`0/${200 + i}`, insertBuf)
       }
@@ -187,9 +247,7 @@ describe("Logical Replication → Reactivity Integration", () => {
       replicator.start()
 
       // Register relation
-      const relBuf = buildRelationMessage(1, "public", "tasks", [
-        { name: "id", typeOid: 23, isKey: true },
-      ])
+      const relBuf = buildRelationMessage(1, "public", "tasks", [{ name: "id", typeOid: 23, isKey: true }])
       replicator.processWalData("0/100", relBuf)
 
       // Simulate two transactions by setting up Begin with different XIDs
@@ -204,7 +262,7 @@ describe("Logical Replication → Reactivity Integration", () => {
       const insertBuf = Buffer.alloc(6 + tupleBuf.length)
       insertBuf[0] = 0x49
       insertBuf.writeUInt32BE(1, 1)
-      insertBuf[5] = 0x4E
+      insertBuf[5] = 0x4e
       tupleBuf.copy(insertBuf, 6)
       replicator.processWalData("0/201", insertBuf)
 
@@ -223,9 +281,7 @@ describe("Logical Replication → Reactivity Integration", () => {
       replicator.start()
 
       // Register relation
-      const relBuf = buildRelationMessage(1, "public", "items", [
-        { name: "id", typeOid: 23, isKey: true },
-      ])
+      const relBuf = buildRelationMessage(1, "public", "items", [{ name: "id", typeOid: 23, isKey: true }])
       replicator.processWalData("0/100", relBuf)
 
       // Process 4 inserts
@@ -234,7 +290,7 @@ describe("Logical Replication → Reactivity Integration", () => {
         const insertBuf = Buffer.alloc(6 + tupleBuf.length)
         insertBuf[0] = 0x49
         insertBuf.writeUInt32BE(1, 1)
-        insertBuf[5] = 0x4E
+        insertBuf[5] = 0x4e
         tupleBuf.copy(insertBuf, 6)
         replicator.processWalData(`0/${200 + i}`, insertBuf)
       }

@@ -106,9 +106,7 @@ describe("QueryAssistant", () => {
     })
 
     it("suggests indexes for filtered columns", () => {
-      const explanation = assistant.explainQuery(
-        `ctx.db.tasks.where({ priority: "high" })`,
-      )
+      const explanation = assistant.explainQuery(`ctx.db.tasks.where({ priority: "high" })`)
       expect(explanation.suggestedIndexes.length).toBeGreaterThan(0)
     })
   })
@@ -125,9 +123,7 @@ describe("QueryAssistant", () => {
       ]
 
       const suggestions = assistant.suggestOptimizations(patterns, testSchema)
-      const indexSuggestion = suggestions.find(
-        (s) => s.type === "missing-index" && s.field === "priority",
-      )
+      const indexSuggestion = suggestions.find((s) => s.type === "missing-index" && s.field === "priority")
       expect(indexSuggestion).toBeDefined()
       expect(indexSuggestion!.fix).toContain("CREATE INDEX")
     })
@@ -143,9 +139,7 @@ describe("QueryAssistant", () => {
       ]
 
       const suggestions = assistant.suggestOptimizations(patterns, testSchema)
-      const indexSuggestion = suggestions.find(
-        (s) => s.type === "missing-index" && s.field === "assigneeId",
-      )
+      const indexSuggestion = suggestions.find((s) => s.type === "missing-index" && s.field === "assigneeId")
       expect(indexSuggestion).toBeUndefined()
     })
 

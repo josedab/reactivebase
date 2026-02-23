@@ -68,12 +68,15 @@ describe("jwtProvider", () => {
 
   it("verifies a valid JWT", async () => {
     const provider = jwtProvider({ issuer: "test", audience: "app", secret })
-    const token = createTestJwt({
-      sub: "user123",
-      iss: "test",
-      aud: "app",
-      exp: Math.floor(Date.now() / 1000) + 3600,
-    }, secret)
+    const token = createTestJwt(
+      {
+        sub: "user123",
+        iss: "test",
+        aud: "app",
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      },
+      secret,
+    )
 
     const result = await provider.verify(token)
     expect(result.userId).toBe("user123")
@@ -81,12 +84,15 @@ describe("jwtProvider", () => {
 
   it("rejects an expired JWT", async () => {
     const provider = jwtProvider({ issuer: "test", audience: "app", secret })
-    const token = createTestJwt({
-      sub: "user123",
-      iss: "test",
-      aud: "app",
-      exp: Math.floor(Date.now() / 1000) - 100,
-    }, secret)
+    const token = createTestJwt(
+      {
+        sub: "user123",
+        iss: "test",
+        aud: "app",
+        exp: Math.floor(Date.now() / 1000) - 100,
+      },
+      secret,
+    )
 
     await expect(provider.verify(token)).rejects.toThrow("expired")
   })
@@ -116,10 +122,13 @@ describe("jwtProvider", () => {
 
   it("supports audience as array", async () => {
     const provider = jwtProvider({ audience: "app", secret })
-    const token = createTestJwt({
-      sub: "user1",
-      aud: ["app", "other"],
-    }, secret)
+    const token = createTestJwt(
+      {
+        sub: "user1",
+        aud: ["app", "other"],
+      },
+      secret,
+    )
 
     const result = await provider.verify(token)
     expect(result.userId).toBe("user1")

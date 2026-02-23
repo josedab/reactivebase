@@ -19,12 +19,16 @@ const schema = defineSchema({
 
 describe("diffSchema", () => {
   it("detects new tables", () => {
-    const dbState: DatabaseState = { tables: ["users"], columns: [
-      { table: "users", column: "id", dataType: "text", isNullable: false, defaultValue: null },
-      { table: "users", column: "name", dataType: "text", isNullable: false, defaultValue: null },
-      { table: "users", column: "email", dataType: "text", isNullable: false, defaultValue: null },
-      { table: "users", column: "role", dataType: "text", isNullable: false, defaultValue: null },
-    ], indexes: [] }
+    const dbState: DatabaseState = {
+      tables: ["users"],
+      columns: [
+        { table: "users", column: "id", dataType: "text", isNullable: false, defaultValue: null },
+        { table: "users", column: "name", dataType: "text", isNullable: false, defaultValue: null },
+        { table: "users", column: "email", dataType: "text", isNullable: false, defaultValue: null },
+        { table: "users", column: "role", dataType: "text", isNullable: false, defaultValue: null },
+      ],
+      indexes: [],
+    }
 
     const diff = diffSchema(schema, dbState)
     expect(diff.addTables).toContain("tasks")
@@ -67,8 +71,8 @@ describe("diffSchema", () => {
 
     const diff = diffSchema(schema, dbState)
     expect(diff.addColumns).toHaveLength(2)
-    expect(diff.addColumns.map(c => c.column)).toContain("email")
-    expect(diff.addColumns.map(c => c.column)).toContain("role")
+    expect(diff.addColumns.map((c) => c.column)).toContain("email")
+    expect(diff.addColumns.map((c) => c.column)).toContain("role")
   })
 
   it("detects dropped columns", () => {
@@ -187,7 +191,7 @@ describe("generateDiffSQL", () => {
 
     expect(up).toContain('CREATE TABLE IF NOT EXISTS "users"')
     expect(up).toContain('CREATE TABLE IF NOT EXISTS "tasks"')
-    expect(down).toContain('DROP TABLE')
+    expect(down).toContain("DROP TABLE")
   })
 })
 

@@ -15,8 +15,12 @@ describe("Subscription Sharding Integration", () => {
       const mgr = new SubscriptionShardManager({
         nodeId: "node-1",
         totalShards: 64,
-        onMigrateIn: async (batch) => { migratedIn.push(...batch.subscriptionKeys) },
-        onMigrateOut: async (batch) => { migratedOut.push(...batch.subscriptionKeys) },
+        onMigrateIn: async (batch) => {
+          migratedIn.push(...batch.subscriptionKeys)
+        },
+        onMigrateOut: async (batch) => {
+          migratedOut.push(...batch.subscriptionKeys)
+        },
       })
 
       // Phase 1: Register 200 subscriptions on single node
@@ -268,10 +272,7 @@ describe("Cloud Provisioner Integration", () => {
       expect(deployment.status).toBe("active")
 
       // Step 4: Generate deploy manifest
-      const manifest = provisioner.generateDeployManifest(
-        platform.getProject(projectId)!,
-        prod,
-      )
+      const manifest = provisioner.generateDeployManifest(platform.getProject(projectId)!, prod)
       expect(manifest.environment.isProduction).toBe(true)
       expect(manifest.resources.replicas.min).toBe(2)
 

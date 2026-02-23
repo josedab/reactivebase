@@ -3,26 +3,12 @@
  * Provides useQuery, useMutation, and useAction for Vue 3 Composition API.
  */
 
-import {
-  ref,
-  shallowRef,
-  onMounted,
-  onUnmounted,
-  watch,
-  inject,
-  provide,
-  type Ref,
-  type InjectionKey,
-} from "vue"
-import {
-  ReactiveBaseClient,
-  type ReactiveBaseClientOptions,
-} from "@reactivebase/client"
+import { ref, shallowRef, onMounted, onUnmounted, watch, inject, provide, type Ref, type InjectionKey } from "vue"
+import { ReactiveBaseClient, type ReactiveBaseClientOptions } from "@reactivebase/client"
 
 // --- Provider ---
 
-const REACTIVEBASE_KEY: InjectionKey<ReactiveBaseClient> =
-  Symbol("reactivebase-client")
+const REACTIVEBASE_KEY: InjectionKey<ReactiveBaseClient> = Symbol("reactivebase-client")
 
 /**
  * Provide a ReactiveBase client to descendant components.
@@ -40,9 +26,7 @@ export function provideReactiveBase(options: ReactiveBaseClientOptions): Reactiv
 export function useReactiveBaseClient(): ReactiveBaseClient {
   const client = inject(REACTIVEBASE_KEY)
   if (!client) {
-    throw new Error(
-      "ReactiveBase client not found. Call provideReactiveBase() in a parent component.",
-    )
+    throw new Error("ReactiveBase client not found. Call provideReactiveBase() in a parent component.")
   }
   return client
 }
@@ -88,9 +72,7 @@ export function useQuery<T = unknown>(
   }
 
   onMounted(() => {
-    const resolvedArgs = args && typeof args === "object" && "value" in args
-      ? (args as Ref).value
-      : args
+    const resolvedArgs = args && typeof args === "object" && "value" in args ? (args as Ref).value : args
     subscribe(resolvedArgs)
   })
 

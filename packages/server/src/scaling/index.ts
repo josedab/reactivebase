@@ -1,7 +1,4 @@
-export {
-  ConsistentHashRing,
-  ClusterManager,
-} from "./scaling.js"
+export { ConsistentHashRing, ClusterManager } from "./scaling.js"
 export type {
   ClusterNode,
   ClusterManagerOptions,

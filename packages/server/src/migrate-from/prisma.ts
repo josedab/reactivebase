@@ -211,9 +211,7 @@ export function generateReactiveBaseSchema(models: PrismaModel[]): string {
     for (const field of model.fields) {
       if (field.relation) {
         // Find the model that the FK references
-        const refModel = models.find((m) =>
-          m.fields.some((f) => f.isId && field.relation!.references.includes(f.name)),
-        )
+        const refModel = models.find((m) => m.fields.some((f) => f.isId && field.relation!.references.includes(f.name)))
         if (refModel) {
           fkMap.set(`${model.name}.${field.name}`, camelCase(refModel.name))
         }

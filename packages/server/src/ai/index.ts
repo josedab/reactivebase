@@ -1,9 +1,4 @@
-export {
-  openaiProvider,
-  ollamaProvider,
-  mockAiProvider,
-  createAiContext,
-} from "./ai.js"
+export { openaiProvider, ollamaProvider, mockAiProvider, createAiContext } from "./ai.js"
 export type {
   AiProvider,
   AiContext,

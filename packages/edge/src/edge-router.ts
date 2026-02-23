@@ -230,10 +230,7 @@ export class EdgeQueryRouter {
   /**
    * Execute a mutation (always routes to origin).
    */
-  async mutate<T = unknown>(
-    mutationName: string,
-    args: unknown = {},
-  ): Promise<{ data: T; latencyMs: number }> {
+  async mutate<T = unknown>(mutationName: string, args: unknown = {}): Promise<{ data: T; latencyMs: number }> {
     const startTime = Date.now()
     const result = await this.originClient.prefetchQuery<T>(mutationName, args)
 
@@ -321,11 +318,7 @@ export class EdgeQueryRouter {
     return this.queryOrigin<T>(queryName, args, startTime)
   }
 
-  private async queryOrigin<T>(
-    queryName: string,
-    args: unknown,
-    startTime: number,
-  ): Promise<CachedEdgeResult<T>> {
+  private async queryOrigin<T>(queryName: string, args: unknown, startTime: number): Promise<CachedEdgeResult<T>> {
     const result = await this.originClient.prefetchQuery<T>(queryName, args)
     const latencyMs = Date.now() - startTime
     const cacheKey = createCacheKey(queryName, args)
@@ -345,16 +338,17 @@ export class EdgeQueryRouter {
     // Fire and forget
     const orderedReplicas = this.getOrderedReplicas()
     const firstHealthy = orderedReplicas[0]
-    const client = firstHealthy
-      ? this.replicaClients.get(firstHealthy.region)
-      : this.originClient
+    const client = firstHealthy ? this.replicaClients.get(firstHealthy.region) : this.originClient
 
     if (client) {
-      client.prefetchQuery(queryName, args).then((result) => {
-        this.cache.set(cacheKey, result.data, this.cacheTtlMs, firstHealthy?.region ?? "origin")
-      }).catch(() => {
-        // Silently fail background revalidation
-      })
+      client
+        .prefetchQuery(queryName, args)
+        .then((result) => {
+          this.cache.set(cacheKey, result.data, this.cacheTtlMs, firstHealthy?.region ?? "origin")
+        })
+        .catch(() => {
+          // Silently fail background revalidation
+        })
     }
   }
 

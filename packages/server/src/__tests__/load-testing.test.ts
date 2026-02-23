@@ -82,11 +82,13 @@ describe("Load: Filter-Level Invalidation at Scale", () => {
     }
 
     // Mutate ONE user's tasks — only 1 subscription should be invalidated
-    const invalidated = evaluator.evaluate([{
-      table: "tasks",
-      operation: "insert",
-      affectedFilters: { assigneeId: "u42" },
-    }])
+    const invalidated = evaluator.evaluate([
+      {
+        table: "tasks",
+        operation: "insert",
+        affectedFilters: { assigneeId: "u42" },
+      },
+    ])
 
     expect(invalidated).toHaveLength(1)
     expect(invalidated[0].subscriptionId).toBe("sub_42")
@@ -109,10 +111,12 @@ describe("Load: Filter-Level Invalidation at Scale", () => {
     }
 
     // No filter data → falls back to table-level → invalidates all
-    const invalidated = evaluator.evaluate([{
-      table: "tasks",
-      operation: "update",
-    }])
+    const invalidated = evaluator.evaluate([
+      {
+        table: "tasks",
+        operation: "update",
+      },
+    ])
 
     expect(invalidated).toHaveLength(1_000)
   })
@@ -120,14 +124,18 @@ describe("Load: Filter-Level Invalidation at Scale", () => {
 
 describe("Load: Query Builder Performance", () => {
   it("builds 10K queries without performance degradation", async () => {
-    const result = await bench("query-builder-10k", () => {
-      new QueryBuilder("tasks")
-        .where({ assigneeId: "u1", done: false })
-        .where("priority", "in", ["high", "critical"])
-        .orderBy("createdAt", "desc")
-        .limit(20)
-        .build()
-    }, { iterations: 10_000, warmup: 100 })
+    const result = await bench(
+      "query-builder-10k",
+      () => {
+        new QueryBuilder("tasks")
+          .where({ assigneeId: "u1", done: false })
+          .where("priority", "in", ["high", "critical"])
+          .orderBy("createdAt", "desc")
+          .limit(20)
+          .build()
+      },
+      { iterations: 10_000, warmup: 100 },
+    )
 
     expect(result.avgMs).toBeLessThan(1) // Each build should be <1ms
     expect(result.p99Ms).toBeLessThan(5)
@@ -145,9 +153,13 @@ describe("Load: Result Hashing Performance", () => {
       description: "Lorem ipsum ".repeat(10),
     }))
 
-    const result = await bench("hash-1k-rows", () => {
-      hashResult(largeResult)
-    }, { iterations: 100, warmup: 10 })
+    const result = await bench(
+      "hash-1k-rows",
+      () => {
+        hashResult(largeResult)
+      },
+      { iterations: 100, warmup: 10 },
+    )
 
     expect(result.avgMs).toBeLessThan(50) // 1K rows should hash in <50ms
   })

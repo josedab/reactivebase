@@ -18,7 +18,10 @@ export interface ScanError {
   message: string
 }
 
-export function scanFunctionSource(source: string, moduleName: string): { functions: ScannedFn[]; errors: ScanError[] } {
+export function scanFunctionSource(
+  source: string,
+  moduleName: string,
+): { functions: ScannedFn[]; errors: ScanError[] } {
   const functions: ScannedFn[] = []
   const errors: ScanError[] = []
 

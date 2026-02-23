@@ -20,7 +20,17 @@ export interface PiiDetection {
   recommendation: string
 }
 
-export type PiiType = "email" | "phone" | "ssn" | "name" | "address" | "ip" | "dob" | "credit_card" | "passport" | "custom"
+export type PiiType =
+  | "email"
+  | "phone"
+  | "ssn"
+  | "name"
+  | "address"
+  | "ip"
+  | "dob"
+  | "credit_card"
+  | "passport"
+  | "custom"
 
 export interface AccessLogEntry {
   id: string
@@ -275,9 +285,10 @@ export class ComplianceToolkit {
     const encryptionSection: ComplianceSection = {
       name: "Data Encryption",
       status: this.detectedPii.length > 0 ? "warning" : "pass",
-      findings: this.detectedPii.length > 0
-        ? [`${this.detectedPii.length} PII fields detected — ensure encryption is configured`]
-        : ["No PII fields detected"],
+      findings:
+        this.detectedPii.length > 0
+          ? [`${this.detectedPii.length} PII fields detected — ensure encryption is configured`]
+          : ["No PII fields detected"],
       evidence: [`PII scan completed at ${new Date().toISOString()}`],
     }
     sections.push(encryptionSection)
@@ -287,9 +298,10 @@ export class ComplianceToolkit {
     const accessSection: ComplianceSection = {
       name: "Access Logging",
       status: this.accessLog.length > 0 ? "pass" : "warning",
-      findings: this.accessLog.length > 0
-        ? [`${this.accessLog.length} access log entries recorded`]
-        : ["No access logs recorded — enable access logging"],
+      findings:
+        this.accessLog.length > 0
+          ? [`${this.accessLog.length} access log entries recorded`]
+          : ["No access logs recorded — enable access logging"],
       evidence: [`Access log contains ${this.accessLog.length} entries`],
     }
     sections.push(accessSection)
@@ -299,9 +311,10 @@ export class ComplianceToolkit {
     const retentionSection: ComplianceSection = {
       name: "Data Retention",
       status: this.retentionPolicies.size > 0 ? "pass" : "warning",
-      findings: this.retentionPolicies.size > 0
-        ? [`${this.retentionPolicies.size} retention policies configured`]
-        : ["No retention policies configured"],
+      findings:
+        this.retentionPolicies.size > 0
+          ? [`${this.retentionPolicies.size} retention policies configured`]
+          : ["No retention policies configured"],
       evidence: Array.from(this.retentionPolicies.values()).map(
         (p) => `${p.table}: ${p.retentionDays} days (${p.action})`,
       ),

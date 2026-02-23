@@ -195,8 +195,13 @@ describe("DocumentCollaboration", () => {
       engine.createDocument("doc-1")
 
       engine.setAwareness("doc-1", {
-        clientId: "c1", userId: "u1", userName: "Alice",
-        color: "#EF4444", cursor: null, isEditing: false, lastActivity: Date.now(),
+        clientId: "c1",
+        userId: "u1",
+        userName: "Alice",
+        color: "#EF4444",
+        cursor: null,
+        isEditing: false,
+        lastActivity: Date.now(),
       })
 
       engine.removeAwareness("doc-1", "c1")

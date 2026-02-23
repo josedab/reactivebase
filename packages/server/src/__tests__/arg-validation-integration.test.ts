@@ -4,10 +4,7 @@ import { s, ValidationError } from "../validation/index.js"
 
 describe("function-level argument validation", () => {
   it("query() accepts validate option", () => {
-    const fn = query(
-      async (_ctx, _args: { title: string }) => [],
-      { validate: { title: s.string().min(1) } },
-    )
+    const fn = query(async (_ctx, _args: { title: string }) => [], { validate: { title: s.string().min(1) } })
     expect(fn.options).toHaveProperty("validate")
   })
 
@@ -20,10 +17,7 @@ describe("function-level argument validation", () => {
   })
 
   it("action() accepts validate option", () => {
-    const fn = action(
-      async (_ctx, _args: { email: string }) => {},
-      { validate: { email: s.string().email() } },
-    )
+    const fn = action(async (_ctx, _args: { email: string }) => {}, { validate: { email: s.string().email() } })
     expect(fn.options).toHaveProperty("validate")
   })
 

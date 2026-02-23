@@ -13,13 +13,13 @@ import type { WalChange } from "../logical-replication/logical-replication.js"
 
 describe("LSN Utilities", () => {
   it("parses LSN strings to bigint", () => {
-    expect(parseLsn("0/16B3748")).toBe(BigInt(0x16B3748))
+    expect(parseLsn("0/16B3748")).toBe(BigInt(0x16b3748))
     expect(parseLsn("1/0")).toBe(BigInt(0x100000000))
     expect(parseLsn("0/0")).toBe(0n)
   })
 
   it("formats bigint back to LSN string", () => {
-    expect(formatLsn(BigInt(0x16B3748))).toBe("0/16B3748")
+    expect(formatLsn(BigInt(0x16b3748))).toBe("0/16B3748")
     expect(formatLsn(BigInt(0x100000000))).toBe("1/0")
   })
 
@@ -49,7 +49,7 @@ describe("WalDecoder", () => {
   })
 
   it("returns null for unknown message types", () => {
-    const buf = Buffer.from([0xFF, 0x00, 0x00])
+    const buf = Buffer.from([0xff, 0x00, 0x00])
     expect(decoder.decode("0/0", buf)).toBeNull()
   })
 
@@ -57,9 +57,9 @@ describe("WalDecoder", () => {
     // Build a Begin message: [B][finalLSN:8][commitTimestamp:8][xid:4]
     const buf = Buffer.alloc(21)
     buf[0] = 0x42 // 'B'
-    buf.writeBigInt64BE(0n, 1)       // final LSN
-    buf.writeBigInt64BE(0n, 9)       // commit timestamp
-    buf.writeUInt32BE(42, 17)        // xid
+    buf.writeBigInt64BE(0n, 1) // final LSN
+    buf.writeBigInt64BE(0n, 9) // commit timestamp
+    buf.writeUInt32BE(42, 17) // xid
 
     const change = decoder.decode("0/100", buf)
     expect(change).not.toBeNull()
@@ -111,8 +111,8 @@ describe("WalDecoder", () => {
     const tupleBuf = buildTupleData(["42", "Alice"])
     const insertBuf = Buffer.alloc(6 + tupleBuf.length)
     insertBuf[0] = 0x49 // 'I'
-    insertBuf.writeUInt32BE(1, 1)  // relation ID
-    insertBuf[5] = 0x4E // 'N' for new tuple
+    insertBuf.writeUInt32BE(1, 1) // relation ID
+    insertBuf[5] = 0x4e // 'N' for new tuple
     tupleBuf.copy(insertBuf, 6)
 
     const change = decoder.decode("0/200", insertBuf)
@@ -128,14 +128,12 @@ describe("WalDecoder", () => {
     const buf = Buffer.alloc(6)
     buf[0] = 0x49
     buf.writeUInt32BE(999, 1) // unknown relation ID
-    buf[5] = 0x4E
+    buf[5] = 0x4e
     expect(decoder.decode("0/100", buf)).toBeNull()
   })
 
   it("tracks relations via getRelations()", () => {
-    const relBuf = buildRelationMessage(5, "public", "items", [
-      { name: "id", typeOid: 23, isKey: true },
-    ])
+    const relBuf = buildRelationMessage(5, "public", "items", [{ name: "id", typeOid: 23, isKey: true }])
     decoder.decode("0/100", relBuf)
 
     const rels = decoder.getRelations()
@@ -144,9 +142,7 @@ describe("WalDecoder", () => {
   })
 
   it("clears state on reset", () => {
-    const relBuf = buildRelationMessage(1, "public", "tasks", [
-      { name: "id", typeOid: 23, isKey: true },
-    ])
+    const relBuf = buildRelationMessage(1, "public", "tasks", [{ name: "id", typeOid: 23, isKey: true }])
     decoder.decode("0/100", relBuf)
     expect(decoder.getRelations().size).toBe(1)
 
@@ -161,7 +157,9 @@ describe("ChangeBatcher", () => {
   it("flushes when batch size reached", async () => {
     const received: WalChange[][] = []
     const batcher = new ChangeBatcher(3, 100_000) // large interval so only size triggers
-    batcher.onFlush((changes) => { received.push([...changes]) })
+    batcher.onFlush((changes) => {
+      received.push([...changes])
+    })
 
     for (let i = 0; i < 3; i++) {
       batcher.add(makeChange("insert", "tasks", `0/${i}`))
@@ -176,7 +174,9 @@ describe("ChangeBatcher", () => {
   it("flushes on interval", async () => {
     const received: WalChange[][] = []
     const batcher = new ChangeBatcher(1000, 30)
-    batcher.onFlush((changes) => { received.push([...changes]) })
+    batcher.onFlush((changes) => {
+      received.push([...changes])
+    })
 
     batcher.start()
     batcher.add(makeChange("insert", "tasks", "0/1"))
@@ -200,7 +200,9 @@ describe("ChangeBatcher", () => {
   it("manual flush drains buffer", async () => {
     const received: WalChange[][] = []
     const batcher = new ChangeBatcher(100, 100_000)
-    batcher.onFlush((changes) => { received.push([...changes]) })
+    batcher.onFlush((changes) => {
+      received.push([...changes])
+    })
 
     batcher.add(makeChange("insert", "tasks", "0/1"))
     await batcher.flush()
@@ -232,9 +234,7 @@ describe("LogicalReplicator", () => {
       publicationName: "my_pub",
       tables: ["tasks", "users"],
     })
-    expect(replicator.generatePublicationSQL()).toBe(
-      'CREATE PUBLICATION my_pub FOR TABLE "tasks", "users";',
-    )
+    expect(replicator.generatePublicationSQL()).toBe('CREATE PUBLICATION my_pub FOR TABLE "tasks", "users";')
   })
 
   it("generates replication slot SQL", () => {
@@ -288,9 +288,7 @@ describe("LogicalReplicator", () => {
     const decoder = replicator.getDecoder()
 
     // Register a relation via the decoder
-    const relBuf = buildRelationMessage(1, "public", "tasks", [
-      { name: "id", typeOid: 23, isKey: true },
-    ])
+    const relBuf = buildRelationMessage(1, "public", "tasks", [{ name: "id", typeOid: 23, isKey: true }])
     replicator.processWalData("0/100", relBuf)
 
     // Process an insert
@@ -298,7 +296,7 @@ describe("LogicalReplicator", () => {
     const insertBuf = Buffer.alloc(6 + tupleBuf.length)
     insertBuf[0] = 0x49 // 'I'
     insertBuf.writeUInt32BE(1, 1)
-    insertBuf[5] = 0x4E
+    insertBuf[5] = 0x4e
     tupleBuf.copy(insertBuf, 6)
 
     const change = replicator.processWalData("0/200", insertBuf)
@@ -310,13 +308,13 @@ describe("LogicalReplicator", () => {
   it("delivers batched changes to handler", async () => {
     const received: WalChange[][] = []
     const replicator = new LogicalReplicator({ batchSize: 2 })
-    replicator.onChange((changes) => { received.push([...changes]) })
+    replicator.onChange((changes) => {
+      received.push([...changes])
+    })
     replicator.start()
 
     // Register relation
-    const relBuf = buildRelationMessage(1, "public", "tasks", [
-      { name: "id", typeOid: 23, isKey: true },
-    ])
+    const relBuf = buildRelationMessage(1, "public", "tasks", [{ name: "id", typeOid: 23, isKey: true }])
     replicator.processWalData("0/100", relBuf)
 
     // Send 2 inserts to trigger batch
@@ -325,7 +323,7 @@ describe("LogicalReplicator", () => {
       const insertBuf = Buffer.alloc(6 + tupleBuf.length)
       insertBuf[0] = 0x49
       insertBuf.writeUInt32BE(1, 1)
-      insertBuf[5] = 0x4E
+      insertBuf[5] = 0x4e
       tupleBuf.copy(insertBuf, 6)
       replicator.processWalData(`0/${200 + i}`, insertBuf)
     }

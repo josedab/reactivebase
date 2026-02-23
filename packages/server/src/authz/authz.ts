@@ -30,9 +30,9 @@ export interface ResourceDefinition {
 }
 
 export type PermissionRule =
-  | string                // Direct relation: "owner"
-  | DerivedPermission     // Derived: { from: "org", permission: "admin" }
-  | ComputedPermission    // Custom check function
+  | string // Direct relation: "owner"
+  | DerivedPermission // Derived: { from: "org", permission: "admin" }
+  | ComputedPermission // Custom check function
 
 export interface DerivedPermission {
   _type: "derived"
@@ -160,10 +160,7 @@ LIMIT 1`,
   }
 }
 
-export function buildListRelationsSQL(
-  resourceType: string,
-  resourceId: string,
-): { sql: string; params: unknown[] } {
+export function buildListRelationsSQL(resourceType: string, resourceId: string): { sql: string; params: unknown[] } {
   return {
     sql: `SELECT relation, subject_type, subject_id FROM _reactivebase_authz_tuples
 WHERE resource_type = $1 AND resource_id = $2
@@ -195,11 +192,7 @@ ORDER BY resource_type, resource_id`,
 /**
  * Generate a SQL WHERE clause from a permission check for use in RLS policies.
  */
-export function permissionToWhereClause(
-  resourceType: string,
-  relation: string,
-  userIdParam: string = "$1",
-): string {
+export function permissionToWhereClause(resourceType: string, relation: string, userIdParam: string = "$1"): string {
   return `EXISTS (
   SELECT 1 FROM _reactivebase_authz_tuples
   WHERE resource_type = '${resourceType}'
@@ -225,9 +218,7 @@ export function definePermissions(schema: PermissionSchema): PermissionConfig {
       for (const rule of rules) {
         if (typeof rule === "string") {
           if (!def.relations[rule]) {
-            throw new AuthzError(
-              `Permission "${permName}" on "${resourceType}" references unknown relation "${rule}"`,
-            )
+            throw new AuthzError(`Permission "${permName}" on "${resourceType}" references unknown relation "${rule}"`)
           }
         }
       }
@@ -288,12 +279,7 @@ export class AuthzEngine {
   /**
    * Check if a user has a specific relation to a resource.
    */
-  hasRelation(
-    resourceType: string,
-    resourceId: string,
-    relation: string,
-    subjectId: string,
-  ): boolean {
+  hasRelation(resourceType: string, resourceId: string, relation: string, subjectId: string): boolean {
     const lookupKey = `${resourceType}:${resourceId}:${relation}`
     const subjects = this.relations.get(lookupKey)
     if (!subjects) return false
@@ -434,11 +420,7 @@ export class AuthzEngine {
 
   // ─── Internal ──────────────────────────────────────────────────────────
 
-  private getRelationTargets(
-    resourceType: string,
-    resourceId: string,
-    relation: string,
-  ): string[] {
+  private getRelationTargets(resourceType: string, resourceId: string, relation: string): string[] {
     const lookupKey = `${resourceType}:${resourceId}:${relation}`
     const subjects = this.relations.get(lookupKey)
     if (!subjects) return []

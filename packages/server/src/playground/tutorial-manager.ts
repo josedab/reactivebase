@@ -302,15 +302,19 @@ export class TutorialManager {
     const files: Record<string, string> = {
       "convex/schema.ts": schema,
       "convex/queries.ts": queries,
-      "package.json": JSON.stringify({
-        name: config.projectName,
-        private: true,
-        scripts: { dev: "reactivebase dev", build: "reactivebase generate && tsc", start: "node dist/server.js" },
-        dependencies: {
-          "@reactivebase/server": "^0.1.0",
-          [`@reactivebase/${config.framework}`]: "^0.1.0",
+      "package.json": JSON.stringify(
+        {
+          name: config.projectName,
+          private: true,
+          scripts: { dev: "reactivebase dev", build: "reactivebase generate && tsc", start: "node dist/server.js" },
+          dependencies: {
+            "@reactivebase/server": "^0.1.0",
+            [`@reactivebase/${config.framework}`]: "^0.1.0",
+          },
         },
-      }, null, 2),
+        null,
+        2,
+      ),
       "reactivebase.config.ts": `import { defineConfig } from "@reactivebase/server"\n\nexport default defineConfig({\n  database: { connectionString: process.env.DATABASE_URL! },\n  server: { port: 4000 },\n})\n`,
     }
 

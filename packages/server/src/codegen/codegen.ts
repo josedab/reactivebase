@@ -121,11 +121,7 @@ export function generateApiModule(functions: ScannedFunction[]): string {
 /**
  * Generate the _generated/server.ts file for server-side function registration.
  */
-export function generateServerModule(
-  functions: ScannedFunction[],
-  functionsDir: string,
-  outputDir: string,
-): string {
+export function generateServerModule(functions: ScannedFunction[], functionsDir: string, outputDir: string): string {
   const lines: string[] = []
   const modules = groupByModule(functions)
 
@@ -173,10 +169,7 @@ export function generateDataModel(schemaSource: string): string {
 /**
  * Run full code generation: scan functions dir and write generated files.
  */
-export async function generate(options: {
-  functionsDir: string
-  outputDir: string
-}): Promise<GenerateResult> {
+export async function generate(options: { functionsDir: string; outputDir: string }): Promise<GenerateResult> {
   const { functionsDir, outputDir } = options
 
   await mkdir(outputDir, { recursive: true })

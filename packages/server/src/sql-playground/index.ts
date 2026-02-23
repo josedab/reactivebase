@@ -1,6 +1,4 @@
-export {
-  SqlPlayground,
-} from "./sql-playground.js"
+export { SqlPlayground } from "./sql-playground.js"
 
 export type {
   SqlPlaygroundOptions,

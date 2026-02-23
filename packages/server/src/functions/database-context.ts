@@ -8,11 +8,7 @@ import { QueryBuilder, type QueryDependency, type BuiltQuery } from "../query-bu
 import type { Schema, SchemaDefinition } from "../schema/index.js"
 
 export interface TableAccessor<TRow = Record<string, unknown>> {
-  where(
-    columnOrObject: string | Partial<TRow>,
-    operatorOrValue?: unknown,
-    value?: unknown,
-  ): QueryBuilder<TRow>
+  where(columnOrObject: string | Partial<TRow>, operatorOrValue?: unknown, value?: unknown): QueryBuilder<TRow>
   get(id: string): Promise<TRow | null>
   getOrThrow(id: string): Promise<TRow>
   insert(data: Partial<TRow>): Promise<TRow>
@@ -171,10 +167,7 @@ RETURNING *`
       guardWrite()
       modifiedTables.push(tableName)
 
-      const result = await client.query(
-        `DELETE FROM "${tableName}" WHERE "id" = $1`,
-        [id],
-      )
+      const result = await client.query(`DELETE FROM "${tableName}" WHERE "id" = $1`, [id])
       if (result.rowCount === 0) {
         throw new Error(`Record not found in "${tableName}" with id "${id}"`)
       }

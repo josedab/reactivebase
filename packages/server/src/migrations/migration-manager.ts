@@ -35,10 +35,7 @@ export class MigrationManager {
   /**
    * Generate a new migration from the current schema.
    */
-  async generate(
-    schema: Schema,
-    name: string = "migration",
-  ): Promise<MigrationFile> {
+  async generate(schema: Schema, name: string = "migration"): Promise<MigrationFile> {
     await mkdir(this.migrationsDir, { recursive: true })
 
     const timestamp = Date.now()
@@ -145,10 +142,10 @@ export class MigrationManager {
     for (const migration of pending) {
       try {
         await this.queryFn(migration.upSQL)
-        await this.queryFn(
-          `INSERT INTO "_reactivebase_migrations" (version, name) VALUES ($1, $2)`,
-          [migration.version, migration.name],
-        )
+        await this.queryFn(`INSERT INTO "_reactivebase_migrations" (version, name) VALUES ($1, $2)`, [
+          migration.version,
+          migration.name,
+        ])
         applied.push(migration.version)
       } catch (error) {
         return {
@@ -192,10 +189,7 @@ export class MigrationManager {
     }
 
     await this.queryFn(migrationFile.downSQL)
-    await this.queryFn(
-      `DELETE FROM "_reactivebase_migrations" WHERE version = $1`,
-      [lastApplied.version],
-    )
+    await this.queryFn(`DELETE FROM "_reactivebase_migrations" WHERE version = $1`, [lastApplied.version])
 
     return { rolledBack: lastApplied.version }
   }
@@ -216,9 +210,7 @@ export class MigrationManager {
       migrations: files.map((f) => ({
         version: f.version,
         name: f.name,
-        status: applied.some((a) => a.version === f.version)
-          ? ("applied" as const)
-          : ("pending" as const),
+        status: applied.some((a) => a.version === f.version) ? ("applied" as const) : ("pending" as const),
       })),
     }
   }

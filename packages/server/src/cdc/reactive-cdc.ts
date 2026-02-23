@@ -61,7 +61,8 @@ export type ProcessChangesCallback = (tables: string[], events: ChangeEvent[]) =
 
 // ─── Reactive CDC Adapter ────────────────────────────────────────────────────
 
-const DEFAULT_OPTIONS: Required<Omit<ReactiveCdcOptions, "onProcess" | "onError">> & Pick<ReactiveCdcOptions, "onProcess" | "onError"> = {
+const DEFAULT_OPTIONS: Required<Omit<ReactiveCdcOptions, "onProcess" | "onError">> &
+  Pick<ReactiveCdcOptions, "onProcess" | "onError"> = {
   tables: [],
   batchSize: 100,
   flushIntervalMs: 10,
@@ -105,9 +106,8 @@ export class ReactiveCdcAdapter {
    * Converts WAL changes to ReactivityEngine ChangeEvents and triggers invalidation.
    */
   async processWalChanges(changes: WalChangeEvent[]): Promise<void> {
-    const tracked = this.options.tables.length > 0
-      ? changes.filter((c) => this.options.tables.includes(c.table))
-      : changes
+    const tracked =
+      this.options.tables.length > 0 ? changes.filter((c) => this.options.tables.includes(c.table)) : changes
 
     if (tracked.length === 0) return
 

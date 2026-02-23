@@ -32,10 +32,7 @@ export interface RestRoute {
 /**
  * Generate REST route definitions from a schema.
  */
-export function generateRestRoutes(
-  schema: Schema,
-  options: RestApiOptions = {},
-): RestRoute[] {
+export function generateRestRoutes(schema: Schema, options: RestApiOptions = {}): RestRoute[] {
   const basePath = options.basePath ?? "/api"
   const tables = options.tables ?? schema.tableNames
 
@@ -169,21 +166,33 @@ export function generateGraphQLSchema(schema: Schema): string {
   return lines.join("\n")
 }
 
-function validatorToGraphQL(validator: { type: string; isOptional: boolean; innerValidator?: { type: string } }): string {
-  const actual = validator.type === "optional" && validator.innerValidator
-    ? validator.innerValidator
-    : validator
+function validatorToGraphQL(validator: {
+  type: string
+  isOptional: boolean
+  innerValidator?: { type: string }
+}): string {
+  const actual = validator.type === "optional" && validator.innerValidator ? validator.innerValidator : validator
   const required = !validator.isOptional ? "!" : ""
 
   switch (actual.type) {
-    case "string": case "id": case "enum": return `String${required}`
-    case "number": return `Float${required}`
-    case "integer": return `Int${required}`
-    case "boolean": return `Boolean${required}`
-    case "timestamp": return `String${required}`
-    case "json": return `JSON${required}`
-    case "vector": return `[Float!]${required}`
-    default: return `String${required}`
+    case "string":
+    case "id":
+    case "enum":
+      return `String${required}`
+    case "number":
+      return `Float${required}`
+    case "integer":
+      return `Int${required}`
+    case "boolean":
+      return `Boolean${required}`
+    case "timestamp":
+      return `String${required}`
+    case "json":
+      return `JSON${required}`
+    case "vector":
+      return `[Float!]${required}`
+    default:
+      return `String${required}`
   }
 }
 

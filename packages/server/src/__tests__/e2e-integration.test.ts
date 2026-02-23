@@ -7,12 +7,8 @@
 
 import { describe, it, expect, beforeEach } from "vitest"
 import { defineSchema, defineTable, v } from "../schema/index.js"
-import {
-  SubscriptionRegistry,
-} from "../reactivity/subscription-registry.js"
-import {
-  InvalidationEvaluator,
-} from "../reactivity/invalidation-evaluator.js"
+import { SubscriptionRegistry } from "../reactivity/subscription-registry.js"
+import { InvalidationEvaluator } from "../reactivity/invalidation-evaluator.js"
 import { hashResult, hasResultChanged, computeDiff } from "../reactivity/result-differ.js"
 import { MiddlewareManager } from "../middleware/middleware.js"
 import { enforceAccess, roles, allow } from "../permissions/permissions.js"
@@ -77,9 +73,11 @@ class SimpleInMemoryDB {
     })
   }
 
-  get(tableName: string, id: string) { return this.table(tableName).get(id) ?? null }
+  get(tableName: string, id: string) {
+    return this.table(tableName).get(id) ?? null
+  }
   insert(tableName: string, data: Record<string, unknown>) {
-    const id = data.id as string ?? `id_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+    const id = (data.id as string) ?? `id_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
     const row = { ...data, id }
     this.table(tableName).set(id, row)
     return row
@@ -91,7 +89,9 @@ class SimpleInMemoryDB {
     this.table(tableName).set(id, updated)
     return updated
   }
-  delete(tableName: string, id: string) { return this.table(tableName).delete(id) }
+  delete(tableName: string, id: string) {
+    return this.table(tableName).delete(id)
+  }
 }
 const listTasksFn = {
   type: "query",
@@ -219,17 +219,22 @@ describe("E2E: Subscription Registry + Invalidation", () => {
     })
 
     // Mutate u1's tasks — only sub1 should invalidate
-    const invalidated = evaluator.evaluate([{
-      table: "tasks",
-      operation: "insert",
-      affectedFilters: { assigneeId: "u1" },
-    }])
+    const invalidated = evaluator.evaluate([
+      {
+        table: "tasks",
+        operation: "insert",
+        affectedFilters: { assigneeId: "u1" },
+      },
+    ])
 
     expect(invalidated).toHaveLength(1)
     expect(invalidated[0].subscriptionId).toBe("sub1")
 
     // Verify result diffing works
-    const newResult = [{ id: "t1", title: "Task 1" }, { id: "t2", title: "Task 2" }]
+    const newResult = [
+      { id: "t1", title: "Task 1" },
+      { id: "t2", title: "Task 2" },
+    ]
     const oldHash = registry.get("sub1")!.lastResultHash
     expect(hasResultChanged(oldHash, newResult)).toBe(true)
 
@@ -251,15 +256,25 @@ describe("E2E: Middleware Pipeline", () => {
 
     mw.use({
       name: "logger",
-      before: () => { log.push("before") },
-      after: () => { log.push("after") },
-      onError: () => { log.push("error") },
+      before: () => {
+        log.push("before")
+      },
+      after: () => {
+        log.push("after")
+      },
+      onError: () => {
+        log.push("error")
+      },
     })
 
     mw.use({
       name: "timer",
-      before: () => { log.push("timer-start") },
-      after: () => { log.push("timer-end") },
+      before: () => {
+        log.push("timer-start")
+      },
+      after: () => {
+        log.push("timer-end")
+      },
     })
 
     const ctx = {
@@ -300,15 +315,25 @@ describe("E2E: Auth + Permissions + Validation Pipeline", () => {
     await expect(enforceAccess("authenticated", anonAuth, "test")).rejects.toThrow()
 
     // Validation passes for valid args
-    expect(() => validateArgs({ title: "Hello", priority: 5 }, {
-      title: s.string().min(1),
-      priority: s.number().min(1).max(10),
-    })).not.toThrow()
+    expect(() =>
+      validateArgs(
+        { title: "Hello", priority: 5 },
+        {
+          title: s.string().min(1),
+          priority: s.number().min(1).max(10),
+        },
+      ),
+    ).not.toThrow()
 
     // Validation fails for invalid args
-    expect(() => validateArgs({ title: "" }, {
-      title: s.string().min(1),
-    })).toThrow(ValidationError)
+    expect(() =>
+      validateArgs(
+        { title: "" },
+        {
+          title: s.string().min(1),
+        },
+      ),
+    ).toThrow(ValidationError)
   })
 
   it("rate limiter + validation + permissions compose correctly", async () => {
@@ -370,9 +395,7 @@ describe("E2E: Pub/Sub Cross-Server", () => {
     const received: ChangeEvent[][] = []
     await server2.subscribe("changes", (events) => received.push(events))
 
-    await server1.publish("changes", [
-      { table: "tasks", operation: "insert", affectedFilters: { assigneeId: "u1" } },
-    ])
+    await server1.publish("changes", [{ table: "tasks", operation: "insert", affectedFilters: { assigneeId: "u1" } }])
 
     expect(received).toHaveLength(1)
     expect(received[0][0].table).toBe("tasks")
@@ -393,10 +416,10 @@ describe("E2E: Query Builder Full Pipeline", () => {
 
     const built = builder.build()
 
-    expect(built.sql).toContain('WHERE')
-    expect(built.sql).toContain('JOIN')
-    expect(built.sql).toContain('ORDER BY')
-    expect(built.sql).toContain('LIMIT 20')
+    expect(built.sql).toContain("WHERE")
+    expect(built.sql).toContain("JOIN")
+    expect(built.sql).toContain("ORDER BY")
+    expect(built.sql).toContain("LIMIT 20")
     expect(built.params).toHaveLength(2)
 
     const deps = builder.getDependencies()
@@ -411,8 +434,8 @@ describe("E2E: Query Builder Full Pipeline", () => {
 
     const built = builder.build()
 
-    expect(built.sql).toContain('<=>')
-    expect(built.sql).toContain('LIMIT 5')
+    expect(built.sql).toContain("<=>")
+    expect(built.sql).toContain("LIMIT 5")
     expect(built.params).toHaveLength(2) // category + embedding
   })
 })

@@ -1,9 +1,4 @@
-export {
-  IncrementalViewMaintainer,
-  extractDependencies,
-  isIvmEligible,
-  evaluatePredicate,
-} from "./ivm.js"
+export { IncrementalViewMaintainer, extractDependencies, isIvmEligible, evaluatePredicate } from "./ivm.js"
 
 export type {
   QueryAstNode,

@@ -64,31 +64,32 @@ export interface UseOptimisticReturn<T> {
  *     rollback(mutationId)
  *   }
  */
-export function useOptimistic<T>(
-  serverData: T,
-  options: UseOptimisticOptions = {},
-): UseOptimisticReturn<T> {
+export function useOptimistic<T>(serverData: T, options: UseOptimisticOptions = {}): UseOptimisticReturn<T> {
   const [localData, setLocalData] = useState<T>(serverData)
   const [pendingCount, setPendingCount] = useState(0)
   const mutationCounter = useRef(0)
 
-  const cacheAdapter = useMemo<OptimisticCacheAdapter>(() => ({
-    get() {
-      return { data: localData, version: mutationCounter.current }
-    },
-    update(_id: string, data: unknown, _version: number) {
-      setLocalData(data as T)
-    },
-  }), []) // intentionally stable — updates via setLocalData
+  const cacheAdapter = useMemo<OptimisticCacheAdapter>(
+    () => ({
+      get() {
+        return { data: localData, version: mutationCounter.current }
+      },
+      update(_id: string, data: unknown, _version: number) {
+        setLocalData(data as T)
+      },
+    }),
+    [],
+  ) // intentionally stable — updates via setLocalData
 
   const manager = useMemo(
-    () => new OptimisticUpdateManager(cacheAdapter, {
-      timeoutMs: options.timeoutMs ?? 30_000,
-      maxSnapshots: options.maxSnapshots ?? 50,
-      onRollback: () => setPendingCount((c) => Math.max(0, c - 1)),
-      onConfirm: () => setPendingCount((c) => Math.max(0, c - 1)),
-      onTimeout: () => setPendingCount((c) => Math.max(0, c - 1)),
-    }),
+    () =>
+      new OptimisticUpdateManager(cacheAdapter, {
+        timeoutMs: options.timeoutMs ?? 30_000,
+        maxSnapshots: options.maxSnapshots ?? 50,
+        onRollback: () => setPendingCount((c) => Math.max(0, c - 1)),
+        onConfirm: () => setPendingCount((c) => Math.max(0, c - 1)),
+        onTimeout: () => setPendingCount((c) => Math.max(0, c - 1)),
+      }),
     [],
   )
 
@@ -106,24 +107,33 @@ export function useOptimistic<T>(
     }
   }, [options.conflictResolver])
 
-  const applyOptimistic = useCallback((optimisticData: T): string => {
-    const mutationId = `opt_${++mutationCounter.current}_${Date.now()}`
-    manager.apply({
-      mutationId,
-      subscriptionId: "local",
-      optimisticData,
-    })
-    setPendingCount((c) => c + 1)
-    return mutationId
-  }, [manager])
+  const applyOptimistic = useCallback(
+    (optimisticData: T): string => {
+      const mutationId = `opt_${++mutationCounter.current}_${Date.now()}`
+      manager.apply({
+        mutationId,
+        subscriptionId: "local",
+        optimisticData,
+      })
+      setPendingCount((c) => c + 1)
+      return mutationId
+    },
+    [manager],
+  )
 
-  const confirm = useCallback((mutationId: string, serverData?: T) => {
-    manager.confirm(mutationId, serverData)
-  }, [manager])
+  const confirm = useCallback(
+    (mutationId: string, serverData?: T) => {
+      manager.confirm(mutationId, serverData)
+    },
+    [manager],
+  )
 
-  const rollback = useCallback((mutationId: string) => {
-    manager.rollback(mutationId)
-  }, [manager])
+  const rollback = useCallback(
+    (mutationId: string) => {
+      manager.rollback(mutationId)
+    },
+    [manager],
+  )
 
   const rollbackAll = useCallback(() => {
     manager.rollbackAll()
@@ -191,15 +201,11 @@ export function useCursors(roomId: string): {
   const [cursors, setCursors] = useState<CursorData[]>([])
 
   useEffect(() => {
-    const unsubscribe = client.subscribe(
-      `__collab:cursors:${roomId}`,
-      { roomId },
-      (result) => {
-        if (Array.isArray(result)) {
-          setCursors(result as CursorData[])
-        }
-      },
-    )
+    const unsubscribe = client.subscribe(`__collab:cursors:${roomId}`, { roomId }, (result) => {
+      if (Array.isArray(result)) {
+        setCursors(result as CursorData[])
+      }
+    })
     return unsubscribe
   }, [client, roomId])
 
@@ -233,15 +239,11 @@ export function useTypingUsers(roomId: string): {
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([])
 
   useEffect(() => {
-    const unsubscribe = client.subscribe(
-      `__collab:typing:${roomId}`,
-      { roomId },
-      (result) => {
-        if (Array.isArray(result)) {
-          setTypingUsers(result as TypingUser[])
-        }
-      },
-    )
+    const unsubscribe = client.subscribe(`__collab:typing:${roomId}`, { roomId }, (result) => {
+      if (Array.isArray(result)) {
+        setTypingUsers(result as TypingUser[])
+      }
+    })
     return unsubscribe
   }, [client, roomId])
 
@@ -271,15 +273,11 @@ export function useSelections(roomId: string): {
   const [selections, setSelections] = useState<SelectionData[]>([])
 
   useEffect(() => {
-    const unsubscribe = client.subscribe(
-      `__collab:selections:${roomId}`,
-      { roomId },
-      (result) => {
-        if (Array.isArray(result)) {
-          setSelections(result as SelectionData[])
-        }
-      },
-    )
+    const unsubscribe = client.subscribe(`__collab:selections:${roomId}`, { roomId }, (result) => {
+      if (Array.isArray(result)) {
+        setSelections(result as SelectionData[])
+      }
+    })
     return unsubscribe
   }, [client, roomId])
 
@@ -343,12 +341,23 @@ export function useDevTools(refreshIntervalMs: number = 2000): UseDevToolsReturn
   const [subscriptions, setSubscriptions] = useState<SubscriptionInfo[]>([])
   const [mutations, setMutations] = useState<MutationInfo[]>([])
   const [cacheStats, setCacheStats] = useState<CacheStats>({
-    entries: 0, hitCount: 0, missCount: 0, hitRate: 0,
-    totalSizeEstimate: 0, oldestEntry: null, newestEntry: null,
+    entries: 0,
+    hitCount: 0,
+    missCount: 0,
+    hitRate: 0,
+    totalSizeEstimate: 0,
+    oldestEntry: null,
+    newestEntry: null,
   })
   const [wsStats, setWsStats] = useState<WebSocketStats>({
-    messagesSent: 0, messagesReceived: 0, bytesSent: 0, bytesReceived: 0,
-    connectionUptime: 0, reconnectCount: 0, lastMessageAt: null, status: "disconnected",
+    messagesSent: 0,
+    messagesReceived: 0,
+    bytesSent: 0,
+    bytesReceived: 0,
+    connectionUptime: 0,
+    reconnectCount: 0,
+    lastMessageAt: null,
+    status: "disconnected",
   })
 
   const devtools = useMemo(() => new DevToolsInstrumentation(), [])

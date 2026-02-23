@@ -1,10 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import {
-  PersistentCache,
-  MutationQueue,
-  SyncManager,
-  MemoryOfflineStorage,
-} from "../offline/offline.js"
+import { PersistentCache, MutationQueue, SyncManager, MemoryOfflineStorage } from "../offline/offline.js"
 
 describe("PersistentCache", () => {
   let cache: PersistentCache
@@ -123,9 +118,13 @@ describe("SyncManager", () => {
 
     await queue.enqueue("fail", {})
 
-    const sync = new SyncManager(queue, async () => {
-      throw new Error("Conflict")
-    }, { conflictStrategy: "last-write-wins" })
+    const sync = new SyncManager(
+      queue,
+      async () => {
+        throw new Error("Conflict")
+      },
+      { conflictStrategy: "last-write-wins" },
+    )
 
     const result = await sync.sync()
     expect(result.failed).toBe(1)
@@ -140,9 +139,13 @@ describe("SyncManager", () => {
 
     await queue.enqueue("conflict", {})
 
-    const sync = new SyncManager(queue, async () => {
-      throw new Error("Conflict")
-    }, { conflictStrategy: "server-wins" })
+    const sync = new SyncManager(
+      queue,
+      async () => {
+        throw new Error("Conflict")
+      },
+      { conflictStrategy: "server-wins" },
+    )
 
     const result = await sync.sync()
     expect(result.failed).toBe(1)

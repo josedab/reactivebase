@@ -18,8 +18,7 @@ const schema = defineSchema({
     taskId: v.id("tasks"),
     authorId: v.id("users"),
     body: v.string(),
-  })
-    .relation("author", { from: "authorId", to: "users" }),
+  }).relation("author", { from: "authorId", to: "users" }),
 })
 
 describe("resolveRelations", () => {
@@ -69,12 +68,7 @@ describe("buildQueryWithIncludes", () => {
       comments: { relation: "comments" },
     })
 
-    const { sql } = buildQueryWithIncludes(
-      'SELECT "tasks".* FROM "tasks"',
-      [],
-      "tasks",
-      resolved,
-    )
+    const { sql } = buildQueryWithIncludes('SELECT "tasks".* FROM "tasks"', [], "tasks", resolved)
 
     expect(sql).toContain("_base")
     expect(sql).toContain("LEFT JOIN LATERAL")
@@ -83,12 +77,7 @@ describe("buildQueryWithIncludes", () => {
   })
 
   it("returns unmodified query when no relations", () => {
-    const { sql, params } = buildQueryWithIncludes(
-      'SELECT * FROM "tasks"',
-      [1],
-      "tasks",
-      [],
-    )
+    const { sql, params } = buildQueryWithIncludes('SELECT * FROM "tasks"', [1], "tasks", [])
 
     expect(sql).toBe('SELECT * FROM "tasks"')
     expect(params).toEqual([1])
@@ -99,12 +88,7 @@ describe("buildQueryWithIncludes", () => {
       comments: { relation: "comments", limit: 5 },
     })
 
-    const { sql } = buildQueryWithIncludes(
-      'SELECT "tasks".* FROM "tasks"',
-      [],
-      "tasks",
-      resolved,
-    )
+    const { sql } = buildQueryWithIncludes('SELECT "tasks".* FROM "tasks"', [], "tasks", resolved)
 
     expect(sql).toContain("LIMIT 5")
   })
@@ -114,12 +98,7 @@ describe("buildQueryWithIncludes", () => {
       comments: { relation: "comments", orderBy: { createdAt: "desc" } },
     })
 
-    const { sql } = buildQueryWithIncludes(
-      'SELECT "tasks".* FROM "tasks"',
-      [],
-      "tasks",
-      resolved,
-    )
+    const { sql } = buildQueryWithIncludes('SELECT "tasks".* FROM "tasks"', [], "tasks", resolved)
 
     expect(sql).toContain("ORDER BY")
     expect(sql).toContain("DESC")

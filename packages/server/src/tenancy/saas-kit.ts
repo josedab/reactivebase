@@ -116,10 +116,50 @@ CREATE INDEX IF NOT EXISTS idx_tenants_status ON _reactivebase_tenants (status);
 // ─── Default Plans ───────────────────────────────────────────────────────────
 
 export const DEFAULT_PLANS: SaasPlan[] = [
-  { id: "free", name: "Free", priceCents: 0, interval: "monthly", limits: { maxUsers: 3, maxSubscriptions: 100, maxStorageMb: 500, maxApiCallsPerDay: 1000, maxEnvironments: 1 }, features: ["Basic queries", "Community support"] },
-  { id: "starter", name: "Starter", priceCents: 2900, interval: "monthly", limits: { maxUsers: 10, maxSubscriptions: 1000, maxStorageMb: 5000, maxApiCallsPerDay: 10000, maxEnvironments: 3 }, features: ["Reactive queries", "Email support", "Custom domains"] },
-  { id: "pro", name: "Pro", priceCents: 9900, interval: "monthly", limits: { maxUsers: 50, maxSubscriptions: 10000, maxStorageMb: 50000, maxApiCallsPerDay: 100000, maxEnvironments: 10 }, features: ["All features", "Priority support", "SSO", "Audit log"] },
-  { id: "enterprise", name: "Enterprise", priceCents: 49900, interval: "monthly", limits: { maxUsers: Infinity, maxSubscriptions: Infinity, maxStorageMb: Infinity, maxApiCallsPerDay: Infinity, maxEnvironments: Infinity }, features: ["Unlimited", "Dedicated support", "SLA", "Custom contracts"] },
+  {
+    id: "free",
+    name: "Free",
+    priceCents: 0,
+    interval: "monthly",
+    limits: { maxUsers: 3, maxSubscriptions: 100, maxStorageMb: 500, maxApiCallsPerDay: 1000, maxEnvironments: 1 },
+    features: ["Basic queries", "Community support"],
+  },
+  {
+    id: "starter",
+    name: "Starter",
+    priceCents: 2900,
+    interval: "monthly",
+    limits: { maxUsers: 10, maxSubscriptions: 1000, maxStorageMb: 5000, maxApiCallsPerDay: 10000, maxEnvironments: 3 },
+    features: ["Reactive queries", "Email support", "Custom domains"],
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    priceCents: 9900,
+    interval: "monthly",
+    limits: {
+      maxUsers: 50,
+      maxSubscriptions: 10000,
+      maxStorageMb: 50000,
+      maxApiCallsPerDay: 100000,
+      maxEnvironments: 10,
+    },
+    features: ["All features", "Priority support", "SSO", "Audit log"],
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    priceCents: 49900,
+    interval: "monthly",
+    limits: {
+      maxUsers: Infinity,
+      maxSubscriptions: Infinity,
+      maxStorageMb: Infinity,
+      maxApiCallsPerDay: Infinity,
+      maxEnvironments: Infinity,
+    },
+    features: ["Unlimited", "Dedicated support", "SLA", "Custom contracts"],
+  },
 ]
 
 // ─── SaaS Kit ────────────────────────────────────────────────────────────────

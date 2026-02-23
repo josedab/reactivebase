@@ -91,15 +91,11 @@ export async function ivmAnalyze(options: IvmCommandOptions): Promise<void> {
   console.log("")
   console.log("To check if a specific query is IVM-eligible:")
   console.log('  import { isIvmEligible } from "@reactivebase/server"')
-  console.log('  console.log(isIvmEligible(myQueryAst))')
+  console.log("  console.log(isIvmEligible(myQueryAst))")
 }
 
 function findViewsFile(projectDir: string): string | null {
-  const candidates = [
-    "convex/views.ts",
-    "src/views.ts",
-    "views.ts",
-  ]
+  const candidates = ["convex/views.ts", "src/views.ts", "views.ts"]
   for (const candidate of candidates) {
     const filePath = join(projectDir, candidate)
     if (existsSync(filePath)) return filePath

@@ -81,7 +81,10 @@ describe("RpcTypeGenerator", () => {
         exportName: "list",
         type: "query",
         argsSchema: { kind: "object", properties: { userId: { kind: "string", required: true } } },
-        returnSchema: { kind: "array", items: { kind: "object", properties: { id: { kind: "id" }, title: { kind: "string" } } } },
+        returnSchema: {
+          kind: "array",
+          items: { kind: "object", properties: { id: { kind: "id" }, title: { kind: "string" } } },
+        },
         requiresAuth: true,
       },
       {
@@ -151,7 +154,11 @@ describe("RpcTypeGenerator", () => {
     const gen = new RpcTypeGenerator()
     for (const def of createTestDefs()) gen.addFunction(def)
 
-    const sdk = gen.generateSdkStub({ language: "python", packageName: "rb_client", serverUrl: "http://localhost:4000" })
+    const sdk = gen.generateSdkStub({
+      language: "python",
+      packageName: "rb_client",
+      serverUrl: "http://localhost:4000",
+    })
     expect(sdk).toContain("ReactiveBaseClient")
     expect(sdk).toContain("httpx")
     expect(sdk).toContain("tasks_list")

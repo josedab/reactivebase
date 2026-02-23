@@ -144,11 +144,7 @@ export interface S3ClientLike {
     contentType?: string
     metadata?: Record<string, string>
   }): Promise<void>
-  getSignedUrl(params: {
-    bucket: string
-    key: string
-    expiresIn: number
-  }): Promise<string>
+  getSignedUrl(params: { bucket: string; key: string; expiresIn: number }): Promise<string>
   deleteObject(params: { bucket: string; key: string }): Promise<void>
   headObject(params: { bucket: string; key: string }): Promise<boolean>
 }
@@ -196,9 +192,7 @@ export class MemoryStorageBackend implements StorageBackend {
 export function createStorageContext(backend: StorageBackend): StorageContext {
   return {
     async upload(data, options = {}) {
-      const buffer = typeof data === "string"
-        ? Buffer.from(data, "utf-8")
-        : Buffer.from(data)
+      const buffer = typeof data === "string" ? Buffer.from(data, "utf-8") : Buffer.from(data)
       return backend.put(buffer, options)
     },
     async getUrl(storageId) {

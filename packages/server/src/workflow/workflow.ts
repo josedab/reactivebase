@@ -453,15 +453,10 @@ export class WorkflowEngine {
   }
 
   get activeCount(): number {
-    return [...this.instances.values()].filter(
-      (i) => i.status === "running" || i.status === "waiting",
-    ).length
+    return [...this.instances.values()].filter((i) => i.status === "running" || i.status === "waiting").length
   }
 
-  private async executeWorkflow(
-    instance: WorkflowInstance,
-    definition: WorkflowDefinition,
-  ): Promise<void> {
+  private async executeWorkflow(instance: WorkflowInstance, definition: WorkflowDefinition): Promise<void> {
     const ctx = new WorkflowContext(instance.id, instance.workflowName, instance.steps)
     const options = definition.options ?? {}
 
@@ -527,12 +522,18 @@ function parseDuration(str: string): number {
 
   const value = parseFloat(match[1])
   switch (match[2]) {
-    case "ms": return value
-    case "s": return value * 1000
-    case "m": return value * 60_000
-    case "h": return value * 3_600_000
-    case "d": return value * 86_400_000
-    default: return value
+    case "ms":
+      return value
+    case "s":
+      return value * 1000
+    case "m":
+      return value * 60_000
+    case "h":
+      return value * 3_600_000
+    case "d":
+      return value * 86_400_000
+    default:
+      return value
   }
 }
 

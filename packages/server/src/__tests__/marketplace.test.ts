@@ -45,7 +45,11 @@ describe("PluginMarketplace", () => {
     it("searches by query", () => {
       const results = marketplace.search({ query: "auth" })
       expect(results.length).toBeGreaterThanOrEqual(1)
-      expect(results.every((r) => r.name.includes("auth") || r.keywords.includes("auth") || r.description.toLowerCase().includes("auth"))).toBe(true)
+      expect(
+        results.every(
+          (r) => r.name.includes("auth") || r.keywords.includes("auth") || r.description.toLowerCase().includes("auth"),
+        ),
+      ).toBe(true)
     })
 
     it("filters by category", () => {
@@ -101,7 +105,9 @@ describe("PluginMarketplace", () => {
       const plugin: PluginV2Definition = {
         ...testPlugin,
         name: "hook-plugin",
-        onInstall: () => { called = true },
+        onInstall: () => {
+          called = true
+        },
       }
       await marketplace.install(plugin)
       expect(called).toBe(true)
@@ -122,7 +128,9 @@ describe("PluginMarketplace", () => {
       let started = false
       const plugin: PluginV2Definition = {
         ...testPlugin,
-        onStart: () => { started = true },
+        onStart: () => {
+          started = true
+        },
       }
       await marketplace.install(plugin)
       await marketplace.start("test-plugin")
@@ -134,7 +142,9 @@ describe("PluginMarketplace", () => {
       let stopped = false
       const plugin: PluginV2Definition = {
         ...testPlugin,
-        onStop: () => { stopped = true },
+        onStop: () => {
+          stopped = true
+        },
       }
       await marketplace.install(plugin)
       await marketplace.start("test-plugin")

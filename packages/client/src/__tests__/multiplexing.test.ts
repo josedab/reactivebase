@@ -59,7 +59,9 @@ describe("MultiTabCoordinator", () => {
   function createMockChannel(): BroadcastChannelLike & { messages: TabMessage[] } {
     return {
       messages: [],
-      postMessage(msg: unknown) { this.messages.push(msg as TabMessage) },
+      postMessage(msg: unknown) {
+        this.messages.push(msg as TabMessage)
+      },
       onmessage: null,
     }
   }

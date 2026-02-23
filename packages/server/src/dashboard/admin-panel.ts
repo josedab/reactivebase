@@ -66,10 +66,7 @@ const DEFAULT_OPTIONS: Required<AdminPanelOptions> = {
  * Generate the full admin panel HTML.
  * Self-contained SPA that fetches data from API endpoints.
  */
-export function generateAdminPanelHTML(
-  model: SchemaVisualModel,
-  options: AdminPanelOptions = {},
-): string {
+export function generateAdminPanelHTML(model: SchemaVisualModel, options: AdminPanelOptions = {}): string {
   const opts = {
     ...DEFAULT_OPTIONS,
     ...options,
@@ -185,11 +182,15 @@ export function generateAdminPanelHTML(
         <div class="metric-card"><div class="metric-value" id="m-subs">0</div><div class="metric-label">Active Subscriptions</div></div>
       </div>
       <div class="schema-canvas">
-        ${model.tables.map((t: VisualTable) => `
+        ${model.tables
+          .map(
+            (t: VisualTable) => `
         <div class="schema-table-card">
           <div class="schema-table-header">${t.name}</div>
           ${t.columns.map((c) => `<div class="schema-col"><span class="name">${c.name}</span><span class="type">${c.type}${c.isOptional ? "?" : ""}</span></div>`).join("")}
-        </div>`).join("")}
+        </div>`,
+          )
+          .join("")}
       </div>
     </div>
 
@@ -206,11 +207,15 @@ export function generateAdminPanelHTML(
       <h2 style="margin-bottom:16px">Schema Designer</h2>
       <p style="color:var(--muted);margin-bottom:16px">Visual representation of your database schema. Edit schema.ts to make changes.</p>
       <div class="schema-canvas">
-        ${model.tables.map((t: VisualTable) => `
+        ${model.tables
+          .map(
+            (t: VisualTable) => `
         <div class="schema-table-card">
           <div class="schema-table-header">${t.name} <span style="font-size:11px;color:var(--muted)">${t.columns.length} cols</span></div>
           ${t.columns.map((c) => `<div class="schema-col"><span class="name">${c.isId ? "🔑 " : c.referencedTable ? "🔗 " : ""}${c.name}</span><span class="type">${c.type}</span></div>`).join("")}
-        </div>`).join("")}
+        </div>`,
+          )
+          .join("")}
       </div>
     </div>
 
@@ -227,7 +232,9 @@ export function generateAdminPanelHTML(
     </div>
 
     <!-- Data Browser Panels (one per table) -->
-    ${model.tables.map((t: VisualTable) => `
+    ${model.tables
+      .map(
+        (t: VisualTable) => `
     <div id="panel-table-${t.name}" class="panel">
       <div class="toolbar">
         <h2>📋 ${t.name}</h2>
@@ -242,7 +249,9 @@ export function generateAdminPanelHTML(
           <tbody id="tbody-${t.name}"><tr><td colspan="${t.columns.length}" style="text-align:center;color:var(--muted)">Click to load data from /api/${t.name}</td></tr></tbody>
         </table>
       </div>
-    </div>`).join("")}
+    </div>`,
+      )
+      .join("")}
   </div>
 </div>
 

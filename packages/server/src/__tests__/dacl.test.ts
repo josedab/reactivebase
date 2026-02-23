@@ -74,7 +74,9 @@ describe("DaclEngine", () => {
 
     it("checks role-based access", async () => {
       engine.definePolicy(allow("tasks", "read").roles("admin"))
-      const devResult = await engine.check(makeContext({ user: { userId: "u1", roles: ["developer"], attributes: {} } }))
+      const devResult = await engine.check(
+        makeContext({ user: { userId: "u1", roles: ["developer"], attributes: {} } }),
+      )
       expect(devResult.allowed).toBe(false)
 
       const adminResult = await engine.check(makeContext({ user: { userId: "u1", roles: ["admin"], attributes: {} } }))
@@ -82,14 +84,16 @@ describe("DaclEngine", () => {
     })
 
     it("evaluates row-level conditions", async () => {
-      engine.definePolicy(
-        allow("tasks", "read").where((ctx) => ctx.user.teamId === ctx.row.teamId),
-      )
+      engine.definePolicy(allow("tasks", "read").where((ctx) => ctx.user.teamId === ctx.row.teamId))
 
-      const sameTeam = await engine.check(makeContext({ user: { userId: "u1", roles: [], teamId: "t1", attributes: {} }, row: { teamId: "t1" } }))
+      const sameTeam = await engine.check(
+        makeContext({ user: { userId: "u1", roles: [], teamId: "t1", attributes: {} }, row: { teamId: "t1" } }),
+      )
       expect(sameTeam.allowed).toBe(true)
 
-      const diffTeam = await engine.check(makeContext({ user: { userId: "u1", roles: [], teamId: "t2", attributes: {} }, row: { teamId: "t1" } }))
+      const diffTeam = await engine.check(
+        makeContext({ user: { userId: "u1", roles: [], teamId: "t2", attributes: {} }, row: { teamId: "t1" } }),
+      )
       expect(diffTeam.allowed).toBe(false)
     })
 
@@ -100,7 +104,9 @@ describe("DaclEngine", () => {
       const normalResult = await engine.check(makeContext({ user: { userId: "u1", roles: ["user"], attributes: {} } }))
       expect(normalResult.allowed).toBe(true)
 
-      const bannedResult = await engine.check(makeContext({ user: { userId: "u1", roles: ["banned"], attributes: {} } }))
+      const bannedResult = await engine.check(
+        makeContext({ user: { userId: "u1", roles: ["banned"], attributes: {} } }),
+      )
       expect(bannedResult.allowed).toBe(false)
     })
 

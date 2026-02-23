@@ -69,12 +69,7 @@ export class WebhookRegistry {
         return { status: 401, error: "Missing webhook signature" }
       }
 
-      const isValid = verifyWebhookSignature(
-        body,
-        signature,
-        webhook.secret,
-        webhook.signatureAlgorithm ?? "sha256",
-      )
+      const isValid = verifyWebhookSignature(body, signature, webhook.secret, webhook.signatureAlgorithm ?? "sha256")
 
       if (!isValid) {
         return { status: 401, error: "Invalid webhook signature" }
@@ -127,28 +122,24 @@ export class OutboundWebhookManager {
    * Get all outbound hooks that should fire for a given mutation.
    */
   getHooksForMutation(mutationName: string): OutboundWebhook[] {
-    return this.hooks.filter((h) =>
-      h.onMutations.includes(mutationName) || h.onMutations.includes("*"),
-    )
+    return this.hooks.filter((h) => h.onMutations.includes(mutationName) || h.onMutations.includes("*"))
   }
 
   /**
    * Send outbound webhook notifications for a mutation.
    */
-  async notify(
-    mutationName: string,
-    result: unknown,
-    modifiedTables: string[],
-  ): Promise<void> {
+  async notify(mutationName: string, result: unknown, modifiedTables: string[]): Promise<void> {
     const hooks = this.getHooksForMutation(mutationName)
 
     await Promise.allSettled(
-      hooks.map((hook) => this.send(hook, {
-        event: mutationName,
-        data: result,
-        modifiedTables,
-        timestamp: new Date().toISOString(),
-      })),
+      hooks.map((hook) =>
+        this.send(hook, {
+          event: mutationName,
+          data: result,
+          modifiedTables,
+          timestamp: new Date().toISOString(),
+        }),
+      ),
     )
   }
 
@@ -160,9 +151,7 @@ export class OutboundWebhookManager {
     }
 
     if (hook.secret) {
-      const signature = createHmac("sha256", hook.secret)
-        .update(body)
-        .digest("hex")
+      const signature = createHmac("sha256", hook.secret).update(body).digest("hex")
       headers["X-ReactiveBase-Signature"] = `sha256=${signature}`
     }
 
@@ -219,10 +208,7 @@ export function parseNotifyPayload(payload: string): ChangeEvent | null {
 /**
  * Generate SQL for a Postgres trigger that sends NOTIFY on table changes.
  */
-export function generateNotifyTriggerSQL(
-  tableName: string,
-  channel: string = "reactivebase_changes",
-): string {
+export function generateNotifyTriggerSQL(tableName: string, channel: string = "reactivebase_changes"): string {
   const functionName = `notify_${tableName}_changes`
 
   return `
@@ -248,12 +234,7 @@ CREATE TRIGGER ${functionName}_trigger
 
 // --- Helpers ---
 
-function verifyWebhookSignature(
-  body: Buffer,
-  signature: string,
-  secret: string,
-  algorithm: string,
-): boolean {
+function verifyWebhookSignature(body: Buffer, signature: string, secret: string, algorithm: string): boolean {
   // Handle signatures with prefix like "sha256=..."
   const parts = signature.split("=")
   const sigHex = parts.length > 1 ? parts.slice(1).join("=") : signature
@@ -270,9 +251,6 @@ function verifyWebhookSignature(
 /**
  * Define an inbound webhook.
  */
-export function defineWebhook(
-  name: string,
-  config: Omit<WebhookDefinition, "name">,
-): WebhookDefinition {
+export function defineWebhook(name: string, config: Omit<WebhookDefinition, "name">): WebhookDefinition {
   return { name, ...config }
 }

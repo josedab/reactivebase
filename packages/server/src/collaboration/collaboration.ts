@@ -69,8 +69,16 @@ export type AwarenessListener = (roomId: string, state: RoomAwarenessState) => v
 // ─── Defaults ────────────────────────────────────────────────────────────────
 
 const DEFAULT_COLORS = [
-  "#EF4444", "#F97316", "#EAB308", "#22C55E", "#06B6D4",
-  "#3B82F6", "#8B5CF6", "#EC4899", "#F43F5E", "#14B8A6",
+  "#EF4444",
+  "#F97316",
+  "#EAB308",
+  "#22C55E",
+  "#06B6D4",
+  "#3B82F6",
+  "#8B5CF6",
+  "#EC4899",
+  "#F43F5E",
+  "#14B8A6",
 ]
 
 const DEFAULT_OPTIONS: Required<CollaborationOptions> = {
@@ -276,7 +284,9 @@ export class CollaborationManager {
   /**
    * Get all active cursors in a room.
    */
-  getCursors(roomId: string): Array<{ connectionId: string; userId: string; userName: string; color: string; cursor: CursorPosition }> {
+  getCursors(
+    roomId: string,
+  ): Array<{ connectionId: string; userId: string; userName: string; color: string; cursor: CursorPosition }> {
     const room = this.rooms.get(roomId)
     if (!room) return []
 
@@ -294,7 +304,9 @@ export class CollaborationManager {
   /**
    * Get all active selections in a room.
    */
-  getSelections(roomId: string): Array<{ connectionId: string; userId: string; color: string; selection: SelectionRange }> {
+  getSelections(
+    roomId: string,
+  ): Array<{ connectionId: string; userId: string; color: string; selection: SelectionRange }> {
     const room = this.rooms.get(roomId)
     if (!room) return []
 

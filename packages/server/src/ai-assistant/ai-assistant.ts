@@ -193,7 +193,8 @@ export class QueryAssistant {
 
     return {
       code: `// Could not generate query for: "${naturalLanguage}"\n// Try being more specific, e.g., "find tasks where done = false"`,
-      explanation: "Could not match query pattern. Try using keywords like 'find', 'create', 'update', 'delete', 'count'.",
+      explanation:
+        "Could not match query pattern. Try using keywords like 'find', 'create', 'update', 'delete', 'count'.",
       tables: [],
       confidence: 0,
       method: "rule-based",
@@ -247,9 +248,10 @@ export class QueryAssistant {
     const tableMatch = /ctx\.db\.(\w+)/.exec(queryCode)
     const tableName = tableMatch?.[1] ?? "unknown"
 
-    const summary = steps.length > 0
-      ? `Reads from the "${tableName}" table: ${steps.map((s) => s.description.toLowerCase()).join(", ")}.`
-      : `Accesses the "${tableName}" table.`
+    const summary =
+      steps.length > 0
+        ? `Reads from the "${tableName}" table: ${steps.map((s) => s.description.toLowerCase()).join(", ")}.`
+        : `Accesses the "${tableName}" table.`
 
     return { summary, steps, performanceNotes, suggestedIndexes }
   }
@@ -257,10 +259,7 @@ export class QueryAssistant {
   /**
    * Suggest schema optimizations based on access patterns.
    */
-  suggestOptimizations(
-    accessPatterns: AccessPattern[],
-    schema?: SchemaInfo,
-  ): SchemaOptimization[] {
+  suggestOptimizations(accessPatterns: AccessPattern[], schema?: SchemaInfo): SchemaOptimization[] {
     const s = schema ?? this.schema
     if (!s) return []
 
@@ -355,9 +354,7 @@ export class QueryAssistant {
 
     try {
       const code = await this.aiProvider.generate(prompt, { maxTokens: 500, temperature: 0.1 })
-      const tables = Array.from(new Set(
-        Array.from(code.matchAll(/ctx\.db\.(\w+)/g)).map((m) => m[1]),
-      ))
+      const tables = Array.from(new Set(Array.from(code.matchAll(/ctx\.db\.(\w+)/g)).map((m) => m[1])))
 
       return {
         code,
@@ -367,7 +364,13 @@ export class QueryAssistant {
         method: "ai",
       }
     } catch {
-      return { code: `// AI generation failed for: "${input}"`, explanation: "AI provider error", tables: [], confidence: 0, method: "ai" }
+      return {
+        code: `// AI generation failed for: "${input}"`,
+        explanation: "AI provider error",
+        tables: [],
+        confidence: 0,
+        method: "ai",
+      }
     }
   }
 }

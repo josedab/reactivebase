@@ -71,11 +71,7 @@ export function diffSchema(schema: Schema, dbState: DatabaseState): SchemaDiff {
     if (!dbTableNames.has(tableName)) continue // New table, handled above
 
     const table = schema.tables[tableName]
-    const existingCols = new Set(
-      dbState.columns
-        .filter((c) => c.table === tableName)
-        .map((c) => c.column),
-    )
+    const existingCols = new Set(dbState.columns.filter((c) => c.table === tableName).map((c) => c.column))
     const schemaCols = new Set(Object.keys(table.columns))
 
     // Add "id" to schema cols since it's auto-added
@@ -99,14 +95,8 @@ export function diffSchema(schema: Schema, dbState: DatabaseState): SchemaDiff {
     }
 
     // Index diffs
-    const existingIndexes = new Set(
-      dbState.indexes
-        .filter((i) => i.table === tableName)
-        .map((i) => i.name),
-    )
-    const schemaIndexNames = new Set(
-      table.indexes.map((i) => `${tableName}_${i.name}`),
-    )
+    const existingIndexes = new Set(dbState.indexes.filter((i) => i.table === tableName).map((i) => i.name))
+    const schemaIndexNames = new Set(table.indexes.map((i) => `${tableName}_${i.name}`))
 
     for (const index of table.indexes) {
       const indexName = `${tableName}_${index.name}`
@@ -144,7 +134,7 @@ export function generateDiffSQL(diff: SchemaDiff, schema: Schema): { up: string;
   // Add tables (use full CREATE TABLE from schema)
   for (const tableName of diff.addTables) {
     const table = schema.tables[tableName]
-    const lines = ['  id text PRIMARY KEY DEFAULT gen_random_uuid()']
+    const lines = ["  id text PRIMARY KEY DEFAULT gen_random_uuid()"]
     for (const [colName, validator] of Object.entries(table.columns)) {
       lines.push(`  ${columnDefSQL(colName, validator)}`)
     }
@@ -235,8 +225,7 @@ export function introspectionQueries(): {
 }
 
 function columnToAlterSQL(tableName: string, colName: string, validator: Validator): string {
-  const actual = validator.type === "optional" && validator.innerValidator
-    ? validator.innerValidator : validator
+  const actual = validator.type === "optional" && validator.innerValidator ? validator.innerValidator : validator
   const nullable = validator.isOptional ? "" : " NOT NULL"
   let def = ""
   if (validator.options.default === "now" || actual.options.default === "now") {
@@ -248,8 +237,7 @@ function columnToAlterSQL(tableName: string, colName: string, validator: Validat
 }
 
 function columnDefSQL(colName: string, validator: Validator): string {
-  const actual = validator.type === "optional" && validator.innerValidator
-    ? validator.innerValidator : validator
+  const actual = validator.type === "optional" && validator.innerValidator ? validator.innerValidator : validator
   const nullable = validator.isOptional ? "" : " NOT NULL"
   let def = ""
   if (validator.options.default === "now" || actual.options.default === "now") {
@@ -260,7 +248,10 @@ function columnDefSQL(colName: string, validator: Validator): string {
   return `"${colName}" ${actual.pgType}${nullable}${def}`
 }
 
-function indexToSQL(tableName: string, index: { name: string; columns: string[]; unique: boolean; type?: string; opclass?: string }): string {
+function indexToSQL(
+  tableName: string,
+  index: { name: string; columns: string[]; unique: boolean; type?: string; opclass?: string },
+): string {
   const indexName = `${tableName}_${index.name}`
   if (index.type === "hnsw" || index.type === "ivfflat") {
     return `CREATE INDEX IF NOT EXISTS "${indexName}" ON "${tableName}" USING ${index.type} ("${index.columns[0]}" ${index.opclass ?? "vector_cosine_ops"});`

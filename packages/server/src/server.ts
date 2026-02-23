@@ -34,10 +34,7 @@ export interface ReactiveBaseServer {
   getCdcAdapter(): ReactiveCdcAdapter | null
 }
 
-export function createReactiveBaseServer(
-  schema: Schema,
-  config: ReactiveBaseConfig,
-): ReactiveBaseServer {
+export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseConfig): ReactiveBaseServer {
   const pool = new Pool({
     connectionString: config.database.connectionString,
     max: config.database.poolSize ?? 20,
@@ -46,27 +43,34 @@ export function createReactiveBaseServer(
   const middlewareManager = new MiddlewareManager()
   const metrics = new MetricsCollector()
 
-  const transport = new TransportServer(pool, schema, {
-    heartbeatInterval: config.server?.heartbeatInterval ?? 30_000,
-  }, middlewareManager, metrics)
+  const transport = new TransportServer(
+    pool,
+    schema,
+    {
+      heartbeatInterval: config.server?.heartbeatInterval ?? 30_000,
+    },
+    middlewareManager,
+    metrics,
+  )
 
   const functions = new Map<string, RegisteredFunction>()
   const authProviders: AuthProvider[] = []
 
   // Initialize CDC adapter if logical replication mode is configured
-  const cdcAdapter = config.cdc?.mode === "logical-replication"
-    ? new ReactiveCdcAdapter(
-        async (tables, events) => {
-          await transport.getEngine().processChanges(tables, events)
-        },
-        {
-          tables: config.cdc?.tables ?? schema.tableNames,
-          batchSize: config.cdc?.batchSize ?? 100,
-          flushIntervalMs: config.cdc?.flushIntervalMs ?? 10,
-          rowLevelTracking: true,
-        },
-      )
-    : null
+  const cdcAdapter =
+    config.cdc?.mode === "logical-replication"
+      ? new ReactiveCdcAdapter(
+          async (tables, events) => {
+            await transport.getEngine().processChanges(tables, events)
+          },
+          {
+            tables: config.cdc?.tables ?? schema.tableNames,
+            batchSize: config.cdc?.batchSize ?? 100,
+            flushIntervalMs: config.cdc?.flushIntervalMs ?? 10,
+            rowLevelTracking: true,
+          },
+        )
+      : null
 
   // Register auth providers
   if (config.auth?.providers) {
@@ -99,9 +103,7 @@ export function createReactiveBaseServer(
     const authHeader = req.headers.authorization
     if (!authHeader) return createAuthContext(null)
 
-    const token = authHeader.startsWith("Bearer ")
-      ? authHeader.slice(7)
-      : authHeader
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader
 
     for (const provider of authProviders) {
       try {
@@ -227,11 +229,13 @@ export function createReactiveBaseServer(
 
         // Health check endpoint (default)
         res.writeHead(200, { "Content-Type": "application/json" })
-        res.end(JSON.stringify({
-          status: "ok",
-          connections: transport.connectionCount,
-          subscriptions: transport.subscriptionCount,
-        }))
+        res.end(
+          JSON.stringify({
+            status: "ok",
+            connections: transport.connectionCount,
+            subscriptions: transport.subscriptionCount,
+          }),
+        )
       })
 
       transport.attach(httpServer)

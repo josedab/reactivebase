@@ -147,7 +147,8 @@ export function discoverTrpcRoutes(source: string, fileName: string): Discovered
 
   // Match tRPC procedure definitions
   // Pattern: .query(...), .mutation(...), .input(...).query(...), .input(...).mutation(...)
-  const procedurePattern = /(?:(\w+)\s*:\s*)?(?:\w+\.)?(?:input\s*\([^)]*\)\s*\.)?(\w+)\s*\(\s*(?:async\s*)?\(\s*(?:\{[^}]*\}|[^)]*)\)\s*=>/g
+  const procedurePattern =
+    /(?:(\w+)\s*:\s*)?(?:\w+\.)?(?:input\s*\([^)]*\)\s*\.)?(\w+)\s*\(\s*(?:async\s*)?\(\s*(?:\{[^}]*\}|[^)]*)\)\s*=>/g
   let match: RegExpExecArray | null
 
   while ((match = procedurePattern.exec(source)) !== null) {
@@ -206,12 +207,7 @@ function extractTablesFromRouteBody(source: string, fromIndex: number): string[]
   const segment = source.substring(fromIndex, Math.min(fromIndex + 500, source.length))
 
   // Match common ORM patterns
-  const patterns = [
-    /prisma\.(\w+)\./g,
-    /db\.(\w+)\./g,
-    /from\s*\(\s*(\w+)\s*\)/g,
-    /table\s*\(\s*["'](\w+)["']\)/g,
-  ]
+  const patterns = [/prisma\.(\w+)\./g, /db\.(\w+)\./g, /from\s*\(\s*(\w+)\s*\)/g, /table\s*\(\s*["'](\w+)["']\)/g]
 
   for (const pattern of patterns) {
     let m: RegExpExecArray | null
@@ -224,24 +220,22 @@ function extractTablesFromRouteBody(source: string, fromIndex: number): string[]
 }
 
 function pathToFunctionName(path: string): string {
-  return path
-    .replace(/^\/api\//, "")
-    .replace(/^\//, "")
-    .replace(/\/:?\w+/g, "")
-    .replace(/[^a-zA-Z0-9]/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_|_$/g, "")
-    || "handler"
+  return (
+    path
+      .replace(/^\/api\//, "")
+      .replace(/^\//, "")
+      .replace(/\/:?\w+/g, "")
+      .replace(/[^a-zA-Z0-9]/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_|_$/g, "") || "handler"
+  )
 }
 
-function generateFunctionSkeleton(
-  name: string,
-  type: "query" | "mutation" | "action",
-  tables: string[],
-): string {
-  const tableAccess = tables.length > 0
-    ? `\n  // TODO: Migrate data access from ORM to ReactiveBase\n  // Tables: ${tables.join(", ")}`
-    : "\n  // TODO: Implement data access"
+function generateFunctionSkeleton(name: string, type: "query" | "mutation" | "action", tables: string[]): string {
+  const tableAccess =
+    tables.length > 0
+      ? `\n  // TODO: Migrate data access from ORM to ReactiveBase\n  // Tables: ${tables.join(", ")}`
+      : "\n  // TODO: Implement data access"
 
   return `export const ${name} = ${type}(async (ctx) => {${tableAccess}
   throw new Error("Not implemented — migrated from ${type}")
@@ -281,7 +275,11 @@ export function mapPrismaType(prismaType: string): { validator: string; tsType: 
   const mapped = PRISMA_TYPE_MAP[prismaType]
   if (mapped) return mapped
   // Check if it's a relation (model name)
-  return { validator: `v.id("${prismaType.toLowerCase()}s")`, tsType: "string", notes: `Assumed relation to ${prismaType}` }
+  return {
+    validator: `v.id("${prismaType.toLowerCase()}s")`,
+    tsType: "string",
+    notes: `Assumed relation to ${prismaType}`,
+  }
 }
 
 export function mapDrizzleType(drizzleType: string): { validator: string; tsType: string; notes?: string } {
@@ -309,7 +307,11 @@ export function analyzeFeatureGaps(source: "prisma" | "drizzle"): FeatureGap[] {
     return [
       ...common,
       { feature: "Prisma Client extensions", available: false, workaround: "Use ReactiveBase middleware" },
-      { feature: "@map / @@map annotations", available: false, workaround: "Use SQL migration to rename columns/tables" },
+      {
+        feature: "@map / @@map annotations",
+        available: false,
+        workaround: "Use SQL migration to rename columns/tables",
+      },
       { feature: "Multi-provider (MySQL/SQLite)", available: false, workaround: "ReactiveBase is Postgres-only" },
       { feature: "Prisma Studio", available: true, workaround: "ReactiveBase Dashboard serves the same purpose" },
     ]
@@ -338,7 +340,7 @@ export class MigrationWizard {
 
     // Detect source
     for (const [path, content] of Object.entries(files)) {
-      if (path.endsWith(".prisma") || content.includes("model ") && content.includes("@@")) {
+      if (path.endsWith(".prisma") || (content.includes("model ") && content.includes("@@"))) {
         source = "prisma"
         schemaFile = path
         const parsed = this.parsePrismaModels(content)
@@ -601,11 +603,20 @@ export class MigrationWizard {
     const columns = table.fields.map((f) => {
       let sql = `  "${f.name}" `
       switch (f.targetType) {
-        case "string": sql += "TEXT"; break
-        case "number": sql += "DOUBLE PRECISION"; break
-        case "boolean": sql += "BOOLEAN"; break
-        case "Date": sql += "TIMESTAMPTZ"; break
-        default: sql += "TEXT"
+        case "string":
+          sql += "TEXT"
+          break
+        case "number":
+          sql += "DOUBLE PRECISION"
+          break
+        case "boolean":
+          sql += "BOOLEAN"
+          break
+        case "Date":
+          sql += "TIMESTAMPTZ"
+          break
+        default:
+          sql += "TEXT"
       }
       if (!f.isOptional) sql += " NOT NULL"
       if (f.defaultValue) sql += ` DEFAULT ${f.defaultValue}`
@@ -639,7 +650,9 @@ export class MigrationWizard {
       lines.push("  })")
 
       for (const idx of table.indexes) {
-        lines.push(`    .index("${idx.name}", [${idx.columns.map((c) => `"${c}"`).join(", ")}]${idx.unique ? ", { unique: true }" : ""}`)
+        lines.push(
+          `    .index("${idx.name}", [${idx.columns.map((c) => `"${c}"`).join(", ")}]${idx.unique ? ", { unique: true }" : ""}`,
+        )
       }
 
       lines.push("  ,")

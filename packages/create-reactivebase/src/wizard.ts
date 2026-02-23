@@ -27,8 +27,7 @@ const FRAMEWORKS = {
  */
 export async function runWizard(projectName: string): Promise<WizardOptions> {
   const rl = createInterface({ input: process.stdin, output: process.stdout })
-  const ask = (q: string): Promise<string> =>
-    new Promise((resolve) => rl.question(q, resolve))
+  const ask = (q: string): Promise<string> => new Promise((resolve) => rl.question(q, resolve))
 
   console.log("\n  🚀 ReactiveBase Project Setup\n")
 
@@ -40,9 +39,8 @@ export async function runWizard(projectName: string): Promise<WizardOptions> {
   console.log("    4) Next.js")
   console.log("    5) None (server only)")
   const fwChoice = await ask("  Choose [1-5]: ")
-  const framework = (["react", "vue", "svelte", "nextjs", "none"] as const)[
-    parseInt(fwChoice || "1", 10) - 1
-  ] ?? "react"
+  const framework =
+    (["react", "vue", "svelte", "nextjs", "none"] as const)[parseInt(fwChoice || "1", 10) - 1] ?? "react"
 
   // Auth selection
   console.log("\n  Authentication:")
@@ -50,9 +48,7 @@ export async function runWizard(projectName: string): Promise<WizardOptions> {
   console.log("    2) Clerk")
   console.log("    3) None")
   const authChoice = await ask("  Choose [1-3]: ")
-  const auth = (["jwt", "clerk", "none"] as const)[
-    parseInt(authChoice || "1", 10) - 1
-  ] ?? "jwt"
+  const auth = (["jwt", "clerk", "none"] as const)[parseInt(authChoice || "1", 10) - 1] ?? "jwt"
 
   // Database selection
   console.log("\n  Database:")
@@ -60,9 +56,7 @@ export async function runWizard(projectName: string): Promise<WizardOptions> {
   console.log("    2) Docker Compose")
   console.log("    3) Connection URL")
   const dbChoice = await ask("  Choose [1-3]: ")
-  const database = (["pglite", "docker", "url"] as const)[
-    parseInt(dbChoice || "1", 10) - 1
-  ] ?? "pglite"
+  const database = (["pglite", "docker", "url"] as const)[parseInt(dbChoice || "1", 10) - 1] ?? "pglite"
 
   // Template
   console.log("\n  Template:")
@@ -71,9 +65,7 @@ export async function runWizard(projectName: string): Promise<WizardOptions> {
   console.log("    3) Chat app")
   console.log("    4) AI search")
   const tplChoice = await ask("  Choose [1-4]: ")
-  const template = (["blank", "todo", "chat", "ai-search"] as const)[
-    parseInt(tplChoice || "1", 10) - 1
-  ] ?? "blank"
+  const template = (["blank", "todo", "chat", "ai-search"] as const)[parseInt(tplChoice || "1", 10) - 1] ?? "blank"
 
   rl.close()
 
@@ -132,32 +124,32 @@ export function generateConfigFile(options: WizardOptions): string {
 
   // Database
   if (options.database === "url") {
-    lines.push('  database: {')
+    lines.push("  database: {")
     lines.push('    connectionString: process.env.DATABASE_URL ?? "postgresql://localhost:5432/reactivebase",')
-    lines.push('  },')
+    lines.push("  },")
   } else if (options.database === "docker") {
-    lines.push('  database: {')
+    lines.push("  database: {")
     lines.push('    connectionString: "postgresql://reactivebase:reactivebase@localhost:5432/reactivebase",')
-    lines.push('  },')
+    lines.push("  },")
   } else {
-    lines.push('  database: {')
-    lines.push('    // PGlite — no Postgres installation needed')
+    lines.push("  database: {")
+    lines.push("    // PGlite — no Postgres installation needed")
     lines.push('    connectionString: "pglite://.reactivebase/data",')
-    lines.push('  },')
+    lines.push("  },")
   }
 
   // Auth
   if (options.auth === "jwt") {
-    lines.push('  auth: {')
-    lines.push('    providers: [')
-    lines.push('      jwtProvider({')
+    lines.push("  auth: {")
+    lines.push("    providers: [")
+    lines.push("      jwtProvider({")
     lines.push('        secret: process.env.JWT_SECRET ?? "dev-secret-change-in-production",')
-    lines.push('      }),')
-    lines.push('    ],')
-    lines.push('  },')
+    lines.push("      }),")
+    lines.push("    ],")
+    lines.push("  },")
   }
 
-  lines.push('  server: { port: 4000 },')
+  lines.push("  server: { port: 4000 },")
   lines.push("})")
   lines.push("")
 

@@ -5,12 +5,7 @@ export { PluginRegistryClient, BUILTIN_PLUGINS } from "./registry.js"
 export type { RegistryEntry } from "./registry.js"
 
 // Plugin Marketplace v2
-export {
-  PluginMarketplace,
-  PluginMarketplaceError,
-  validatePluginConfig,
-  MARKETPLACE_CATALOG,
-} from "./marketplace.js"
+export { PluginMarketplace, PluginMarketplaceError, validatePluginConfig, MARKETPLACE_CATALOG } from "./marketplace.js"
 export type {
   PluginV2Definition,
   PluginV2Instance,
@@ -41,4 +36,10 @@ export type {
 
 // Plugin Developer Portal
 export { PluginPortal } from "./plugin-portal.js"
-export type { PortalPlugin, PluginCompatibilityStatus, CompatibilityMatrix, PluginScaffold, PortalStats } from "./plugin-portal.js"
+export type {
+  PortalPlugin,
+  PluginCompatibilityStatus,
+  CompatibilityMatrix,
+  PluginScaffold,
+  PortalStats,
+} from "./plugin-portal.js"

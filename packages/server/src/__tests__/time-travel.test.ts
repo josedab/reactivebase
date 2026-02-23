@@ -104,8 +104,20 @@ describe("TimeTravelEngine", () => {
     })
 
     it("reconstructs row state at a point in time", () => {
-      engine.recordMutation({ mutationName: "a", table: "tasks", operation: "insert", rowId: "t1", after: { title: "v1" } })
-      engine.recordMutation({ mutationName: "b", table: "tasks", operation: "update", rowId: "t1", after: { title: "v2" } })
+      engine.recordMutation({
+        mutationName: "a",
+        table: "tasks",
+        operation: "insert",
+        rowId: "t1",
+        after: { title: "v1" },
+      })
+      engine.recordMutation({
+        mutationName: "b",
+        table: "tasks",
+        operation: "update",
+        rowId: "t1",
+        after: { title: "v2" },
+      })
 
       // The latest state should be v2
       const stateNow = engine.getRowStateAt("tasks", "t1", Date.now() + 1)
@@ -118,8 +130,20 @@ describe("TimeTravelEngine", () => {
     })
 
     it("returns null for deleted rows", () => {
-      engine.recordMutation({ mutationName: "a", table: "tasks", operation: "insert", rowId: "t1", after: { title: "v1" } })
-      engine.recordMutation({ mutationName: "b", table: "tasks", operation: "delete", rowId: "t1", before: { title: "v1" } })
+      engine.recordMutation({
+        mutationName: "a",
+        table: "tasks",
+        operation: "insert",
+        rowId: "t1",
+        after: { title: "v1" },
+      })
+      engine.recordMutation({
+        mutationName: "b",
+        table: "tasks",
+        operation: "delete",
+        rowId: "t1",
+        before: { title: "v1" },
+      })
 
       const state = engine.getRowStateAt("tasks", "t1", Date.now() + 1)
       expect(state).toBeNull()
@@ -144,8 +168,21 @@ describe("TimeTravelEngine", () => {
   describe("diffing", () => {
     it("generates a diff between two points", () => {
       const before = Date.now()
-      engine.recordMutation({ mutationName: "a", table: "tasks", operation: "insert", rowId: "t1", after: { title: "New" } })
-      engine.recordMutation({ mutationName: "b", table: "tasks", operation: "update", rowId: "t1", before: { title: "New" }, after: { title: "Updated" } })
+      engine.recordMutation({
+        mutationName: "a",
+        table: "tasks",
+        operation: "insert",
+        rowId: "t1",
+        after: { title: "New" },
+      })
+      engine.recordMutation({
+        mutationName: "b",
+        table: "tasks",
+        operation: "update",
+        rowId: "t1",
+        before: { title: "New" },
+        after: { title: "Updated" },
+      })
 
       const d = engine.diff(before - 1, Date.now() + 1)
       expect(d.changes).toHaveLength(1)

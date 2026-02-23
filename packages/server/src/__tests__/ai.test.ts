@@ -73,9 +73,9 @@ describe("createAiContext", () => {
     const provider = mockAiProvider()
     const ctx = createAiContext(provider)
 
-    await expect(
-      ctx.search("test", { table: "docs", vectorColumn: "embedding" }),
-    ).rejects.toThrow("requires a database query function")
+    await expect(ctx.search("test", { table: "docs", vectorColumn: "embedding" })).rejects.toThrow(
+      "requires a database query function",
+    )
   })
 
   it("performs vector search with query function", async () => {

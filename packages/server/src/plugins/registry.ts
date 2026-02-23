@@ -85,10 +85,8 @@ export class PluginRegistryClient {
    */
   search(query: string): RegistryEntry[] {
     const q = query.toLowerCase()
-    return this.plugins.filter((p) =>
-      p.name.includes(q) ||
-      p.description.toLowerCase().includes(q) ||
-      p.keywords?.some((k) => k.includes(q)),
+    return this.plugins.filter(
+      (p) => p.name.includes(q) || p.description.toLowerCase().includes(q) || p.keywords?.some((k) => k.includes(q)),
     )
   }
 

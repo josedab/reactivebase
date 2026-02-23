@@ -44,8 +44,7 @@ describe("schema definition", () => {
       tasks: defineTable({
         title: v.string(),
         assigneeId: v.id("users"),
-      })
-        .relation("assignee", { from: "assigneeId", to: "users" }),
+      }).relation("assignee", { from: "assigneeId", to: "users" }),
     })
 
     expect(schema.tables.tasks.relations).toHaveLength(1)

@@ -13,12 +13,7 @@ import { createAuthContext, type AuthContext, type AuthProvider } from "../auth/
 import { ReactivityEngine, type SubscriptionUpdate } from "../reactivity/index.js"
 import { MiddlewareManager, type MiddlewareContext } from "../middleware/index.js"
 import { MetricsCollector } from "../metrics/index.js"
-import {
-  parseClientMessage,
-  serializeServerMessage,
-  type ServerMessage,
-  type ClientMessage,
-} from "./protocol.js"
+import { parseClientMessage, serializeServerMessage, type ServerMessage, type ClientMessage } from "./protocol.js"
 
 export interface TransportServerOptions {
   heartbeatInterval: number
@@ -246,13 +241,7 @@ export class TransportServer {
 
     try {
       const startTime = performance.now()
-      const { result, version } = await this.engine.subscribe(
-        subscriptionId,
-        conn.id,
-        queryName,
-        args,
-        conn.auth,
-      )
+      const { result, version } = await this.engine.subscribe(subscriptionId, conn.id, queryName, args, conn.auth)
       const latencyMs = performance.now() - startTime
 
       conn.subscriptionCount++
@@ -317,13 +306,7 @@ export class TransportServer {
         return
       }
 
-      const result = await executeMutationFunction(
-        this.pool,
-        this.schema,
-        fn,
-        beforeResult.args,
-        conn.auth,
-      )
+      const result = await executeMutationFunction(this.pool, this.schema, fn, beforeResult.args, conn.auth)
       const latencyMs = performance.now() - startTime
 
       const finalResult = await this.middleware.runAfter(mwCtx, result.result)
@@ -341,7 +324,11 @@ export class TransportServer {
       await this.engine.processChanges(result.modifiedTables)
     } catch (error) {
       const mwCtx: MiddlewareContext = {
-        functionName: mutationName, functionType: "mutation", args, auth: conn.auth, state: new Map(),
+        functionName: mutationName,
+        functionType: "mutation",
+        args,
+        auth: conn.auth,
+        state: new Map(),
       }
       await this.middleware.runOnError(mwCtx, error instanceof Error ? error : new Error(String(error)))
       this.metrics?.recordMutation(`mutation:${mutationName}`, 0, true)
@@ -374,7 +361,11 @@ export class TransportServer {
 
     try {
       const mwCtx: MiddlewareContext = {
-        functionName: actionName, functionType: "action", args, auth: conn.auth, state: new Map(),
+        functionName: actionName,
+        functionType: "action",
+        args,
+        auth: conn.auth,
+        state: new Map(),
       }
 
       const beforeResult = await this.middleware.runBefore(mwCtx)
@@ -388,7 +379,11 @@ export class TransportServer {
       this.send(conn, { type: "action_result", requestId, data: finalResult })
     } catch (error) {
       const mwCtx: MiddlewareContext = {
-        functionName: actionName, functionType: "action", args, auth: conn.auth, state: new Map(),
+        functionName: actionName,
+        functionType: "action",
+        args,
+        auth: conn.auth,
+        state: new Map(),
       }
       await this.middleware.runOnError(mwCtx, error instanceof Error ? error : new Error(String(error)))
       this.send(conn, {

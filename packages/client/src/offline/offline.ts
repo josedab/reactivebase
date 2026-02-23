@@ -227,9 +227,19 @@ export interface SyncResult {
 export class MemoryOfflineStorage implements OfflineStorage {
   private data = new Map<string, unknown>()
 
-  async get(key: string) { return this.data.get(key) }
-  async set(key: string, value: unknown) { this.data.set(key, value) }
-  async delete(key: string) { this.data.delete(key) }
-  async keys() { return Array.from(this.data.keys()) }
-  async clear() { this.data.clear() }
+  async get(key: string) {
+    return this.data.get(key)
+  }
+  async set(key: string, value: unknown) {
+    this.data.set(key, value)
+  }
+  async delete(key: string) {
+    this.data.delete(key)
+  }
+  async keys() {
+    return Array.from(this.data.keys())
+  }
+  async clear() {
+    this.data.clear()
+  }
 }

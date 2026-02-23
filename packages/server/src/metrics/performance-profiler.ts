@@ -143,8 +143,20 @@ export class PerformanceProfiler {
 
     // Default alert rules
     this.alertRules = [
-      { name: "Slow Query", type: "slow-query", threshold: this.options.slowQueryThresholdMs, severity: "warning", enabled: true },
-      { name: "N+1 Detection", type: "n-plus-one", threshold: this.options.nPlusOneThreshold, severity: "warning", enabled: true },
+      {
+        name: "Slow Query",
+        type: "slow-query",
+        threshold: this.options.slowQueryThresholdMs,
+        severity: "warning",
+        enabled: true,
+      },
+      {
+        name: "N+1 Detection",
+        type: "n-plus-one",
+        threshold: this.options.nPlusOneThreshold,
+        severity: "warning",
+        enabled: true,
+      },
       { name: "High Error Rate", type: "high-error-rate", threshold: 0.05, severity: "critical", enabled: true },
       { name: "High Fanout", type: "high-fanout", threshold: 1000, severity: "warning", enabled: true },
     ]
@@ -152,7 +164,12 @@ export class PerformanceProfiler {
 
   // ─── Query Recording ────────────────────────────────────────────────────
 
-  recordQueryExecution(queryName: string, durationMs: number, tables: string[], opts?: { args?: unknown; connectionId?: string; explainPlan?: string; isError?: boolean }): void {
+  recordQueryExecution(
+    queryName: string,
+    durationMs: number,
+    tables: string[],
+    opts?: { args?: unknown; connectionId?: string; explainPlan?: string; isError?: boolean },
+  ): void {
     this.totalQueries++
 
     // Track profile
@@ -204,7 +221,12 @@ export class PerformanceProfiler {
 
   // ─── Subscription Fanout ────────────────────────────────────────────────
 
-  recordFanout(table: string, changeType: "insert" | "update" | "delete", affectedSubscriptions: number, reExecutionTimeMs: number): void {
+  recordFanout(
+    table: string,
+    changeType: "insert" | "update" | "delete",
+    affectedSubscriptions: number,
+    reExecutionTimeMs: number,
+  ): void {
     const entry: SubscriptionFanout = {
       table,
       changeType,
@@ -239,7 +261,7 @@ export class PerformanceProfiler {
       queryName,
       callCount: sorted.length,
       totalDurationMs: total,
-      avgDurationMs: Math.round(total / sorted.length * 10) / 10,
+      avgDurationMs: Math.round((total / sorted.length) * 10) / 10,
       minDurationMs: sorted[0],
       maxDurationMs: sorted[sorted.length - 1],
       p50DurationMs: this.percentile(sorted, 0.5),
@@ -270,8 +292,7 @@ export class PerformanceProfiler {
   // ─── N+1 Detection ──────────────────────────────────────────────────────
 
   getNPlusOneDetections(): NPlusOneDetection[] {
-    return Array.from(this.nPlusOneDetections.values())
-      .filter((d) => d.occurrences >= this.options.nPlusOneThreshold)
+    return Array.from(this.nPlusOneDetections.values()).filter((d) => d.occurrences >= this.options.nPlusOneThreshold)
   }
 
   // ─── Alerts ─────────────────────────────────────────────────────────────
@@ -296,11 +317,11 @@ export class PerformanceProfiler {
   // ─── Stats ──────────────────────────────────────────────────────────────
 
   getStats(): ProfilerStats {
-    const allDurations = Array.from(this.queryProfiles.values())
-      .flatMap((p) => p.durations)
-    const avgDuration = allDurations.length > 0
-      ? Math.round(allDurations.reduce((s, d) => s + d, 0) / allDurations.length * 10) / 10
-      : 0
+    const allDurations = Array.from(this.queryProfiles.values()).flatMap((p) => p.durations)
+    const avgDuration =
+      allDurations.length > 0
+        ? Math.round((allDurations.reduce((s, d) => s + d, 0) / allDurations.length) * 10) / 10
+        : 0
     const sortedAll = [...allDurations].sort((a, b) => a - b)
 
     return {
@@ -325,8 +346,8 @@ export class PerformanceProfiler {
         type: "timeseries",
         gridPos: { x: 0, y: 0, w: 12, h: 8 },
         targets: [
-          { expr: 'rate(reactivebase_queries_total[5m])', legendFormat: "Queries/s" },
-          { expr: 'rate(reactivebase_mutations_total[5m])', legendFormat: "Mutations/s" },
+          { expr: "rate(reactivebase_queries_total[5m])", legendFormat: "Queries/s" },
+          { expr: "rate(reactivebase_mutations_total[5m])", legendFormat: "Mutations/s" },
         ],
       },
       {
@@ -335,9 +356,18 @@ export class PerformanceProfiler {
         type: "timeseries",
         gridPos: { x: 12, y: 0, w: 12, h: 8 },
         targets: [
-          { expr: 'histogram_quantile(0.99, rate(reactivebase_query_duration_seconds_bucket[5m]))', legendFormat: "p99" },
-          { expr: 'histogram_quantile(0.95, rate(reactivebase_query_duration_seconds_bucket[5m]))', legendFormat: "p95" },
-          { expr: 'histogram_quantile(0.50, rate(reactivebase_query_duration_seconds_bucket[5m]))', legendFormat: "p50" },
+          {
+            expr: "histogram_quantile(0.99, rate(reactivebase_query_duration_seconds_bucket[5m]))",
+            legendFormat: "p99",
+          },
+          {
+            expr: "histogram_quantile(0.95, rate(reactivebase_query_duration_seconds_bucket[5m]))",
+            legendFormat: "p95",
+          },
+          {
+            expr: "histogram_quantile(0.50, rate(reactivebase_query_duration_seconds_bucket[5m]))",
+            legendFormat: "p50",
+          },
         ],
       },
       {
@@ -345,27 +375,21 @@ export class PerformanceProfiler {
         title: "Active Subscriptions",
         type: "stat",
         gridPos: { x: 0, y: 8, w: 6, h: 4 },
-        targets: [
-          { expr: "reactivebase_subscriptions_active", legendFormat: "Active" },
-        ],
+        targets: [{ expr: "reactivebase_subscriptions_active", legendFormat: "Active" }],
       },
       {
         id: 4,
         title: "WebSocket Connections",
         type: "stat",
         gridPos: { x: 6, y: 8, w: 6, h: 4 },
-        targets: [
-          { expr: "reactivebase_connections_active", legendFormat: "Connections" },
-        ],
+        targets: [{ expr: "reactivebase_connections_active", legendFormat: "Connections" }],
       },
       {
         id: 5,
         title: "Error Rate",
         type: "timeseries",
         gridPos: { x: 12, y: 8, w: 12, h: 4 },
-        targets: [
-          { expr: 'rate(reactivebase_errors_total[5m])', legendFormat: "Errors/s" },
-        ],
+        targets: [{ expr: "rate(reactivebase_errors_total[5m])", legendFormat: "Errors/s" }],
       },
       {
         id: 6,
@@ -383,7 +407,10 @@ export class PerformanceProfiler {
         type: "table",
         gridPos: { x: 12, y: 12, w: 12, h: 8 },
         targets: [
-          { expr: 'topk(10, reactivebase_query_duration_seconds_sum / reactivebase_query_duration_seconds_count)', legendFormat: "{{query_name}}" },
+          {
+            expr: "topk(10, reactivebase_query_duration_seconds_sum / reactivebase_query_duration_seconds_count)",
+            legendFormat: "{{query_name}}",
+          },
         ],
       },
       {
@@ -393,8 +420,8 @@ export class PerformanceProfiler {
         gridPos: { x: 0, y: 20, w: 12, h: 8 },
         targets: [
           { expr: "reactivebase_scheduler_pending_jobs", legendFormat: "Pending" },
-          { expr: 'rate(reactivebase_scheduler_completed_total[5m])', legendFormat: "Completed/s" },
-          { expr: 'rate(reactivebase_scheduler_failed_total[5m])', legendFormat: "Failed/s" },
+          { expr: "rate(reactivebase_scheduler_completed_total[5m])", legendFormat: "Completed/s" },
+          { expr: "rate(reactivebase_scheduler_failed_total[5m])", legendFormat: "Failed/s" },
         ],
       },
       {
@@ -447,9 +474,7 @@ export class PerformanceProfiler {
 
   private detectNPlusOne(queryName: string, now: number): void {
     const windowStart = now - this.options.windowMs
-    const recentSame = this.recentQueries.filter(
-      (q) => q.name === queryName && q.timestamp >= windowStart,
-    )
+    const recentSame = this.recentQueries.filter((q) => q.name === queryName && q.timestamp >= windowStart)
 
     if (recentSame.length >= this.options.nPlusOneThreshold) {
       const existing = this.nPlusOneDetections.get(queryName)

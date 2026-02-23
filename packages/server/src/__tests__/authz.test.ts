@@ -246,10 +246,7 @@ describe("AuthzEngine", () => {
         document: {
           relations: { owner: "user" },
           permissions: {
-            view: [
-              "owner",
-              computed((ctx) => ctx.claims.isAdmin === true, "admin-override"),
-            ],
+            view: ["owner", computed((ctx) => ctx.claims.isAdmin === true, "admin-override")],
           },
         },
       })

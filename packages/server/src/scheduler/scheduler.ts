@@ -93,12 +93,7 @@ export class JobScheduler {
   /**
    * Schedule a job to run after a delay.
    */
-  async runAfter(
-    delay: string | number,
-    actionRef: string,
-    args: unknown = {},
-    maxRetries?: number,
-  ): Promise<string> {
+  async runAfter(delay: string | number, actionRef: string, args: unknown = {}, maxRetries?: number): Promise<string> {
     const delayMs = typeof delay === "number" ? delay : parseDelay(delay)
     const scheduledAt = new Date(Date.now() + delayMs)
     return this.scheduleAt(scheduledAt, actionRef, args, maxRetries)
@@ -107,12 +102,7 @@ export class JobScheduler {
   /**
    * Schedule a job to run at a specific time.
    */
-  async scheduleAt(
-    date: Date,
-    actionRef: string,
-    args: unknown = {},
-    maxRetries?: number,
-  ): Promise<string> {
+  async scheduleAt(date: Date, actionRef: string, args: unknown = {}, maxRetries?: number): Promise<string> {
     const { tableName } = this.options
     const result = await this.pool.query(
       `INSERT INTO "${tableName}" (action_ref, args, scheduled_at, max_retries)
@@ -138,9 +128,7 @@ export class JobScheduler {
     this.running = true
 
     // Schedule initial cron jobs
-    this.scheduleCronJobs().catch((err) =>
-      console.error("Failed to schedule cron jobs:", err),
-    )
+    this.scheduleCronJobs().catch((err) => console.error("Failed to schedule cron jobs:", err))
 
     this.pollTimer = setInterval(() => {
       this.poll().catch((err) => console.error("Scheduler poll error:", err))
@@ -163,10 +151,7 @@ export class JobScheduler {
    */
   async getJob(jobId: string): Promise<ScheduledJob | null> {
     const { tableName } = this.options
-    const result = await this.pool.query(
-      `SELECT * FROM "${tableName}" WHERE id = $1`,
-      [jobId],
-    )
+    const result = await this.pool.query(`SELECT * FROM "${tableName}" WHERE id = $1`, [jobId])
     return result.rows.length > 0 ? mapJobRow(result.rows[0]) : null
   }
 
@@ -216,10 +201,9 @@ export class JobScheduler {
     try {
       await this.actionExecutor!(job.actionRef, job.args)
 
-      await this.pool.query(
-        `UPDATE "${tableName}" SET status = 'completed', completed_at = now() WHERE id = $1`,
-        [job.id],
-      )
+      await this.pool.query(`UPDATE "${tableName}" SET status = 'completed', completed_at = now() WHERE id = $1`, [
+        job.id,
+      ])
 
       // If this was a cron job, schedule the next occurrence
       if (job.cronExpression) {
@@ -228,7 +212,14 @@ export class JobScheduler {
           await this.pool.query(
             `INSERT INTO "${tableName}" (action_ref, args, scheduled_at, cron_expression, cron_name, max_retries)
              VALUES ($1, $2, $3, $4, $5, $6)`,
-            [job.actionRef, JSON.stringify(job.args), nextRun, job.cronExpression, (job as unknown as Record<string, unknown>).cronName, job.maxRetries],
+            [
+              job.actionRef,
+              JSON.stringify(job.args),
+              nextRun,
+              job.cronExpression,
+              (job as unknown as Record<string, unknown>).cronName,
+              job.maxRetries,
+            ],
           )
         }
       }
@@ -294,12 +285,18 @@ export function parseDelay(delay: string): number {
   const unit = match[2]
 
   switch (unit) {
-    case "ms": return value
-    case "s": return value * 1000
-    case "m": return value * 60_000
-    case "h": return value * 3_600_000
-    case "d": return value * 86_400_000
-    default: return value
+    case "ms":
+      return value
+    case "s":
+      return value * 1000
+    case "m":
+      return value * 60_000
+    case "h":
+      return value * 3_600_000
+    case "d":
+      return value * 86_400_000
+    default:
+      return value
   }
 }
 

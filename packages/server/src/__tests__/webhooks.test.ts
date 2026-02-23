@@ -16,9 +16,11 @@ function createMockRequest(headers: Record<string, string> = {}): IncomingMessag
 describe("WebhookRegistry", () => {
   it("registers and retrieves webhooks", () => {
     const registry = new WebhookRegistry()
-    registry.register(defineWebhook("stripe", {
-      handler: async () => ({ invalidateTables: ["payments"] }),
-    }))
+    registry.register(
+      defineWebhook("stripe", {
+        handler: async () => ({ invalidateTables: ["payments"] }),
+      }),
+    )
 
     expect(registry.get("stripe")).toBeDefined()
     expect(registry.size).toBe(1)
@@ -28,12 +30,14 @@ describe("WebhookRegistry", () => {
     const registry = new WebhookRegistry()
     const received: unknown[] = []
 
-    registry.register(defineWebhook("test", {
-      handler: async (payload) => {
-        received.push(payload)
-        return { invalidateTables: ["tasks"] }
-      },
-    }))
+    registry.register(
+      defineWebhook("test", {
+        handler: async (payload) => {
+          received.push(payload)
+          return { invalidateTables: ["tasks"] }
+        },
+      }),
+    )
 
     const body = Buffer.from(JSON.stringify({ action: "created" }))
     const result = await registry.handleRequest("test", createMockRequest(), body)
@@ -47,39 +51,35 @@ describe("WebhookRegistry", () => {
     const secret = "webhook-secret-123"
     const registry = new WebhookRegistry()
 
-    registry.register(defineWebhook("secure", {
-      secret,
-      signatureHeader: "X-Signature",
-      handler: async () => ({}),
-    }))
+    registry.register(
+      defineWebhook("secure", {
+        secret,
+        signatureHeader: "X-Signature",
+        handler: async () => ({}),
+      }),
+    )
 
     const body = Buffer.from('{"event":"test"}')
     const signature = "sha256=" + createHmac("sha256", secret).update(body).digest("hex")
 
-    const result = await registry.handleRequest(
-      "secure",
-      createMockRequest({ "x-signature": signature }),
-      body,
-    )
+    const result = await registry.handleRequest("secure", createMockRequest({ "x-signature": signature }), body)
     expect(result.status).toBe(200)
   })
 
   it("rejects invalid signature", async () => {
     const registry = new WebhookRegistry()
-    registry.register(defineWebhook("secure", {
-      secret: "correct-secret",
-      signatureHeader: "X-Signature",
-      handler: async () => ({}),
-    }))
+    registry.register(
+      defineWebhook("secure", {
+        secret: "correct-secret",
+        signatureHeader: "X-Signature",
+        handler: async () => ({}),
+      }),
+    )
 
     const body = Buffer.from('{"event":"test"}')
     const badSig = "sha256=" + createHmac("sha256", "wrong-secret").update(body).digest("hex")
 
-    const result = await registry.handleRequest(
-      "secure",
-      createMockRequest({ "x-signature": badSig }),
-      body,
-    )
+    const result = await registry.handleRequest("secure", createMockRequest({ "x-signature": badSig }), body)
     expect(result.status).toBe(401)
   })
 
@@ -113,12 +113,14 @@ describe("OutboundWebhookManager", () => {
 
 describe("parseNotifyPayload", () => {
   it("parses valid JSON notification", () => {
-    const event = parseNotifyPayload(JSON.stringify({
-      table: "tasks",
-      operation: "INSERT",
-      id: "123",
-      row: { id: "123", title: "New task" },
-    }))
+    const event = parseNotifyPayload(
+      JSON.stringify({
+        table: "tasks",
+        operation: "INSERT",
+        id: "123",
+        row: { id: "123", title: "New task" },
+      }),
+    )
 
     expect(event).not.toBeNull()
     expect(event!.table).toBe("tasks")
@@ -139,7 +141,7 @@ describe("generateNotifyTriggerSQL", () => {
     expect(sql).toContain("CREATE OR REPLACE FUNCTION notify_tasks_changes()")
     expect(sql).toContain("pg_notify")
     expect(sql).toContain("AFTER INSERT OR UPDATE OR DELETE")
-    expect(sql).toContain("ON \"tasks\"")
+    expect(sql).toContain('ON "tasks"')
   })
 
   it("uses custom channel name", () => {

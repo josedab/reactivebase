@@ -44,9 +44,9 @@ describe("CloudPlatform", () => {
       for (let i = 0; i < 5; i++) {
         await platform.createProject({ name: `p${i}`, plan: "free", orgId: "org1" })
       }
-      await expect(
-        platform.createProject({ name: "p5", plan: "free", orgId: "org1" }),
-      ).rejects.toThrow("maximum of 5 projects")
+      await expect(platform.createProject({ name: "p5", plan: "free", orgId: "org1" })).rejects.toThrow(
+        "maximum of 5 projects",
+      )
     })
 
     it("updates project plan", async () => {
@@ -95,9 +95,9 @@ describe("CloudPlatform", () => {
       const smallProject = await platform.createProject({ name: "small", plan: "free" })
       await platform.createEnvironment(smallProject.id, { name: "env1" })
       await platform.createEnvironment(smallProject.id, { name: "env2" })
-      await expect(
-        platform.createEnvironment(smallProject.id, { name: "env3" }),
-      ).rejects.toThrow("maximum of 2 environments")
+      await expect(platform.createEnvironment(smallProject.id, { name: "env3" })).rejects.toThrow(
+        "maximum of 2 environments",
+      )
     })
 
     it("deletes non-production environment", async () => {
@@ -172,9 +172,9 @@ describe("CloudPlatform", () => {
 
     it("prevents duplicate members", () => {
       platform.addTeamMember(project.id, { userId: "u1", email: "a@b.com", role: "developer" })
-      expect(() =>
-        platform.addTeamMember(project.id, { userId: "u1", email: "a@b.com", role: "admin" }),
-      ).toThrow("already a member")
+      expect(() => platform.addTeamMember(project.id, { userId: "u1", email: "a@b.com", role: "admin" })).toThrow(
+        "already a member",
+      )
     })
 
     it("removes team member", () => {

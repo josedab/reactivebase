@@ -70,9 +70,7 @@ export class TestServer {
     const result = await handler(ctx, args)
 
     // If result is thenable (mock query builder), await it
-    const resolved = result && typeof result === "object" && "then" in result
-      ? await result
-      : result
+    const resolved = result && typeof result === "object" && "then" in result ? await result : result
 
     return {
       data: resolved as T,
@@ -92,9 +90,7 @@ export class TestServer {
     const ctx = this.createFunctionContext(dbCtx)
 
     const result = await handler(ctx, args)
-    const resolved = result && typeof result === "object" && "then" in result
-      ? await result
-      : result
+    const resolved = result && typeof result === "object" && "then" in result ? await result : result
 
     return {
       data: resolved as T,
@@ -105,18 +101,13 @@ export class TestServer {
   /**
    * Run an action function.
    */
-  async runAction<T = unknown>(
-    fnOrRef: { handler: Function } | string,
-    args: unknown = {},
-  ): Promise<T> {
+  async runAction<T = unknown>(fnOrRef: { handler: Function } | string, args: unknown = {}): Promise<T> {
     const { handler } = this.resolveFunction(fnOrRef, "action")
     const dbCtx = this.db.createContext("readwrite")
     const ctx = this.createFunctionContext(dbCtx)
 
     const result = await handler(ctx, args)
-    return (result && typeof result === "object" && "then" in result
-      ? await result
-      : result) as T
+    return (result && typeof result === "object" && "then" in result ? await result : result) as T
   }
 
   /**
@@ -132,8 +123,8 @@ export class TestServer {
     if (missing.length > 0) {
       throw new Error(
         `Expected mutation to modify tables [${expectedTables.join(", ")}] ` +
-        `but missing: [${missing.join(", ")}]. ` +
-        `Actually modified: [${result.modifiedTables.join(", ")}]`,
+          `but missing: [${missing.join(", ")}]. ` +
+          `Actually modified: [${result.modifiedTables.join(", ")}]`,
       )
     }
   }
@@ -150,9 +141,7 @@ export class TestServer {
     const actual = JSON.stringify(result.data)
     const exp = JSON.stringify(expected)
     if (actual !== exp) {
-      throw new Error(
-        `Query result mismatch.\nExpected: ${exp}\nActual: ${actual}`,
-      )
+      throw new Error(`Query result mismatch.\nExpected: ${exp}\nActual: ${actual}`)
     }
   }
 
@@ -207,8 +196,12 @@ export class TestServer {
       db: dbCtx,
       auth: this.auth,
       scheduler: {
-        async runAfter() { return "mock_job_id" },
-        async runAt() { return "mock_job_id" },
+        async runAfter() {
+          return "mock_job_id"
+        },
+        async runAt() {
+          return "mock_job_id"
+        },
       },
       log: {
         debug() {},

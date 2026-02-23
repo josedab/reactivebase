@@ -57,7 +57,8 @@ export interface InvalidationEvent {
 
 // ─── Edge Prefetch Cache ─────────────────────────────────────────────────────
 
-const DEFAULT_OPTIONS: Required<Omit<EdgePrefetchOptions, "onInvalidation">> & Pick<EdgePrefetchOptions, "onInvalidation"> = {
+const DEFAULT_OPTIONS: Required<Omit<EdgePrefetchOptions, "onInvalidation">> &
+  Pick<EdgePrefetchOptions, "onInvalidation"> = {
   ttlMs: 30_000,
   staleWhileRevalidateMs: 5_000,
   maxEntries: 10_000,

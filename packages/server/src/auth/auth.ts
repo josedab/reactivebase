@@ -64,9 +64,7 @@ export function jwtProvider(options: JwtProviderOptions): AuthProvider {
 
       const [headerB64, payloadB64, signatureB64] = parts
 
-      const header = JSON.parse(
-        Buffer.from(headerB64, "base64url").toString("utf-8"),
-      )
+      const header = JSON.parse(Buffer.from(headerB64, "base64url").toString("utf-8"))
       const alg = header.alg as string
 
       const data = `${headerB64}.${payloadB64}`
@@ -76,9 +74,7 @@ export function jwtProvider(options: JwtProviderOptions): AuthProvider {
         if (!options.secret) {
           throw new AuthenticationError("JWT secret required for HS256")
         }
-        const expectedSig = createHmac("sha256", options.secret)
-          .update(data)
-          .digest("base64url")
+        const expectedSig = createHmac("sha256", options.secret).update(data).digest("base64url")
 
         if (expectedSig !== signatureB64) {
           throw new AuthenticationError("Invalid JWT signature")
@@ -109,9 +105,7 @@ export function jwtProvider(options: JwtProviderOptions): AuthProvider {
         throw new AuthenticationError(`Unsupported JWT algorithm: ${alg}`)
       }
 
-      const payload = JSON.parse(
-        Buffer.from(payloadB64, "base64url").toString("utf-8"),
-      )
+      const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf-8"))
 
       // Validate standard claims
       if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
@@ -188,10 +182,7 @@ export function defineRlsPolicy<TRow = Record<string, unknown>>(
   return { table, filter }
 }
 
-export function createAuthContext(
-  userId: string | null,
-  claims: Record<string, unknown> = {},
-): AuthContext {
+export function createAuthContext(userId: string | null, claims: Record<string, unknown> = {}): AuthContext {
   return {
     userId,
     claims,

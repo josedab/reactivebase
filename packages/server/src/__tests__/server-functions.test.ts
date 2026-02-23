@@ -12,9 +12,12 @@ describe("server function definitions", () => {
   })
 
   it("defines a non-reactive query", () => {
-    const fn = query(async (ctx) => {
-      return [{ id: "1", title: "Test" }]
-    }, { reactive: false })
+    const fn = query(
+      async (ctx) => {
+        return [{ id: "1", title: "Test" }]
+      },
+      { reactive: false },
+    )
 
     expect(fn.type).toBe("query")
     expect((fn.options as { reactive: boolean }).reactive).toBe(false)
@@ -48,12 +51,15 @@ describe("server function definitions", () => {
   })
 
   it("defines an action with options", () => {
-    const fn = action(async (ctx) => {
-      // scheduled work
-    }, {
-      cron: "0 9 * * *",
-      timezone: "UTC",
-    })
+    const fn = action(
+      async (ctx) => {
+        // scheduled work
+      },
+      {
+        cron: "0 9 * * *",
+        timezone: "UTC",
+      },
+    )
 
     expect(fn.type).toBe("action")
     expect((fn.options as { cron: string }).cron).toBe("0 9 * * *")

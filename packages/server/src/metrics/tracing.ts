@@ -89,9 +89,12 @@ export function createOtelTracerAdapter(otelTracer: OtelTracerLike): Tracer {
 
 /** Minimal OpenTelemetry Tracer interface for loose coupling */
 export interface OtelTracerLike {
-  startSpan(name: string, options?: {
-    attributes?: Record<string, string | number | boolean>
-  }): OtelSpanLike
+  startSpan(
+    name: string,
+    options?: {
+      attributes?: Record<string, string | number | boolean>
+    },
+  ): OtelSpanLike
 }
 
 export interface OtelSpanLike {

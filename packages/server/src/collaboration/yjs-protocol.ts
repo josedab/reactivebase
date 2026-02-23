@@ -38,9 +38,9 @@ export interface SyncMessage {
 }
 
 export enum YjsSyncMessageType {
-  SyncStep1 = 0,   // Send state vector → request missing updates
-  SyncStep2 = 1,   // Send updates in response to SyncStep1
-  Update = 2,       // Incremental update broadcast
+  SyncStep1 = 0, // Send state vector → request missing updates
+  SyncStep2 = 1, // Send updates in response to SyncStep1
+  Update = 2, // Incremental update broadcast
 }
 
 export interface AwarenessMessage {
@@ -180,7 +180,12 @@ export function decodeStateVector(data: Uint8Array): Map<number, number> {
  * Encode a document update into binary format.
  * Format: [clientId: varUint] [clock: varUint] [parentClock: varUint] [content: varBytes]
  */
-export function encodeUpdate(clientId: string, clock: number, content: Uint8Array, parentClock: number = 0): Uint8Array {
+export function encodeUpdate(
+  clientId: string,
+  clock: number,
+  content: Uint8Array,
+  parentClock: number = 0,
+): Uint8Array {
   const parts: Uint8Array[] = [
     writeVarUint(hashClientId(clientId)),
     writeVarUint(clock),

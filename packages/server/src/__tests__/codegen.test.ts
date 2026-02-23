@@ -9,7 +9,9 @@ const testDir = join(tmpdir(), `rb-codegen-test-${Date.now()}`)
 async function setupTestDir() {
   await mkdir(testDir, { recursive: true })
 
-  await writeFile(join(testDir, "tasks.ts"), `
+  await writeFile(
+    join(testDir, "tasks.ts"),
+    `
 import { query, mutation, action } from "@reactivebase/server"
 
 export const listTasks = query(async (ctx, args: { userId: string }) => {
@@ -23,21 +25,28 @@ export const createTask = mutation(async (ctx, args: { title: string }) => {
 export const sendNotification = action(async (ctx, args: { taskId: string }) => {
   // send notification
 })
-`)
+`,
+  )
 
-  await writeFile(join(testDir, "users.ts"), `
+  await writeFile(
+    join(testDir, "users.ts"),
+    `
 import { query } from "@reactivebase/server"
 
 export const getUser = query(async (ctx, args: { id: string }) => {
   return ctx.db.users.get(args.id)
 })
-`)
+`,
+  )
 
   // schema.ts should be ignored
-  await writeFile(join(testDir, "schema.ts"), `
+  await writeFile(
+    join(testDir, "schema.ts"),
+    `
 import { defineSchema } from "@reactivebase/server"
 export default defineSchema({})
-`)
+`,
+  )
 }
 
 describe("scanFunctions", () => {
@@ -47,19 +56,19 @@ describe("scanFunctions", () => {
     const functions = await scanFunctions(testDir)
 
     expect(functions).toHaveLength(4)
-    expect(functions.find(f => f.name === "tasks.listTasks")).toBeDefined()
-    expect(functions.find(f => f.name === "tasks.createTask")).toBeDefined()
-    expect(functions.find(f => f.name === "tasks.sendNotification")).toBeDefined()
-    expect(functions.find(f => f.name === "users.getUser")).toBeDefined()
+    expect(functions.find((f) => f.name === "tasks.listTasks")).toBeDefined()
+    expect(functions.find((f) => f.name === "tasks.createTask")).toBeDefined()
+    expect(functions.find((f) => f.name === "tasks.sendNotification")).toBeDefined()
+    expect(functions.find((f) => f.name === "users.getUser")).toBeDefined()
   })
 
   it("correctly identifies function types", async () => {
     await setupTestDir()
 
     const functions = await scanFunctions(testDir)
-    const listTasks = functions.find(f => f.exportName === "listTasks")!
-    const createTask = functions.find(f => f.exportName === "createTask")!
-    const sendNotification = functions.find(f => f.exportName === "sendNotification")!
+    const listTasks = functions.find((f) => f.exportName === "listTasks")!
+    const createTask = functions.find((f) => f.exportName === "createTask")!
+    const sendNotification = functions.find((f) => f.exportName === "sendNotification")!
 
     expect(listTasks.type).toBe("query")
     expect(createTask.type).toBe("mutation")
@@ -70,7 +79,7 @@ describe("scanFunctions", () => {
     await setupTestDir()
 
     const functions = await scanFunctions(testDir)
-    const schemaFns = functions.filter(f => f.module === "schema")
+    const schemaFns = functions.filter((f) => f.module === "schema")
     expect(schemaFns).toHaveLength(0)
   })
 

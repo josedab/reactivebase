@@ -56,7 +56,9 @@ console.log(`  ✅ Generated: ${schemaPath}`)
 // Generate a basic server.ts if it doesn't exist
 const serverPath = join(outputDir, "server.ts")
 if (!existsSync(serverPath)) {
-  writeFileSync(serverPath, `import { createReactiveBaseServer, defineConfig } from "@reactivebase/server"
+  writeFileSync(
+    serverPath,
+    `import { createReactiveBaseServer, defineConfig } from "@reactivebase/server"
 import schema from "./convex/schema.js"
 
 const config = defineConfig({
@@ -70,7 +72,9 @@ const server = createReactiveBaseServer(schema, config)
 server.start().then(({ port }) => {
   console.log(\`ReactiveBase server running on port \${port}\`)
 })
-`, "utf-8")
+`,
+    "utf-8",
+  )
   console.log(`  ✅ Generated: ${serverPath}`)
 }
 

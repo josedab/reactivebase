@@ -14,9 +14,7 @@ describe("InMemoryPubSubAdapter", () => {
     const received: ChangeEvent[][] = []
     await adapter2.subscribe("test-channel", (events) => received.push(events))
 
-    const changes: ChangeEvent[] = [
-      { table: "tasks", operation: "insert" },
-    ]
+    const changes: ChangeEvent[] = [{ table: "tasks", operation: "insert" }]
     await adapter1.publish("test-channel", changes)
 
     expect(received).toHaveLength(1)

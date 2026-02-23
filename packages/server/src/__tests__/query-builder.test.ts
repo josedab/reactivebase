@@ -19,9 +19,7 @@ describe("query builder", () => {
   })
 
   it("builds a query with multiple WHERE conditions", () => {
-    const qb = new QueryBuilder("tasks")
-      .where({ assigneeId: "user1" })
-      .where("priority", "in", ["high", "critical"])
+    const qb = new QueryBuilder("tasks").where({ assigneeId: "user1" }).where("priority", "in", ["high", "critical"])
     const built = qb.build()
 
     expect(built.sql).toContain('WHERE "assigneeId" = $1 AND "priority" = ANY($2)')
@@ -29,9 +27,7 @@ describe("query builder", () => {
   })
 
   it("builds a query with ORDER BY", () => {
-    const qb = new QueryBuilder("tasks")
-      .orderBy("priority", "desc")
-      .orderBy("createdAt", "asc")
+    const qb = new QueryBuilder("tasks").orderBy("priority", "desc").orderBy("createdAt", "asc")
     const built = qb.build()
 
     expect(built.sql).toContain('ORDER BY "priority" DESC, "createdAt" ASC')
@@ -46,19 +42,14 @@ describe("query builder", () => {
   })
 
   it("builds a query with JOIN", () => {
-    const qb = new QueryBuilder("tasks")
-      .join("users", "assigneeId", "id")
+    const qb = new QueryBuilder("tasks").join("users", "assigneeId", "id")
     const built = qb.build()
 
-    expect(built.sql).toContain(
-      'INNER JOIN "users" ON "tasks"."assigneeId" = "users"."id"',
-    )
+    expect(built.sql).toContain('INNER JOIN "users" ON "tasks"."assigneeId" = "users"."id"')
   })
 
   it("builds a query with GROUP BY", () => {
-    const qb = new QueryBuilder("tasks")
-      .groupBy("priority")
-      .select("priority", 'COUNT(*) as "count"')
+    const qb = new QueryBuilder("tasks").groupBy("priority").select("priority", 'COUNT(*) as "count"')
     const built = qb.build()
 
     expect(built.sql).toContain('GROUP BY "priority"')
@@ -80,9 +71,7 @@ describe("query builder", () => {
   })
 
   it("tracks dependencies", () => {
-    const qb = new QueryBuilder("tasks")
-      .where({ assigneeId: "user1", done: false })
-      .join("users", "assigneeId")
+    const qb = new QueryBuilder("tasks").where({ assigneeId: "user1", done: false }).join("users", "assigneeId")
 
     const deps = qb.getDependencies()
 
@@ -93,9 +82,7 @@ describe("query builder", () => {
   })
 
   it("handles comparison operators", () => {
-    const qb = new QueryBuilder("tasks")
-      .where("dueDate", "<", new Date("2026-01-01"))
-      .where("priority", ">=", 3)
+    const qb = new QueryBuilder("tasks").where("dueDate", "<", new Date("2026-01-01")).where("priority", ">=", 3)
     const built = qb.build()
 
     expect(built.sql).toContain('"dueDate" < $1')

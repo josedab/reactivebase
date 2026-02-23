@@ -18,10 +18,7 @@ export interface FunctionReference<_TArgs = unknown, _TReturn = unknown> {
 }
 
 export interface OptimisticUpdateConfig<TArgs = unknown> {
-  optimisticUpdate?: (
-    localStore: LocalStore,
-    args: TArgs,
-  ) => void
+  optimisticUpdate?: (localStore: LocalStore, args: TArgs) => void
 }
 
 export interface LocalStore {
@@ -58,17 +55,13 @@ export function useQuery<TResult = unknown, TArgs = unknown>(
     setData(undefined)
     setError(null)
 
-    const unsubscribe = client.subscribe(
-      queryName,
-      argsRef.current,
-      (result, err) => {
-        if (err) {
-          setError(err)
-        } else {
-          setData(result as TResult)
-        }
-      },
-    )
+    const unsubscribe = client.subscribe(queryName, argsRef.current, (result, err) => {
+      if (err) {
+        setError(err)
+      } else {
+        setData(result as TResult)
+      }
+    })
 
     return unsubscribe
   }, [client, queryName, argsJson])

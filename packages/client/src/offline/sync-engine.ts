@@ -48,11 +48,7 @@ export interface SyncEngineOptions {
 
 export type ConflictStrategy = "last-write-wins" | "server-wins" | "client-wins" | "custom"
 
-export type MergeFunction = (
-  clientValue: unknown,
-  serverValue: unknown,
-  baseValue: unknown | undefined,
-) => unknown
+export type MergeFunction = (clientValue: unknown, serverValue: unknown, baseValue: unknown | undefined) => unknown
 
 export interface VectorClock {
   [clientId: string]: number
@@ -150,7 +146,8 @@ const DEFAULT_SYNC_OPTIONS = {
 }
 
 export class OfflineSyncEngine {
-  private options: Required<Omit<SyncEngineOptions, "customMerge" | "onSyncStatus" | "onConflict">> & Pick<SyncEngineOptions, "customMerge" | "onSyncStatus" | "onConflict">
+  private options: Required<Omit<SyncEngineOptions, "customMerge" | "onSyncStatus" | "onConflict">> &
+    Pick<SyncEngineOptions, "customMerge" | "onSyncStatus" | "onConflict">
   private queue: MutationQueue
   private cache: PersistentCache
   private clock: VectorClock
@@ -294,11 +291,7 @@ export class OfflineSyncEngine {
             synced++
             this.backoffAttempt = 0
           } catch (error) {
-            const conflict = await this.resolveConflict(
-              mutation,
-              error,
-              serverStateFetcher,
-            )
+            const conflict = await this.resolveConflict(mutation, error, serverStateFetcher)
 
             if (conflict) {
               conflicts.push(conflict)
@@ -367,14 +360,10 @@ export class OfflineSyncEngine {
         return { winner: "server", value: serverValue.value }
       case "custom":
         if (this.options.customMerge) {
-          const merged = this.options.customMerge(
-            clientValue.value,
-            serverValue.value,
-            undefined,
-          )
+          const merged = this.options.customMerge(clientValue.value, serverValue.value, undefined)
           return { winner: "merged", value: merged }
         }
-        // Fall through to LWW
+      // Fall through to LWW
       case "last-write-wins":
       default:
         // LWW: higher timestamp wins; tie-break by client ID
@@ -403,9 +392,7 @@ export class OfflineSyncEngine {
     _error: unknown,
     serverStateFetcher?: (mutationName: string) => Promise<unknown>,
   ): Promise<SyncConflict | null> {
-    const serverState = serverStateFetcher
-      ? await serverStateFetcher(mutation.mutationName).catch(() => null)
-      : null
+    const serverState = serverStateFetcher ? await serverStateFetcher(mutation.mutationName).catch(() => null) : null
 
     switch (this.options.conflictStrategy) {
       case "server-wins":

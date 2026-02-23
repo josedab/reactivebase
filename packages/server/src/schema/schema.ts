@@ -58,9 +58,7 @@ function validateSchema(definition: SchemaDefinition): void {
     for (const index of table.indexes) {
       for (const col of index.columns) {
         if (!(col in table.columns)) {
-          throw new Error(
-            `Index "${index.name}" on table "${name}" references non-existent column "${col}"`,
-          )
+          throw new Error(`Index "${index.name}" on table "${name}" references non-existent column "${col}"`)
         }
       }
     }

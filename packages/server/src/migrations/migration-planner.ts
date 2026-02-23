@@ -16,7 +16,16 @@
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface SchemaChange {
-  type: "add-table" | "drop-table" | "add-column" | "drop-column" | "alter-column" | "add-index" | "drop-index" | "rename-column" | "rename-table"
+  type:
+    | "add-table"
+    | "drop-table"
+    | "add-column"
+    | "drop-column"
+    | "alter-column"
+    | "add-index"
+    | "drop-index"
+    | "rename-column"
+    | "rename-table"
   table: string
   column?: string
   details: Record<string, unknown>
@@ -82,9 +91,11 @@ export class MigrationPlanner {
       safeCount: analyzed.filter((c) => c.risk === "safe").length,
       cautionCount: analyzed.filter((c) => c.risk === "caution").length,
       breakingCount: analyzed.filter((c) => c.risk === "breaking").length,
-      overallRisk: analyzed.some((c) => c.risk === "breaking") ? "breaking"
-        : analyzed.some((c) => c.risk === "caution") ? "caution"
-        : "safe",
+      overallRisk: analyzed.some((c) => c.risk === "breaking")
+        ? "breaking"
+        : analyzed.some((c) => c.risk === "caution")
+          ? "caution"
+          : "safe",
     }
   }
 
@@ -159,8 +170,13 @@ export class MigrationPlanner {
     }
 
     const totalSteps = phases.reduce((sum, p) => sum + p.steps.length, 0)
-    const estimatedDowntime = phases.some((p) => p.requiresLock && p.steps.some((s) => (s.estimatedLockTimeMs ?? 0) > 1000))
-      ? "minimal" : breakingChanges.length > 0 ? "minimal" : "zero"
+    const estimatedDowntime = phases.some(
+      (p) => p.requiresLock && p.steps.some((s) => (s.estimatedLockTimeMs ?? 0) > 1000),
+    )
+      ? "minimal"
+      : breakingChanges.length > 0
+        ? "minimal"
+        : "zero"
 
     return { phases, estimatedDowntime, warnings, rollbackSteps, totalSteps }
   }
@@ -182,7 +198,11 @@ export class MigrationPlanner {
         if (step.concurrentSafe) {
           simulation.push({ step: step.description, status: "ok", message: "Can run without locks" })
         } else if (step.estimatedLockTimeMs && step.estimatedLockTimeMs > 5000) {
-          simulation.push({ step: step.description, status: "warning", message: `May lock table for ~${step.estimatedLockTimeMs}ms` })
+          simulation.push({
+            step: step.description,
+            status: "warning",
+            message: `May lock table for ~${step.estimatedLockTimeMs}ms`,
+          })
         } else {
           simulation.push({ step: step.description, status: "ok", message: "Acceptable lock duration" })
         }
@@ -201,29 +221,84 @@ export class MigrationPlanner {
   private classifyChange(change: SchemaChange): AnalyzedChange {
     switch (change.type) {
       case "add-table":
-        return { change, risk: "safe", reason: "Adding new table has no effect on existing queries", recommendation: "Apply directly" }
+        return {
+          change,
+          risk: "safe",
+          reason: "Adding new table has no effect on existing queries",
+          recommendation: "Apply directly",
+        }
       case "add-column":
         if (change.details.notNull && !change.details.default) {
-          return { change, risk: "breaking", reason: "Adding NOT NULL column without default fails for existing rows", recommendation: "Add with DEFAULT or make nullable first" }
+          return {
+            change,
+            risk: "breaking",
+            reason: "Adding NOT NULL column without default fails for existing rows",
+            recommendation: "Add with DEFAULT or make nullable first",
+          }
         }
-        return { change, risk: "safe", reason: "Adding nullable column is non-blocking", recommendation: "Apply directly" }
+        return {
+          change,
+          risk: "safe",
+          reason: "Adding nullable column is non-blocking",
+          recommendation: "Apply directly",
+        }
       case "add-index":
-        return { change, risk: "caution", reason: "Index creation locks table during build", recommendation: "Use CREATE INDEX CONCURRENTLY" }
+        return {
+          change,
+          risk: "caution",
+          reason: "Index creation locks table during build",
+          recommendation: "Use CREATE INDEX CONCURRENTLY",
+        }
       case "drop-table":
-        return { change, risk: "breaking", reason: "Dropping table permanently removes all data", recommendation: "Rename to _deprecated first, drop after confirmation" }
+        return {
+          change,
+          risk: "breaking",
+          reason: "Dropping table permanently removes all data",
+          recommendation: "Rename to _deprecated first, drop after confirmation",
+        }
       case "drop-column":
-        return { change, risk: "breaking", reason: "Dropping column removes data and breaks queries using it", recommendation: "Use expand-contract: stop reading, then drop" }
+        return {
+          change,
+          risk: "breaking",
+          reason: "Dropping column removes data and breaks queries using it",
+          recommendation: "Use expand-contract: stop reading, then drop",
+        }
       case "alter-column":
         if (change.details.typeChange) {
-          return { change, risk: "breaking", reason: "Changing column type may fail for incompatible data", recommendation: "Add new column, migrate data, swap" }
+          return {
+            change,
+            risk: "breaking",
+            reason: "Changing column type may fail for incompatible data",
+            recommendation: "Add new column, migrate data, swap",
+          }
         }
-        return { change, risk: "caution", reason: "Column alteration may require table rewrite", recommendation: "Test with dry-run first" }
+        return {
+          change,
+          risk: "caution",
+          reason: "Column alteration may require table rewrite",
+          recommendation: "Test with dry-run first",
+        }
       case "rename-column":
-        return { change, risk: "breaking", reason: "Renaming breaks existing queries and application code", recommendation: "Add new column, copy data, update app, drop old" }
+        return {
+          change,
+          risk: "breaking",
+          reason: "Renaming breaks existing queries and application code",
+          recommendation: "Add new column, copy data, update app, drop old",
+        }
       case "rename-table":
-        return { change, risk: "breaking", reason: "Renaming breaks all references to the table", recommendation: "Create view with old name as alias during migration" }
+        return {
+          change,
+          risk: "breaking",
+          reason: "Renaming breaks all references to the table",
+          recommendation: "Create view with old name as alias during migration",
+        }
       case "drop-index":
-        return { change, risk: "caution", reason: "Dropping index may degrade query performance", recommendation: "Monitor query performance after dropping" }
+        return {
+          change,
+          risk: "caution",
+          reason: "Dropping index may degrade query performance",
+          recommendation: "Monitor query performance after dropping",
+        }
       default:
         return { change, risk: "caution", reason: "Unknown change type", recommendation: "Review manually" }
     }
@@ -276,7 +351,12 @@ export class MigrationPlanner {
     }
   }
 
-  private generateExpandContract(analyzed: AnalyzedChange): { expand: MigrationStep[]; migrate: MigrationStep[]; contract: MigrationStep[]; warning?: string } {
+  private generateExpandContract(analyzed: AnalyzedChange): {
+    expand: MigrationStep[]
+    migrate: MigrationStep[]
+    contract: MigrationStep[]
+    warning?: string
+  } {
     const { change } = analyzed
     const table = sanitize(change.table)
     const column = change.column ? sanitize(change.column) : ""
@@ -286,52 +366,62 @@ export class MigrationPlanner {
         return {
           expand: [], // Nothing to add
           migrate: [], // Nothing to copy
-          contract: [{
-            sql: `ALTER TABLE "${table}" DROP COLUMN IF EXISTS "${column}";`,
-            description: `Drop column ${column} from ${table}`,
-            reversible: false,
-            concurrentSafe: false,
-            estimatedLockTimeMs: 100,
-          }],
+          contract: [
+            {
+              sql: `ALTER TABLE "${table}" DROP COLUMN IF EXISTS "${column}";`,
+              description: `Drop column ${column} from ${table}`,
+              reversible: false,
+              concurrentSafe: false,
+              estimatedLockTimeMs: 100,
+            },
+          ],
           warning: `Dropping ${table}.${column} will permanently remove data`,
         }
       case "drop-table":
         return {
-          expand: [{
-            sql: `ALTER TABLE "${table}" RENAME TO "${table}_deprecated";`,
-            description: `Rename ${table} to ${table}_deprecated`,
-            reversible: true,
-            reverseSql: `ALTER TABLE "${table}_deprecated" RENAME TO "${table}";`,
-            concurrentSafe: false,
-            estimatedLockTimeMs: 50,
-          }],
+          expand: [
+            {
+              sql: `ALTER TABLE "${table}" RENAME TO "${table}_deprecated";`,
+              description: `Rename ${table} to ${table}_deprecated`,
+              reversible: true,
+              reverseSql: `ALTER TABLE "${table}_deprecated" RENAME TO "${table}";`,
+              concurrentSafe: false,
+              estimatedLockTimeMs: 50,
+            },
+          ],
           migrate: [],
-          contract: [{
-            sql: `DROP TABLE IF EXISTS "${table}_deprecated" CASCADE;`,
-            description: `Drop deprecated table ${table}_deprecated`,
-            reversible: false,
-            concurrentSafe: false,
-          }],
+          contract: [
+            {
+              sql: `DROP TABLE IF EXISTS "${table}_deprecated" CASCADE;`,
+              description: `Drop deprecated table ${table}_deprecated`,
+              reversible: false,
+              concurrentSafe: false,
+            },
+          ],
           warning: `Table ${table} will be renamed then dropped`,
         }
       case "alter-column": {
         const newType = String(change.details.newType ?? "text")
         const newCol = `${column}_new`
         return {
-          expand: [{
-            sql: `ALTER TABLE "${table}" ADD COLUMN "${newCol}" ${newType};`,
-            description: `Add new column ${newCol} with type ${newType}`,
-            reversible: true,
-            reverseSql: `ALTER TABLE "${table}" DROP COLUMN IF EXISTS "${newCol}";`,
-            concurrentSafe: true,
-          }],
-          migrate: [{
-            sql: `UPDATE "${table}" SET "${newCol}" = "${column}"::${newType};`,
-            description: `Migrate data from ${column} to ${newCol}`,
-            reversible: false,
-            concurrentSafe: false,
-            estimatedLockTimeMs: 5000,
-          }],
+          expand: [
+            {
+              sql: `ALTER TABLE "${table}" ADD COLUMN "${newCol}" ${newType};`,
+              description: `Add new column ${newCol} with type ${newType}`,
+              reversible: true,
+              reverseSql: `ALTER TABLE "${table}" DROP COLUMN IF EXISTS "${newCol}";`,
+              concurrentSafe: true,
+            },
+          ],
+          migrate: [
+            {
+              sql: `UPDATE "${table}" SET "${newCol}" = "${column}"::${newType};`,
+              description: `Migrate data from ${column} to ${newCol}`,
+              reversible: false,
+              concurrentSafe: false,
+              estimatedLockTimeMs: 5000,
+            },
+          ],
           contract: [
             {
               sql: `ALTER TABLE "${table}" DROP COLUMN "${column}";`,
@@ -355,25 +445,31 @@ export class MigrationPlanner {
       case "rename-column": {
         const newName = sanitize(String(change.details.newName ?? `${column}_renamed`))
         return {
-          expand: [{
-            sql: `ALTER TABLE "${table}" ADD COLUMN "${newName}" text;`,
-            description: `Add new column ${newName}`,
-            reversible: true,
-            reverseSql: `ALTER TABLE "${table}" DROP COLUMN IF EXISTS "${newName}";`,
-            concurrentSafe: true,
-          }],
-          migrate: [{
-            sql: `UPDATE "${table}" SET "${newName}" = "${column}";`,
-            description: `Copy data from ${column} to ${newName}`,
-            reversible: false,
-            concurrentSafe: false,
-          }],
-          contract: [{
-            sql: `ALTER TABLE "${table}" DROP COLUMN "${column}";`,
-            description: `Drop old column ${column}`,
-            reversible: false,
-            concurrentSafe: false,
-          }],
+          expand: [
+            {
+              sql: `ALTER TABLE "${table}" ADD COLUMN "${newName}" text;`,
+              description: `Add new column ${newName}`,
+              reversible: true,
+              reverseSql: `ALTER TABLE "${table}" DROP COLUMN IF EXISTS "${newName}";`,
+              concurrentSafe: true,
+            },
+          ],
+          migrate: [
+            {
+              sql: `UPDATE "${table}" SET "${newName}" = "${column}";`,
+              description: `Copy data from ${column} to ${newName}`,
+              reversible: false,
+              concurrentSafe: false,
+            },
+          ],
+          contract: [
+            {
+              sql: `ALTER TABLE "${table}" DROP COLUMN "${column}";`,
+              description: `Drop old column ${column}`,
+              reversible: false,
+              concurrentSafe: false,
+            },
+          ],
         }
       }
       default:

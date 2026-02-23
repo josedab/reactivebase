@@ -50,9 +50,7 @@ describe("SqlPlayground", () => {
     })
 
     it("detects JOINs", () => {
-      const analysis = playground.analyzeQuery(
-        "SELECT t.*, u.name FROM tasks t JOIN users u ON t.assignee_id = u.id",
-      )
+      const analysis = playground.analyzeQuery("SELECT t.*, u.name FROM tasks t JOIN users u ON t.assignee_id = u.id")
       expect(analysis.hasJoin).toBe(true)
       expect(analysis.tables).toContain("tasks")
       expect(analysis.tables).toContain("users")
@@ -66,9 +64,7 @@ describe("SqlPlayground", () => {
     })
 
     it("detects aggregations", () => {
-      const analysis = playground.analyzeQuery(
-        "SELECT priority, COUNT(*) FROM tasks GROUP BY priority",
-      )
+      const analysis = playground.analyzeQuery("SELECT priority, COUNT(*) FROM tasks GROUP BY priority")
       expect(analysis.hasAggregation).toBe(true)
     })
 
@@ -83,7 +79,8 @@ describe("SqlPlayground", () => {
       expect(playground.analyzeQuery("SELECT * FROM tasks").complexity).toBe("simple")
       expect(playground.analyzeQuery("SELECT * FROM tasks JOIN users ON true").complexity).toBe("moderate")
       expect(
-        playground.analyzeQuery("SELECT * FROM tasks WHERE id IN (SELECT id FROM users) JOIN x ON true GROUP BY y").complexity,
+        playground.analyzeQuery("SELECT * FROM tasks WHERE id IN (SELECT id FROM users) JOIN x ON true GROUP BY y")
+          .complexity,
       ).toBe("complex")
     })
 
@@ -144,16 +141,18 @@ Execution Time: 0.523 ms`
       const analysis = playground.analyzeQuery("SELECT * FROM tasks WHERE done = false")
       const plan: QueryPlan = {
         raw: "",
-        nodes: [{
-          type: "Seq Scan on tasks",
-          relation: "tasks",
-          startupCost: 0,
-          totalCost: 100,
-          planRows: 5000,
-          planWidth: 128,
-          children: [],
-          filter: "done = false",
-        }],
+        nodes: [
+          {
+            type: "Seq Scan on tasks",
+            relation: "tasks",
+            startupCost: 0,
+            totalCost: 100,
+            planRows: 5000,
+            planWidth: 128,
+            children: [],
+            filter: "done = false",
+          },
+        ],
         totalCost: 100,
       }
 
@@ -208,7 +207,13 @@ Execution Time: 0.523 ms`
     })
 
     it("clears history", () => {
-      playground.addToHistory({ sql: "SELECT 1", executedAt: Date.now(), executionTimeMs: 1, rowCount: 1, success: true })
+      playground.addToHistory({
+        sql: "SELECT 1",
+        executedAt: Date.now(),
+        executionTimeMs: 1,
+        rowCount: 1,
+        success: true,
+      })
       playground.clearHistory()
       expect(playground.getHistory()).toHaveLength(0)
     })

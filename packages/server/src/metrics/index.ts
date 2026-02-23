@@ -11,18 +11,8 @@ export type {
 
 export { toPrometheusFormat } from "./prometheus.js"
 
-export {
-  NoopTracer,
-  ConsoleTracer,
-  createOtelTracerAdapter,
-  traced,
-} from "./tracing.js"
-export type {
-  Tracer,
-  Span,
-  OtelTracerLike,
-  OtelSpanLike,
-} from "./tracing.js"
+export { NoopTracer, ConsoleTracer, createOtelTracerAdapter, traced } from "./tracing.js"
+export type { Tracer, Span, OtelTracerLike, OtelSpanLike } from "./tracing.js"
 
 // Performance Profiler
 export { PerformanceProfiler } from "./performance-profiler.js"

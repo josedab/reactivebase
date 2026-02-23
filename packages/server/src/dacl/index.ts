@@ -1,9 +1,4 @@
-export {
-  DaclEngine,
-  PolicyBuilder,
-  allow,
-  deny,
-} from "./dacl.js"
+export { DaclEngine, PolicyBuilder, allow, deny } from "./dacl.js"
 
 export type {
   Action,

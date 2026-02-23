@@ -134,23 +134,31 @@ export class StressTestSuite {
       phases.push(phase)
 
       if (phase.p99LatencyMs > thresholds.maxP99LatencyMs!) {
-        failures.push(`Phase ${level} subs: p99 latency ${phase.p99LatencyMs}ms exceeds ${thresholds.maxP99LatencyMs}ms`)
+        failures.push(
+          `Phase ${level} subs: p99 latency ${phase.p99LatencyMs}ms exceeds ${thresholds.maxP99LatencyMs}ms`,
+        )
       }
       if (phase.falseInvalidationRate > thresholds.maxFalseInvalidationRate!) {
-        failures.push(`Phase ${level} subs: false invalidation rate ${(phase.falseInvalidationRate * 100).toFixed(1)}% exceeds ${(thresholds.maxFalseInvalidationRate! * 100).toFixed(1)}%`)
+        failures.push(
+          `Phase ${level} subs: false invalidation rate ${(phase.falseInvalidationRate * 100).toFixed(1)}% exceeds ${(thresholds.maxFalseInvalidationRate! * 100).toFixed(1)}%`,
+        )
       }
     }
 
     // Run chaos tests
     if (this.options.enableChaos) {
       const midLevel = this.options.subscriptionLevels[Math.floor(this.options.subscriptionLevels.length / 2)]
-      chaos.push(this.runChaosScenario("connection-drop", "Simulate 10% connection drops during invalidation", midLevel))
+      chaos.push(
+        this.runChaosScenario("connection-drop", "Simulate 10% connection drops during invalidation", midLevel),
+      )
       chaos.push(this.runChaosScenario("slow-consumer", "Simulate slow consumer (100ms processing delay)", midLevel))
       chaos.push(this.runChaosScenario("burst-writes", "10x write burst for 1 second", midLevel))
 
       for (const c of chaos) {
         if (!c.passed) {
-          failures.push(`Chaos "${c.scenario}": ${c.messageLossRate * 100}% message loss, recovery ${c.recoveryTimeMs}ms`)
+          failures.push(
+            `Chaos "${c.scenario}": ${c.messageLossRate * 100}% message loss, recovery ${c.recoveryTimeMs}ms`,
+          )
         }
       }
     }
@@ -342,7 +350,9 @@ export class StressTestSuite {
     lines.push("| Subscriptions | Invalidations/s | Avg Latency | p95 | p99 | Max | Memory |")
     lines.push("|---|---|---|---|---|---|---|")
     for (const p of report.phases) {
-      lines.push(`| ${p.subscriptionCount.toLocaleString()} | ${p.invalidationsPerSecond.toLocaleString()} | ${p.avgLatencyMs}ms | ${p.p95LatencyMs}ms | ${p.p99LatencyMs}ms | ${p.maxLatencyMs}ms | ${p.memoryUsageMb}MB |`)
+      lines.push(
+        `| ${p.subscriptionCount.toLocaleString()} | ${p.invalidationsPerSecond.toLocaleString()} | ${p.avgLatencyMs}ms | ${p.p95LatencyMs}ms | ${p.p99LatencyMs}ms | ${p.maxLatencyMs}ms | ${p.memoryUsageMb}MB |`,
+      )
     }
     lines.push("")
 
@@ -351,7 +361,9 @@ export class StressTestSuite {
       lines.push("| Scenario | Subscriptions | Message Loss | Recovery | Status |")
       lines.push("|---|---|---|---|---|")
       for (const c of report.chaos) {
-        lines.push(`| ${c.scenario} | ${c.subscriptionCount.toLocaleString()} | ${(c.messageLossRate * 100).toFixed(2)}% | ${c.recoveryTimeMs}ms | ${c.passed ? "✅" : "❌"} |`)
+        lines.push(
+          `| ${c.scenario} | ${c.subscriptionCount.toLocaleString()} | ${(c.messageLossRate * 100).toFixed(2)}% | ${c.recoveryTimeMs}ms | ${c.passed ? "✅" : "❌"} |`,
+        )
       }
       lines.push("")
     }

@@ -117,10 +117,7 @@ export function localKeyProvider(masterKey: string): KeyProvider {
 /**
  * Multi-key provider for key rotation scenarios.
  */
-export function rotatingKeyProvider(
-  keysMap: Record<string, string>,
-  currentKeyId: string,
-): KeyProvider {
+export function rotatingKeyProvider(keysMap: Record<string, string>, currentKeyId: string): KeyProvider {
   const keys = new Map<string, Buffer>()
   for (const [id, secret] of Object.entries(keysMap)) {
     keys.set(id, createHash("sha256").update(secret).digest())
@@ -153,7 +150,9 @@ export function kmsKeyProvider(options: { region: string; keyArn: string }): Key
   return {
     name: "aws-kms",
     async getKey(_keyId: string): Promise<Buffer> {
-      throw new EncryptionError("AWS KMS provider requires @aws-sdk/client-kms. Install it and use the full implementation.")
+      throw new EncryptionError(
+        "AWS KMS provider requires @aws-sdk/client-kms. Install it and use the full implementation.",
+      )
     },
     async getCurrentKeyId(): Promise<string> {
       return options.keyArn
@@ -274,7 +273,9 @@ export class EncryptionEngine {
         iv = randomBytes(12)
       }
 
-      const cipher = createCipheriv(this.algorithm, key, iv) as ReturnType<typeof createCipheriv> & { getAuthTag(): Buffer }
+      const cipher = createCipheriv(this.algorithm, key, iv) as ReturnType<typeof createCipheriv> & {
+        getAuthTag(): Buffer
+      }
       const encrypted = Buffer.concat([cipher.update(plaintext, "utf-8"), cipher.final()])
       const authTag = cipher.getAuthTag()
 
@@ -301,7 +302,9 @@ export class EncryptionEngine {
       const ciphertext = Buffer.from(encrypted.ciphertext, "base64")
       const authTag = Buffer.from(encrypted.authTag, "base64")
 
-      const decipher = createDecipheriv(this.algorithm, key, iv) as ReturnType<typeof createDecipheriv> & { setAuthTag(tag: Buffer): void }
+      const decipher = createDecipheriv(this.algorithm, key, iv) as ReturnType<typeof createDecipheriv> & {
+        setAuthTag(tag: Buffer): void
+      }
       decipher.setAuthTag(authTag)
 
       const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()])
@@ -316,10 +319,7 @@ export class EncryptionEngine {
 
   // ─── Row Encryption (batch) ──────────────────────────────────────────────
 
-  async encryptRow(
-    table: string,
-    row: Record<string, unknown>,
-  ): Promise<Record<string, unknown>> {
+  async encryptRow(table: string, row: Record<string, unknown>): Promise<Record<string, unknown>> {
     const result = { ...row }
     for (const [key, config] of this.fieldConfigs) {
       if (!key.startsWith(`${table}.`)) continue
@@ -331,10 +331,7 @@ export class EncryptionEngine {
     return result
   }
 
-  async decryptRow(
-    table: string,
-    row: Record<string, unknown>,
-  ): Promise<Record<string, unknown>> {
+  async decryptRow(table: string, row: Record<string, unknown>): Promise<Record<string, unknown>> {
     const result = { ...row }
     for (const [key, config] of this.fieldConfigs) {
       if (!key.startsWith(`${table}.`)) continue
@@ -351,10 +348,7 @@ export class EncryptionEngine {
 
   // ─── Key Rotation ────────────────────────────────────────────────────────
 
-  async reEncryptValue(
-    fieldName: string,
-    encrypted: EncryptedValue,
-  ): Promise<EncryptedValue> {
+  async reEncryptValue(fieldName: string, encrypted: EncryptedValue): Promise<EncryptedValue> {
     const decrypted = await this.decryptField(fieldName, encrypted)
     return this.encryptField(fieldName, decrypted, encrypted.mode)
   }

@@ -185,10 +185,7 @@ export class CloudProvisioner {
 
   // ─── Preview Environments ──────────────────────────────────────────────
 
-  async createPreviewEnvironment(
-    projectId: string,
-    config: PreviewEnvironmentConfig,
-  ): Promise<PreviewEnvironment> {
+  async createPreviewEnvironment(projectId: string, config: PreviewEnvironmentConfig): Promise<PreviewEnvironment> {
     const project = this.platform.getProject(projectId)
     if (!project) throw new Error(`Project ${projectId} not found`)
 
@@ -250,7 +247,9 @@ export class CloudProvisioner {
         preview.status = "destroyed"
         try {
           await this.platform.deleteEnvironment(preview.environmentId)
-        } catch { /* environment may already be gone */ }
+        } catch {
+          /* environment may already be gone */
+        }
         destroyed++
       }
     }
@@ -267,8 +266,7 @@ export class CloudProvisioner {
   }
 
   listPreviews(projectId: string): PreviewEnvironment[] {
-    return Array.from(this.previews.values())
-      .filter((p) => p.projectId === projectId)
+    return Array.from(this.previews.values()).filter((p) => p.projectId === projectId)
   }
 
   cleanupExpiredPreviews(): PreviewEnvironment[] {
@@ -336,11 +334,46 @@ export class CloudProvisioner {
 
   createProvisioningPipeline(projectId: string, environmentId: string): ProvisioningPipeline {
     const steps: ProvisioningStep[] = [
-      { name: "Validate configuration", status: "pending", startedAt: null, completedAt: null, error: null, durationMs: null },
-      { name: "Provision database", status: "pending", startedAt: null, completedAt: null, error: null, durationMs: null },
-      { name: "Configure networking", status: "pending", startedAt: null, completedAt: null, error: null, durationMs: null },
-      { name: "Deploy application", status: "pending", startedAt: null, completedAt: null, error: null, durationMs: null },
-      { name: "Run health checks", status: "pending", startedAt: null, completedAt: null, error: null, durationMs: null },
+      {
+        name: "Validate configuration",
+        status: "pending",
+        startedAt: null,
+        completedAt: null,
+        error: null,
+        durationMs: null,
+      },
+      {
+        name: "Provision database",
+        status: "pending",
+        startedAt: null,
+        completedAt: null,
+        error: null,
+        durationMs: null,
+      },
+      {
+        name: "Configure networking",
+        status: "pending",
+        startedAt: null,
+        completedAt: null,
+        error: null,
+        durationMs: null,
+      },
+      {
+        name: "Deploy application",
+        status: "pending",
+        startedAt: null,
+        completedAt: null,
+        error: null,
+        durationMs: null,
+      },
+      {
+        name: "Run health checks",
+        status: "pending",
+        startedAt: null,
+        completedAt: null,
+        error: null,
+        durationMs: null,
+      },
       { name: "Configure DNS", status: "pending", startedAt: null, completedAt: null, error: null, durationMs: null },
     ]
 

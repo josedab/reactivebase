@@ -123,10 +123,12 @@ export class ReactivityEngine {
    * Evaluates which subscriptions are affected and re-executes them.
    */
   async processChanges(modifiedTables: string[], changeEvents?: ChangeEvent[]): Promise<void> {
-    const changes: ChangeEvent[] = changeEvents ?? modifiedTables.map((table) => ({
-      table,
-      operation: "update" as const,
-    }))
+    const changes: ChangeEvent[] =
+      changeEvents ??
+      modifiedTables.map((table) => ({
+        table,
+        operation: "update" as const,
+      }))
 
     const invalidated = this.evaluator.evaluate(changes)
 

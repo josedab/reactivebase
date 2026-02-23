@@ -75,15 +75,41 @@ describe("ReactiveCdcAdapter server integration", () => {
     const flushed: number[] = []
 
     const adapter = new ReactiveCdcAdapter(
-      async (tables, events) => { flushed.push(events.length) },
+      async (tables, events) => {
+        flushed.push(events.length)
+      },
       { batchSize: 3 },
     )
 
     // Send exactly batchSize events — should auto-flush
     await adapter.processWalChanges([
-      { table: "t", operation: "insert", rowId: "1", oldValues: null, newValues: null, lsn: "0/1", timestamp: Date.now() },
-      { table: "t", operation: "insert", rowId: "2", oldValues: null, newValues: null, lsn: "0/2", timestamp: Date.now() },
-      { table: "t", operation: "insert", rowId: "3", oldValues: null, newValues: null, lsn: "0/3", timestamp: Date.now() },
+      {
+        table: "t",
+        operation: "insert",
+        rowId: "1",
+        oldValues: null,
+        newValues: null,
+        lsn: "0/1",
+        timestamp: Date.now(),
+      },
+      {
+        table: "t",
+        operation: "insert",
+        rowId: "2",
+        oldValues: null,
+        newValues: null,
+        lsn: "0/2",
+        timestamp: Date.now(),
+      },
+      {
+        table: "t",
+        operation: "insert",
+        rowId: "3",
+        oldValues: null,
+        newValues: null,
+        lsn: "0/3",
+        timestamp: Date.now(),
+      },
     ])
 
     expect(flushed.length).toBeGreaterThan(0)
@@ -92,7 +118,15 @@ describe("ReactiveCdcAdapter server integration", () => {
 
   it("resets stats", async () => {
     const adapter = new ReactiveCdcAdapter(async () => {}, { batchSize: 1 })
-    await adapter.processWalChange({ table: "t", operation: "insert", rowId: "1", oldValues: null, newValues: null, lsn: "0/1", timestamp: Date.now() })
+    await adapter.processWalChange({
+      table: "t",
+      operation: "insert",
+      rowId: "1",
+      oldValues: null,
+      newValues: null,
+      lsn: "0/1",
+      timestamp: Date.now(),
+    })
 
     expect(adapter.getStats().eventsProcessed).toBe(1)
     adapter.resetStats()

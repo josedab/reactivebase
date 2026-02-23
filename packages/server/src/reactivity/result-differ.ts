@@ -25,10 +25,7 @@ export function hasResultChanged(oldHash: string, newResult: unknown): boolean {
  * Compute a minimal diff between old and new array results.
  * Returns the diff or null if results are identical.
  */
-export function computeDiff(
-  oldResult: unknown,
-  newResult: unknown,
-): ResultDiff | null {
+export function computeDiff(oldResult: unknown, newResult: unknown): ResultDiff | null {
   const oldHash = hashResult(oldResult)
   const newHash = hashResult(newResult)
 
@@ -51,10 +48,7 @@ export interface ResultDiff {
   modified?: Array<{ id: string; changes: Record<string, unknown> }>
 }
 
-function computeArrayDiff(
-  oldArray: Record<string, unknown>[],
-  newArray: Record<string, unknown>[],
-): ResultDiff {
+function computeArrayDiff(oldArray: Record<string, unknown>[], newArray: Record<string, unknown>[]): ResultDiff {
   const oldMap = new Map(oldArray.map((item) => [item.id as string, item]))
   const newMap = new Map(newArray.map((item) => [item.id as string, item]))
 

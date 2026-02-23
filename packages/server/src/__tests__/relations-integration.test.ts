@@ -66,15 +66,10 @@ describe("query builder with relations - SQL generation", () => {
       comments: { relation: "comments", limit: 10, orderBy: { createdAt: "desc" } },
     })
 
-    const { sql, params } = buildQueryWithIncludes(
-      built.sql,
-      built.params,
-      "tasks",
-      resolved,
-    )
+    const { sql, params } = buildQueryWithIncludes(built.sql, built.params, "tasks", resolved)
 
     // SQL structure checks
-    expect(sql).toContain("SELECT \"_base\".*")
+    expect(sql).toContain('SELECT "_base".*')
     expect(sql).toContain("_rel_assignee")
     expect(sql).toContain("_rel_comments")
     expect(sql).toContain("LEFT JOIN LATERAL")
@@ -90,8 +85,7 @@ describe("query builder with relations - SQL generation", () => {
   })
 
   it("generates correct SQL for belongs-to relation", () => {
-    const builder = new QueryBuilder("comments")
-      .where({ taskId: "task_1" })
+    const builder = new QueryBuilder("comments").where({ taskId: "task_1" })
 
     const built = builder.build()
 
@@ -99,12 +93,7 @@ describe("query builder with relations - SQL generation", () => {
       author: { relation: "author" },
     })
 
-    const { sql } = buildQueryWithIncludes(
-      built.sql,
-      built.params,
-      "comments",
-      resolved,
-    )
+    const { sql } = buildQueryWithIncludes(built.sql, built.params, "comments", resolved)
 
     // Should join users table via authorId → users.id
     expect(sql).toContain('"users"."id" = "_base"."authorId"')
@@ -120,12 +109,7 @@ describe("query builder with relations - SQL generation", () => {
       comments: { relation: "comments" },
     })
 
-    const { sql } = buildQueryWithIncludes(
-      built.sql,
-      built.params,
-      "tasks",
-      resolved,
-    )
+    const { sql } = buildQueryWithIncludes(built.sql, built.params, "tasks", resolved)
 
     // Should join comments table via comments.taskId → tasks.id
     expect(sql).toContain('"comments"."taskId" = "_base"."id"')
@@ -150,8 +134,7 @@ describe("query builder with relations - SQL generation", () => {
   })
 
   it("tracks dependencies through relation includes", () => {
-    const builder = new QueryBuilder("tasks")
-      .where({ assigneeId: "user_1" })
+    const builder = new QueryBuilder("tasks").where({ assigneeId: "user_1" })
 
     const deps = builder.getDependencies()
 

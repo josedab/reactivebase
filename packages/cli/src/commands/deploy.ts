@@ -162,7 +162,9 @@ export function generateDeployManifestFile(
   }
 }
 
-export async function deployPreview(options: DeployOptions & { prNumber: number; branch: string }): Promise<DeployResult> {
+export async function deployPreview(
+  options: DeployOptions & { prNumber: number; branch: string },
+): Promise<DeployResult> {
   return deploy({
     ...options,
     preview: `pr-${options.prNumber}`,

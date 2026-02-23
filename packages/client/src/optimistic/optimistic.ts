@@ -244,9 +244,8 @@ export class OptimisticUpdateManager {
    */
   getPendingCount(subscriptionId?: string): number {
     if (!subscriptionId) return this.getPending().length
-    return [...this.snapshots.values()].filter(
-      (s) => s.status === "pending" && s.subscriptionId === subscriptionId,
-    ).length
+    return [...this.snapshots.values()].filter((s) => s.status === "pending" && s.subscriptionId === subscriptionId)
+      .length
   }
 
   /**

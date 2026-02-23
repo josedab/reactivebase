@@ -194,11 +194,7 @@ export class CloudClient {
 
   // ─── Project Management ──────────────────────────────────────────────────
 
-  async createProject(options: {
-    name: string
-    region?: string
-    plan?: string
-  }): Promise<CloudProject> {
+  async createProject(options: { name: string; region?: string; plan?: string }): Promise<CloudProject> {
     return this.request<CloudProject>("POST", "/projects", {
       name: options.name,
       region: options.region ?? "us-east-1",
@@ -257,37 +253,20 @@ export class CloudClient {
     return this.request<CloudDeployment>("POST", `/projects/${projectId}/deploy`, bundle)
   }
 
-  async deployToEnvironment(
-    projectId: string,
-    envId: string,
-    bundle: DeploymentBundle,
-  ): Promise<CloudDeployment> {
-    return this.request<CloudDeployment>(
-      "POST",
-      `/projects/${projectId}/environments/${envId}/deploy`,
-      bundle,
-    )
+  async deployToEnvironment(projectId: string, envId: string, bundle: DeploymentBundle): Promise<CloudDeployment> {
+    return this.request<CloudDeployment>("POST", `/projects/${projectId}/environments/${envId}/deploy`, bundle)
   }
 
   async getDeployment(projectId: string, deploymentId: string): Promise<CloudDeployment> {
-    return this.request<CloudDeployment>(
-      "GET",
-      `/projects/${projectId}/deployments/${deploymentId}`,
-    )
+    return this.request<CloudDeployment>("GET", `/projects/${projectId}/deployments/${deploymentId}`)
   }
 
   async listDeployments(projectId: string, limit: number = 20): Promise<CloudDeployment[]> {
-    return this.request<CloudDeployment[]>(
-      "GET",
-      `/projects/${projectId}/deployments?limit=${limit}`,
-    )
+    return this.request<CloudDeployment[]>("GET", `/projects/${projectId}/deployments?limit=${limit}`)
   }
 
   async rollback(projectId: string, deploymentId: string): Promise<CloudDeployment> {
-    return this.request<CloudDeployment>(
-      "POST",
-      `/projects/${projectId}/deployments/${deploymentId}/rollback`,
-    )
+    return this.request<CloudDeployment>("POST", `/projects/${projectId}/deployments/${deploymentId}/rollback`)
   }
 
   // ─── Team Management ─────────────────────────────────────────────────────
@@ -360,7 +339,7 @@ export class CloudClient {
         method,
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
         },
         body: body ? JSON.stringify(body) : undefined,
         signal: controller.signal,
@@ -380,7 +359,10 @@ export class CloudClient {
 }
 
 export class CloudError extends Error {
-  constructor(message: string, public readonly statusCode: number) {
+  constructor(
+    message: string,
+    public readonly statusCode: number,
+  ) {
     super(message)
     this.name = "CloudError"
   }
@@ -414,11 +396,11 @@ Examples:
 /**
  * Estimate monthly cost for a given usage pattern.
  */
-export function estimateMonthlyCost(usage: {
-  subscriptions: number
-  storageGb: number
-  bandwidthGb: number
-}): { plan: string; monthlyCost: number; overageCost: number } {
+export function estimateMonthlyCost(usage: { subscriptions: number; storageGb: number; bandwidthGb: number }): {
+  plan: string
+  monthlyCost: number
+  overageCost: number
+} {
   const planEntries = Object.entries(PLANS).filter(([, p]) => p.price >= 0)
 
   for (const [key, plan] of planEntries) {

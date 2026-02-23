@@ -275,9 +275,7 @@ export class SubscriptionShardManager {
       this.migrationState.activeMigrations = concurrentBatch.length
       this.migrationState.pendingBatches = this.migrationQueue.length
 
-      const results = await Promise.allSettled(
-        concurrentBatch.map((batch) => this.executeSingleMigration(batch)),
-      )
+      const results = await Promise.allSettled(concurrentBatch.map((batch) => this.executeSingleMigration(batch)))
 
       for (let i = 0; i < results.length; i++) {
         const result = results[i]

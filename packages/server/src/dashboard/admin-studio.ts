@@ -265,7 +265,10 @@ export class AdminStudio {
 
     const table: VisualTable = {
       name,
-      columns: [idColumn, ...columns.map((c) => ({ ...c, isId: false, pgType: mapColumnType(c.type), hasDefault: false }))],
+      columns: [
+        idColumn,
+        ...columns.map((c) => ({ ...c, isId: false, pgType: mapColumnType(c.type), hasDefault: false })),
+      ],
       indexes: [],
     }
 
@@ -283,9 +286,7 @@ export class AdminStudio {
     this.model.tables.splice(idx, 1)
     // Remove related relations
     if (this.model.relations) {
-      this.model.relations = this.model.relations.filter(
-        (r) => r.fromTable !== name && r.toTable !== name,
-      )
+      this.model.relations = this.model.relations.filter((r) => r.fromTable !== name && r.toTable !== name)
     }
 
     this.changes.push({ type: "remove-table", table: name, timestamp: Date.now() })
@@ -402,7 +403,10 @@ export class AdminStudio {
 
   // ─── Data Browser Query Builder ──────────────────────────────────────────
 
-  buildBrowseQuery(query: Omit<DataBrowserQuery, "pageSize"> & { pageSize?: number }): { sql: string; params: unknown[] } {
+  buildBrowseQuery(query: Omit<DataBrowserQuery, "pageSize"> & { pageSize?: number }): {
+    sql: string
+    params: unknown[]
+  } {
     return buildDataBrowserSQL({
       ...query,
       pageSize: query.pageSize ?? this.options.pageSize,
@@ -415,15 +419,17 @@ export class AdminStudio {
 
   // ─── Subscription Inspector ──────────────────────────────────────────────
 
-  inspectSubscriptions(subscriptions: Array<{
-    id: string
-    queryName: string
-    args: unknown
-    connectionId: string
-    dependencies: Array<{ table: string }>
-    lastResult: unknown
-    version: number
-  }>): SubscriptionInspectorEntry[] {
+  inspectSubscriptions(
+    subscriptions: Array<{
+      id: string
+      queryName: string
+      args: unknown
+      connectionId: string
+      dependencies: Array<{ table: string }>
+      lastResult: unknown
+      version: number
+    }>,
+  ): SubscriptionInspectorEntry[] {
     return subscriptions.map((sub) => ({
       subscriptionId: sub.id,
       queryName: sub.queryName,
@@ -441,10 +447,7 @@ export class AdminStudio {
   getMetrics(activeSubscriptions: number = 0): StudioMetricsSummary {
     const totalColumns = this.model.tables.reduce((sum, t) => sum + t.columns.length, 0)
     const totalRelations = this.model.relations?.length ?? 0
-    const totalIndexes = this.model.tables.reduce(
-      (sum, t) => sum + (t.indexes?.length ?? 0),
-      0,
-    )
+    const totalIndexes = this.model.tables.reduce((sum, t) => sum + (t.indexes?.length ?? 0), 0)
 
     return {
       tables: this.model.tables.length,

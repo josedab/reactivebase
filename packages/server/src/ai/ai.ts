@@ -51,7 +51,7 @@ export function openaiProvider(options: {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${options.apiKey}`,
+          Authorization: `Bearer ${options.apiKey}`,
         },
         body: JSON.stringify({
           model: embedOpts?.model ?? embeddingModel,
@@ -81,7 +81,7 @@ export function openaiProvider(options: {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${options.apiKey}`,
+          Authorization: `Bearer ${options.apiKey}`,
         },
         body: JSON.stringify({
           model: genOpts?.model ?? chatModel,
@@ -113,11 +113,13 @@ export function openaiProvider(options: {
 /**
  * Ollama-compatible provider for local models.
  */
-export function ollamaProvider(options: {
-  baseUrl?: string
-  embeddingModel?: string
-  chatModel?: string
-} = {}): AiProvider {
+export function ollamaProvider(
+  options: {
+    baseUrl?: string
+    embeddingModel?: string
+    chatModel?: string
+  } = {},
+): AiProvider {
   const baseUrl = options.baseUrl ?? "http://localhost:11434"
   const embeddingModel = options.embeddingModel ?? "nomic-embed-text"
   const chatModel = options.chatModel ?? "llama3"
@@ -163,10 +165,12 @@ export function ollamaProvider(options: {
 /**
  * Mock provider for testing.
  */
-export function mockAiProvider(options: {
-  embeddingDimensions?: number
-  generateResponse?: string
-} = {}): AiProvider {
+export function mockAiProvider(
+  options: {
+    embeddingDimensions?: number
+    generateResponse?: string
+  } = {},
+): AiProvider {
   const dims = options.embeddingDimensions ?? 3
 
   return {

@@ -1,6 +1,4 @@
-export {
-  QueryAssistant,
-} from "./ai-assistant.js"
+export { QueryAssistant } from "./ai-assistant.js"
 export type {
   QueryAssistantOptions,
   AiProviderAdapter,

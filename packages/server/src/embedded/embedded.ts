@@ -90,9 +90,7 @@ export class EmbeddedClientAdapter {
  * Create an embedded Postgres pool using PGlite.
  * Dynamically imports @electric-sql/pglite to avoid hard dependency.
  */
-export async function createEmbeddedPool(
-  options: EmbeddedPoolOptions = {},
-): Promise<EmbeddedPoolAdapter> {
+export async function createEmbeddedPool(options: EmbeddedPoolOptions = {}): Promise<EmbeddedPoolAdapter> {
   const dataDir = options.dataDir ?? "memory://"
 
   try {
@@ -107,11 +105,13 @@ export async function createEmbeddedPool(
     const pglite = new PGlite(dataDir) as PGliteLike
     return new EmbeddedPoolAdapter(pglite, options)
   } catch (error: unknown) {
-    if ((error as { code?: string }).code === "ERR_MODULE_NOT_FOUND" ||
-        (error as { code?: string }).code === "MODULE_NOT_FOUND") {
+    if (
+      (error as { code?: string }).code === "ERR_MODULE_NOT_FOUND" ||
+      (error as { code?: string }).code === "MODULE_NOT_FOUND"
+    ) {
       throw new Error(
         "PGlite not installed. Run: npm install @electric-sql/pglite\n" +
-        "Or set DATABASE_URL to connect to a real Postgres instance.",
+          "Or set DATABASE_URL to connect to a real Postgres instance.",
       )
     }
     throw error
@@ -122,9 +122,7 @@ export async function createEmbeddedPool(
  * Create a pool from either DATABASE_URL env var or fall back to PGlite.
  * Supports pglite:// connection strings for explicit PGlite usage.
  */
-export async function createAutoPool(
-  options?: EmbeddedPoolOptions,
-): Promise<EmbeddedPoolAdapter | unknown> {
+export async function createAutoPool(options?: EmbeddedPoolOptions): Promise<EmbeddedPoolAdapter | unknown> {
   const dbUrl = process.env.DATABASE_URL
 
   // Explicit PGlite connection string

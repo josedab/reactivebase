@@ -1,11 +1,4 @@
-export {
-  LogicalReplicator,
-  WalDecoder,
-  ChangeBatcher,
-  parseLsn,
-  formatLsn,
-  compareLsn,
-} from "./logical-replication.js"
+export { LogicalReplicator, WalDecoder, ChangeBatcher, parseLsn, formatLsn, compareLsn } from "./logical-replication.js"
 
 export type {
   LogicalReplicatorOptions,

@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import {
-  generateFederatedSchema,
-  generateResolverSkeleton,
-  getSubscriptionMappings,
-} from "../api-gen/federation.js"
+import { generateFederatedSchema, generateResolverSkeleton, getSubscriptionMappings } from "../api-gen/federation.js"
 import type { Schema } from "../schema/index.js"
 
 // Mock schema for testing

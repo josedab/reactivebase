@@ -4,10 +4,7 @@
  * ReactiveBase client subscriptions for seamless reactive data binding.
  */
 
-import {
-  ReactiveBaseClient,
-  type ReactiveBaseClientOptions,
-} from "@reactivebase/client"
+import { ReactiveBaseClient, type ReactiveBaseClientOptions } from "@reactivebase/client"
 
 // --- Client management ---
 
@@ -27,9 +24,7 @@ export function initReactiveBase(options: ReactiveBaseClientOptions): ReactiveBa
  */
 export function getReactiveBaseClient(): ReactiveBaseClient {
   if (!globalClient) {
-    throw new Error(
-      "ReactiveBase not initialized. Call initReactiveBase() first.",
-    )
+    throw new Error("ReactiveBase not initialized. Call initReactiveBase() first.")
   }
   return globalClient
 }

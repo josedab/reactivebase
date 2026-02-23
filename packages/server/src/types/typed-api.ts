@@ -90,12 +90,14 @@ export interface TypedQueryResult<TRow> extends PromiseLike<TRow[]> {
 /**
  * Extract the argument type from a TypedFunctionReference.
  */
-export type InferArgs<T> = T extends TypedFunctionReference<infer A, unknown, "query" | "mutation" | "action"> ? A : unknown
+export type InferArgs<T> =
+  T extends TypedFunctionReference<infer A, unknown, "query" | "mutation" | "action"> ? A : unknown
 
 /**
  * Extract the return type from a TypedFunctionReference.
  */
-export type InferReturn<T> = T extends TypedFunctionReference<unknown, infer R, "query" | "mutation" | "action"> ? R : unknown
+export type InferReturn<T> =
+  T extends TypedFunctionReference<unknown, infer R, "query" | "mutation" | "action"> ? R : unknown
 
 // --- API Object Type ---
 
@@ -119,8 +121,11 @@ export type TableNames<T extends SchemaDefinition> = keyof T & string
 /**
  * Extract the row type for a specific table.
  */
-export type TableRow<T extends SchemaDefinition, K extends keyof T> =
-  T[K] extends { columns: infer C extends ColumnDefinitions } ? InferRow<C> : never
+export type TableRow<T extends SchemaDefinition, K extends keyof T> = T[K] extends {
+  columns: infer C extends ColumnDefinitions
+}
+  ? InferRow<C>
+  : never
 
 /**
  * Utility: make all properties of InferRow writable for insert/update.

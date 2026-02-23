@@ -57,7 +57,8 @@ export default defineSchema({ tasks: defineTable({ title: v.string(), done: v.bo
     const mgr = new TutorialManager()
     const result = mgr.exportProject(
       { projectName: "my-app", includeSchema: true, includeQueries: true, framework: "react" },
-      "// schema", "// queries",
+      "// schema",
+      "// queries",
     )
     expect(result.files["convex/schema.ts"]).toBe("// schema")
     expect(result.files["package.json"]).toContain("@reactivebase/react")
@@ -77,13 +78,31 @@ describe("ReactiveCdcAdapter", () => {
   it("processes WAL changes and converts to ChangeEvents", async () => {
     const processed: string[] = []
     const adapter = new ReactiveCdcAdapter(
-      async (tables) => { processed.push(...tables) },
+      async (tables) => {
+        processed.push(...tables)
+      },
       { batchSize: 10 },
     )
 
     await adapter.processWalChanges([
-      { table: "tasks", operation: "insert", rowId: "t1", oldValues: null, newValues: { title: "Test" }, lsn: "0/1", timestamp: Date.now() },
-      { table: "users", operation: "update", rowId: "u1", oldValues: { name: "Old" }, newValues: { name: "New" }, lsn: "0/2", timestamp: Date.now() },
+      {
+        table: "tasks",
+        operation: "insert",
+        rowId: "t1",
+        oldValues: null,
+        newValues: { title: "Test" },
+        lsn: "0/1",
+        timestamp: Date.now(),
+      },
+      {
+        table: "users",
+        operation: "update",
+        rowId: "u1",
+        oldValues: { name: "Old" },
+        newValues: { name: "New" },
+        lsn: "0/2",
+        timestamp: Date.now(),
+      },
     ])
     // Under batch size, so need to flush
     await adapter.stopBuffering()
@@ -95,13 +114,31 @@ describe("ReactiveCdcAdapter", () => {
   it("filters by tracked tables", async () => {
     const processed: string[] = []
     const adapter = new ReactiveCdcAdapter(
-      async (tables) => { processed.push(...tables) },
+      async (tables) => {
+        processed.push(...tables)
+      },
       { tables: ["tasks"], batchSize: 2 },
     )
 
     await adapter.processWalChanges([
-      { table: "tasks", operation: "insert", rowId: "t1", oldValues: null, newValues: null, lsn: "0/1", timestamp: Date.now() },
-      { table: "users", operation: "insert", rowId: "u1", oldValues: null, newValues: null, lsn: "0/2", timestamp: Date.now() },
+      {
+        table: "tasks",
+        operation: "insert",
+        rowId: "t1",
+        oldValues: null,
+        newValues: null,
+        lsn: "0/1",
+        timestamp: Date.now(),
+      },
+      {
+        table: "users",
+        operation: "insert",
+        rowId: "u1",
+        oldValues: null,
+        newValues: null,
+        lsn: "0/2",
+        timestamp: Date.now(),
+      },
     ])
     // Flush remaining buffer
     await adapter.stopBuffering()
@@ -114,8 +151,24 @@ describe("ReactiveCdcAdapter", () => {
     const adapter = new ReactiveCdcAdapter(async () => {}, { batchSize: 5, rowLevelTracking: true })
 
     await adapter.processWalChanges([
-      { table: "tasks", operation: "insert", rowId: "t1", oldValues: null, newValues: null, lsn: "0/1", timestamp: Date.now() },
-      { table: "tasks", operation: "insert", rowId: null, oldValues: null, newValues: null, lsn: "0/2", timestamp: Date.now() },
+      {
+        table: "tasks",
+        operation: "insert",
+        rowId: "t1",
+        oldValues: null,
+        newValues: null,
+        lsn: "0/1",
+        timestamp: Date.now(),
+      },
+      {
+        table: "tasks",
+        operation: "insert",
+        rowId: null,
+        oldValues: null,
+        newValues: null,
+        lsn: "0/2",
+        timestamp: Date.now(),
+      },
     ])
 
     const stats = adapter.getStats()
@@ -306,9 +359,7 @@ describe("MigrationPlanner", () => {
 
   it("generates expand-contract plan for breaking changes", () => {
     const planner = new MigrationPlanner()
-    const analysis = planner.analyzeChanges([
-      { type: "drop-table", table: "legacy", details: {} },
-    ])
+    const analysis = planner.analyzeChanges([{ type: "drop-table", table: "legacy", details: {} }])
     const plan = planner.generateSafePlan(analysis)
     expect(plan.phases.length).toBeGreaterThanOrEqual(2)
     expect(plan.warnings.length).toBeGreaterThan(0)
@@ -327,9 +378,7 @@ describe("MigrationPlanner", () => {
 
   it("runs dry-run simulation", () => {
     const planner = new MigrationPlanner()
-    const analysis = planner.analyzeChanges([
-      { type: "add-column", table: "users", column: "bio", details: {} },
-    ])
+    const analysis = planner.analyzeChanges([{ type: "add-column", table: "users", column: "bio", details: {} }])
     const plan = planner.generateSafePlan(analysis)
     const dryRun = planner.dryRun(plan)
     expect(dryRun.wouldSucceed).toBe(true)
@@ -396,7 +445,13 @@ describe("AnalyticsEngine", () => {
   })
 
   it("generates SQL", () => {
-    const sql = generateAnalyticsSQL({ name: "daily_signups", table: "users", aggregation: "count", timeBucket: "day", timestampColumn: "created_at" })
+    const sql = generateAnalyticsSQL({
+      name: "daily_signups",
+      table: "users",
+      aggregation: "count",
+      timeBucket: "day",
+      timestampColumn: "created_at",
+    })
     expect(sql).toContain("COUNT")
     expect(sql).toContain("date_trunc")
     expect(sql).toContain("GROUP BY bucket")
@@ -418,12 +473,15 @@ describe("ComplianceToolkit", () => {
   it("detects PII columns", () => {
     const toolkit = new ComplianceToolkit()
     const detections = toolkit.detectPII([
-      { table: "users", columns: [
-        { name: "id", type: "text" },
-        { name: "email", type: "text" },
-        { name: "phone", type: "text" },
-        { name: "created_at", type: "timestamptz" },
-      ]},
+      {
+        table: "users",
+        columns: [
+          { name: "id", type: "text" },
+          { name: "email", type: "text" },
+          { name: "phone", type: "text" },
+          { name: "created_at", type: "timestamptz" },
+        ],
+      },
     ])
     expect(detections.length).toBeGreaterThanOrEqual(2)
     expect(detections.some((d) => d.piiType === "email")).toBe(true)
@@ -505,7 +563,14 @@ describe("PluginPortal", () => {
     const portal = new PluginPortal()
     const results = portal.listPlugins({ query: "auth" })
     expect(results.length).toBeGreaterThan(0)
-    expect(results.every((p) => p.entry.name.includes("auth") || p.entry.keywords.some((k) => k.includes("auth")) || p.entry.description.toLowerCase().includes("auth"))).toBe(true)
+    expect(
+      results.every(
+        (p) =>
+          p.entry.name.includes("auth") ||
+          p.entry.keywords.some((k) => k.includes("auth")) ||
+          p.entry.description.toLowerCase().includes("auth"),
+      ),
+    ).toBe(true)
   })
 
   it("filters by category", () => {

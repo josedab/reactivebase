@@ -65,10 +65,7 @@ export function createTenancyMiddleware(config: TenancyConfig): Middleware {
 /**
  * Build a tenant-filtered WHERE clause for a query.
  */
-export function buildTenantFilter(
-  tenantId: string,
-  column: string,
-): { sql: string; param: string } {
+export function buildTenantFilter(tenantId: string, column: string): { sql: string; param: string } {
   return {
     sql: `"${column}" = `,
     param: tenantId,
@@ -78,10 +75,7 @@ export function buildTenantFilter(
 /**
  * Generate SQL to create a schema for a tenant.
  */
-export function generateTenantSchemaSQL(
-  tenantId: string,
-  sourceSchema: string = "public",
-): string {
+export function generateTenantSchemaSQL(tenantId: string, sourceSchema: string = "public"): string {
   const schemaName = `tenant_${sanitizeTenantId(tenantId)}`
   return `
 CREATE SCHEMA IF NOT EXISTS "${schemaName}";
@@ -140,6 +134,6 @@ export function getTenantFromState(state: Map<string, unknown>): TenantContext |
   return {
     tenantId: state.get("_tenantId") as string | null,
     mode: mode as "row" | "schema",
-    column: state.get("_tenantColumn") as string ?? "tenantId",
+    column: (state.get("_tenantColumn") as string) ?? "tenantId",
   }
 }

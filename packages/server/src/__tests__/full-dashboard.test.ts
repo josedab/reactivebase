@@ -5,8 +5,10 @@ import { defineSchema, defineTable, v } from "../schema/index.js"
 
 const schema = defineSchema({
   users: defineTable({ name: v.string(), email: v.string() }),
-  tasks: defineTable({ title: v.string(), done: v.boolean() })
-    .relation("comments", { from: "id", to: "comments.taskId" }),
+  tasks: defineTable({ title: v.string(), done: v.boolean() }).relation("comments", {
+    from: "id",
+    to: "comments.taskId",
+  }),
   comments: defineTable({ taskId: v.id("tasks"), body: v.string() }),
 })
 

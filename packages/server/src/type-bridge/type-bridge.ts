@@ -40,14 +40,7 @@ export interface FunctionSignature {
   sourceLine?: number
 }
 
-export type TypeDescriptor =
-  | PrimitiveType
-  | ObjectType
-  | ArrayType
-  | UnionType
-  | LiteralType
-  | ReferenceType
-  | VoidType
+export type TypeDescriptor = PrimitiveType | ObjectType | ArrayType | UnionType | LiteralType | ReferenceType | VoidType
 
 export interface PrimitiveType {
   kind: "primitive"
@@ -167,10 +160,7 @@ export class TypeBridge {
   /**
    * Generate a type manifest from function definitions and schema.
    */
-  generateManifest(
-    functions: ScannedFunction[],
-    tables: ScannedTable[],
-  ): TypeManifest {
+  generateManifest(functions: ScannedFunction[], tables: ScannedTable[]): TypeManifest {
     const functionMap: Record<string, FunctionSignature> = {}
     for (const fn of functions) {
       const key = fn.module ? `${fn.module}.${fn.name}` : fn.name
@@ -242,12 +232,16 @@ export class TypeBridge {
     for (const [mod, fns] of modules) {
       if (mod === "_root") {
         for (const fn of fns) {
-          lines.push(`  ${fn.name}: TypedFunctionReference<"${fn.kind}", ${this.typeDescriptorToTS(fn.args)}, ${this.typeDescriptorToTS(fn.returns)}>`)
+          lines.push(
+            `  ${fn.name}: TypedFunctionReference<"${fn.kind}", ${this.typeDescriptorToTS(fn.args)}, ${this.typeDescriptorToTS(fn.returns)}>`,
+          )
         }
       } else {
         lines.push(`  ${mod}: {`)
         for (const fn of fns) {
-          lines.push(`    ${fn.name}: TypedFunctionReference<"${fn.kind}", ${this.typeDescriptorToTS(fn.args)}, ${this.typeDescriptorToTS(fn.returns)}>`)
+          lines.push(
+            `    ${fn.name}: TypedFunctionReference<"${fn.kind}", ${this.typeDescriptorToTS(fn.args)}, ${this.typeDescriptorToTS(fn.returns)}>`,
+          )
         }
         lines.push("  }")
       }

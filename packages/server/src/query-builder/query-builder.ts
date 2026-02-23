@@ -201,9 +201,10 @@ export class QueryBuilder<TRow = Record<string, unknown>> {
     const parts: string[] = []
 
     // SELECT
-    const columns = this.plan.selectedColumns.length > 0
-      ? this.plan.selectedColumns.map((c) => `"${c}"`).join(", ")
-      : `"${this.plan.table}".*`
+    const columns =
+      this.plan.selectedColumns.length > 0
+        ? this.plan.selectedColumns.map((c) => `"${c}"`).join(", ")
+        : `"${this.plan.table}".*`
     parts.push(`SELECT ${columns}`)
 
     // FROM
@@ -254,9 +255,7 @@ export class QueryBuilder<TRow = Record<string, unknown>> {
         parts.push(`LIMIT ${vs.topK}`)
       }
     } else if (this.plan.orderByClauses.length > 0) {
-      const orders = this.plan.orderByClauses.map(
-        (o) => `"${o.column}" ${o.direction.toUpperCase()}`,
-      )
+      const orders = this.plan.orderByClauses.map((o) => `"${o.column}" ${o.direction.toUpperCase()}`)
       parts.push(`ORDER BY ${orders.join(", ")}`)
     }
 

@@ -63,16 +63,44 @@ export function toPrometheusFormat(snapshot: MetricsSnapshot): string {
   }
 
   // Subscription metrics
-  counter("reactivebase_subscriptions_created_total", "Total subscriptions created", snapshot.subscriptions.totalCreated)
-  counter("reactivebase_subscriptions_removed_total", "Total subscriptions removed", snapshot.subscriptions.totalRemoved)
-  gauge("reactivebase_subscriptions_per_connection_avg", "Average subscriptions per connection", snapshot.subscriptions.avgPerConnection)
+  counter(
+    "reactivebase_subscriptions_created_total",
+    "Total subscriptions created",
+    snapshot.subscriptions.totalCreated,
+  )
+  counter(
+    "reactivebase_subscriptions_removed_total",
+    "Total subscriptions removed",
+    snapshot.subscriptions.totalRemoved,
+  )
+  gauge(
+    "reactivebase_subscriptions_per_connection_avg",
+    "Average subscriptions per connection",
+    snapshot.subscriptions.avgPerConnection,
+  )
 
   // Invalidation metrics
   counter("reactivebase_invalidations_total", "Total invalidation evaluations", snapshot.invalidations.totalEvaluations)
-  counter("reactivebase_invalidations_hits_total", "Total subscriptions invalidated", snapshot.invalidations.totalInvalidated)
-  counter("reactivebase_invalidations_skipped_total", "Total subscriptions skipped", snapshot.invalidations.totalSkipped)
-  gauge("reactivebase_invalidations_eval_time_avg_ms", "Average invalidation evaluation time ms", snapshot.invalidations.avgEvaluationTimeMs)
-  gauge("reactivebase_invalidations_false_rate", "False invalidation rate", snapshot.invalidations.falseInvalidationRate)
+  counter(
+    "reactivebase_invalidations_hits_total",
+    "Total subscriptions invalidated",
+    snapshot.invalidations.totalInvalidated,
+  )
+  counter(
+    "reactivebase_invalidations_skipped_total",
+    "Total subscriptions skipped",
+    snapshot.invalidations.totalSkipped,
+  )
+  gauge(
+    "reactivebase_invalidations_eval_time_avg_ms",
+    "Average invalidation evaluation time ms",
+    snapshot.invalidations.avgEvaluationTimeMs,
+  )
+  gauge(
+    "reactivebase_invalidations_false_rate",
+    "False invalidation rate",
+    snapshot.invalidations.falseInvalidationRate,
+  )
 
   // Uptime
   gauge("reactivebase_uptime_ms", "Server uptime in milliseconds", snapshot.uptime)

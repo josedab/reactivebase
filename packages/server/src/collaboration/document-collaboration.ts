@@ -134,7 +134,14 @@ export function buildInsertDocumentSQL(doc: { id: string; type: string }): { sql
   }
 }
 
-export function buildInsertUpdateSQL(update: { id: string; documentId: string; clientId: string; data: Uint8Array; version: number; isUndo: boolean }): { sql: string; params: unknown[] } {
+export function buildInsertUpdateSQL(update: {
+  id: string
+  documentId: string
+  clientId: string
+  data: Uint8Array
+  version: number
+  isUndo: boolean
+}): { sql: string; params: unknown[] } {
   return {
     sql: `INSERT INTO _reactivebase_collab_updates (id, document_id, client_id, data, version, is_undo) VALUES ($1, $2, $3, $4, $5, $6)`,
     params: [update.id, update.documentId, update.clientId, update.data, update.version, update.isUndo],
@@ -379,10 +386,7 @@ export class DocumentCollaboration {
   private mergeState(existing: Uint8Array | null, update: Uint8Array): Uint8Array {
     if (!existing) return new Uint8Array(update)
     // Use Yjs-compatible clock-based merge via encoded updates
-    const result = mergeUpdates([
-      encodeUpdate("__state__", 0, existing),
-      encodeUpdate("__update__", 1, update),
-    ])
+    const result = mergeUpdates([encodeUpdate("__state__", 0, existing), encodeUpdate("__update__", 1, update)])
     return result.merged
   }
 

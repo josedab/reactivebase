@@ -1,10 +1,5 @@
 import { describe, it, expect } from "vitest"
-import {
-  generateRestRoutes,
-  matchRoute,
-  parseQueryFilters,
-  generateGraphQLSchema,
-} from "../api-gen/api-gen.js"
+import { generateRestRoutes, matchRoute, parseQueryFilters, generateGraphQLSchema } from "../api-gen/api-gen.js"
 import { defineSchema, defineTable, v } from "../schema/index.js"
 
 const schema = defineSchema({
@@ -147,6 +142,6 @@ describe("generateGraphQLSchema", () => {
     const gql = generateGraphQLSchema(schema)
     expect(gql).toContain("String!") // required string
     expect(gql).toContain("Boolean!") // required boolean
-    expect(gql).toContain("Int")     // optional integer
+    expect(gql).toContain("Int") // optional integer
   })
 })

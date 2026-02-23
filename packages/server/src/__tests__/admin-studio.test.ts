@@ -19,14 +19,29 @@ function createTestModel(): SchemaVisualModel {
         columns: [
           { name: "id", type: "id", pgType: "text", isId: true, isOptional: false, hasDefault: false },
           { name: "title", type: "string", pgType: "text", isId: false, isOptional: false, hasDefault: false },
-          { name: "assigneeId", type: "id", pgType: "text", isId: false, isOptional: false, hasDefault: false, referencedTable: "users" },
+          {
+            name: "assigneeId",
+            type: "id",
+            pgType: "text",
+            isId: false,
+            isOptional: false,
+            hasDefault: false,
+            referencedTable: "users",
+          },
           { name: "done", type: "boolean", pgType: "boolean", isId: false, isOptional: false, hasDefault: false },
         ],
         indexes: [],
       },
     ],
     relations: [
-      { name: "tasks_assigneeId_users", fromTable: "tasks", fromColumn: "assigneeId", toTable: "users", toColumn: "id", type: "belongs_to" },
+      {
+        name: "tasks_assigneeId_users",
+        fromTable: "tasks",
+        fromColumn: "assigneeId",
+        toTable: "users",
+        toColumn: "id",
+        type: "belongs_to",
+      },
     ],
   }
 }
@@ -35,9 +50,7 @@ describe("AdminStudio", () => {
   describe("schema designer", () => {
     it("adds a table with auto-generated id column", () => {
       const studio = new AdminStudio(createTestModel())
-      const table = studio.addTable("projects", [
-        { name: "name", type: "string", isOptional: false },
-      ])
+      const table = studio.addTable("projects", [{ name: "name", type: "string", isOptional: false }])
 
       expect(table.name).toBe("projects")
       expect(table.columns[0].name).toBe("id")
@@ -73,9 +86,9 @@ describe("AdminStudio", () => {
 
     it("prevents duplicate column names", () => {
       const studio = new AdminStudio(createTestModel())
-      expect(() =>
-        studio.addColumn("users", { name: "email", type: "string", isOptional: false }),
-      ).toThrow("already exists")
+      expect(() => studio.addColumn("users", { name: "email", type: "string", isOptional: false })).toThrow(
+        "already exists",
+      )
     })
 
     it("removes a column", () => {
@@ -260,9 +273,7 @@ describe("buildCountSQL", () => {
   })
 
   it("applies filters to count", () => {
-    const { sql, params } = buildCountSQL("tasks", [
-      { column: "done", operator: "eq", value: true },
-    ])
+    const { sql, params } = buildCountSQL("tasks", [{ column: "done", operator: "eq", value: true }])
     expect(sql).toContain("WHERE")
     expect(params).toEqual([true])
   })
