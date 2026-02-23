@@ -112,15 +112,56 @@ Look for issues labeled `good first issue` on GitHub. These are typically:
 # Run all tests
 npm run test
 
-# Run tests for a specific package
-cd packages/server && npx vitest run
+# Run tests for a specific package (convenience scripts)
+npm run test:server
+npm run test:client
+npm run test:react
+
+# Run tests for any package using turbo filter
+npx turbo run test --filter=@reactivebase/server
+npx turbo run test --filter=@reactivebase/vue
 
 # Run a specific test file
 cd packages/server && npx vitest run src/__tests__/schema.test.ts
 
 # Watch mode
 cd packages/server && npx vitest watch
+
+# Run tests with coverage
+npm run test:coverage
 ```
+
+## Troubleshooting
+
+### `npm run typecheck` fails on `@reactivebase/edge`
+
+The edge package has test files that reference types not compatible with its `tsconfig.json`. This is a known issue.
+
+**Workaround:** Run typecheck excluding the edge package:
+
+```bash
+npx turbo run typecheck --filter='!@reactivebase/edge'
+```
+
+### `npm run lint` fails on `@reactivebase/testing`
+
+The testing package has 8 known ESLint errors (unused variables and missing return types in test helpers).
+
+**Workaround:** Run lint excluding the testing package:
+
+```bash
+npx turbo run lint --filter='!@reactivebase/testing'
+```
+
+### `npm run format:check` shows warnings
+
+If `format:check` reports unformatted files, run the formatter to auto-fix them:
+
+```bash
+npm run format
+```
+
+Then verify with `npm run format:check`.
 
 ## Questions?
 

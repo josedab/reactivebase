@@ -4,6 +4,10 @@
  */
 
 const args = process.argv.slice(2)
+const verbose = args.includes("--verbose") || args.includes("-V")
+if (verbose) {
+  process.env.LOG_LEVEL = "debug"
+}
 const command = args[0]
 
 async function main(): Promise<void> {
@@ -14,6 +18,7 @@ async function main(): Promise<void> {
       await devServer({
         port: parseInt(port, 10),
         projectDir: process.cwd(),
+        logLevel: verbose ? "debug" : "info",
       })
       break
     }
@@ -191,6 +196,7 @@ Commands:
 Options:
   --help, -h       Show this help message
   --version, -v    Show version number
+  --verbose, -V    Enable verbose/debug output
 
 Migrate subcommands:
   --generate       Generate a new migration

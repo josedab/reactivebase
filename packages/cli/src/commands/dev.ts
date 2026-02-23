@@ -10,6 +10,7 @@ import { writeGeneratedFiles } from "./generate.js"
 export interface DevCommandOptions {
   port: number
   projectDir: string
+  logLevel?: "debug" | "info" | "warn" | "error"
 }
 
 export async function devServer(options: DevCommandOptions): Promise<void> {
