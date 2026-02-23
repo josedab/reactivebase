@@ -22,3 +22,21 @@ export type {
   VersionedValue,
   DeltaChange,
 } from "./sync-engine.js"
+
+// SQLite Cache
+export { SQLiteCacheAdapter, generateCacheTableSQL } from "./sqlite-cache.js"
+export type { SQLiteAdapter, SQLiteCacheOptions, CacheMetadata } from "./sqlite-cache.js"
+
+// Conflict Resolver
+export { ConflictResolver } from "./conflict-resolver.js"
+export type { ConflictStrategyType, Conflict, ConflictResolutionConfig, ConflictLogEntry } from "./conflict-resolver.js"
+
+// Background Sync
+export { BackgroundSyncManager } from "./background-sync.js"
+export type {
+  SyncStatus as BackgroundSyncStatus,
+  SyncState,
+  ConnectivityAwarePrimitive,
+  BackgroundSyncOptions,
+  PriorityMutation,
+} from "./background-sync.js"

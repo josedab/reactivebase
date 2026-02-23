@@ -35,6 +35,24 @@ export type {
   DeltaChange,
 } from "./offline/index.js"
 
+// SQLite Cache
+export { SQLiteCacheAdapter, generateCacheTableSQL } from "./offline/index.js"
+export type { SQLiteAdapter, SQLiteCacheOptions, CacheMetadata } from "./offline/index.js"
+
+// Conflict Resolver
+export { ConflictResolver } from "./offline/index.js"
+export type { ConflictStrategyType, Conflict, ConflictResolutionConfig, ConflictLogEntry } from "./offline/index.js"
+
+// Background Sync
+export { BackgroundSyncManager } from "./offline/index.js"
+export type {
+  BackgroundSyncStatus,
+  SyncState,
+  ConnectivityAwarePrimitive,
+  BackgroundSyncOptions,
+  PriorityMutation,
+} from "./offline/index.js"
+
 // Optimistic Updates
 export { OptimisticUpdateManager } from "./optimistic/index.js"
 export type {
@@ -42,7 +60,7 @@ export type {
   OptimisticSnapshot,
   OptimisticManagerOptions,
   ConflictInfo,
-  ConflictResolver,
+  ConflictResolver as OptimisticConflictResolver,
   OptimisticCacheAdapter,
 } from "./optimistic/index.js"
 
