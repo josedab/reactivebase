@@ -1,11 +1,5 @@
 export { schemaToVisualModel, visualModelToCode, generateDashboardHTML } from "./schema-visualizer.js"
-export type {
-  SchemaVisualModel,
-  VisualTable,
-  VisualColumn,
-  VisualIndex,
-  VisualRelation,
-} from "./schema-visualizer.js"
+export type { SchemaVisualModel, VisualTable, VisualColumn, VisualIndex, VisualRelation } from "./schema-visualizer.js"
 
 export { generateFullDashboardHTML } from "./full-dashboard.js"
 
@@ -50,3 +44,24 @@ export type {
 
 // Migration Wizard UI
 export { generateMigrationWizardHTML } from "./migration-wizard.js"
+
+// Live Dashboard
+export {
+  LiveDashboard,
+  generateLiveDashboardTableSQL,
+  buildInsertQueryLogSQL,
+  buildInsertMutationTimelineSQL,
+} from "./live-dashboard.js"
+export type {
+  LiveDashboardOptions,
+  DashboardAuthConfig,
+  QueryExecution,
+  QuerySpan,
+  MutationTimelineEntry,
+  ActiveConnection,
+  DashboardAlert,
+  LiveDashboardMetrics,
+  FlamechartData,
+  FlamechartSpan,
+  AdminRoute as LiveAdminRoute,
+} from "./live-dashboard.js"

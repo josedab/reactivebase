@@ -12,8 +12,18 @@
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Programming Languages", "Linters", "Other"],
-  "keywords": ["reactivebase", "reactive", "postgres", "realtime", "typescript"],
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "reactivebase",
+    "reactive",
+    "postgres",
+    "realtime",
+    "typescript"
+  ],
   "icon": "icon.png",
   "activationEvents": [
     "workspaceContains:**/reactivebase.config.ts",
@@ -78,7 +88,8 @@
     "build": "tsup src/extension.ts --format cjs --external vscode",
     "watch": "tsup src/extension.ts --format cjs --external vscode --watch",
     "package": "vsce package",
-    "publish": "vsce publish"
+    "publish": "vsce publish",
+    "lint": "eslint src/"
   },
   "devDependencies": {
     "@types/vscode": "^1.85.0",

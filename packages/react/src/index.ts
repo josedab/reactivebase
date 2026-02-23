@@ -14,3 +14,13 @@ export type {
   CollaborationState,
   UseDevToolsReturn,
 } from "./hooks/index.js"
+
+// CRDT Collaborative Editing Hooks
+export { useCollabText, useCollabList, useCollabMap, useCollabCounter } from "./hooks/index.js"
+export type {
+  UseCollabTextReturn,
+  UseCollabListReturn,
+  UseCollabMapReturn,
+  UseCollabCounterReturn,
+  CollabDocumentInfo,
+} from "./hooks/index.js"

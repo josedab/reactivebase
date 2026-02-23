@@ -24,6 +24,8 @@ export interface ValidatorOptions {
   maxLength?: number
   min?: number | string
   max?: number | string
+  /** @internal Mark field for encryption middleware */
+  __encrypted?: boolean
 }
 
 export interface Validator<T = unknown> {
@@ -71,9 +73,7 @@ export const v = {
     return createValidator("boolean", "boolean", options)
   },
 
-  timestamp(
-    options: ValidatorOptions & { default?: "now" | string } = {},
-  ): Validator<Date> {
+  timestamp(options: ValidatorOptions & { default?: "now" | string } = {}): Validator<Date> {
     return createValidator("timestamp", "timestamptz", options)
   },
 
@@ -112,5 +112,23 @@ export const v = {
 
   storageId(): Validator<string> {
     return createValidator("id", "text", {})
+  },
+
+  /**
+   * Field-level encryption validator.
+   * Wraps an inner validator to transparently encrypt/decrypt at the field level.
+   * Data is stored as encrypted JSONB in Postgres.
+   */
+  encrypted<T>(inner: Validator<T>): Validator<T> {
+    return createValidator(
+      "custom",
+      "jsonb",
+      {},
+      {
+        innerValidator: inner as Validator,
+        // Mark this field for encryption middleware
+        options: { ...inner.options, __encrypted: true },
+      },
+    )
   },
 } as const

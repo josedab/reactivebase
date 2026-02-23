@@ -18,6 +18,7 @@
     "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
     "clean": "rm -rf dist"
   },
   "dependencies": {

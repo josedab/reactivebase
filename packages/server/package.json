@@ -11,6 +11,261 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "import": "./dist/schema.js",
+      "require": "./dist/schema.cjs"
+    },
+    "./functions": {
+      "types": "./dist/functions.d.ts",
+      "import": "./dist/functions.js",
+      "require": "./dist/functions.cjs"
+    },
+    "./auth": {
+      "types": "./dist/auth.d.ts",
+      "import": "./dist/auth.js",
+      "require": "./dist/auth.cjs"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "import": "./dist/config.js",
+      "require": "./dist/config.cjs"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js",
+      "require": "./dist/server.cjs"
+    },
+    "./transport": {
+      "types": "./dist/transport.d.ts",
+      "import": "./dist/transport.js",
+      "require": "./dist/transport.cjs"
+    },
+    "./reactivity": {
+      "types": "./dist/reactivity.d.ts",
+      "import": "./dist/reactivity.js",
+      "require": "./dist/reactivity.cjs"
+    },
+    "./metrics": {
+      "types": "./dist/metrics.d.ts",
+      "import": "./dist/metrics.js",
+      "require": "./dist/metrics.cjs"
+    },
+    "./embedded": {
+      "types": "./dist/embedded.d.ts",
+      "import": "./dist/embedded.js",
+      "require": "./dist/embedded.cjs"
+    },
+    "./pubsub": {
+      "types": "./dist/pubsub.d.ts",
+      "import": "./dist/pubsub.js",
+      "require": "./dist/pubsub.cjs"
+    },
+    "./scheduler": {
+      "types": "./dist/scheduler.d.ts",
+      "import": "./dist/scheduler.js",
+      "require": "./dist/scheduler.cjs"
+    },
+    "./middleware": {
+      "types": "./dist/middleware.d.ts",
+      "import": "./dist/middleware.js",
+      "require": "./dist/middleware.cjs"
+    },
+    "./storage": {
+      "types": "./dist/storage.d.ts",
+      "import": "./dist/storage.js",
+      "require": "./dist/storage.cjs"
+    },
+    "./webhooks": {
+      "types": "./dist/webhooks.d.ts",
+      "import": "./dist/webhooks.js",
+      "require": "./dist/webhooks.cjs"
+    },
+    "./presence": {
+      "types": "./dist/presence.d.ts",
+      "import": "./dist/presence.js",
+      "require": "./dist/presence.cjs"
+    },
+    "./dashboard": {
+      "types": "./dist/dashboard.d.ts",
+      "import": "./dist/dashboard.js",
+      "require": "./dist/dashboard.cjs"
+    },
+    "./permissions": {
+      "types": "./dist/permissions.d.ts",
+      "import": "./dist/permissions.js",
+      "require": "./dist/permissions.cjs"
+    },
+    "./codegen": {
+      "types": "./dist/codegen.d.ts",
+      "import": "./dist/codegen.js",
+      "require": "./dist/codegen.cjs"
+    },
+    "./cdc": {
+      "types": "./dist/cdc.d.ts",
+      "import": "./dist/cdc.js",
+      "require": "./dist/cdc.cjs"
+    },
+    "./tenancy": {
+      "types": "./dist/tenancy.d.ts",
+      "import": "./dist/tenancy.js",
+      "require": "./dist/tenancy.cjs"
+    },
+    "./ai": {
+      "types": "./dist/ai.d.ts",
+      "import": "./dist/ai.js",
+      "require": "./dist/ai.cjs"
+    },
+    "./api-gen": {
+      "types": "./dist/api-gen.d.ts",
+      "import": "./dist/api-gen.js",
+      "require": "./dist/api-gen.cjs"
+    },
+    "./api-gen/federation": {
+      "types": "./dist/api-gen/federation.d.ts",
+      "import": "./dist/api-gen/federation.js",
+      "require": "./dist/api-gen/federation.cjs"
+    },
+    "./validation": {
+      "types": "./dist/validation.d.ts",
+      "import": "./dist/validation.js",
+      "require": "./dist/validation.cjs"
+    },
+    "./migrations": {
+      "types": "./dist/migrations.d.ts",
+      "import": "./dist/migrations.js",
+      "require": "./dist/migrations.cjs"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js",
+      "require": "./dist/types.cjs"
+    },
+    "./benchmark": {
+      "types": "./dist/benchmark.d.ts",
+      "import": "./dist/benchmark.js",
+      "require": "./dist/benchmark.cjs"
+    },
+    "./plugins": {
+      "types": "./dist/plugins.d.ts",
+      "import": "./dist/plugins.js",
+      "require": "./dist/plugins.cjs"
+    },
+    "./cloud": {
+      "types": "./dist/cloud.d.ts",
+      "import": "./dist/cloud.js",
+      "require": "./dist/cloud.cjs"
+    },
+    "./query-builder": {
+      "types": "./dist/query-builder.d.ts",
+      "import": "./dist/query-builder.js",
+      "require": "./dist/query-builder.cjs"
+    },
+    "./crdt": {
+      "types": "./dist/crdt.d.ts",
+      "import": "./dist/crdt.js",
+      "require": "./dist/crdt.cjs"
+    },
+    "./authz": {
+      "types": "./dist/authz.d.ts",
+      "import": "./dist/authz.js",
+      "require": "./dist/authz.cjs"
+    },
+    "./time-travel": {
+      "types": "./dist/time-travel.d.ts",
+      "import": "./dist/time-travel.js",
+      "require": "./dist/time-travel.cjs"
+    },
+    "./workflow": {
+      "types": "./dist/workflow.d.ts",
+      "import": "./dist/workflow.js",
+      "require": "./dist/workflow.cjs"
+    },
+    "./materialized-views": {
+      "types": "./dist/materialized-views.d.ts",
+      "import": "./dist/materialized-views.js",
+      "require": "./dist/materialized-views.cjs"
+    },
+    "./multi-db": {
+      "types": "./dist/multi-db.d.ts",
+      "import": "./dist/multi-db.js",
+      "require": "./dist/multi-db.cjs"
+    },
+    "./playground": {
+      "types": "./dist/playground.d.ts",
+      "import": "./dist/playground.js",
+      "require": "./dist/playground.cjs"
+    },
+    "./scaling": {
+      "types": "./dist/scaling.d.ts",
+      "import": "./dist/scaling.js",
+      "require": "./dist/scaling.cjs"
+    },
+    "./encryption": {
+      "types": "./dist/encryption.d.ts",
+      "import": "./dist/encryption.js",
+      "require": "./dist/encryption.cjs"
+    },
+    "./ai-assistant": {
+      "types": "./dist/ai-assistant.d.ts",
+      "import": "./dist/ai-assistant.js",
+      "require": "./dist/ai-assistant.cjs"
+    },
+    "./logical-replication": {
+      "types": "./dist/logical-replication.d.ts",
+      "import": "./dist/logical-replication.js",
+      "require": "./dist/logical-replication.cjs"
+    },
+    "./cloud-platform": {
+      "types": "./dist/cloud-platform.d.ts",
+      "import": "./dist/cloud-platform.js",
+      "require": "./dist/cloud-platform.cjs"
+    },
+    "./type-bridge": {
+      "types": "./dist/type-bridge.d.ts",
+      "import": "./dist/type-bridge.js",
+      "require": "./dist/type-bridge.cjs"
+    },
+    "./collaboration": {
+      "types": "./dist/collaboration.d.ts",
+      "import": "./dist/collaboration.js",
+      "require": "./dist/collaboration.cjs"
+    },
+    "./sql-playground": {
+      "types": "./dist/sql-playground.d.ts",
+      "import": "./dist/sql-playground.js",
+      "require": "./dist/sql-playground.cjs"
+    },
+    "./dacl": {
+      "types": "./dist/dacl.d.ts",
+      "import": "./dist/dacl.js",
+      "require": "./dist/dacl.cjs"
+    },
+    "./ivm": {
+      "types": "./dist/ivm.d.ts",
+      "import": "./dist/ivm.js",
+      "require": "./dist/ivm.cjs"
+    },
+    "./multi-region": {
+      "types": "./dist/multi-region.d.ts",
+      "import": "./dist/multi-region.js",
+      "require": "./dist/multi-region.cjs"
+    },
+    "./branching": {
+      "types": "./dist/branching.d.ts",
+      "import": "./dist/branching.js",
+      "require": "./dist/branching.cjs"
+    },
+    "./schema-designer": {
+      "types": "./dist/schema-designer.d.ts",
+      "import": "./dist/schema-designer.js",
+      "require": "./dist/schema-designer.cjs"
+    },
+    "./migrate-from": {
+      "types": "./dist/migrate-from.d.ts",
+      "import": "./dist/migrate-from.js",
+      "require": "./dist/migrate-from.cjs"
     }
   },
   "scripts": {
@@ -18,6 +273,8 @@
     "dev": "tsup --watch",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "benchmark": "vitest run src/__tests__/benchmark.test.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {

@@ -1,6 +1,4 @@
-export {
-  CloudPlatform,
-} from "./cloud-platform.js"
+export { CloudPlatform } from "./cloud-platform.js"
 
 export type {
   CloudPlatformOptions,
@@ -36,3 +34,24 @@ export type {
 // Cloud Dashboard
 export { generateCloudDashboardHTML } from "./cloud-dashboard.js"
 export type { CloudDashboardData } from "./cloud-dashboard.js"
+
+// Cloud Observability
+export {
+  CloudObservability,
+  generateObservabilityTableSQL,
+  buildInsertMetricSQL,
+  buildQueryMetricsSQL,
+  buildInsertAlertSQL,
+} from "./cloud-observability.js"
+export type {
+  CloudObservabilityOptions,
+  MetricDataPoint,
+  AggregatedMetric,
+  HealthCheck,
+  AlertRule,
+  Alert,
+  AutoScaleRecommendation,
+  TlsCertificateStatus,
+  ObservabilitySnapshot,
+  ObservabilitySummary,
+} from "./cloud-observability.js"

@@ -12,3 +12,27 @@ export type {
   CrossDatabaseQuery,
   FederatedQueryResult,
 } from "./multi-db.js"
+
+// Database Adapter Layer
+export {
+  createPostgresAdapter,
+  createSQLiteAdapter,
+  createMySQLAdapter,
+  postgresTranslator,
+  sqliteTranslator,
+  mysqlTranslator,
+  getTranslator,
+  translateColumnType,
+  translateCreateTable,
+  DatabaseAdapterError,
+} from "./database-adapter.js"
+export type {
+  DatabaseAdapter,
+  DatabaseDialect,
+  TransactionHandle,
+  DatabaseAdapterInfo,
+  SQLTranslator,
+  PostgresAdapterOptions,
+  SQLiteAdapterOptions,
+  MySQLAdapterOptions,
+} from "./database-adapter.js"

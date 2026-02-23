@@ -58,7 +58,10 @@ async function main(): Promise<void> {
         console.log("Listing functions...")
         const { generateTypes } = await import("./commands/generate.js")
         const files = generateTypes(process.cwd())
-        console.log("Generated files:", files.map((f) => f.path))
+        console.log(
+          "Generated files:",
+          files.map((f) => f.path),
+        )
       } else {
         console.log("Usage: reactivebase functions list")
       }
@@ -122,7 +125,15 @@ async function main(): Promise<void> {
       const { deploy, deployPreview, destroyPreview, tailLogs } = await import("./commands/deploy.js")
       const subcommand = args[1]
 
-      if (subcommand === "--preview") {
+      if (subcommand === "--cloud") {
+        const { deployCloud } = await import("./commands/deploy-cloud.js")
+        await deployCloud({
+          projectDir: process.cwd(),
+          projectName: getFlag("--name", ""),
+          region: getFlag("--region", "us-east-1"),
+          plan: getFlag("--plan", "starter"),
+        })
+      } else if (subcommand === "--preview") {
         const prNumber = parseInt(getFlag("--pr", "0"), 10)
         const branch = getFlag("--branch", "main")
         await deployPreview({ projectDir: process.cwd(), prNumber, branch })
@@ -171,7 +182,8 @@ Commands:
   dev              Start development server
   generate         Generate types from schema
   migrate          Database migration commands
-  deploy           Deploy to cloud (Fly.io/Railway)
+  deploy           Deploy to cloud (Fly.io/Railway/ReactiveBase Cloud)
+  deploy --cloud   Deploy to ReactiveBase Cloud (managed)
   functions list   List all defined functions
   dacl             Access control policy management
   ivm              Incremental view maintenance

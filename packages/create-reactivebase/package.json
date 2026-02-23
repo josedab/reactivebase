@@ -9,7 +9,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "lint": "eslint src/"
   },
   "devDependencies": {
     "tsup": "^8.0.0",

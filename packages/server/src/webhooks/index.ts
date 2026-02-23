@@ -5,9 +5,27 @@ export {
   parseNotifyPayload,
   generateNotifyTriggerSQL,
 } from "./webhooks.js"
+export type { WebhookDefinition, WebhookResult, OutboundWebhook, NotifyListenerOptions } from "./webhooks.js"
+
+// Event Streaming
+export {
+  EventStreamManager,
+  KafkaStreamAdapter,
+  NatsStreamAdapter,
+  SqsStreamAdapter,
+  generateEventStreamTableSQL,
+  buildInsertDeadLetterSQL,
+} from "./event-streaming.js"
 export type {
-  WebhookDefinition,
-  WebhookResult,
-  OutboundWebhook,
-  NotifyListenerOptions,
-} from "./webhooks.js"
+  EventStreamAdapter,
+  StreamEvent,
+  PublishResult,
+  EventFilter,
+  EventTransform,
+  RetryPolicy,
+  DeadLetterConfig,
+  EventStreamManagerOptions,
+  KafkaAdapterOptions,
+  NatsAdapterOptions,
+  SqsAdapterOptions,
+} from "./event-streaming.js"

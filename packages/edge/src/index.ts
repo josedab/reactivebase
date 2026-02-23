@@ -49,10 +49,7 @@ export class EdgeClient {
    * Prefetch a query result via HTTP POST to /query.
    * Returns serializable result suitable for SSR hydration.
    */
-  async prefetchQuery<T = unknown>(
-    queryName: string,
-    args: unknown = {},
-  ): Promise<PrefetchResult<T>> {
+  async prefetchQuery<T = unknown>(queryName: string, args: unknown = {}): Promise<PrefetchResult<T>> {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), this.timeout)
 
@@ -73,11 +70,7 @@ export class EdgeClient {
 
       if (!response.ok) {
         const body = await response.text()
-        throw new EdgeQueryError(
-          `Query "${queryName}" failed: ${response.status}`,
-          response.status,
-          body,
-        )
+        throw new EdgeQueryError(`Query "${queryName}" failed: ${response.status}`, response.status, body)
       }
 
       const result = (await response.json()) as { data: T }
@@ -97,12 +90,8 @@ export class EdgeClient {
   /**
    * Prefetch multiple queries in parallel.
    */
-  async prefetchQueries(
-    queries: Array<{ queryName: string; args?: unknown }>,
-  ): Promise<Map<string, PrefetchResult>> {
-    const results = await Promise.allSettled(
-      queries.map((q) => this.prefetchQuery(q.queryName, q.args ?? {})),
-    )
+  async prefetchQueries(queries: Array<{ queryName: string; args?: unknown }>): Promise<Map<string, PrefetchResult>> {
+    const results = await Promise.allSettled(queries.map((q) => this.prefetchQuery(q.queryName, q.args ?? {})))
 
     const map = new Map<string, PrefetchResult>()
     for (const result of results) {
@@ -148,9 +137,15 @@ export function createEdgeClient(options: EdgeClientOptions): EdgeClient {
 
 // Edge Query Router (read replica routing + caching)
 export { EdgeQueryRouter } from "./edge-router.js"
+export type { ReplicaConfig, EdgeQueryRouterOptions, CachedEdgeResult, ReplicaHealth } from "./edge-router.js"
+
+// Serverless Runtime (connection pooling, smart routing, hybrid reactivity)
+export { ServerlessRuntime } from "./serverless-runtime.js"
 export type {
-  ReplicaConfig,
-  EdgeQueryRouterOptions,
-  CachedEdgeResult,
-  ReplicaHealth,
-} from "./edge-router.js"
+  ServerlessRuntimeOptions,
+  ServerlessQueryResult,
+  ConnectionPoolStats,
+  InvalidationMessage,
+  EdgeCacheEntry,
+  ServerlessRuntimeStats,
+} from "./serverless-runtime.js"
