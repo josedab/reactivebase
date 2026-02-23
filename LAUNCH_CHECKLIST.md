@@ -65,7 +65,7 @@ cd website && npm run build && cd ..
 for pkg in packages/server packages/client packages/react packages/vue \
   packages/svelte packages/nextjs packages/edge packages/testing \
   packages/cli packages/reactivebase packages/create-reactivebase \
-  packages/migrate-from-prisma; do
+  packages/migrate-from-prisma packages/graphql packages/react-native; do
   echo "=== $pkg ==="
   cd $pkg && npm pack --dry-run && cd -
 done
@@ -80,7 +80,7 @@ git push origin v0.1.0
 for pkg in packages/server packages/client packages/react packages/vue \
   packages/svelte packages/nextjs packages/edge packages/testing \
   packages/cli packages/reactivebase packages/create-reactivebase \
-  packages/migrate-from-prisma; do
+  packages/migrate-from-prisma packages/graphql packages/react-native; do
   cd $pkg && npm publish --access public && cd -
 done
 ```

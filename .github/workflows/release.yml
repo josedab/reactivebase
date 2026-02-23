@@ -31,7 +31,7 @@ jobs:
 
       - name: Publish to npm
         run: |
-          for pkg in packages/server packages/client packages/react packages/vue packages/svelte packages/nextjs packages/edge packages/testing packages/cli packages/reactivebase packages/create-reactivebase; do
+          for pkg in packages/server packages/client packages/react packages/vue packages/svelte packages/nextjs packages/edge packages/testing packages/cli packages/reactivebase packages/create-reactivebase packages/migrate-from-prisma packages/graphql packages/react-native; do
             cd $pkg
             npm publish --access public || true
             cd -
