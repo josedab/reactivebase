@@ -9,12 +9,31 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --passWithNoTests --coverage",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
     "lint": "eslint src/"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reactivebase/reactivebase.git",
+    "directory": "packages/create-reactivebase"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "reactivebase",
+    "create",
+    "scaffolding",
+    "typescript"
+  ]
 }

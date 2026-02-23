@@ -7,7 +7,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/reactivebase/reactivebase"
+    "url": "https://github.com/reactivebase/reactivebase.git",
+    "directory": "packages/vscode-extension"
   },
   "engines": {
     "vscode": "^1.85.0"
@@ -87,6 +88,9 @@
   "scripts": {
     "build": "tsup src/extension.ts --format cjs --external vscode",
     "watch": "tsup src/extension.ts --format cjs --external vscode --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --passWithNoTests --coverage",
+    "typecheck": "tsc --noEmit",
     "package": "vsce package",
     "publish": "vsce publish",
     "lint": "eslint src/"
@@ -95,6 +99,11 @@
     "@types/vscode": "^1.85.0",
     "tsup": "^8.0.0",
     "typescript": "^5.7.0",
+    "vitest": "^3.0.0",
     "@vscode/vsce": "^3.0.0"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }

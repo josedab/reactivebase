@@ -276,7 +276,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "benchmark": "vitest run src/__tests__/benchmark.test.ts",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "pg": "^8.13.0",
@@ -289,5 +290,28 @@
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reactivebase/reactivebase.git",
+    "directory": "packages/server"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "reactivebase",
+    "reactive",
+    "backend",
+    "postgres",
+    "realtime",
+    "typescript",
+    "server",
+    "queries",
+    "mutations"
+  ]
 }

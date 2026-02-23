@@ -25,7 +25,8 @@
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
     "@reactivebase/server": "*",
@@ -43,5 +44,14 @@
     "realtime",
     "typescript"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reactivebase/reactivebase.git",
+    "directory": "packages/reactivebase"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }

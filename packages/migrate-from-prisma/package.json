@@ -9,6 +9,9 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --passWithNoTests --coverage",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
     "lint": "eslint src/"
   },
@@ -17,7 +20,8 @@
   },
   "devDependencies": {
     "tsup": "^8.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
   },
   "publishConfig": {
     "access": "public"
@@ -31,5 +35,12 @@
     "url": "https://github.com/reactivebase/reactivebase.git",
     "directory": "packages/migrate-from-prisma"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "reactivebase",
+    "prisma",
+    "migration",
+    "orm",
+    "typescript"
+  ]
 }

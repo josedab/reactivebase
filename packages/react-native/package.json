@@ -20,7 +20,8 @@
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
     "@reactivebase/client": "*"
@@ -45,8 +46,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/reactivebase/reactivebase",
+    "url": "https://github.com/reactivebase/reactivebase.git",
     "directory": "packages/react-native"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "reactivebase",
+    "react-native",
+    "mobile",
+    "offline-first",
+    "realtime",
+    "typescript"
+  ]
 }
