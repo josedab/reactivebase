@@ -1487,3 +1487,21 @@ export type {
   MigrationExecutionState,
   ExpandContractOptions,
 } from "./safe-migrations/index.js"
+
+// Reactive Permissions Debugger
+export {
+  PermissionsDebugger,
+  TraceRingBuffer,
+  AuthDebugDashboard,
+  AuthDebugError,
+  createPermissionsDebugger,
+  createAuthDebugDashboard,
+} from "./auth-debugger/index.js"
+export type {
+  DebugTraceEntry,
+  PermissionsDebugResult,
+  AuthDebugOptions,
+  RlsPolicyInfo,
+  ZanzibarTupleInfo,
+  AuthDebugDashboardData,
+} from "./auth-debugger/index.js"

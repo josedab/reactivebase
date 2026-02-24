@@ -112,6 +112,17 @@ async function main(): Promise<void> {
       break
     }
 
+    case "auth:debug": {
+      const { authDebug } = await import("./commands/auth-debug.js")
+      await authDebug({
+        projectDir: process.cwd(),
+        userId: getFlag("--user", ""),
+        queryName: getFlag("--query", ""),
+        table: getFlag("--table", ""),
+      })
+      break
+    }
+
     case "ivm": {
       const { ivmList, ivmStats, ivmAnalyze } = await import("./commands/ivm.js")
       const subcommand = args[1] || "list"
