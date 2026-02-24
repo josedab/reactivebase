@@ -43,3 +43,22 @@ export type {
   PluginScaffold,
   PortalStats,
 } from "./plugin-portal.js"
+
+// Plugin SDK v2
+export { PluginSDK, PluginTestHarness, validateWithJSONSchema } from "./plugin-sdk-v2.js"
+export type {
+  PluginV2Config,
+  PluginHook,
+  HookContext,
+  JSONSchema,
+  JSONSchemaProperty,
+  ContextExtension,
+  SchemaExtension,
+} from "./plugin-sdk-v2.js"
+
+// Built-in Plugins
+export { s3StoragePlugin, posthogPlugin, ALL_BUILTIN_PLUGINS, BUILTIN_PLUGIN_METADATA } from "./builtin-plugins.js"
+
+// Plugin CLI
+export { PluginCLI } from "./plugin-cli.js"
+export type { PluginCLIConfig, CLIResult } from "./plugin-cli.js"
