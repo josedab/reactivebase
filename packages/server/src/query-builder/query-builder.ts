@@ -335,3 +335,213 @@ export class CountQueryBuilder {
 export function createQueryBuilder<TRow>(table: string): QueryBuilder<TRow> {
   return new QueryBuilder<TRow>(table)
 }
+
+// ─── Aggregate Query Builder ─────────────────────────────────────────────────
+
+export type AggregateFunction = "count" | "sum" | "avg" | "min" | "max"
+
+export interface AggregationColumn {
+  fn: AggregateFunction
+  column: string
+  alias: string
+  distinct?: boolean
+}
+
+export interface HavingClause {
+  fn: AggregateFunction
+  column: string
+  operator: WhereOperator
+  value: unknown
+}
+
+export interface AggregateResult {
+  sql: string
+  params: unknown[]
+  groupByColumns: string[]
+  aggregations: AggregationColumn[]
+}
+
+/**
+ * Fluent aggregate query builder supporting count, sum, avg, min, max,
+ * groupBy, and having — all reactive through the dependency tracking system.
+ */
+export class AggregateQueryBuilder<TRow = Record<string, unknown>> {
+  private table: string
+  private aggregations: AggregationColumn[] = []
+  private _groupBy: string[] = []
+  private _having: HavingClause[] = []
+  private _where: WhereClause[] = []
+  private _joins: JoinClause[] = []
+
+  constructor(table: string) {
+    this.table = table
+  }
+
+  /** Count rows or a specific column. */
+  count(column: string = "*", alias?: string): AggregateQueryBuilder<TRow> {
+    this.aggregations.push({ fn: "count", column, alias: alias ?? `${column}_count` })
+    return this
+  }
+
+  /** Count distinct values of a column. */
+  countDistinct(column: string, alias?: string): AggregateQueryBuilder<TRow> {
+    this.aggregations.push({ fn: "count", column, alias: alias ?? `${column}_distinct_count`, distinct: true })
+    return this
+  }
+
+  /** Sum values of a column. */
+  sum(column: string, alias?: string): AggregateQueryBuilder<TRow> {
+    this.aggregations.push({ fn: "sum", column, alias: alias ?? `${column}_sum` })
+    return this
+  }
+
+  /** Average values of a column. */
+  avg(column: string, alias?: string): AggregateQueryBuilder<TRow> {
+    this.aggregations.push({ fn: "avg", column, alias: alias ?? `${column}_avg` })
+    return this
+  }
+
+  /** Minimum value of a column. */
+  min(column: string, alias?: string): AggregateQueryBuilder<TRow> {
+    this.aggregations.push({ fn: "min", column, alias: alias ?? `${column}_min` })
+    return this
+  }
+
+  /** Maximum value of a column. */
+  max(column: string, alias?: string): AggregateQueryBuilder<TRow> {
+    this.aggregations.push({ fn: "max", column, alias: alias ?? `${column}_max` })
+    return this
+  }
+
+  /** Group results by one or more columns. */
+  groupBy(...columns: string[]): AggregateQueryBuilder<TRow> {
+    this._groupBy.push(...columns)
+    return this
+  }
+
+  /** Filter aggregated results (SQL HAVING clause). */
+  having(fn: AggregateFunction, column: string, operator: WhereOperator, value: unknown): AggregateQueryBuilder<TRow> {
+    this._having.push({ fn, column, operator, value })
+    return this
+  }
+
+  /** Filter source rows before aggregation. */
+  where(
+    columnOrObject: string | Partial<TRow>,
+    operatorOrValue?: WhereOperator | unknown,
+    value?: unknown,
+  ): AggregateQueryBuilder<TRow> {
+    if (typeof columnOrObject === "object" && columnOrObject !== null) {
+      for (const [col, val] of Object.entries(columnOrObject)) {
+        this._where.push({
+          column: col,
+          operator: "=",
+          value: val,
+          paramIndex: this._where.length + 1,
+        })
+      }
+    } else if (value !== undefined) {
+      this._where.push({
+        column: columnOrObject as string,
+        operator: operatorOrValue as WhereOperator,
+        value,
+        paramIndex: this._where.length + 1,
+      })
+    } else {
+      this._where.push({
+        column: columnOrObject as string,
+        operator: "=",
+        value: operatorOrValue,
+        paramIndex: this._where.length + 1,
+      })
+    }
+    return this
+  }
+
+  /** Join another table for cross-table aggregations. */
+  join(
+    table: string,
+    fromColumn: string,
+    toColumn?: string,
+    type: "INNER" | "LEFT" | "RIGHT" = "INNER",
+  ): AggregateQueryBuilder<TRow> {
+    this._joins.push({ table, fromColumn, toColumn: toColumn ?? "id", type })
+    return this
+  }
+
+  /** Build the aggregate SQL query. */
+  build(): AggregateResult {
+    if (this.aggregations.length === 0) {
+      throw new Error("At least one aggregation (count, sum, avg, min, max) is required")
+    }
+
+    const params: unknown[] = []
+    const parts: string[] = []
+
+    // SELECT: group by columns + aggregation functions
+    const selectParts: string[] = []
+    for (const col of this._groupBy) {
+      selectParts.push(`"${col}"`)
+    }
+    for (const agg of this.aggregations) {
+      const col = agg.column === "*" ? "*" : `"${agg.column}"`
+      const distinctPrefix = agg.distinct ? "DISTINCT " : ""
+      selectParts.push(`${agg.fn.toUpperCase()}(${distinctPrefix}${col}) AS "${agg.alias}"`)
+    }
+    parts.push(`SELECT ${selectParts.join(", ")}`)
+
+    // FROM
+    parts.push(`FROM "${this.table}"`)
+
+    // JOINs
+    for (const join of this._joins) {
+      parts.push(
+        `${join.type} JOIN "${join.table}" ON "${this.table}"."${join.fromColumn}" = "${join.table}"."${join.toColumn}"`,
+      )
+    }
+
+    // WHERE
+    if (this._where.length > 0) {
+      const conditions = this._where.map((clause) => {
+        params.push(clause.value)
+        const paramRef = `$${params.length}`
+        if (clause.operator === "in") {
+          return `"${clause.column}" = ANY(${paramRef})`
+        }
+        return `"${clause.column}" ${clause.operator} ${paramRef}`
+      })
+      parts.push(`WHERE ${conditions.join(" AND ")}`)
+    }
+
+    // GROUP BY
+    if (this._groupBy.length > 0) {
+      parts.push(`GROUP BY ${this._groupBy.map((c) => `"${c}"`).join(", ")}`)
+    }
+
+    // HAVING
+    if (this._having.length > 0) {
+      const havingClauses = this._having.map((h) => {
+        params.push(h.value)
+        const col = h.column === "*" ? "*" : `"${h.column}"`
+        return `${h.fn.toUpperCase()}(${col}) ${h.operator} $${params.length}`
+      })
+      parts.push(`HAVING ${havingClauses.join(" AND ")}`)
+    }
+
+    return {
+      sql: parts.join("\n"),
+      params,
+      groupByColumns: [...this._groupBy],
+      aggregations: [...this.aggregations],
+    }
+  }
+
+  /** Extract dependency information for reactivity tracking. */
+  getDependencies(): QueryDependency[] {
+    const deps: QueryDependency[] = [{ table: this.table, filters: {} }]
+    for (const join of this._joins) {
+      deps.push({ table: join.table, filters: {} })
+    }
+    return deps
+  }
+}
