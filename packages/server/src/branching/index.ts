@@ -23,3 +23,15 @@ export type {
   SeedDataConfig,
   GitHubPRConfig,
 } from "./branching.js"
+
+export { NeonBranchingAdapter, NeonBranchingError } from "./neon-branching.js"
+
+export type { NeonConfig, NeonBranch, NeonEndpoint } from "./neon-branching.js"
+
+export { generateGitHubActionYAML, PRPreviewManager, PreviewError } from "./github-action.js"
+
+export type { PreviewConfig, PreviewRecord } from "./github-action.js"
+
+export { BranchDashboard } from "./branch-dashboard.js"
+
+export type { BranchTreeNode, DashboardBranching, DashboardPreviewSource } from "./branch-dashboard.js"
