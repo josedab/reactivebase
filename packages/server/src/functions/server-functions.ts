@@ -9,6 +9,7 @@ import type { TrackedDatabaseContext } from "./database-context.js"
 import { createDatabaseContext } from "./database-context.js"
 import type { Schema } from "../schema/index.js"
 import { executeTransaction, executeReadOnly } from "../transaction/index.js"
+import { writeOutboxEvent, type OutboxEvent, type OutboxRecord } from "../transaction/index.js"
 import type { QueryDependency } from "../query-builder/index.js"
 import { enforceAccess, type AccessRule } from "../permissions/index.js"
 import { validateArgs, type ValidationSchema } from "../validation/index.js"
@@ -18,6 +19,14 @@ export interface FunctionContext {
   auth: AuthContext
   scheduler: SchedulerContext
   log: LogContext
+  /** Emit a domain event to the transactional outbox (mutation context only). */
+  emit: (event: OutboxEvent) => Promise<OutboxRecord>
+  /**
+   * Call another query function from within a query handler.
+   * Enables query composition with automatic transitive dependency tracking.
+   * Circular dependencies are detected and throw an error.
+   */
+  query: <TResult = unknown>(queryRef: { _name: string } | string, args?: unknown) => Promise<TResult>
 }
 
 export interface SchedulerContext {
@@ -154,6 +163,7 @@ export async function executeQueryFunction(
   fn: RegisteredFunction,
   args: unknown,
   auth: AuthContext,
+  functionRegistry?: Map<string, RegisteredFunction>,
 ): Promise<QueryExecutionResult> {
   // Enforce access control
   const opts = fn.options as QueryOptions
@@ -164,7 +174,14 @@ export async function executeQueryFunction(
 
   return executeReadOnly(pool, async (client: PoolClient) => {
     const db = createDatabaseContext(client, schema, "read")
-    const ctx = createFunctionContext(db, auth)
+    const dependencies = db.getDependencies()
+
+    // Build query resolution context for ctx.query() composition
+    const queryContext: QueryResolutionContext | undefined = functionRegistry
+      ? { registry: functionRegistry, pool, schema, callStack: new Set([fn.name]), parentDependencies: dependencies }
+      : undefined
+
+    const ctx = createFunctionContext(db, auth, undefined, undefined, queryContext)
 
     const result = await fn.handler(ctx, args)
 
@@ -173,7 +190,7 @@ export async function executeQueryFunction(
 
     return {
       result: finalResult,
-      dependencies: db.getDependencies(),
+      dependencies,
     }
   })
 }
@@ -199,7 +216,7 @@ export async function executeMutationFunction(
 
   const txResult = await executeTransaction(pool, async (client: PoolClient) => {
     const db = createDatabaseContext(client, schema, "readwrite")
-    const ctx = createFunctionContext(db, auth, scheduledActions)
+    const ctx = createFunctionContext(db, auth, scheduledActions, client)
 
     // Run legacy auth check if defined
     const opts = fn.options as MutationOptions
@@ -245,14 +262,64 @@ export async function executeActionFunction(
   }
 }
 
+/** Query resolution context for detecting circular dependencies */
+interface QueryResolutionContext {
+  registry: Map<string, RegisteredFunction>
+  pool: Pool
+  schema: Schema
+  callStack: Set<string>
+  /** Accumulates dependencies from composed queries for transitive tracking */
+  parentDependencies?: QueryDependency[]
+}
+
 function createFunctionContext(
   db: TrackedDatabaseContext,
   auth: AuthContext,
   scheduledActions?: ScheduledAction[],
+  txClient?: PoolClient,
+  queryContext?: QueryResolutionContext,
 ): FunctionContext {
   return {
     db,
     auth,
+    async emit(event: OutboxEvent): Promise<OutboxRecord> {
+      if (!txClient) {
+        throw new Error("ctx.emit() is only available inside mutation handlers")
+      }
+      return writeOutboxEvent(txClient, event)
+    },
+    async query<TResult = unknown>(queryRef: { _name: string } | string, args?: unknown): Promise<TResult> {
+      if (!queryContext) {
+        throw new Error("ctx.query() requires a query resolution context")
+      }
+
+      const name = typeof queryRef === "string" ? queryRef : queryRef._name
+      const fn = queryContext.registry.get(name)
+      if (!fn) throw new Error(`Query function not found: "${name}"`)
+      if (fn.type !== "query") throw new Error(`"${name}" is not a query function`)
+
+      // Circular dependency detection
+      if (queryContext.callStack.has(name)) {
+        const cycle = [...queryContext.callStack, name].join(" → ")
+        throw new Error(`Circular query dependency detected: ${cycle}`)
+      }
+
+      queryContext.callStack.add(name)
+      try {
+        const result = await executeQueryFunction(queryContext.pool, queryContext.schema, fn, args, auth)
+
+        // Merge composed query dependencies into parent for transitive tracking
+        if (queryContext.parentDependencies) {
+          for (const dep of result.dependencies) {
+            queryContext.parentDependencies.push(dep)
+          }
+        }
+
+        return result.result as TResult
+      } finally {
+        queryContext.callStack.delete(name)
+      }
+    },
     scheduler: {
       async runAfter(delay: string, actionRef: string, args: unknown): Promise<string> {
         const id = generateId()
