@@ -1148,3 +1148,283 @@ export type {
   MigrationImpact as SchemaDesignerMigrationImpact,
   CodeGenerationResult,
 } from "./schema-designer/index.js"
+
+// Edge-First Global Query Layer
+export {
+  EdgeQueryLayer,
+  EdgeQueryCache,
+  InvalidationPropagator,
+  ConsistencyManager,
+  EdgeQueryError,
+  buildCreateEdgeCacheTableSQL,
+  buildCreateInvalidationLogTableSQL,
+  buildUpsertCacheEntrySQL,
+  buildGetCacheEntrySQL,
+  buildInvalidateByTablesSQL,
+  buildInsertInvalidationSQL,
+  buildGetPendingInvalidationsSQL,
+  buildMarkInvalidationsProcessedSQL,
+} from "./edge-query/index.js"
+export type {
+  EdgeRegion,
+  EdgeCacheEntry,
+  InvalidationMessage,
+  EdgeQueryOptions,
+  EdgeQueryLayerOptions,
+  EdgeCacheStats as EdgeQueryCacheStats,
+  ConsistencyProof,
+} from "./edge-query/index.js"
+
+// Multiplayer Collaboration Kit
+export {
+  MultiplayerKit,
+  CrdtDocument as MultiplayerCrdtDocument,
+  PresenceTracker,
+  CursorManager,
+  MultiplayerError,
+  incrementVectorClock,
+  mergeVectorClocks as mergeMultiplayerClocks,
+  buildCreateMultiplayerTablesSQL,
+  buildInsertRoomSQL,
+  buildUpsertPermissionSQL,
+  buildGetPermissionSQL,
+  buildInsertOperationSQL as buildInsertMpOperationSQL,
+  buildGetOperationsSinceSQL as buildGetMpOperationsSinceSQL,
+} from "./multiplayer/index.js"
+export type {
+  MultiplayerUser,
+  CursorPosition as MultiplayerCursorPosition,
+  PresenceState,
+  SelectionRange as MultiplayerSelectionRange,
+  MultiplayerPermission,
+  MultiplayerRoom,
+  MultiplayerEvent,
+  CrdtOperation as MultiplayerCrdtOperation,
+  MultiplayerKitOptions,
+  RoomStats,
+} from "./multiplayer/index.js"
+
+// Declarative Authorization (Zanzibar)
+export {
+  ZanzibarEngine,
+  ZanzibarError,
+  buildCreateZanzibarTablesSQL,
+  buildWriteTupleSQL,
+  buildDeleteTupleSQL,
+  buildReadTuplesSQL,
+  buildListObjectsSQL as buildZanzibarListObjectsSQL,
+  buildReverseExpandSQL,
+  buildLogChangeSQL,
+} from "./zanzibar/index.js"
+export type {
+  RelationTuple,
+  NamespaceConfig,
+  RelationRule,
+  RelationRef,
+  CheckRequest,
+  CheckResult,
+  ResolutionStep,
+  ExpandResult,
+  UsersetTree,
+  ListObjectsRequest,
+  ZanzibarOptions,
+  ZanzibarStats,
+} from "./zanzibar/index.js"
+
+// Visual Workflow Studio
+export {
+  WorkflowStudio,
+  WorkflowValidator,
+  WorkflowDebugger,
+  WorkflowStudioError,
+  builtInTemplates,
+  buildCreateWorkflowStudioTablesSQL,
+  buildUpsertDesignSQL,
+  buildGetDesignSQL,
+  buildInsertExecutionSQL as buildInsertWfExecutionSQL,
+  buildUpdateExecutionSQL as buildUpdateWfExecutionSQL,
+  buildInsertDebugSnapshotSQL,
+} from "./workflow-studio/index.js"
+export type {
+  WorkflowNode,
+  WorkflowNodeType,
+  PortDefinition,
+  WorkflowEdge,
+  WorkflowDesign,
+  WorkflowVariable,
+  WorkflowTemplate,
+  WorkflowExecution,
+  NodeExecutionState,
+  DebugBreakpoint,
+  DebugSnapshot,
+  WorkflowStudioOptions,
+  ValidationError as WorkflowValidationError,
+  MonitoringSnapshot,
+} from "./workflow-studio/index.js"
+
+// Event Sourcing & CQRS
+export {
+  EventStore,
+  ProjectionEngine,
+  EventSourcingError,
+  buildCreateEventStoreTablesSQL,
+  buildAppendEventSQL,
+  buildGetEventsSQL as buildGetEsEventsSQL,
+  buildGetEventsByFilterSQL,
+  buildUpsertStreamSQL,
+  buildSaveSnapshotSQL,
+  buildGetLatestSnapshotSQL,
+  buildUpsertProjectionSQL,
+} from "./event-sourcing/index.js"
+export type {
+  DomainEvent,
+  EventMetadata,
+  EventStream,
+  Snapshot,
+  Projection,
+  ProjectionState,
+  EventFilter as EventSourcingFilter,
+  EventStoreOptions,
+  AppendResult,
+  ReplaySession,
+  CommandHandler,
+  ReadModel,
+  EventStoreStats,
+} from "./event-sourcing/index.js"
+
+// Embedded Analytics & Materialized Dashboards
+export {
+  AnalyticsEngine as EmbeddedAnalyticsEngine,
+  AggregationEngine,
+  AnalyticsError,
+  compilePipelineToSQL,
+  generateEmbedToken,
+  generateEmbedSnippet,
+  buildCreateAnalyticsTablesSQL,
+  buildUpsertPipelineSQL,
+  buildUpsertResultSQL,
+  buildGetResultSQL,
+  buildUpsertDashboardSQL,
+  buildGetDashboardSQL,
+} from "./analytics/index.js"
+export type {
+  AggregationPipeline,
+  AggregationStage,
+  MatchStage,
+  GroupStage,
+  SortStage,
+  LimitStage,
+  ProjectStage,
+  WindowStage,
+  AggregationFunction,
+  WindowFunction,
+  CronSchedule,
+  MaterializedResult,
+  DashboardDefinition,
+  DashboardWidget,
+  WidgetType,
+  WidgetConfig,
+  Threshold,
+  LayoutConfig,
+  EmbedConfig,
+  AnalyticsOptions,
+  AnalyticsStats,
+} from "./analytics/index.js"
+
+// Time-Travel Debugging & Audit (extended)
+export {
+  AuditTrail,
+  TemporalQuery,
+  TimelineBuilder,
+  generateAuditTableSQL,
+  buildInsertAuditSQL as buildInsertAuditEntrySQL,
+  buildQueryAuditSQL,
+  buildTemporalQuerySQL,
+  buildTemporalRangeQuerySQL,
+  buildEnableTemporalSQL,
+} from "./time-travel/index.js"
+export type { AuditEntry, AuditFilter, AuditTrailOptions, TimelineEntry } from "./time-travel/index.js"
+
+// Schema Registry & Consumer-Driven Contracts
+export {
+  SchemaRegistry,
+  BreakingChangeDetector,
+  ContractValidator,
+  MigrationSafetyChecker,
+  SchemaRegistryError,
+  computeFingerprint,
+  buildCreateSchemaRegistryTablesSQL,
+  buildInsertVersionSQL,
+  buildGetVersionSQL,
+  buildGetLatestVersionSQL,
+  buildUpsertContractSQL,
+  buildGetContractsByStatusSQL,
+} from "./schema-registry/index.js"
+export type {
+  SchemaVersion,
+  SchemaSpec,
+  TableSpec,
+  ColumnSpec,
+  IndexSpec as SchemaIndexSpec,
+  ConstraintSpec,
+  EnumSpec,
+  ConsumerContract,
+  RequiredTable,
+  RequiredColumn,
+  BreakingChange,
+  BreakingChangeType,
+  CompatibilityResult,
+  MigrationSafetyCheck as SchemaRegistryMigrationSafetyCheck,
+  MigrationRisk,
+  SchemaRegistryOptions,
+  RegistryStats,
+} from "./schema-registry/index.js"
+
+// Reactive File & Media Pipeline
+export {
+  MediaPipeline,
+  TransformBuilder,
+  ReactiveUrlBuilder,
+  UploadValidator,
+  MediaPipelineError,
+  transformPresets,
+  buildCreateMediaTablesSQL,
+  buildInsertFileSQL,
+  buildGetFileSQL,
+  buildListFilesSQL,
+  buildInsertVariantSQL,
+  buildGetVariantsSQL,
+  buildDeleteFileSQL,
+} from "./media-pipeline/index.js"
+export type {
+  MediaFile,
+  MediaMetadata,
+  MediaVariant,
+  ImageTransform,
+  VideoTransform,
+  WatermarkConfig,
+  UploadOptions,
+  UploadResult,
+  CdnConfig,
+  SignedUrlOptions,
+  MediaPipelineOptions,
+  MediaPipelineStats,
+} from "./media-pipeline/index.js"
+
+// Cross-Framework Universal SDK
+export { UniversalSdk, ProtocolBuilder, UniversalSdkError } from "./universal-sdk/index.js"
+export type {
+  ProtocolSpec,
+  EndpointSpec,
+  TypeSpec,
+  FieldSpec,
+  TypeRef,
+  EnumTypeSpec,
+  ErrorSpec,
+  AuthSpec,
+  TargetLanguage,
+  CodegenOptions,
+  GeneratedFile,
+  GenerationResult,
+  UniversalSdkOptions,
+} from "./universal-sdk/index.js"

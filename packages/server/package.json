@@ -266,6 +266,51 @@
       "types": "./dist/migrate-from.d.ts",
       "import": "./dist/migrate-from.js",
       "require": "./dist/migrate-from.cjs"
+    },
+    "./edge-query": {
+      "types": "./dist/edge-query.d.ts",
+      "import": "./dist/edge-query.js",
+      "require": "./dist/edge-query.cjs"
+    },
+    "./multiplayer": {
+      "types": "./dist/multiplayer.d.ts",
+      "import": "./dist/multiplayer.js",
+      "require": "./dist/multiplayer.cjs"
+    },
+    "./zanzibar": {
+      "types": "./dist/zanzibar.d.ts",
+      "import": "./dist/zanzibar.js",
+      "require": "./dist/zanzibar.cjs"
+    },
+    "./workflow-studio": {
+      "types": "./dist/workflow-studio.d.ts",
+      "import": "./dist/workflow-studio.js",
+      "require": "./dist/workflow-studio.cjs"
+    },
+    "./event-sourcing": {
+      "types": "./dist/event-sourcing.d.ts",
+      "import": "./dist/event-sourcing.js",
+      "require": "./dist/event-sourcing.cjs"
+    },
+    "./analytics": {
+      "types": "./dist/analytics.d.ts",
+      "import": "./dist/analytics.js",
+      "require": "./dist/analytics.cjs"
+    },
+    "./schema-registry": {
+      "types": "./dist/schema-registry.d.ts",
+      "import": "./dist/schema-registry.js",
+      "require": "./dist/schema-registry.cjs"
+    },
+    "./media-pipeline": {
+      "types": "./dist/media-pipeline.d.ts",
+      "import": "./dist/media-pipeline.js",
+      "require": "./dist/media-pipeline.cjs"
+    },
+    "./universal-sdk": {
+      "types": "./dist/universal-sdk.d.ts",
+      "import": "./dist/universal-sdk.js",
+      "require": "./dist/universal-sdk.cjs"
     }
   },
   "scripts": {
