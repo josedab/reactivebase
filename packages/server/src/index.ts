@@ -1505,3 +1505,18 @@ export type {
   ZanzibarTupleInfo,
   AuthDebugDashboardData,
 } from "./auth-debugger/index.js"
+
+// Smart Connection Pooling & Query Coalescing
+export {
+  SmartPool,
+  QueryDeduplicator,
+  AdaptivePoolSizer,
+  SubscriptionCoalescer,
+  BatchInvalidationEvaluator,
+  BackpressureError,
+  PoolExhaustedError,
+  createSmartPool,
+  createQueryDeduplicator,
+  createSubscriptionCoalescer,
+} from "./smart-pool/index.js"
+export type { SmartPoolOptions, CoalescedQuery, PoolStats, BatchEvaluatorOptions } from "./smart-pool/index.js"
