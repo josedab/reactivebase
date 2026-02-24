@@ -1594,3 +1594,28 @@ export type {
   InvalidationTrigger,
   SubscriptionAnalyticsOptions,
 } from "./subscription-analytics/index.js"
+
+// Reactive Full-Text Search
+export {
+  SearchQueryBuilder,
+  SearchError,
+  generateSearchIndexSQL,
+  generateFacetSQL,
+  createSearchQuery,
+  searchTable,
+} from "./full-text-search/index.js"
+export type {
+  SearchableColumnConfig,
+  SearchOptions as FullTextSearchOptions,
+  FuzzySearchOptions,
+  HighlightOptions,
+  FacetConfig,
+  FacetResult,
+  SearchResult as FullTextSearchResult,
+  SearchIndexDefinition,
+  SearchQueryPlan,
+  SearchLanguage,
+  FuzzyMatchType,
+  SearchRankFunction,
+  SearchableValidatorOptions,
+} from "./full-text-search/index.js"

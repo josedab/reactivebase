@@ -21,3 +21,7 @@ export type {
   UseCollabCounterReturn,
   CollabDocumentInfo,
 } from "./crdt-hooks.js"
+
+// Full-Text Search Hooks
+export { useSearch, SearchInput } from "./search-hooks.js"
+export type { UseSearchOptions, UseSearchReturn, SearchInputProps } from "./search-hooks.js"

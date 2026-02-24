@@ -26,6 +26,12 @@ export interface ValidatorOptions {
   max?: number | string
   /** @internal Mark field for encryption middleware */
   __encrypted?: boolean
+  /** @internal Mark field as searchable for full-text search */
+  __searchable?: boolean
+  /** @internal Search weight (A-D) */
+  __searchWeight?: "A" | "B" | "C" | "D"
+  /** @internal Search language */
+  __searchLanguage?: string
 }
 
 export interface Validator<T = unknown> {
@@ -129,6 +135,18 @@ export const v = {
         // Mark this field for encryption middleware
         options: { ...inner.options, __encrypted: true },
       },
+    )
+  },
+
+  /**
+   * Mark a string column as searchable for full-text search.
+   * Generates a GIN index on the tsvector representation.
+   */
+  searchable(options: { weight?: "A" | "B" | "C" | "D"; language?: string } = {}): Validator<string> {
+    return createValidator(
+      "string",
+      "text",
+      { __searchable: true, __searchWeight: options.weight, __searchLanguage: options.language },
     )
   },
 } as const
