@@ -1,5 +1,12 @@
-export { useQuery, useMutation, useAction } from "./hooks.js"
-export type { FunctionReference, OptimisticUpdateConfig, LocalStore } from "./hooks.js"
+export { useQuery, useMutation, useAction, useAggregateQuery } from "./hooks.js"
+export type {
+  FunctionReference,
+  OptimisticUpdateConfig,
+  LocalStore,
+  AggregateQueryOptions,
+  AggregateQueryResult,
+  UseQueryOptions,
+} from "./hooks.js"
 
 export { useOptimistic, useCursors, useTypingUsers, useSelections, useDevTools } from "./collaboration-hooks.js"
 export type {

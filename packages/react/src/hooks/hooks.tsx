@@ -28,6 +28,11 @@ export interface LocalStore {
   update(subscriptionId: string, updater: (data: unknown) => unknown): void
 }
 
+export interface UseQueryOptions {
+  /** Whether the query is enabled (default: true). Set to false to defer execution. */
+  enabled?: boolean
+}
+
 /**
  * Subscribe to a reactive query. Returns `undefined` during loading,
  * then the typed result. Re-renders when server pushes updates.
@@ -35,10 +40,15 @@ export interface LocalStore {
  * When used with a typed FunctionReference, TResult is inferred automatically:
  *   const tasks = useQuery(api.tasks.listTasks, { userId: "u1" })
  *   // tasks is Task[] | undefined
+ *
+ * Dependent query pattern:
+ *   const user = useQuery(api.users.get, { id: userId })
+ *   const tasks = useQuery(api.tasks.listByUser, { userId: user?.id }, { enabled: !!user })
  */
 export function useQuery<TResult = unknown, TArgs = unknown>(
   queryRef: FunctionReference<TArgs, TResult> | string,
   args?: TArgs,
+  options?: UseQueryOptions,
 ): TResult | undefined {
   const client = useReactiveBaseClient()
   const [data, setData] = useState<TResult | undefined>(undefined)
@@ -46,12 +56,17 @@ export function useQuery<TResult = unknown, TArgs = unknown>(
   const queryName = typeof queryRef === "string" ? queryRef : queryRef._name
   const argsRef = useRef(args)
   const argsJson = JSON.stringify(args)
+  const enabled = options?.enabled ?? true
 
   useEffect(() => {
     argsRef.current = args
   }, [argsJson])
 
   useEffect(() => {
+    if (!enabled) {
+      return
+    }
+
     setData(undefined)
     setError(null)
 
@@ -64,7 +79,7 @@ export function useQuery<TResult = unknown, TArgs = unknown>(
     })
 
     return unsubscribe
-  }, [client, queryName, argsJson])
+  }, [client, queryName, argsJson, enabled])
 
   if (error) throw error
 
@@ -133,4 +148,67 @@ export function useAction<TArgs = unknown, TResult = unknown>(
     },
     [client, actionName],
   )
+}
+
+// ─── Aggregate Query Hook ────────────────────────────────────────────────────
+
+export interface AggregateQueryOptions {
+  /** Whether the query is enabled (default: true). Set to false to defer execution. */
+  enabled?: boolean
+}
+
+export interface AggregateQueryResult<T = unknown> {
+  data: T | undefined
+  isLoading: boolean
+  error: Error | null
+}
+
+/**
+ * Subscribe to a reactive aggregate query.
+ * Returns aggregated results that update automatically when underlying data changes.
+ *
+ * Usage:
+ *   const { data, isLoading } = useAggregateQuery(api.tasks.taskStats, { userId: "u1" })
+ */
+export function useAggregateQuery<TResult = unknown, TArgs = unknown>(
+  queryRef: FunctionReference<TArgs, TResult> | string,
+  args?: TArgs,
+  options?: AggregateQueryOptions,
+): AggregateQueryResult<TResult> {
+  const client = useReactiveBaseClient()
+  const [data, setData] = useState<TResult | undefined>(undefined)
+  const [error, setError] = useState<Error | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const queryName = typeof queryRef === "string" ? queryRef : queryRef._name
+  const argsRef = useRef(args)
+  const argsJson = JSON.stringify(args)
+  const enabled = options?.enabled ?? true
+
+  useEffect(() => {
+    argsRef.current = args
+  }, [argsJson])
+
+  useEffect(() => {
+    if (!enabled) {
+      setIsLoading(false)
+      return
+    }
+
+    setData(undefined)
+    setError(null)
+    setIsLoading(true)
+
+    const unsubscribe = client.subscribe(queryName, argsRef.current, (result, err) => {
+      setIsLoading(false)
+      if (err) {
+        setError(err)
+      } else {
+        setData(result as TResult)
+      }
+    })
+
+    return unsubscribe
+  }, [client, queryName, argsJson, enabled])
+
+  return { data, isLoading, error }
 }

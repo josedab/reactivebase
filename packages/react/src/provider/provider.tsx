@@ -3,17 +3,23 @@
  */
 
 import { createContext, useContext, useMemo, useEffect, type ReactNode } from "react"
-import { ReactiveBaseClient, type ReactiveBaseClientOptions } from "@reactivebase/client"
+import {
+  ReactiveBaseClient,
+  type ReactiveBaseClientOptions,
+  type ClientSubscriptionMiddleware,
+} from "@reactivebase/client"
 
 const ReactiveBaseContext = createContext<ReactiveBaseClient | null>(null)
 
 export interface ReactiveBaseProviderProps {
   url: string
   token?: string
+  /** Client-side subscription middleware pipeline */
+  middleware?: ClientSubscriptionMiddleware[]
   children: ReactNode
 }
 
-export function ReactiveBaseProvider({ url, token, children }: ReactiveBaseProviderProps) {
+export function ReactiveBaseProvider({ url, token, middleware, children }: ReactiveBaseProviderProps) {
   const client = useMemo(() => new ReactiveBaseClient({ url, token }), [url, token])
 
   useEffect(() => {
