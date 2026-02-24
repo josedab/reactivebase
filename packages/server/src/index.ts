@@ -1577,3 +1577,20 @@ export type {
   ExtensionDetectionResult,
   ExtensionProvisionOptions,
 } from "./extensions/index.js"
+
+// Subscription Analytics & Cost Attribution
+export {
+  SubscriptionAnalytics,
+  createSubscriptionAnalytics,
+} from "./subscription-analytics/index.js"
+export type {
+  SubscriptionCostRecord,
+  CostAttribution,
+  QueryCostSummary,
+  UserCostSummary,
+  TenantCostSummary,
+  CostTotals,
+  OptimizationSuggestion,
+  InvalidationTrigger,
+  SubscriptionAnalyticsOptions,
+} from "./subscription-analytics/index.js"
