@@ -20,3 +20,14 @@ export type {
   AuthResultMessage,
   ErrorPayload,
 } from "./protocol.js"
+
+// Embeddable Mode
+export { createReactiveBaseMiddleware, toExpressMiddleware } from "./embeddable.js"
+export type {
+  EmbeddableConfig,
+  IncomingRequest,
+  OutgoingResponse,
+  ReactiveBaseMiddlewareResult,
+  HttpHandler,
+  WsUpgradeHandler,
+} from "./embeddable.js"
