@@ -4,8 +4,9 @@
  */
 
 import type { PoolClient } from "pg"
-import { QueryBuilder, type QueryDependency, type BuiltQuery } from "../query-builder/index.js"
+import { QueryBuilder, AggregateQueryBuilder, type QueryDependency, type BuiltQuery } from "../query-builder/index.js"
 import type { Schema, SchemaDefinition } from "../schema/index.js"
+import type { Validator, ComputedFieldFn } from "../schema/index.js"
 
 export interface TableAccessor<TRow = Record<string, unknown>> {
   where(columnOrObject: string | Partial<TRow>, operatorOrValue?: unknown, value?: unknown): QueryBuilder<TRow>
@@ -15,6 +16,8 @@ export interface TableAccessor<TRow = Record<string, unknown>> {
   update(id: string, data: Partial<TRow>): Promise<TRow>
   delete(id: string): Promise<void>
   count(): Promise<number>
+  /** Create an aggregate query builder for this table. */
+  aggregate(): AggregateQueryBuilder<TRow>
 }
 
 export interface DatabaseContext {
@@ -78,7 +81,7 @@ export function createDatabaseContext(
 
   // Create typed table accessors for each table in the schema
   for (const tableName of schema.tableNames) {
-    const accessor = createTableAccessor(client, tableName, dependencies, modifiedTables, mode)
+    const accessor = createTableAccessor(client, tableName, dependencies, modifiedTables, mode, schema)
     context[tableName] = accessor
   }
 
@@ -91,13 +94,49 @@ function createTableAccessor(
   dependencies: QueryDependency[],
   modifiedTables: string[],
   mode: "read" | "readwrite",
+  schema?: Schema,
 ): TableAccessor {
+  // Collect virtual field definitions for this table
+  const virtualFields = new Map<string, ComputedFieldFn>()
+  if (schema) {
+    const tableDef = schema.tables[tableName]
+    if (tableDef) {
+      for (const [colName, validator] of Object.entries(tableDef.columns)) {
+        if (validator.type === "virtual" && validator.computeFn) {
+          virtualFields.set(colName, validator.computeFn)
+          // Track cross-table dependencies for reactivity
+          if (validator.dependsOnTables) {
+            for (const dep of validator.dependsOnTables) {
+              dependencies.push({ table: dep, filters: {} })
+            }
+          }
+        }
+      }
+    }
+  }
+
+  const applyVirtualFields = (rows: unknown[]): unknown[] => {
+    if (virtualFields.size === 0) return rows
+    return rows.map((row) => {
+      const r = row as Record<string, unknown>
+      const enriched = { ...r }
+      for (const [field, fn] of virtualFields) {
+        try {
+          enriched[field] = fn(r)
+        } catch {
+          enriched[field] = undefined
+        }
+      }
+      return enriched
+    })
+  }
+
   const executeQuery = async (builder: QueryBuilder): Promise<unknown[]> => {
     const built = builder.build()
     const queryDeps = builder.getDependencies()
     dependencies.push(...queryDeps)
     const result = await client.query(built.sql, built.params)
-    return result.rows
+    return applyVirtualFields(result.rows)
   }
 
   const guardWrite = () => {
@@ -177,6 +216,10 @@ RETURNING *`
       dependencies.push({ table: tableName, filters: {} })
       const result = await client.query(`SELECT COUNT(*) as "count" FROM "${tableName}"`)
       return parseInt(result.rows[0].count, 10)
+    },
+
+    aggregate() {
+      return new AggregateQueryBuilder(tableName)
     },
   } as TableAccessor
 }
