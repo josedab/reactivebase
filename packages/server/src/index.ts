@@ -1565,3 +1565,15 @@ export type {
   UsageAlert,
   UsageAlertRule,
 } from "./rate-limiting/index.js"
+
+// Postgres Extension Auto-Provisioner
+export {
+  ExtensionDetector,
+  createExtensionDetector,
+} from "./extensions/index.js"
+export type {
+  PgExtensionInfo,
+  CloudProvider,
+  ExtensionDetectionResult,
+  ExtensionProvisionOptions,
+} from "./extensions/index.js"
