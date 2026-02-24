@@ -7,6 +7,23 @@ export type { CacheEntry } from "./cache/index.js"
 export { ReactiveBaseClient } from "./subscription/index.js"
 export type { ReactiveBaseClientOptions, SubscriptionHandle, QueryListener } from "./subscription/index.js"
 
+// Client Subscription Middleware
+export {
+  ClientMiddlewarePipeline,
+  loggingMiddleware,
+  retryMiddleware,
+  analyticsMiddleware,
+} from "./subscription/index.js"
+export type {
+  ClientSubscriptionMiddleware,
+  SubscriptionEvent,
+  SubscriptionUpdateEvent,
+  SubscriptionErrorEvent,
+  SubscriptionStaleEvent,
+  SubscriptionReconnectEvent,
+  AnalyticsMetric,
+} from "./subscription/index.js"
+
 export { encodeMessage, decodeMessage, isBinaryMessage, compressionRatio } from "./protocol/index.js"
 
 export { MultiTabCoordinator } from "./multitab/index.js"
