@@ -4,17 +4,26 @@
  * ReactiveBase client subscriptions for seamless reactive data binding.
  */
 
-import { ReactiveBaseClient, type ReactiveBaseClientOptions } from "@reactivebase/client"
+import {
+  ReactiveBaseClient,
+  type ReactiveBaseClientOptions,
+  type ClientSubscriptionMiddleware,
+} from "@reactivebase/client"
 
 // --- Client management ---
 
 let globalClient: ReactiveBaseClient | null = null
 
+export interface ReactiveBaseSvelteOptions extends ReactiveBaseClientOptions {
+  /** Client-side subscription middleware pipeline */
+  middleware?: ClientSubscriptionMiddleware[]
+}
+
 /**
  * Initialize the ReactiveBase client for Svelte.
  * Call once at app startup.
  */
-export function initReactiveBase(options: ReactiveBaseClientOptions): ReactiveBaseClient {
+export function initReactiveBase(options: ReactiveBaseSvelteOptions): ReactiveBaseClient {
   globalClient = new ReactiveBaseClient(options)
   return globalClient
 }

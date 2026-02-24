@@ -4,17 +4,26 @@
  */
 
 import { ref, shallowRef, onMounted, onUnmounted, watch, inject, provide, type Ref, type InjectionKey } from "vue"
-import { ReactiveBaseClient, type ReactiveBaseClientOptions } from "@reactivebase/client"
+import {
+  ReactiveBaseClient,
+  type ReactiveBaseClientOptions,
+  type ClientSubscriptionMiddleware,
+} from "@reactivebase/client"
 
 // --- Provider ---
 
 const REACTIVEBASE_KEY: InjectionKey<ReactiveBaseClient> = Symbol("reactivebase-client")
 
+export interface ReactiveBaseVueOptions extends ReactiveBaseClientOptions {
+  /** Client-side subscription middleware pipeline */
+  middleware?: ClientSubscriptionMiddleware[]
+}
+
 /**
  * Provide a ReactiveBase client to descendant components.
  * Call in the setup() of your root App component.
  */
-export function provideReactiveBase(options: ReactiveBaseClientOptions): ReactiveBaseClient {
+export function provideReactiveBase(options: ReactiveBaseVueOptions): ReactiveBaseClient {
   const client = new ReactiveBaseClient(options)
   provide(REACTIVEBASE_KEY, client)
   return client
