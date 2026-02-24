@@ -184,12 +184,12 @@ export default defineSchema({
     authorId: v.id("users"),
     body: v.string(),
     createdAt: v.timestamp({ default: "now" }),
-  })
-    .index("by_task", ["taskId"]),
+  }).index("by_task", ["taskId"]),
 })
 ```
 
 **Acceptance criteria:**
+
 - Schema definitions produce fully typed query builders (autocomplete for field names, correct return types)
 - `v.id("tableName")` creates a typed foreign key reference that the query builder understands for joins
 - Schema changes generate SQL migration files (up and down) that developers review before applying
@@ -209,6 +209,7 @@ npx reactivebase migrate --rollback    # Rolls back last migration
 ```
 
 **Acceptance criteria:**
+
 - Migrations are standard SQL files that can be reviewed, edited, and version-controlled
 - Non-destructive changes (add column, add table, add index) are auto-generated
 - Destructive changes (drop column, drop table) require explicit confirmation
@@ -237,22 +238,18 @@ ctx.db.tasks
 // Joins (typed based on v.id() references)
 ctx.db.tasks
   .where({ done: false })
-  .join("users", "assigneeId")  // Type-safe: knows assigneeId references users
+  .join("users", "assigneeId") // Type-safe: knows assigneeId references users
   .select("tasks.*", "users.name as assigneeName")
 
 // Aggregations
-ctx.db.tasks
-  .where({ assigneeId: userId })
-  .groupBy("priority")
-  .select("priority", ctx.db.fn.count("*").as("count"))
+ctx.db.tasks.where({ assigneeId: userId }).groupBy("priority").select("priority", ctx.db.fn.count("*").as("count"))
 
 // Full-text search (Postgres native)
-ctx.db.tasks
-  .whereTextSearch("title", "urgent bug fix")
-  .orderByRelevance()
+ctx.db.tasks.whereTextSearch("title", "urgent bug fix").orderByRelevance()
 ```
 
 **Acceptance criteria:**
+
 - All filter operators produce type-safe comparisons (cannot compare string field with number)
 - Join paths are validated at compile time based on `v.id()` references in the schema
 - Query builder produces parameterized SQL (no SQL injection risk)
@@ -277,24 +274,22 @@ export default defineSchema({
     taskId: v.id("tasks"),
     authorId: v.id("users"),
     // ... fields
-  })
-    .relation("author", { from: "authorId", to: "users" }),
+  }).relation("author", { from: "authorId", to: "users" }),
 })
 
 // Usage in queries
-const tasksWithComments = await ctx.db.tasks
-  .where({ assigneeId: userId })
-  .include({
-    assignee: true,
-    comments: {
-      include: { author: true },
-      orderBy: { createdAt: "desc" },
-      limit: 10,
-    },
-  })
+const tasksWithComments = await ctx.db.tasks.where({ assigneeId: userId }).include({
+  assignee: true,
+  comments: {
+    include: { author: true },
+    orderBy: { createdAt: "desc" },
+    limit: 10,
+  },
+})
 ```
 
 **Acceptance criteria:**
+
 - Relations are resolved using efficient SQL (single query with lateral joins, not N+1)
 - Nested includes are type-safe: available relations are autocompleted based on schema definitions
 - Circular relations are handled (A has many B, B belongs to A)
@@ -313,31 +308,24 @@ import { query } from "reactivebase/server"
 
 // Simple reactive query
 export const listTasks = query(async (ctx, { assigneeId }: { assigneeId: string }) => {
-  return ctx.db.tasks
-    .where({ assigneeId, done: false })
-    .orderBy("priority", "desc")
-    .include({ assignee: true })
+  return ctx.db.tasks.where({ assigneeId, done: false }).orderBy("priority", "desc").include({ assignee: true })
 })
 
 // Query with authentication
 export const myTasks = query(async (ctx) => {
-  const userId = ctx.auth.requireUser()  // Throws if not authenticated
+  const userId = ctx.auth.requireUser() // Throws if not authenticated
   return ctx.db.tasks.where({ assigneeId: userId, done: false })
 })
 
 // Query with computed data
 export const taskStats = query(async (ctx, { teamId }: { teamId: string }) => {
   const members = await ctx.db.users.where({ teamId })
-  const memberIds = members.map(m => m.id)
+  const memberIds = members.map((m) => m.id)
 
   const [total, completed, overdue] = await Promise.all([
     ctx.db.tasks.where("assigneeId", "in", memberIds).count(),
     ctx.db.tasks.where("assigneeId", "in", memberIds).where({ done: true }).count(),
-    ctx.db.tasks
-      .where("assigneeId", "in", memberIds)
-      .where({ done: false })
-      .where("dueDate", "<", new Date())
-      .count(),
+    ctx.db.tasks.where("assigneeId", "in", memberIds).where({ done: false }).where("dueDate", "<", new Date()).count(),
   ])
 
   return { total, completed, overdue, completionRate: total > 0 ? completed / total : 0 }
@@ -345,6 +333,7 @@ export const taskStats = query(async (ctx, { teamId }: { teamId: string }) => {
 ```
 
 **Acceptance criteria:**
+
 - Query functions receive a context object with database access and authentication info
 - Query arguments are validated using the function's TypeScript types (runtime validation via schema)
 - Queries are read-only: attempting to call `insert`, `update`, or `delete` inside a query throws at compile time and runtime
@@ -357,6 +346,7 @@ export const taskStats = query(async (ctx, { teamId }: { teamId: string }) => {
 When a client subscribes to a query, the framework tracks which tables and filter conditions the query accessed. When a mutation modifies data that could affect the query's results, the framework re-executes the query and pushes updated results if they differ.
 
 **Acceptance criteria:**
+
 - Client subscribes via: `const tasks = useQuery(api.listTasks, { assigneeId: "123" })`
 - Initial results are delivered immediately (same as a one-shot fetch)
 - When a mutation modifies the `tasks` table, queries that accessed that table are re-evaluated
@@ -371,15 +361,19 @@ For queries that do not need live updates (e.g., data exports, admin reports), a
 
 ```typescript
 // Server-side
-export const exportTasks = query(async (ctx, filters) => {
-  return ctx.db.tasks.where(filters)
-}, { reactive: false })
+export const exportTasks = query(
+  async (ctx, filters) => {
+    return ctx.db.tasks.where(filters)
+  },
+  { reactive: false },
+)
 
 // Client-side
-const tasks = await fetchQuery(api.exportTasks, filters)  // Returns data, no subscription
+const tasks = await fetchQuery(api.exportTasks, filters) // Returns data, no subscription
 ```
 
 **Acceptance criteria:**
+
 - Non-reactive queries skip dependency tracking and subscription registration
 - Non-reactive queries return a promise (resolved once) instead of a reactive subscription
 - Performance: non-reactive queries have lower overhead than reactive queries
@@ -416,25 +410,31 @@ export const completeTask = mutation(async (ctx, { taskId }: { taskId: string })
   return { success: true }
 })
 
-export const reassignTasks = mutation(async (ctx, {
-  fromUserId,
-  toUserId,
-}: {
-  fromUserId: string
-  toUserId: string
-}) => {
-  const tasks = await ctx.db.tasks.where({ assigneeId: fromUserId, done: false })
+export const reassignTasks = mutation(
+  async (
+    ctx,
+    {
+      fromUserId,
+      toUserId,
+    }: {
+      fromUserId: string
+      toUserId: string
+    },
+  ) => {
+    const tasks = await ctx.db.tasks.where({ assigneeId: fromUserId, done: false })
 
-  // Bulk update - all within the same transaction
-  for (const task of tasks) {
-    await ctx.db.tasks.update(task.id, { assigneeId: toUserId })
-  }
+    // Bulk update - all within the same transaction
+    for (const task of tasks) {
+      await ctx.db.tasks.update(task.id, { assigneeId: toUserId })
+    }
 
-  return { reassigned: tasks.length }
-})
+    return { reassigned: tasks.length }
+  },
+)
 ```
 
 **Acceptance criteria:**
+
 - Every mutation executes inside a `SERIALIZABLE` isolation level transaction
 - If any database operation within the mutation throws, all changes roll back
 - Serialization failures (Postgres error code `40001`) are automatically retried (up to configurable max, default 3)
@@ -460,6 +460,7 @@ await completeTask({ taskId: "abc123" })
 ```
 
 **Acceptance criteria:**
+
 - Optimistic updates apply immediately to the local query cache
 - If the server mutation succeeds, the optimistic update is confirmed (no flicker)
 - If the server mutation fails, the optimistic update rolls back and queries revert to server state
@@ -476,7 +477,7 @@ export const createTask = mutation({
     title: v.string({ minLength: 1, maxLength: 500 }),
     priority: v.enum("low", "medium", "high", "critical"),
     assigneeId: v.id("users"),
-    dueDate: v.optional(v.timestamp({ min: "now" })),  // Cannot be in the past
+    dueDate: v.optional(v.timestamp({ min: "now" })), // Cannot be in the past
   },
   handler: async (ctx, args) => {
     // args is fully typed and validated
@@ -490,6 +491,7 @@ export const createTask = mutation({
 ```
 
 **Acceptance criteria:**
+
 - Validation errors return structured error objects with field-level details
 - Client SDK surfaces validation errors in a format compatible with form libraries
 - Custom validation functions can access the database (e.g., check uniqueness)
@@ -532,6 +534,7 @@ export const processUpload = action(async (ctx, { fileUrl }: { fileUrl: string }
 ```
 
 **Acceptance criteria:**
+
 - Actions execute outside of a database transaction
 - Actions can read from the database (non-transactional reads)
 - Actions can call mutations (which execute in their own transactions)
@@ -557,28 +560,28 @@ export const createUser = mutation(async (ctx, args) => {
   await ctx.scheduler.runAfter("24h", api.actions.sendOnboardingTip, { userId: user.id })
 
   // Scheduled for a specific time
-  await ctx.scheduler.runAt(
-    new Date("2026-03-01T09:00:00Z"),
-    api.actions.sendTrialExpiry,
-    { userId: user.id }
-  )
+  await ctx.scheduler.runAt(new Date("2026-03-01T09:00:00Z"), api.actions.sendTrialExpiry, { userId: user.id })
 
   return user
 })
 
 // Cron-scheduled actions
-export const dailyDigest = action(async (ctx) => {
-  const users = await ctx.db.users.where({ digestEnabled: true })
-  for (const user of users) {
-    await ctx.scheduler.runAfter("0s", api.actions.sendDigestEmail, { userId: user.id })
-  }
-}, {
-  cron: "0 9 * * *",
-  timezone: "UTC",
-})
+export const dailyDigest = action(
+  async (ctx) => {
+    const users = await ctx.db.users.where({ digestEnabled: true })
+    for (const user of users) {
+      await ctx.scheduler.runAfter("0s", api.actions.sendDigestEmail, { userId: user.id })
+    }
+  },
+  {
+    cron: "0 9 * * *",
+    timezone: "UTC",
+  },
+)
 ```
 
 **Acceptance criteria:**
+
 - Scheduled jobs are persisted (survive server restarts)
 - Scheduled jobs enqueued within a mutation are only dispatched after the transaction commits
 - Cron jobs use distributed locking to prevent duplicate execution across multiple server instances
@@ -617,6 +620,7 @@ Level 3 - Row level:
 ```
 
 **Acceptance criteria:**
+
 - The framework tracks dependencies at Level 2 (table + filter) for the initial release
 - Dependency tracking is automatic: developers do not annotate queries with dependency information
 - The query builder instruments all `.where()`, `.join()`, and `.include()` calls to record accessed tables and filter conditions
@@ -629,6 +633,7 @@ Level 3 - Row level:
 When a mutation commits, the framework determines which tables were modified and what the nature of the changes was (inserts, updates, deletes) to evaluate which subscriptions need re-execution.
 
 **Acceptance criteria:**
+
 - The framework captures the set of tables modified by a mutation and the affected filter dimensions
 - For inserts: the framework knows which table received a new row and the values of indexed/filtered columns
 - For updates: the framework knows which table, which rows (by primary key), and which columns changed
@@ -660,6 +665,7 @@ Subscription D: tasks (no filter, e.g., count all tasks)
 ```
 
 **Acceptance criteria:**
+
 - Invalidation is evaluated in-memory (no additional database queries for the evaluation itself)
 - Only subscriptions whose filter conditions could be affected by the change are re-executed
 - Re-execution produces a new result set that is compared (deep equality) to the previous result
@@ -673,6 +679,7 @@ Subscription D: tasks (no filter, e.g., count all tasks)
 Changes made to Postgres outside of ReactiveBase (direct SQL, other applications, migration scripts) are detected and trigger appropriate invalidations.
 
 **Acceptance criteria:**
+
 - Postgres LISTEN/NOTIFY channels are used to broadcast table-level change notifications
 - The framework installs lightweight Postgres triggers on managed tables that issue NOTIFY on INSERT/UPDATE/DELETE
 - External changes trigger Level 1 (table-level) invalidation (since filter details are not available)
@@ -686,6 +693,7 @@ Changes made to Postgres outside of ReactiveBase (direct SQL, other applications
 The framework manages WebSocket connections between clients and the server for delivering reactive query updates.
 
 **Acceptance criteria:**
+
 - Each client maintains a single WebSocket connection to the server (multiplexed subscriptions)
 - Connection protocol handles: authentication, subscription registration, subscription updates, subscription cancellation, heartbeat/keepalive, reconnection
 - Server-side connection state tracks: active subscriptions, last-sent results (for diffing), authentication context
@@ -698,6 +706,7 @@ The framework manages WebSocket connections between clients and the server for d
 Clients that disconnect and reconnect receive a consistent state without missing intermediate updates.
 
 **Acceptance criteria:**
+
 - Client SDK automatically reconnects with exponential backoff on disconnection
 - On reconnection, client sends its last-known state version for each active subscription
 - Server compares last-known version to current state and sends a minimal update (or full re-send if gap is too large)
@@ -722,6 +731,7 @@ In multi-server deployments, mutations on one server must trigger invalidations 
 ```
 
 **Acceptance criteria:**
+
 - After a mutation commits, the originating server publishes a change event to Redis pub/sub
 - Change events include: table name, operation type (insert/update/delete), and affected filter dimensions
 - All servers subscribe to change event channels and evaluate their local subscriptions
@@ -759,6 +769,7 @@ export default defineConfig({
 ```
 
 **Acceptance criteria:**
+
 - JWT verification with JWKS rotation support
 - Integration guides for: Clerk, Auth0, Supabase Auth, NextAuth.js, custom JWT
 - Auth context is available in all server functions via `ctx.auth`
@@ -785,16 +796,18 @@ export const deleteTask = mutation({
 
 // Row-level security (applied to all queries on a table)
 export default defineSchema({
-  tasks: defineTable({ /* ... */ })
-    .rowLevelSecurity((ctx, row) => {
-      // Users can only see their own tasks, admins see all
-      if (ctx.auth.claims.role === "admin") return true
-      return row.assigneeId === ctx.auth.userId
-    }),
+  tasks: defineTable({
+    /* ... */
+  }).rowLevelSecurity((ctx, row) => {
+    // Users can only see their own tasks, admins see all
+    if (ctx.auth.claims.role === "admin") return true
+    return row.assigneeId === ctx.auth.userId
+  }),
 })
 ```
 
 **Acceptance criteria:**
+
 - Authorization functions run before the main handler
 - Authorization failures return a structured 403 error (not a generic 500)
 - Row-level security policies are applied as additional WHERE clauses in queries (pushed down to Postgres, not filtered in application code)
@@ -842,6 +855,7 @@ function TaskList({ userId }: { userId: string }) {
 ```
 
 **Acceptance criteria:**
+
 - `useQuery` returns `undefined` during initial load, then the typed result, enabling loading state handling
 - `useQuery` automatically re-renders the component when the server pushes updated results
 - `useQuery` unsubscribes when the component unmounts
@@ -857,6 +871,7 @@ function TaskList({ userId }: { userId: string }) {
 The reactive subscription engine is framework-agnostic, with React hooks as one adapter.
 
 **Acceptance criteria:**
+
 - `@reactivebase/client` provides the core subscription engine (WebSocket management, caching, optimistic updates)
 - `@reactivebase/react` wraps the client core in React hooks
 - Additional framework adapters can be built for: Vue (`@reactivebase/vue`), Svelte (`@reactivebase/svelte`), Solid (`@reactivebase/solid`)
@@ -887,6 +902,7 @@ function TaskList({ preloaded }) {
 ```
 
 **Acceptance criteria:**
+
 - `preloadQuery` executes the query server-side and serializes the result
 - `usePreloadedQuery` hydrates the preloaded result on the client and establishes a reactive subscription
 - No loading flash: the component renders immediately with server-fetched data, then transitions to reactive mode
@@ -905,6 +921,7 @@ npm run dev
 ```
 
 **Acceptance criteria:**
+
 - Scaffolding creates a project with: schema definition, example query/mutation/action, TypeScript configuration, dev server, and README
 - `npm run dev` starts a local server with an embedded Postgres (via embedded-postgres or pg-mem for testing) for true zero-dependency local development
 - Hot reload on file changes (schema, server functions)
@@ -916,6 +933,7 @@ npm run dev
 The framework generates TypeScript types from the schema definition and server function signatures, providing end-to-end type safety.
 
 **Acceptance criteria:**
+
 - Running `npx reactivebase generate` produces a `_generated/` directory with:
   - `api.ts`: typed references to all server functions
   - `dataModel.ts`: TypeScript types for all tables
@@ -931,6 +949,7 @@ The framework generates TypeScript types from the schema definition and server f
 The local development server provides built-in tools for understanding system behavior.
 
 **Acceptance criteria:**
+
 - Dev server logs: every query execution, mutation, subscription invalidation, and scheduled job
 - Dev dashboard shows:
   - Active WebSocket connections and their subscriptions
@@ -958,6 +977,7 @@ reactivebase jobs             # View scheduled/running jobs
 ```
 
 **Acceptance criteria:**
+
 - All commands support `--help` with examples
 - `reactivebase functions run` accepts JSON arguments and prints the result
 - `reactivebase subscriptions` shows active subscription count per query, useful for capacity planning
@@ -970,6 +990,7 @@ reactivebase jobs             # View scheduled/running jobs
 **FR-901: Built-in metrics for monitoring reactivity performance.**
 
 **Acceptance criteria:**
+
 - Prometheus-compatible metrics endpoint on configurable port
 - Core metrics:
   - `reactivebase_queries_executed_total` (counter, by query name)
@@ -989,6 +1010,7 @@ reactivebase jobs             # View scheduled/running jobs
 **FR-902: OpenTelemetry distributed tracing.**
 
 **Acceptance criteria:**
+
 - Every query, mutation, and action execution creates a trace span
 - Mutation traces include child spans for: transaction begin, each database operation, transaction commit, invalidation evaluation, and scheduled job enqueue
 - Reactivity traces link: mutation span to invalidation evaluation span to query re-execution span to WebSocket push span
@@ -1000,6 +1022,7 @@ reactivebase jobs             # View scheduled/running jobs
 **FR-903: Structured logging with context.**
 
 **Acceptance criteria:**
+
 - All framework operations produce structured JSON logs
 - Log entries include: timestamp, level, function name, request ID, user ID (if authenticated), duration
 - Developers can log from server functions via `ctx.log.info/warn/error(message, data)`
@@ -1026,6 +1049,7 @@ Optional:
 ```
 
 **Acceptance criteria:**
+
 - Single-server deployment requires only Postgres (no Redis)
 - Multi-server deployment adds Redis for cross-server reactivity
 - Docker Compose file provided for local production-like setup
@@ -1038,6 +1062,7 @@ Optional:
 **FR-1002: Stateless server processes for horizontal scaling.**
 
 **Acceptance criteria:**
+
 - Server processes are stateless (subscription state is in-memory but reconstructed on restart)
 - Adding more server processes increases capacity linearly
 - WebSocket connections are distributed across servers via a load balancer (sticky sessions recommended but not required)
@@ -1049,18 +1074,19 @@ Optional:
 
 **FR-1003: Documented performance targets and tuning guidance.**
 
-| Metric | Target (single server) | Target (multi-server) |
-|--------|----------------------|----------------------|
-| Query latency (p50) | < 5ms | < 10ms |
-| Query latency (p99) | < 50ms | < 100ms |
-| Mutation latency (p50) | < 10ms | < 20ms |
-| Mutation latency (p99) | < 100ms | < 200ms |
-| Subscription update delivery (p50) | < 50ms after commit | < 100ms after commit |
-| Subscription update delivery (p99) | < 200ms after commit | < 500ms after commit |
-| Max concurrent subscriptions per server | 50,000 | N/A (distribute) |
-| Max mutations per second per server | 5,000 | N/A (distribute) |
+| Metric                                  | Target (single server) | Target (multi-server) |
+| --------------------------------------- | ---------------------- | --------------------- |
+| Query latency (p50)                     | < 5ms                  | < 10ms                |
+| Query latency (p99)                     | < 50ms                 | < 100ms               |
+| Mutation latency (p50)                  | < 10ms                 | < 20ms                |
+| Mutation latency (p99)                  | < 100ms                | < 200ms               |
+| Subscription update delivery (p50)      | < 50ms after commit    | < 100ms after commit  |
+| Subscription update delivery (p99)      | < 200ms after commit   | < 500ms after commit  |
+| Max concurrent subscriptions per server | 50,000                 | N/A (distribute)      |
+| Max mutations per second per server     | 5,000                  | N/A (distribute)      |
 
 **Acceptance criteria:**
+
 - Performance benchmarks are reproducible and published
 - Tuning guide documents: Postgres connection pool sizing, Redis pub/sub channel design, invalidation batching, subscription memory management
 - Degradation is graceful: under load, latency increases but no data loss or subscription loss
@@ -1227,6 +1253,7 @@ create-reactivebase          # Project scaffolding
 **Goal:** Deliver a working framework that demonstrates the core value proposition: define queries and mutations in TypeScript, get automatic reactivity and transactions on Postgres.
 
 **Deliverables:**
+
 - Schema definition and migration generation
 - Query builder with TypeScript type inference
 - Reactive queries with table-level dependency tracking (Level 1)
@@ -1240,6 +1267,7 @@ create-reactivebase          # Project scaffolding
 - GitHub repository with CI, contributing guide, and examples
 
 **Scope explicitly excluded from Phase 1:**
+
 - Filter-level dependency tracking (Level 2)
 - Multi-server support (Redis pub/sub)
 - SSR integration
@@ -1249,6 +1277,7 @@ create-reactivebase          # Project scaffolding
 - Vue/Svelte/Solid adapters
 
 **Success criteria:**
+
 - 1,000+ GitHub stars
 - 100+ weekly npm downloads
 - 20+ developers building with it (tracked via opt-in telemetry or Discord)
@@ -1260,6 +1289,7 @@ create-reactivebase          # Project scaffolding
 **Goal:** Make ReactiveBase viable for production workloads.
 
 **Deliverables:**
+
 - Filter-level dependency tracking (Level 2) for precise invalidation
 - Multi-server support via Redis pub/sub
 - Job scheduling and cron (built-in scheduler)
@@ -1274,6 +1304,7 @@ create-reactivebase          # Project scaffolding
 - Performance benchmarks (published, reproducible)
 
 **Success criteria:**
+
 - 3,000+ GitHub stars
 - 500+ weekly npm downloads
 - 50+ production deployments
@@ -1285,6 +1316,7 @@ create-reactivebase          # Project scaffolding
 **Goal:** Build the ecosystem and begin generating revenue.
 
 **Deliverables:**
+
 - Observability dashboard (paid tier, source-available)
   - Live subscription viewer
   - Mutation timeline with transaction details
@@ -1300,6 +1332,7 @@ create-reactivebase          # Project scaffolding
 - Enterprise features: SSO for dashboard, audit logging, dedicated support
 
 **Success criteria:**
+
 - 7,000+ GitHub stars
 - 2,000+ weekly npm downloads
 - $5,000+ MRR from dashboard and enterprise tiers
@@ -1311,6 +1344,7 @@ create-reactivebase          # Project scaffolding
 **Goal:** Launch managed cloud offering and pursue sustainable growth.
 
 **Deliverables:**
+
 - ReactiveBase Cloud: managed hosting with auto-scaling
 - Global edge deployment for low-latency query execution
 - Multi-region Postgres with reactive replication
@@ -1319,6 +1353,7 @@ create-reactivebase          # Project scaffolding
 - Row-level (Level 3) dependency tracking for high-precision invalidation at scale
 
 **Success criteria:**
+
 - $25,000+ MRR across all tiers
 - 500+ total paying customers
 - Path to full-time commitment or seed funding
@@ -1329,21 +1364,21 @@ create-reactivebase          # Project scaffolding
 
 ### 9.1 Detailed Comparison Matrix
 
-| Capability | ReactiveBase | Convex | Supabase | Firebase | Prisma + tRPC + WS | ElectricSQL |
-|---|---|---|---|---|---|---|
-| Reactive queries | Yes (core feature) | Yes (core feature) | Partial (Realtime add-on) | Yes (Firestore) | Manual assembly | Yes (local-first) |
-| Automatic transactions | Yes (serializable) | Yes (serializable) | No (manual) | No (limited) | No (manual) | No |
-| Background jobs | Yes (built-in) | Yes (built-in) | No (separate) | Yes (Cloud Functions) | No (separate) | No |
-| Self-hosted | Yes (primary) | No | Yes | No | Yes | Yes |
-| Database | Postgres | Proprietary | Postgres | Proprietary | Any (via ORM) | Postgres (sync) |
-| Raw SQL access | Yes | No | Yes | No | Yes (via ORM) | Limited |
-| TypeScript-native | Yes | Yes | Partial | Partial | Yes | Yes |
-| Vendor lock-in | None | Total | Low | Total | None | Low |
-| Local dev (zero deps) | Yes (embedded PG) | No (cloud required) | No (Docker) | No (emulator) | Manual setup | Yes (SQLite) |
-| SSR support | Yes (Next.js, Remix) | Yes (Next.js) | Limited | Limited | Manual | Limited |
-| Optimistic updates | Yes (client SDK) | Yes (client SDK) | No | Yes (Firestore SDK) | Manual | Yes (local-first) |
-| Client frameworks | React, Vue, Svelte | React | Any | Any (Firebase SDK) | React (tRPC) | React |
-| Pricing model | Open core | SaaS | Open core | SaaS | Free (OSS) | Open core |
+| Capability             | ReactiveBase         | Convex              | Supabase                  | Firebase              | Prisma + tRPC + WS | ElectricSQL       |
+| ---------------------- | -------------------- | ------------------- | ------------------------- | --------------------- | ------------------ | ----------------- |
+| Reactive queries       | Yes (core feature)   | Yes (core feature)  | Partial (Realtime add-on) | Yes (Firestore)       | Manual assembly    | Yes (local-first) |
+| Automatic transactions | Yes (serializable)   | Yes (serializable)  | No (manual)               | No (limited)          | No (manual)        | No                |
+| Background jobs        | Yes (built-in)       | Yes (built-in)      | No (separate)             | Yes (Cloud Functions) | No (separate)      | No                |
+| Self-hosted            | Yes (primary)        | No                  | Yes                       | No                    | Yes                | Yes               |
+| Database               | Postgres             | Proprietary         | Postgres                  | Proprietary           | Any (via ORM)      | Postgres (sync)   |
+| Raw SQL access         | Yes                  | No                  | Yes                       | No                    | Yes (via ORM)      | Limited           |
+| TypeScript-native      | Yes                  | Yes                 | Partial                   | Partial               | Yes                | Yes               |
+| Vendor lock-in         | None                 | Total               | Low                       | Total                 | None               | Low               |
+| Local dev (zero deps)  | Yes (embedded PG)    | No (cloud required) | No (Docker)               | No (emulator)         | Manual setup       | Yes (SQLite)      |
+| SSR support            | Yes (Next.js, Remix) | Yes (Next.js)       | Limited                   | Limited               | Manual             | Limited           |
+| Optimistic updates     | Yes (client SDK)     | Yes (client SDK)    | No                        | Yes (Firestore SDK)   | Manual             | Yes (local-first) |
+| Client frameworks      | React, Vue, Svelte   | React               | Any                       | Any (Firebase SDK)    | React (tRPC)       | React             |
+| Pricing model          | Open core            | SaaS                | Open core                 | SaaS                  | Free (OSS)         | Open core         |
 
 ### 9.2 Positioning Against Key Competitors
 
@@ -1361,18 +1396,18 @@ create-reactivebase          # Project scaffolding
 
 ## 10. Risks and Mitigations
 
-| # | Risk | Likelihood | Impact | Mitigation |
-|---|------|-----------|--------|------------|
-| 1 | Reactivity engine performance does not meet targets | Medium | Critical | Start with table-level tracking (simpler, proven approach). Filter-level tracking in Phase 2 after core architecture is validated. Publish benchmarks early to build confidence. |
-| 2 | Scope is too large for initial release | High | High | Phase 1 scope is aggressively trimmed: no filter-level tracking, no multi-server, no scheduling, no RLS. Ship the minimum that demonstrates the core value (reactive queries + auto transactions). |
-| 3 | Convex releases a self-hosted or open-source tier | Low | High | ReactiveBase's Postgres-native architecture is structurally different from Convex's proprietary engine. Even a self-hosted Convex would not provide raw SQL access, Postgres ecosystem compatibility, or pluggable infrastructure. |
-| 4 | Developer mindshare captured by Supabase or Drizzle ecosystem | Medium | Medium | Content strategy emphasizes the integrated reactive experience (not just "another ORM"). Clear comparisons showing what ReactiveBase provides that assembling individual tools does not. |
-| 5 | WebSocket scaling becomes a bottleneck | Medium | Medium | Documented scaling guide from Phase 1. Multi-server Redis pub/sub in Phase 2. Sticky sessions and connection draining patterns well understood. |
-| 6 | Postgres change detection misses external writes | Low | Medium | Phase 2 adds Postgres triggers for external change detection. LISTEN/NOTIFY for immediate notification. Logical replication as advanced option. |
-| 7 | Maintaining multiple client framework adapters is unsustainable | Medium | Low | Client core is framework-agnostic (one codebase). Framework adapters are thin wrappers (< 500 LOC each). Community can contribute adapters using documented interfaces. |
-| 8 | Embedded Postgres for local dev is fragile across platforms | Medium | Medium | Use pg-mem for unit testing and lightweight dev. Provide Docker Compose as fallback. Test on Linux, macOS (ARM/x64), and Windows in CI. |
-| 9 | Adoption blocked by "not invented here" at larger companies | Medium | Low | Enterprise tier with SLA and support addresses organizational risk concerns. Case studies and production benchmarks provide evidence. Postgres compatibility reduces perceived risk. |
-| 10 | Revenue generation takes longer than projected | Medium | Medium | Framework generates independent value (blog content, speaking, consulting). Pro dashboard and enterprise support have proven revenue models in OSS (Sidekiq, Supabase, PostHog). |
+| #   | Risk                                                            | Likelihood | Impact   | Mitigation                                                                                                                                                                                                                         |
+| --- | --------------------------------------------------------------- | ---------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Reactivity engine performance does not meet targets             | Medium     | Critical | Start with table-level tracking (simpler, proven approach). Filter-level tracking in Phase 2 after core architecture is validated. Publish benchmarks early to build confidence.                                                   |
+| 2   | Scope is too large for initial release                          | High       | High     | Phase 1 scope is aggressively trimmed: no filter-level tracking, no multi-server, no scheduling, no RLS. Ship the minimum that demonstrates the core value (reactive queries + auto transactions).                                 |
+| 3   | Convex releases a self-hosted or open-source tier               | Low        | High     | ReactiveBase's Postgres-native architecture is structurally different from Convex's proprietary engine. Even a self-hosted Convex would not provide raw SQL access, Postgres ecosystem compatibility, or pluggable infrastructure. |
+| 4   | Developer mindshare captured by Supabase or Drizzle ecosystem   | Medium     | Medium   | Content strategy emphasizes the integrated reactive experience (not just "another ORM"). Clear comparisons showing what ReactiveBase provides that assembling individual tools does not.                                           |
+| 5   | WebSocket scaling becomes a bottleneck                          | Medium     | Medium   | Documented scaling guide from Phase 1. Multi-server Redis pub/sub in Phase 2. Sticky sessions and connection draining patterns well understood.                                                                                    |
+| 6   | Postgres change detection misses external writes                | Low        | Medium   | Phase 2 adds Postgres triggers for external change detection. LISTEN/NOTIFY for immediate notification. Logical replication as advanced option.                                                                                    |
+| 7   | Maintaining multiple client framework adapters is unsustainable | Medium     | Low      | Client core is framework-agnostic (one codebase). Framework adapters are thin wrappers (< 500 LOC each). Community can contribute adapters using documented interfaces.                                                            |
+| 8   | Embedded Postgres for local dev is fragile across platforms     | Medium     | Medium   | Use pg-mem for unit testing and lightweight dev. Provide Docker Compose as fallback. Test on Linux, macOS (ARM/x64), and Windows in CI.                                                                                            |
+| 9   | Adoption blocked by "not invented here" at larger companies     | Medium     | Low      | Enterprise tier with SLA and support addresses organizational risk concerns. Case studies and production benchmarks provide evidence. Postgres compatibility reduces perceived risk.                                               |
+| 10  | Revenue generation takes longer than projected                  | Medium     | Medium   | Framework generates independent value (blog content, speaking, consulting). Pro dashboard and enterprise support have proven revenue models in OSS (Sidekiq, Supabase, PostHog).                                                   |
 
 ---
 
@@ -1380,34 +1415,34 @@ create-reactivebase          # Project scaffolding
 
 ### 11.1 Product Health
 
-| Metric | Phase 1 | Phase 2 | Phase 3 |
-|--------|---------|---------|---------|
-| GitHub stars | 1,000 | 3,000 | 7,000 |
-| npm weekly downloads | 100 | 500 | 2,000 |
-| Production deployments | 20 | 50 | 200 |
-| Active Discord members | 100 | 300 | 800 |
-| External contributors (merged PRs) | 5 | 15 | 30 |
+| Metric                             | Phase 1 | Phase 2 | Phase 3 |
+| ---------------------------------- | ------- | ------- | ------- |
+| GitHub stars                       | 1,000   | 3,000   | 7,000   |
+| npm weekly downloads               | 100     | 500     | 2,000   |
+| Production deployments             | 20      | 50      | 200     |
+| Active Discord members             | 100     | 300     | 800     |
+| External contributors (merged PRs) | 5       | 15      | 30      |
 
 ### 11.2 Technical Health
 
-| Metric | Target |
-|--------|--------|
-| Subscription update latency (p50) | < 50ms |
-| Subscription update latency (p99) | < 200ms |
-| False invalidation rate (table-level) | < 30% |
-| False invalidation rate (filter-level) | < 10% |
-| Memory per active subscription | < 1 KB |
-| CI test suite pass rate | > 99.5% |
-| Benchmark regression (version over version) | < 5% |
+| Metric                                      | Target  |
+| ------------------------------------------- | ------- |
+| Subscription update latency (p50)           | < 50ms  |
+| Subscription update latency (p99)           | < 200ms |
+| False invalidation rate (table-level)       | < 30%   |
+| False invalidation rate (filter-level)      | < 10%   |
+| Memory per active subscription              | < 1 KB  |
+| CI test suite pass rate                     | > 99.5% |
+| Benchmark regression (version over version) | < 5%    |
 
 ### 11.3 Business Health
 
-| Metric | Phase 2 | Phase 3 | Phase 4 |
-|--------|---------|---------|---------|
-| MRR | - | $5,000 | $25,000 |
-| Paying customers | - | 50 | 300 |
-| Enterprise customers | - | 5 | 25 |
-| Monthly churn | - | < 8% | < 5% |
+| Metric               | Phase 2 | Phase 3 | Phase 4 |
+| -------------------- | ------- | ------- | ------- |
+| MRR                  | -       | $5,000  | $25,000 |
+| Paying customers     | -       | 50      | 300     |
+| Enterprise customers | -       | 5       | 25      |
+| Monthly churn        | -       | < 8%    | < 5%    |
 
 ### 11.4 North Star Metric
 
