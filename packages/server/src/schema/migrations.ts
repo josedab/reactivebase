@@ -23,6 +23,8 @@ export function generateCreateTableSQL(tableName: string, columns: Record<string
   lines.push("  id text PRIMARY KEY DEFAULT gen_random_uuid()")
 
   for (const [colName, validator] of Object.entries(columns)) {
+    // Virtual fields are not stored in Postgres
+    if (validator.type === "virtual") continue
     const pgCol = columnToSQL(colName, validator)
     lines.push(`  ${pgCol}`)
   }
@@ -31,6 +33,12 @@ export function generateCreateTableSQL(tableName: string, columns: Record<string
 }
 
 function columnToSQL(name: string, validator: Validator): string {
+  // Computed columns use Postgres GENERATED ALWAYS AS
+  if (validator.type === "computed" && validator.computeSql) {
+    const inner = validator.innerValidator ?? validator
+    return `"${name}" ${inner.pgType} GENERATED ALWAYS AS (${validator.computeSql}) STORED`
+  }
+
   const actualValidator =
     validator.type === "optional" && validator.innerValidator ? validator.innerValidator : validator
   const pgType = actualValidator.pgType

@@ -16,6 +16,8 @@ export type ValidatorType =
   | "optional"
   | "custom"
   | "vector"
+  | "computed"
+  | "virtual"
 
 export interface ValidatorOptions {
   default?: unknown
@@ -34,6 +36,12 @@ export interface ValidatorOptions {
   __searchLanguage?: string
 }
 
+/** Function signature for computed/virtual field derivation */
+export type ComputedFieldFn<T = unknown> = (row: Record<string, unknown>) => T
+
+/** SQL expression for server-side computed columns */
+export type ComputedSqlExpr = string
+
 export interface Validator<T = unknown> {
   readonly type: ValidatorType
   readonly tsType: T
@@ -44,6 +52,12 @@ export interface Validator<T = unknown> {
   readonly referencedTable?: string
   readonly innerValidator?: Validator
   readonly dimensions?: number
+  /** Derivation function for computed/virtual fields */
+  readonly computeFn?: ComputedFieldFn<T>
+  /** SQL expression for server-side computed columns (GENERATED ALWAYS AS) */
+  readonly computeSql?: ComputedSqlExpr
+  /** Tables this computed/virtual field depends on for reactivity */
+  readonly dependsOnTables?: readonly string[]
 }
 
 function createValidator<T>(
@@ -143,10 +157,76 @@ export const v = {
    * Generates a GIN index on the tsvector representation.
    */
   searchable(options: { weight?: "A" | "B" | "C" | "D"; language?: string } = {}): Validator<string> {
-    return createValidator(
-      "string",
-      "text",
-      { __searchable: true, __searchWeight: options.weight, __searchLanguage: options.language },
-    )
+    return createValidator("string", "text", {
+      __searchable: true,
+      __searchWeight: options.weight,
+      __searchLanguage: options.language,
+    })
+  },
+
+  /**
+   * Define a server-side computed column (Postgres GENERATED ALWAYS AS).
+   * The SQL expression is stored and computed by Postgres; the derivation
+   * function is used for in-memory evaluation and type inference.
+   */
+  computed<T>(options: {
+    sql: ComputedSqlExpr
+    returning: Validator<T>
+    fn?: ComputedFieldFn<T>
+    dependsOn?: string[]
+  }): Validator<T> {
+    if (!options.sql || typeof options.sql !== "string" || options.sql.trim().length === 0) {
+      throw new Error("v.computed() requires a non-empty SQL expression")
+    }
+    if (!options.returning) {
+      throw new Error("v.computed() requires a 'returning' validator for type inference")
+    }
+    // Block dangerous SQL patterns in computed expressions
+    const sqlUpper = options.sql.toUpperCase()
+    if (
+      sqlUpper.includes("DROP ") ||
+      sqlUpper.includes("DELETE ") ||
+      sqlUpper.includes("INSERT ") ||
+      sqlUpper.includes("UPDATE ") ||
+      sqlUpper.includes("ALTER ") ||
+      sqlUpper.includes("TRUNCATE ")
+    ) {
+      throw new Error("v.computed() SQL expression must not contain DDL/DML statements")
+    }
+    return {
+      type: "computed",
+      tsType: undefined as unknown as T,
+      pgType: options.returning.pgType,
+      isOptional: false,
+      options: {},
+      computeSql: options.sql,
+      computeFn: options.fn,
+      dependsOnTables: options.dependsOn,
+      innerValidator: options.returning as Validator,
+    } as Validator<T>
+  },
+
+  /**
+   * Define a virtual field computed at query time (not stored in Postgres).
+   * The derivation function runs server-side after row fetch. Cross-table
+   * dependencies are tracked for automatic reactivity invalidation.
+   */
+  virtual<T>(options: { fn: ComputedFieldFn<T>; returning: Validator<T>; dependsOn?: string[] }): Validator<T> {
+    if (!options.fn || typeof options.fn !== "function") {
+      throw new Error("v.virtual() requires a derivation function ('fn')")
+    }
+    if (!options.returning) {
+      throw new Error("v.virtual() requires a 'returning' validator for type inference")
+    }
+    return {
+      type: "virtual",
+      tsType: undefined as unknown as T,
+      pgType: options.returning.pgType,
+      isOptional: false,
+      options: {},
+      computeFn: options.fn,
+      dependsOnTables: options.dependsOn,
+      innerValidator: options.returning as Validator,
+    } as Validator<T>
   },
 } as const

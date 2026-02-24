@@ -41,6 +41,10 @@ export interface SchemaField {
   hasDefault: boolean
   isId: boolean
   referencedTable?: string
+  /** Whether this is a computed column (stored in Postgres) */
+  isComputed?: boolean
+  /** Whether this is a virtual field (not stored, derived at query time) */
+  isVirtual?: boolean
 }
 
 export interface SchemaTable {

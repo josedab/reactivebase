@@ -1,5 +1,5 @@
 export { v } from "./validators.js"
-export type { Validator, ValidatorOptions, ValidatorType } from "./validators.js"
+export type { Validator, ValidatorOptions, ValidatorType, ComputedFieldFn, ComputedSqlExpr } from "./validators.js"
 export { defineTable } from "./table.js"
 export type { TableDefinition, ColumnDefinitions, InferRow, IndexDefinition, RelationDefinition } from "./table.js"
 export { defineSchema } from "./schema.js"
