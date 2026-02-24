@@ -25,3 +25,34 @@ export type {
   GatewayRoute,
   GatewayStats,
 } from "./api-gateway.js"
+
+// OpenAPI 3.1 Generator
+export { OpenApiGenerator } from "./openapi-generator.js"
+export type {
+  OpenApi31Spec,
+  OpenApi31PathItem,
+  OpenApi31Operation,
+  OpenApi31Schema,
+  FunctionDescriptor,
+  ArgSchema,
+  ReturnSchema,
+  OpenApiGeneratorOptions,
+} from "./openapi-generator.js"
+
+// GraphQL Schema Generator
+export { GraphQLSchemaGenerator } from "./graphql-schema-generator.js"
+export type {
+  GeneratedGraphQLResult,
+  GraphQLSchemaGeneratorOptions,
+  IntrospectionResponse,
+} from "./graphql-schema-generator.js"
+
+// Unified Gateway
+export { UnifiedGateway } from "./unified-gateway.js"
+export type {
+  GatewayRequest,
+  GatewayResponse,
+  UnifiedGatewayOptions,
+  GatewayRouteInfo,
+  GatewayTransportStats,
+} from "./unified-gateway.js"
