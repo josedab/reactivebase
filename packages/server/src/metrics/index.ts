@@ -45,3 +45,21 @@ export type {
 // Alert Engine
 export { AlertEngine, builtInRules } from "./alert-engine.js"
 export type { AlertRule as AlertEngineRule, Alert, AlertAction, AlertSeverity } from "./alert-engine.js"
+
+// Performance Advisor
+export {
+  PerformanceAdvisor,
+  buildUnusedIndexesSQL,
+  buildTableSeqScanSQL,
+  buildIndexSuggestionsSQL,
+} from "./performance-advisor.js"
+export type {
+  AdvisorOptions,
+  QueryRecord,
+  InvalidationRecord,
+  IndexUsageRecord,
+  Recommendation,
+  RecommendationType,
+  RecommendationSeverity,
+  AdvisorReport,
+} from "./performance-advisor.js"
