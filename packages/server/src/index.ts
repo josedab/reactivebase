@@ -1428,3 +1428,22 @@ export type {
   GenerationResult,
   UniversalSdkOptions,
 } from "./universal-sdk/index.js"
+
+// Webhook Delivery Queue & Integration Bus
+export {
+  WebhookDeliveryQueue,
+  WebhookSimulator,
+  WebhookDeliveryError,
+  webhookTemplates,
+  generateDeliveryQueueTableSQL,
+  createDeliveryQueue,
+  createWebhookSimulator,
+} from "./webhooks/index.js"
+export type {
+  DeliveryRecord,
+  DeliveryStatus,
+  DeliveryQueueOptions,
+  DeliveryMetrics,
+  WebhookTemplate,
+  SimulatedDelivery,
+} from "./webhooks/index.js"
