@@ -354,3 +354,56 @@ export class PreviewError extends Error {
     this.name = "PreviewError"
   }
 }
+
+/**
+ * Generate a GitHub Action workflow step that runs migration shadow preview
+ * and posts results as a PR comment.
+ */
+export function generateMigrationPreviewStep(config: PreviewConfig = {}): string {
+  const c = { ...DEFAULT_CONFIG, ...config }
+
+  return `
+      - name: Migration Impact Preview
+        id: migration-preview
+        run: |
+          npx reactivebase migration:preview --format=json > /tmp/migration-report.json
+        env:
+          DATABASE_URL: \${{ secrets.PREVIEW_DATABASE_URL }}
+          NODE_ENV: preview
+
+      - name: Post Migration Report
+        if: always() && steps.migration-preview.outcome != 'skipped'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            try {
+              const report = JSON.parse(fs.readFileSync('/tmp/migration-report.json', 'utf8'));
+              const emoji = report.status === 'safe' ? '✅' : report.status === 'warning' ? '⚠️' : '❌';
+              let body = '## ' + emoji + ' Migration Impact Report\\n\\n';
+              body += '**Status:** ' + report.status.toUpperCase() + '\\n';
+              body += '**Duration:** ' + report.durationMs + 'ms\\n\\n';
+              if (report.breakingChanges && report.breakingChanges.length > 0) {
+                body += '### Breaking Changes\\n';
+                report.breakingChanges.forEach(bc => { body += '- **' + bc.type + '**: ' + bc.description + '\\n'; });
+                body += '\\n';
+              }
+              if (report.performanceRegressions && report.performanceRegressions.length > 0) {
+                body += '### Performance Regressions\\n';
+                report.performanceRegressions.forEach(pr => {
+                  body += '- ' + (pr.functionName || pr.sql.substring(0, 50)) + ': +' + pr.regressionPct + '% regression\\n';
+                });
+                body += '\\n';
+              }
+              body += report.summary + '\\n';
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            } catch (e) {
+              console.log('Migration report not available:', e.message);
+            }
+`.trim()
+}

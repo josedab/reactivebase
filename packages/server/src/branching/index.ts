@@ -28,7 +28,12 @@ export { NeonBranchingAdapter, NeonBranchingError } from "./neon-branching.js"
 
 export type { NeonConfig, NeonBranch, NeonEndpoint } from "./neon-branching.js"
 
-export { generateGitHubActionYAML, PRPreviewManager, PreviewError } from "./github-action.js"
+export {
+  generateGitHubActionYAML,
+  PRPreviewManager,
+  PreviewError,
+  generateMigrationPreviewStep,
+} from "./github-action.js"
 
 export type { PreviewConfig, PreviewRecord } from "./github-action.js"
 

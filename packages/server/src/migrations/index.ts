@@ -21,3 +21,16 @@ export type {
   MigrationStep as PlannerMigrationStep,
   DryRunResult,
 } from "./migration-planner.js"
+
+// Live Migration Previews (Shadow Execution)
+export { MigrationPreview } from "./shadow-preview.js"
+export type {
+  MigrationPreviewOptions,
+  MigrationPreviewRequest,
+  MigrationPreviewReport,
+  RecentQuery,
+  QueryReplayResult,
+  BreakingChange,
+  PerformanceRegression,
+  IndexRecommendation,
+} from "./shadow-preview.js"
