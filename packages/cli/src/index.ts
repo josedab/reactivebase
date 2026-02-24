@@ -181,6 +181,28 @@ async function main(): Promise<void> {
       break
     }
 
+    case "seed": {
+      const { seedRun } = await import("./commands/seed.js")
+      await seedRun({
+        projectDir: process.cwd(),
+        profile: args.includes("--profile") ? getFlag("--profile", "") : undefined,
+        environment: getFlag("--env", "dev"),
+      })
+      break
+    }
+
+    case "seed:reset": {
+      const { seedReset } = await import("./commands/seed.js")
+      await seedReset({ projectDir: process.cwd() })
+      break
+    }
+
+    case "seed:status": {
+      const { seedStatus } = await import("./commands/seed.js")
+      await seedStatus({ projectDir: process.cwd() })
+      break
+    }
+
     case "--help":
     case "-h":
     case undefined:

@@ -1520,3 +1520,25 @@ export {
   createSubscriptionCoalescer,
 } from "./smart-pool/index.js"
 export type { SmartPoolOptions, CoalescedQuery, PoolStats, BatchEvaluatorOptions } from "./smart-pool/index.js"
+
+// Data Seeding & Fixtures
+export {
+  SeedRegistry,
+  SeedError,
+  SeedDependencyError,
+  SeedCycleError,
+  defineSeed,
+  defineSeedProfile,
+  createSeedRegistry,
+  generateSeedTrackingTableSQL,
+} from "./seeding/index.js"
+export type {
+  SeedDefinition,
+  SeedProfile,
+  SeedContext,
+  SeedEnvironment,
+  SeedRecord,
+  SeedExecutionResult,
+  SeedStatus,
+  FakeDataGenerators,
+} from "./seeding/index.js"

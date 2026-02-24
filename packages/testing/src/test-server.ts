@@ -182,6 +182,22 @@ export class TestServer {
     this.auth = createAuthContext(null)
   }
 
+  /**
+   * Apply seed data to the test server.
+   * Integrates with the seeding framework for reproducible test data.
+   */
+  async withSeed(
+    seedRecords: Array<{ table: string; data: Record<string, unknown> }>,
+  ): Promise<void> {
+    const dbCtx = this.db.createContext("readwrite")
+    for (const record of seedRecords) {
+      const tableAccessor = dbCtx[record.table]
+      if (tableAccessor && typeof tableAccessor === "object" && "insert" in (tableAccessor as object)) {
+        await (tableAccessor as { insert: (data: Record<string, unknown>) => Promise<unknown> }).insert(record.data)
+      }
+    }
+  }
+
   private resolveFunction(fnOrRef: { handler: Function } | string, _expectedType?: string) {
     if (typeof fnOrRef === "string") {
       const fn = this.functions.get(fnOrRef)
