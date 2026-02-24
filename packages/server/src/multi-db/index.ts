@@ -36,3 +36,14 @@ export type {
   SQLiteAdapterOptions,
   MySQLAdapterOptions,
 } from "./database-adapter.js"
+
+// Federation Extensions (defineDataSource, cross-source, reactive federation)
+export { defineDataSource, mergeQueryResults, FederationChangeRelay, ReplicaRouter } from "./federation.js"
+export type {
+  DataSourceConfig,
+  DataSourceSchema,
+  FederatedDataSource,
+  MergedQueryResult,
+  ChangeNotification,
+  ChangeNotificationHandler,
+} from "./federation.js"
