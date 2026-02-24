@@ -28,3 +28,20 @@ export type {
   GrafanaDashboard,
   GrafanaPanel,
 } from "./performance-profiler.js"
+
+// OTel Instrumentation
+export { OtelInstrumentation, createAutoInstrumentedTracer } from "./otel-instrumentation.js"
+export type { OtelConfig, ConnectionPoolLike, InstrumentedResult } from "./otel-instrumentation.js"
+
+// Realtime Dashboard
+export { RealtimeDashboard } from "./realtime-dashboard.js"
+export type {
+  SlowQueryEntry as DashboardSlowQueryEntry,
+  SubscriptionHeatmapEntry,
+  ConnectionPoolMetrics,
+  ErrorBreakdownEntry,
+} from "./realtime-dashboard.js"
+
+// Alert Engine
+export { AlertEngine, builtInRules } from "./alert-engine.js"
+export type { AlertRule as AlertEngineRule, Alert, AlertAction, AlertSeverity } from "./alert-engine.js"
