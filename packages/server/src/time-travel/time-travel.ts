@@ -382,3 +382,314 @@ export class TimeTravelEngine {
     this.eventCounter = 0
   }
 }
+
+// ─── Audit Trail ─────────────────────────────────────────────────────────────
+
+export interface AuditEntry {
+  id: string
+  timestamp: string
+  timestampMs: number
+  action: string
+  resource: string
+  resourceId: string
+  userId: string
+  ipAddress?: string
+  userAgent?: string
+  changes?: Record<string, { from: unknown; to: unknown }>
+  metadata?: Record<string, unknown>
+  severity: "info" | "warning" | "critical"
+}
+
+export interface AuditFilter {
+  userId?: string
+  resource?: string
+  resourceId?: string
+  action?: string
+  severity?: AuditEntry["severity"]
+  fromMs?: number
+  toMs?: number
+  limit?: number
+}
+
+export interface AuditTrailOptions {
+  retentionDays?: number
+  maxEntries?: number
+  enableComplianceMode?: boolean
+}
+
+export interface TimelineEntry {
+  timestamp: number
+  type: "mutation" | "audit"
+  label: string
+  detail: string
+  severity?: AuditEntry["severity"]
+  userId?: string
+  resource?: string
+}
+
+export function generateAuditTableSQL(): string {
+  return `
+CREATE TABLE IF NOT EXISTS _reactivebase_audit_trail (
+  id TEXT PRIMARY KEY,
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  timestamp_ms BIGINT NOT NULL,
+  action TEXT NOT NULL,
+  resource TEXT NOT NULL,
+  resource_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  ip_address TEXT,
+  user_agent TEXT,
+  changes JSONB,
+  metadata JSONB,
+  severity TEXT NOT NULL DEFAULT 'info' CHECK (severity IN ('info', 'warning', 'critical'))
+);
+CREATE INDEX IF NOT EXISTS idx_audit_user ON _reactivebase_audit_trail (user_id, timestamp_ms);
+CREATE INDEX IF NOT EXISTS idx_audit_resource ON _reactivebase_audit_trail (resource, resource_id, timestamp_ms);
+CREATE INDEX IF NOT EXISTS idx_audit_action ON _reactivebase_audit_trail (action, timestamp_ms);
+CREATE INDEX IF NOT EXISTS idx_audit_severity ON _reactivebase_audit_trail (severity, timestamp_ms);
+`.trim()
+}
+
+export function buildInsertAuditSQL(): string {
+  return `INSERT INTO _reactivebase_audit_trail (id, timestamp_ms, action, resource, resource_id, user_id, ip_address, user_agent, changes, metadata, severity)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11)`
+}
+
+export function buildQueryAuditSQL(filter: AuditFilter): { sql: string; params: unknown[] } {
+  const conditions: string[] = []
+  const params: unknown[] = []
+  let idx = 1
+
+  if (filter.userId) {
+    conditions.push(`user_id = $${idx++}`)
+    params.push(filter.userId)
+  }
+  if (filter.resource) {
+    conditions.push(`resource = $${idx++}`)
+    params.push(filter.resource)
+  }
+  if (filter.resourceId) {
+    conditions.push(`resource_id = $${idx++}`)
+    params.push(filter.resourceId)
+  }
+  if (filter.action) {
+    conditions.push(`action = $${idx++}`)
+    params.push(filter.action)
+  }
+  if (filter.severity) {
+    conditions.push(`severity = $${idx++}`)
+    params.push(filter.severity)
+  }
+  if (filter.fromMs !== undefined) {
+    conditions.push(`timestamp_ms >= $${idx++}`)
+    params.push(filter.fromMs)
+  }
+  if (filter.toMs !== undefined) {
+    conditions.push(`timestamp_ms <= $${idx++}`)
+    params.push(filter.toMs)
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
+  const limit = filter.limit ? `LIMIT $${idx}` : "LIMIT 1000"
+  if (filter.limit) params.push(filter.limit)
+
+  return {
+    sql: `SELECT * FROM _reactivebase_audit_trail ${where} ORDER BY timestamp_ms DESC ${limit}`,
+    params,
+  }
+}
+
+export function buildTemporalQuerySQL(table: string, timestamp: number): string {
+  return `SELECT * FROM "${table.replace(/"/g, '""')}" AS OF SYSTEM TIME '${new Date(timestamp).toISOString()}'`
+}
+
+export function buildTemporalRangeQuerySQL(table: string, fromMs: number, toMs: number): string {
+  return `SELECT * FROM "${table.replace(/"/g, '""')}" FOR SYSTEM_TIME FROM '${new Date(fromMs).toISOString()}' TO '${new Date(toMs).toISOString()}'`
+}
+
+export function buildEnableTemporalSQL(table: string): string {
+  const escaped = table.replace(/"/g, '""')
+  return `
+ALTER TABLE "${escaped}" ADD COLUMN IF NOT EXISTS _rb_valid_from TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE "${escaped}" ADD COLUMN IF NOT EXISTS _rb_valid_to TIMESTAMPTZ NOT NULL DEFAULT 'infinity';
+CREATE INDEX IF NOT EXISTS idx_${table}_temporal ON "${escaped}" (_rb_valid_from, _rb_valid_to);
+`.trim()
+}
+
+export class AuditTrail {
+  private entries: AuditEntry[] = []
+  private readonly maxEntries: number
+  private readonly retentionMs: number
+  private readonly complianceMode: boolean
+  private counter = 0
+
+  constructor(options: AuditTrailOptions = {}) {
+    this.maxEntries = options.maxEntries ?? 50000
+    this.retentionMs = (options.retentionDays ?? 90) * 24 * 60 * 60 * 1000
+    this.complianceMode = options.enableComplianceMode ?? false
+  }
+
+  record(params: {
+    action: string
+    resource: string
+    resourceId: string
+    userId: string
+    ipAddress?: string
+    userAgent?: string
+    changes?: Record<string, { from: unknown; to: unknown }>
+    metadata?: Record<string, unknown>
+    severity?: AuditEntry["severity"]
+  }): AuditEntry {
+    this.counter++
+    const now = Date.now()
+
+    const entry: AuditEntry = {
+      id: `audit_${now}_${this.counter}`,
+      timestamp: new Date(now).toISOString(),
+      timestampMs: now,
+      action: params.action,
+      resource: params.resource,
+      resourceId: params.resourceId,
+      userId: params.userId,
+      ipAddress: params.ipAddress,
+      userAgent: params.userAgent,
+      changes: params.changes,
+      metadata: params.metadata,
+      severity: params.severity ?? "info",
+    }
+
+    this.entries.push(entry)
+
+    if (this.entries.length > this.maxEntries) {
+      if (this.complianceMode) {
+        // In compliance mode, keep critical entries even when pruning
+        const critical = this.entries.filter((e) => e.severity === "critical")
+        const recent = this.entries.slice(-Math.floor(this.maxEntries * 0.8))
+        const merged = new Map<string, AuditEntry>()
+        for (const e of critical) merged.set(e.id, e)
+        for (const e of recent) merged.set(e.id, e)
+        this.entries = Array.from(merged.values()).sort((a, b) => a.timestampMs - b.timestampMs)
+      } else {
+        this.entries = this.entries.slice(-Math.floor(this.maxEntries * 0.8))
+      }
+    }
+
+    return entry
+  }
+
+  query(filter: AuditFilter): AuditEntry[] {
+    let results = this.entries
+
+    if (filter.userId) results = results.filter((e) => e.userId === filter.userId)
+    if (filter.resource) results = results.filter((e) => e.resource === filter.resource)
+    if (filter.resourceId) results = results.filter((e) => e.resourceId === filter.resourceId)
+    if (filter.action) results = results.filter((e) => e.action === filter.action)
+    if (filter.severity) results = results.filter((e) => e.severity === filter.severity)
+    if (filter.fromMs !== undefined) results = results.filter((e) => e.timestampMs >= filter.fromMs!)
+    if (filter.toMs !== undefined) results = results.filter((e) => e.timestampMs <= filter.toMs!)
+
+    results = results.sort((a, b) => b.timestampMs - a.timestampMs)
+    return filter.limit ? results.slice(0, filter.limit) : results
+  }
+
+  getResourceHistory(resource: string, resourceId: string): AuditEntry[] {
+    return this.entries
+      .filter((e) => e.resource === resource && e.resourceId === resourceId)
+      .sort((a, b) => a.timestampMs - b.timestampMs)
+  }
+
+  prune(): number {
+    const cutoff = Date.now() - this.retentionMs
+    const before = this.entries.length
+    if (this.complianceMode) {
+      this.entries = this.entries.filter((e) => e.timestampMs >= cutoff || e.severity === "critical")
+    } else {
+      this.entries = this.entries.filter((e) => e.timestampMs >= cutoff)
+    }
+    return before - this.entries.length
+  }
+
+  get entryCount(): number {
+    return this.entries.length
+  }
+
+  clear(): void {
+    if (this.complianceMode) {
+      throw new Error("Cannot clear audit trail in compliance mode")
+    }
+    this.entries = []
+    this.counter = 0
+  }
+}
+
+// ── At-Query Helper ──────────────────────────────────────────────────────────
+
+export class TemporalQuery {
+  constructor(private readonly engine: TimeTravelEngine) {}
+
+  at(timestampMs: number) {
+    return {
+      getRow: (table: string, rowId: string) => this.engine.getRowStateAt(table, rowId, timestampMs),
+
+      getTable: (table: string): Record<string, Record<string, unknown>> => {
+        const events = this.engine.getEventsInRange(0, timestampMs, table)
+        const rows = new Map<string, Record<string, unknown>>()
+        for (const evt of events.sort((a, b) => a.timestampMs - b.timestampMs)) {
+          if (evt.operation === "delete") {
+            rows.delete(evt.rowId)
+          } else if (evt.after) {
+            rows.set(evt.rowId, evt.after)
+          }
+        }
+        return Object.fromEntries(rows)
+      },
+
+      diff: (otherTimestampMs: number) =>
+        this.engine.diff(Math.min(timestampMs, otherTimestampMs), Math.max(timestampMs, otherTimestampMs)),
+    }
+  }
+}
+
+// ── Timeline Builder ─────────────────────────────────────────────────────────
+
+export class TimelineBuilder {
+  constructor(
+    private readonly engine: TimeTravelEngine,
+    private readonly audit: AuditTrail,
+  ) {}
+
+  build(fromMs: number, toMs: number, options?: { limit?: number }): TimelineEntry[] {
+    const limit = options?.limit ?? 200
+    const entries: TimelineEntry[] = []
+
+    // Mutation events
+    const mutations = this.engine.getEventsInRange(fromMs, toMs)
+    for (const evt of mutations) {
+      entries.push({
+        timestamp: evt.timestampMs,
+        type: "mutation",
+        label: `${evt.operation} on ${evt.table}`,
+        detail: `${evt.mutationName}: ${evt.operation} ${evt.table}.${evt.rowId}`,
+        userId: evt.userId,
+        resource: evt.table,
+      })
+    }
+
+    // Audit entries
+    const audits = this.audit.query({ fromMs, toMs })
+    for (const entry of audits) {
+      entries.push({
+        timestamp: entry.timestampMs,
+        type: "audit",
+        label: `${entry.action} on ${entry.resource}`,
+        detail: `${entry.action}: ${entry.resource}/${entry.resourceId}`,
+        severity: entry.severity,
+        userId: entry.userId,
+        resource: entry.resource,
+      })
+    }
+
+    entries.sort((a, b) => a.timestamp - b.timestamp)
+    return entries.slice(0, limit)
+  }
+}

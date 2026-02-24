@@ -1,9 +1,28 @@
 export {
   TimeTravelEngine,
+  AuditTrail,
+  TemporalQuery,
+  TimelineBuilder,
   generateTimeTravelTableSQL,
+  generateAuditTableSQL,
   buildInsertEventSQL,
   buildGetEventsInRangeSQL,
   buildGetRowHistorySQL,
   buildPruneEventsSQL,
+  buildInsertAuditSQL,
+  buildQueryAuditSQL,
+  buildTemporalQuerySQL,
+  buildTemporalRangeQuerySQL,
+  buildEnableTemporalSQL,
 } from "./time-travel.js"
-export type { MutationEvent, TimeTravelSnapshot, TimeTravelDiff, DiffEntry, TimeTravelOptions } from "./time-travel.js"
+export type {
+  MutationEvent,
+  TimeTravelSnapshot,
+  TimeTravelDiff,
+  DiffEntry,
+  TimeTravelOptions,
+  AuditEntry,
+  AuditFilter,
+  AuditTrailOptions,
+  TimelineEntry,
+} from "./time-travel.js"
