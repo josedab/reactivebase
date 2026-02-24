@@ -24,8 +24,14 @@ async function main(): Promise<void> {
     }
 
     case "generate": {
-      const { writeGeneratedFiles } = await import("./commands/generate.js")
-      writeGeneratedFiles(process.cwd())
+      const subcommand = args[1]
+      if (subcommand === "--procedures") {
+        const { generateProcedures } = await import("./commands/generate-procedures.js")
+        await generateProcedures({ projectDir: process.cwd() })
+      } else {
+        const { writeGeneratedFiles } = await import("./commands/generate.js")
+        writeGeneratedFiles(process.cwd())
+      }
       break
     }
 

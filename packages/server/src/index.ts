@@ -1447,3 +1447,23 @@ export type {
   WebhookTemplate,
   SimulatedDelivery,
 } from "./webhooks/index.js"
+
+// Reactive Stored Procedures
+export {
+  StoredProcedureRegistry,
+  ProcedureBuilder,
+  ProcedureCompileError,
+  compileProcedure,
+  defineProcedure,
+  defineRawProcedure,
+  createProcedureRegistry,
+} from "./stored-procedures/index.js"
+export type {
+  ProcedureDefinition,
+  ProcedureParam,
+  ProcedureBody,
+  ProcedureStatement,
+  PgParamType,
+  PgReturnType,
+  StoredProcedureRegistryOptions,
+} from "./stored-procedures/index.js"
