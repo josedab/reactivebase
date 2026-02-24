@@ -1467,3 +1467,23 @@ export type {
   PgReturnType,
   StoredProcedureRegistryOptions,
 } from "./stored-procedures/index.js"
+
+// Zero-Downtime Safe Migrations
+export {
+  MigrationAnalyzer,
+  SafeMigrationExecutor,
+  SafeMigrationError,
+  UnsafeMigrationError,
+  createMigrationAnalyzer,
+  createSafeMigrationExecutor,
+} from "./safe-migrations/index.js"
+export type {
+  MigrationSafety,
+  OperationType,
+  SchemaOperation,
+  MigrationPlan as ExpandContractPlan,
+  MigrationImpact,
+  MigrationPhase as ExpandContractPhase,
+  MigrationExecutionState,
+  ExpandContractOptions,
+} from "./safe-migrations/index.js"

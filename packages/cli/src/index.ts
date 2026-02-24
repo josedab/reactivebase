@@ -56,6 +56,11 @@ async function main(): Promise<void> {
         case "--rollback":
           console.log("Rollback not yet implemented.")
           break
+        case "--safe": {
+          const { migrateSafe } = await import("./commands/migrate-safe.js")
+          await migrateSafe(options)
+          break
+        }
         default:
           console.error(`Unknown migrate subcommand: ${subcommand}`)
           showMigrateHelp()
