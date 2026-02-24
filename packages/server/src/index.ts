@@ -1542,3 +1542,26 @@ export type {
   SeedStatus,
   FakeDataGenerators,
 } from "./seeding/index.js"
+
+// Reactive Rate Limiting & Usage Metering
+export {
+  RateLimitEngine,
+  SlidingWindowLimiter,
+  TokenBucketLimiter,
+  UsageMeter,
+  AdvancedRateLimitError,
+  createRateLimitEngine,
+  createUsageMeter,
+} from "./rate-limiting/index.js"
+export type {
+  RateLimitRule,
+  RateLimitContext,
+  RateLimitResult,
+  RateLimitAlgorithm,
+  RateLimitScope,
+  UsageMetrics,
+  TenantUsage,
+  FunctionUsage,
+  UsageAlert,
+  UsageAlertRule,
+} from "./rate-limiting/index.js"
