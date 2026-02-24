@@ -77,6 +77,9 @@ export { MetricsCollector } from "./metrics/index.js"
 export { toPrometheusFormat } from "./metrics/index.js"
 export { NoopTracer, ConsoleTracer, createOtelTracerAdapter, traced } from "./metrics/index.js"
 export { PerformanceProfiler } from "./metrics/index.js"
+export { OtelInstrumentation, createAutoInstrumentedTracer } from "./metrics/index.js"
+export { RealtimeDashboard } from "./metrics/index.js"
+export { AlertEngine, builtInRules } from "./metrics/index.js"
 export type {
   MetricsSnapshot,
   ServerMetrics,
@@ -99,6 +102,19 @@ export type {
   ProfilerStats,
   GrafanaDashboard,
   GrafanaPanel,
+} from "./metrics/index.js"
+export type { OtelConfig, ConnectionPoolLike, InstrumentedResult } from "./metrics/index.js"
+export type {
+  SlowQueryEntry as DashboardSlowQueryEntry,
+  SubscriptionHeatmapEntry as DashboardSubscriptionHeatmapEntry,
+  ConnectionPoolMetrics,
+  ErrorBreakdownEntry,
+} from "./metrics/index.js"
+export type {
+  AlertRule as AlertEngineRule,
+  Alert as MetricsAlert,
+  AlertAction,
+  AlertSeverity,
 } from "./metrics/index.js"
 
 // Embedded Postgres
@@ -305,8 +321,10 @@ export type {
 // Change Data Capture
 export { CdcListener, ChangeEventBuffer, deduplicateEvents } from "./cdc/index.js"
 export { ReactiveCdcAdapter } from "./cdc/index.js"
+export { RowLevelCdcAdapter } from "./cdc/index.js"
 export type { CdcOptions, CdcHandler, PgListenClient } from "./cdc/index.js"
 export type { ReactiveCdcOptions, WalChangeEvent, CdcAdapterStats, ProcessChangesCallback } from "./cdc/index.js"
+export type { RowChange, RowLevelBatch, RowLevelCdcStats, SubscriptionFilter } from "./cdc/index.js"
 
 // Multi-Tenancy
 export {
@@ -318,6 +336,14 @@ export {
   generateDropTenantSQL,
 } from "./tenancy/index.js"
 export { SaasKit, DEFAULT_PLANS, generateSaasTablesSQL } from "./tenancy/index.js"
+export {
+  TenantConnectionRouter,
+  buildSetTenantContextSQL,
+  buildCreateRlsPolicySQL,
+  buildEnableRlsSQL,
+} from "./tenancy/index.js"
+export { StripeBillingProvider } from "./tenancy/index.js"
+export { TenantAdminDashboard } from "./tenancy/index.js"
 export type { TenancyConfig, TenantContext } from "./tenancy/index.js"
 export type {
   SaasKitOptions,
@@ -330,6 +356,9 @@ export type {
   PlanLimitCheck,
   SaasAdminOverview,
 } from "./tenancy/index.js"
+export type { TenantConnectionConfig, TenantConnection, TenantPoolStats } from "./tenancy/index.js"
+export type { StripeConfig, StripeWebhookEvent, CheckoutSession, Invoice } from "./tenancy/index.js"
+export type { TenantOverview, TenantDetail, RevenueSummary, TenantActivity } from "./tenancy/index.js"
 
 // AI / RAG Pipeline
 export { openaiProvider, ollamaProvider, mockAiProvider, createAiContext } from "./ai/index.js"
@@ -346,6 +375,9 @@ export {
   buildRevokeApiKeySQL,
   buildIncrementRequestCountSQL,
 } from "./api-gen/index.js"
+export { OpenApiGenerator } from "./api-gen/index.js"
+export { GraphQLSchemaGenerator } from "./api-gen/index.js"
+export { UnifiedGateway } from "./api-gen/index.js"
 export type {
   ApiGatewayOptions,
   ApiKeyRecord,
@@ -360,6 +392,21 @@ export type {
   GraphQLSubscriptionField,
   GatewayRoute,
   GatewayStats,
+} from "./api-gen/index.js"
+export type {
+  OpenApi31Spec,
+  OpenApi31PathItem,
+  OpenApi31Operation,
+  OpenApi31Schema,
+  FunctionDescriptor,
+  OpenApiGeneratorOptions,
+} from "./api-gen/index.js"
+export type {
+  GatewayRequest,
+  GatewayResponse,
+  UnifiedGatewayOptions,
+  GatewayRouteInfo,
+  GatewayTransportStats,
 } from "./api-gen/index.js"
 
 // Validation & Rate Limiting
@@ -442,6 +489,9 @@ export {
   FIRST_PARTY_PLUGINS,
 } from "./plugins/index.js"
 export { PluginPortal } from "./plugins/index.js"
+export { PluginSDK, PluginTestHarness, validateWithJSONSchema } from "./plugins/index.js"
+export { s3StoragePlugin, posthogPlugin, ALL_BUILTIN_PLUGINS, BUILTIN_PLUGIN_METADATA } from "./plugins/index.js"
+export { PluginCLI } from "./plugins/index.js"
 export type { PluginDefinition, PluginContext, PluginManifest, RegistryEntry } from "./plugins/index.js"
 export type {
   PluginV2Definition,
@@ -460,6 +510,7 @@ export type {
   PluginScaffold,
   PortalStats,
 } from "./plugins/index.js"
+export type { PluginV2Config, PluginHook, PluginCLIConfig, CLIResult } from "./plugins/index.js"
 
 // Cloud
 export { CloudClient, CloudError, PLANS, REGIONS, generateDeployCommand, estimateMonthlyCost } from "./cloud/index.js"
@@ -664,6 +715,14 @@ export {
   BUILTIN_TUTORIALS,
 } from "./playground/index.js"
 export { TutorialManager, INTERACTIVE_TUTORIALS } from "./playground/index.js"
+export {
+  LivePlaygroundEngine,
+  encodeShareState,
+  decodeShareState,
+  generateLivePlaygroundHTML,
+} from "./playground/index.js"
+export { generateEmbeddableWidgetHTML, generateEmbedScript } from "./playground/index.js"
+export { GuidedTutorialEngine, GUIDED_TUTORIALS } from "./playground/index.js"
 export type {
   PlaygroundSession,
   ExecutionResult,
@@ -684,6 +743,8 @@ export type {
   ExportConfig,
   ExportResult,
 } from "./playground/index.js"
+export type { LivePlaygroundSession, ShareableState, PlaygroundWidget } from "./playground/index.js"
+export type { GuidedTutorialDef, GuidedStepDef, GuidedTutorialSession, TutorialProgress } from "./playground/index.js"
 
 // Horizontal Scaling
 export { ConsistentHashRing, ClusterManager } from "./scaling/index.js"
@@ -754,6 +815,9 @@ export type {
 
 // AI Query Assistant
 export { QueryAssistant } from "./ai-assistant/index.js"
+export { SchemaGenerator } from "./ai-assistant/index.js"
+export { QueryBuilderAssistant } from "./ai-assistant/index.js"
+export { MigrationCopilot } from "./ai-assistant/index.js"
 export type {
   QueryAssistantOptions,
   AiProviderAdapter,
@@ -762,6 +826,15 @@ export type {
   SchemaOptimization,
   QueryExplanation,
   AccessPattern,
+} from "./ai-assistant/index.js"
+export type { SchemaGenerationResult, SchemaAntiPattern } from "./ai-assistant/index.js"
+export type { CompletionItem, ExplainPlanAnalysis, QueryOptimization } from "./ai-assistant/index.js"
+export type {
+  MigrationAnalysis,
+  MigrationSafetyCheck,
+  IndexOptimization,
+  MigrationImpact as AiMigrationImpact,
+  RollbackPlan,
 } from "./ai-assistant/index.js"
 
 // Logical Replication
@@ -832,6 +905,30 @@ export type {
   TlsCertificateStatus,
   ObservabilitySnapshot,
   ObservabilitySummary,
+} from "./cloud-platform/index.js"
+
+// One-Click Provisioner
+export {
+  OneClickProvisioner,
+  AutoScaler,
+  DatabaseManager,
+  ProvisioningError,
+  DatabaseManagerError,
+  generateProvisioningTableSQL,
+  buildInsertProvisioningSQL,
+  buildQueryTablesSQL,
+} from "./cloud-platform/index.js"
+export type {
+  OneClickProvisionConfig,
+  PostgresConfig,
+  RedisConfig,
+  MonitoringConfig,
+  AutoScaleConfig,
+  ProvisioningResult,
+  AutoScaleState,
+  DatabaseInfo as CloudDatabaseInfo,
+  TableInfo as CloudTableInfo,
+  ConnectionPoolStats,
 } from "./cloud-platform/index.js"
 
 // Type Bridge (E2E Type Safety)
@@ -955,6 +1052,14 @@ export type {
 
 // Incremental View Maintenance (IVM)
 export { IncrementalViewMaintainer, extractDependencies, isIvmEligible, evaluatePredicate } from "./ivm/index.js"
+export {
+  DeltaPatchEncoder,
+  DeltaPatchDecoder,
+  PatchAccumulator,
+  encodeDeltaPatch,
+  decodeDeltaPatch,
+} from "./ivm/index.js"
+export { IvmPipeline } from "./ivm/index.js"
 export type {
   QueryAstNode,
   ScanNode,
@@ -972,6 +1077,8 @@ export type {
   RegisteredView,
   IvmStats,
 } from "./ivm/index.js"
+export type { DeltaPatch, DeltaPatchStats } from "./ivm/index.js"
+export type { PipelineStats, PipelineResult } from "./ivm/index.js"
 
 // Multi-Region Active-Active
 export {
@@ -1010,6 +1117,9 @@ export {
   buildInsertBranchSQL,
   generateBranchCLIUsage,
 } from "./branching/index.js"
+export { NeonBranchingAdapter, NeonBranchingError } from "./branching/index.js"
+export { generateGitHubActionYAML, PRPreviewManager } from "./branching/index.js"
+export { BranchDashboard } from "./branching/index.js"
 export type {
   DatabaseBranchingOptions,
   BranchStrategy,
@@ -1021,6 +1131,9 @@ export type {
   SeedDataConfig,
   GitHubPRConfig,
 } from "./branching/index.js"
+export type { NeonConfig, NeonBranch, NeonEndpoint } from "./branching/index.js"
+export type { PreviewConfig, PreviewRecord } from "./branching/index.js"
+export type { BranchTreeNode } from "./branching/index.js"
 
 // Schema Designer
 export { SchemaDesigner } from "./schema-designer/index.js"
