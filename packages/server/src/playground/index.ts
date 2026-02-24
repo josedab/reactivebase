@@ -33,3 +33,32 @@ export type {
   ExportConfig,
   ExportResult,
 } from "./tutorial-manager.js"
+
+// Live Playground
+export {
+  LivePlaygroundEngine,
+  encodeShareState,
+  decodeShareState,
+  generateLivePlaygroundHTML,
+} from "./live-playground.js"
+export type {
+  LivePlaygroundSession,
+  ShareableState,
+  LivePlaygroundConfig,
+  LiveExecutionResult,
+  LivePlaygroundHTMLOptions,
+} from "./live-playground.js"
+
+// Embeddable Widget
+export { generateEmbeddableWidgetHTML, generateEmbedScript } from "./embeddable-widget.js"
+export type { PlaygroundWidget } from "./embeddable-widget.js"
+
+// Guided Tutorials
+export { GuidedTutorialEngine, GUIDED_TUTORIALS } from "./guided-tutorial.js"
+export type {
+  GuidedTutorialDef,
+  GuidedStepDef,
+  GuidedTutorialSession,
+  StepSubmissionResult,
+  TutorialProgress,
+} from "./guided-tutorial.js"
