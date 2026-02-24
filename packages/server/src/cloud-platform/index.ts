@@ -55,3 +55,34 @@ export type {
   ObservabilitySnapshot,
   ObservabilitySummary,
 } from "./cloud-observability.js"
+
+// One-Click Provisioner
+export {
+  OneClickProvisioner,
+  AutoScaler,
+  DatabaseManager,
+  ProvisioningError,
+  DatabaseManagerError,
+  generateProvisioningTableSQL,
+  buildInsertProvisioningSQL,
+  buildQueryTablesSQL,
+} from "./one-click-provisioner.js"
+export type {
+  OneClickProvisionConfig,
+  PostgresConfig,
+  RedisConfig,
+  MonitoringConfig,
+  HealthCheckRule,
+  AlertRuleConfig,
+  AutoScaleConfig,
+  ProvisioningResult,
+  ProvisionStep,
+  AutoScaleState,
+  ScaleMetricSnapshot,
+  ScaleDecision,
+  DatabaseInfo,
+  TableInfo,
+  ColumnInfo,
+  ConnectionPoolStats,
+  QueryResult,
+} from "./one-click-provisioner.js"
