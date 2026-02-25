@@ -9,6 +9,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
 
+📖 **Documentation**: [reactivebase.dev](https://reactivebase.dev)
+
 > **65,698 LOC · 48 server modules · 1,515 tests · 15 packages · MIT license**
 
 ---
