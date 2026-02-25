@@ -19,6 +19,8 @@ export interface ReactiveBaseConfig {
     port: number
     hostname?: string
     heartbeatInterval?: number
+    /** Allowed CORS origin(s). Set to '*' for any origin, or a specific origin string. Default: undefined (no CORS headers). */
+    corsOrigin?: string
   }
   /** Change Data Capture mode for reactivity invalidation */
   cdc?: {

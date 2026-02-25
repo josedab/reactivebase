@@ -190,10 +190,13 @@ export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseCon
       }
 
       httpServer = createServer((req, res) => {
-        // CORS headers for cross-origin SSR fetches
-        res.setHeader("Access-Control-Allow-Origin", "*")
-        res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        // CORS headers
+        const corsOrigin = config.server?.corsOrigin
+        if (corsOrigin) {
+          res.setHeader("Access-Control-Allow-Origin", corsOrigin)
+          res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+          res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        }
 
         if (req.method === "OPTIONS") {
           res.writeHead(204)
