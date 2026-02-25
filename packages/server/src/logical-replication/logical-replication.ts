@@ -565,8 +565,18 @@ export class LogicalReplicator {
     errorsCount: 0,
   }
 
+  private static readonly IDENTIFIER_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+
   constructor(options: LogicalReplicatorOptions = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options }
+    if (!LogicalReplicator.IDENTIFIER_PATTERN.test(this.options.slotName)) {
+      throw new Error(`Invalid slotName: "${this.options.slotName}". Must match /^[a-zA-Z_][a-zA-Z0-9_]*$/`)
+    }
+    if (!LogicalReplicator.IDENTIFIER_PATTERN.test(this.options.publicationName)) {
+      throw new Error(
+        `Invalid publicationName: "${this.options.publicationName}". Must match /^[a-zA-Z_][a-zA-Z0-9_]*$/`,
+      )
+    }
     this.batcher = new ChangeBatcher(this.options.batchSize, this.options.batchFlushMs)
     this.batcher.onFlush((changes) => this.handleBatch(changes))
   }
