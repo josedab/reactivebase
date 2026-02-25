@@ -5,7 +5,7 @@
  * Usage:
  *   const cli = new PluginCLI()
  *   const result = await cli.add("resend")
- *   console.log(cli.generateCLIOutput("add", result))
+ *   console.info(cli.generateCLIOutput("add", result))
  */
 
 import type { PluginCategory } from "./marketplace.js"

@@ -13,7 +13,7 @@
  * Usage:
  *   const suite = new StressTestSuite({ maxSubscriptions: 10000 })
  *   const report = await suite.run()
- *   console.log(suite.formatReport(report))
+ *   console.info(suite.formatReport(report))
  */
 
 import { SubscriptionRegistry } from "../reactivity/subscription-registry.js"

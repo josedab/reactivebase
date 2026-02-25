@@ -406,10 +406,10 @@ export const completeTask = mutation(async (ctx, { taskId }: { taskId: string })
         description: "Run the mutation and watch the query update reactively. No manual refresh needed!",
         code: `// Simulate: Add a task, then see the query update
 const task = await addTask({ title: "Try ReactiveBase", priority: "high" })
-console.log("Created:", task)
+console.info("Created:", task)
 
 const tasks = await listTasks()
-console.log("Active tasks:", tasks)`,
+console.info("Active tasks:", tasks)`,
         expectedOutput: "Created:",
         hints: ["Mutations return the result of the operation", "Queries re-execute automatically after mutations"],
         validation: "has-output",

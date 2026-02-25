@@ -403,7 +403,7 @@ export function generateMigrationPreviewStep(config: PreviewConfig = {}): string
                 body: body
               });
             } catch (e: unknown) {
-              console.log('Migration report not available:', e.message);
+              console.info('Migration report not available:', e.message);
             }
 `.trim()
 }
