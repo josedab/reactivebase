@@ -15,8 +15,14 @@ export default tseslint.config(
       }],
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-empty-function": "off",
-      "no-console": ["warn", { allow: ["warn", "error", "info", "debug"] }],
+      "no-console": ["error", { allow: ["warn", "error", "info", "debug"] }],
       "prefer-const": "error",
+    },
+  },
+  {
+    files: ["packages/cli/**/*.ts", "packages/create-reactivebase/**/*.ts"],
+    rules: {
+      "no-console": "off",
     },
   },
 )
