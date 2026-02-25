@@ -3,6 +3,8 @@
 // Reactive file URLs, server-side transforms, CDN integration, uploads
 // --------------------------------------------------------------------------
 
+import { createHmac } from "node:crypto"
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface MediaFile {
@@ -279,13 +281,11 @@ export class ReactiveUrlBuilder {
   }
 
   private sign(data: string): string {
-    const key = this.cdn?.signingKey || "default-key"
-    let hash = 0
-    const str = data + key
-    for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0
+    const key = this.cdn?.signingKey
+    if (!key) {
+      throw new Error("CDN signing key is required for signed URL generation")
     }
-    return Math.abs(hash).toString(36)
+    return createHmac("sha256", key).update(data).digest("base64url")
   }
 }
 
