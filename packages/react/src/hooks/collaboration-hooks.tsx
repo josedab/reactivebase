@@ -11,7 +11,7 @@ import {
   OptimisticUpdateManager,
   type OptimisticCacheAdapter,
   type OptimisticSnapshot,
-  type ConflictResolver,
+  type OptimisticConflictResolver,
 } from "@reactivebase/client"
 import {
   DevToolsInstrumentation,
@@ -30,7 +30,7 @@ export interface UseOptimisticOptions {
   /** Max snapshots to retain (default: 50) */
   maxSnapshots?: number
   /** Custom conflict resolver */
-  conflictResolver?: ConflictResolver
+  conflictResolver?: OptimisticConflictResolver
 }
 
 export interface UseOptimisticReturn<T> {

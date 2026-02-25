@@ -64,7 +64,7 @@ export function useSearch<T = unknown>(
       setError(null)
 
       try {
-        const result = await client.query(searchFn._name, {
+        const result = await client.mutate(searchFn._name, {
           query: searchQuery,
           limit,
           mode: options.mode ?? "fulltext",
@@ -174,9 +174,7 @@ export function SearchInput(props: SearchInputProps): React.ReactElement {
       />
 
       {isLoading && (
-        <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}>
-          ⏳
-        </div>
+        <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}>⏳</div>
       )}
 
       {showDropdown && results.length > 0 && (
