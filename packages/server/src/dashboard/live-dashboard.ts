@@ -19,6 +19,8 @@
  *   const html = dashboard.generateHTML()
  */
 
+import { timingSafeEqual } from "node:crypto"
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface LiveDashboardOptions {
@@ -255,7 +257,11 @@ export class LiveDashboard {
     if (auth.checkAuth) return auth.checkAuth(headers)
 
     const token = headers["authorization"]?.replace("Bearer ", "")
-    return token === auth.secret
+    if (!token || !auth.secret) return false
+    const tokenBuf = Buffer.from(token, "utf-8")
+    const secretBuf = Buffer.from(auth.secret, "utf-8")
+    if (tokenBuf.length !== secretBuf.length) return false
+    return timingSafeEqual(tokenBuf, secretBuf)
   }
 
   // ─── Query Recording ───────────────────────────────────────────────────
