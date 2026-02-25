@@ -337,7 +337,7 @@ export class DaclEngine {
           actual: result.allowed,
           matchedPolicy: result.matchedPolicy,
         })
-      } catch (error) {
+      } catch (error: unknown) {
         results.push({
           name: tc.name,
           passed: false,

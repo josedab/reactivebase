@@ -75,7 +75,7 @@ export async function executeReadOnly<T>(pool: Pool, fn: (client: PoolClient) =>
     const result = await fn(client)
     await client.query("COMMIT")
     return result
-  } catch (error) {
+  } catch (error: unknown) {
     await client.query("ROLLBACK").catch((rollbackErr) => {
       console.warn("Failed to rollback read-only transaction:", rollbackErr)
     })

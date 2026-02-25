@@ -1,7 +1,4 @@
-export {
-  ExtensionDetector,
-  createExtensionDetector,
-} from "./extensions.js"
+export { ExtensionDetector, createExtensionDetector } from "./extensions.js"
 export type {
   PgExtensionInfo,
   CloudProvider,

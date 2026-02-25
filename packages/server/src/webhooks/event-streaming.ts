@@ -178,7 +178,7 @@ export class KafkaStreamAdapter implements EventStreamAdapter {
   }
 
   async publish(topic: string, event: StreamEvent): Promise<PublishResult> {
-    const fullTopic = `${this.options.topicPrefix}${topic}`
+    const _fullTopic = `${this.options.topicPrefix}${topic}`
     // In production: use kafkajs Producer.send()
     return {
       success: true,
@@ -235,7 +235,7 @@ export class NatsStreamAdapter implements EventStreamAdapter {
   }
 
   async publish(topic: string, event: StreamEvent): Promise<PublishResult> {
-    const subject = `${this.options.subjectPrefix}.${topic}.${event.type}`
+    const _subject = `${this.options.subjectPrefix}.${topic}.${event.type}`
     // In production: use nats.js JetStream publish
     return {
       success: true,
@@ -428,7 +428,7 @@ export class EventStreamManager {
         const adapterResults = await adapter.publishBatch(table, filteredEvents)
         results.set(name, adapterResults)
         this.stats.published += filteredEvents.length
-      } catch (err) {
+      } catch (err: unknown) {
         this.stats.failed += filteredEvents.length
         results.set(
           name,
@@ -504,7 +504,7 @@ export class EventStreamManager {
           return result
         }
         lastError = result.error
-      } catch (err) {
+      } catch (err: unknown) {
         lastError = err instanceof Error ? err.message : String(err)
       }
 

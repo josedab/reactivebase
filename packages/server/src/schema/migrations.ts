@@ -2,7 +2,7 @@
  * SQL migration generator - diffs schema against database state.
  */
 
-import type { Schema, SchemaDefinition } from "./schema.js"
+import type { Schema } from "./schema.js"
 import type { Validator } from "./validators.js"
 
 export interface Migration {

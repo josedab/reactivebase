@@ -4,9 +4,9 @@
  */
 
 import type { PoolClient } from "pg"
-import { QueryBuilder, AggregateQueryBuilder, type QueryDependency, type BuiltQuery } from "../query-builder/index.js"
-import type { Schema, SchemaDefinition } from "../schema/index.js"
-import type { Validator, ComputedFieldFn } from "../schema/index.js"
+import { QueryBuilder, AggregateQueryBuilder, type QueryDependency } from "../query-builder/index.js"
+import type { Schema } from "../schema/index.js"
+import type { ComputedFieldFn } from "../schema/index.js"
 
 export interface TableAccessor<TRow = Record<string, unknown>> {
   where(columnOrObject: string | Partial<TRow>, operatorOrValue?: unknown, value?: unknown): QueryBuilder<TRow>

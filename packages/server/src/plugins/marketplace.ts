@@ -399,7 +399,7 @@ export class PluginMarketplace {
       }
       this.installed.set(definition.name, instance)
       return instance
-    } catch (err) {
+    } catch (err: unknown) {
       instance.status = "error"
       instance.error = err instanceof Error ? err.message : String(err)
       this.installed.set(definition.name, instance)
@@ -418,7 +418,7 @@ export class PluginMarketplace {
       }
       instance.status = "started"
       instance.startedAt = Date.now()
-    } catch (err) {
+    } catch (err: unknown) {
       instance.status = "error"
       instance.error = err instanceof Error ? err.message : String(err)
       throw err
@@ -435,7 +435,7 @@ export class PluginMarketplace {
         await instance.definition.onStop(ctx)
       }
       instance.status = "stopped"
-    } catch (err) {
+    } catch (err: unknown) {
       instance.status = "error"
       instance.error = err instanceof Error ? err.message : String(err)
     }

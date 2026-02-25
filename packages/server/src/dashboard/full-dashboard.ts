@@ -158,7 +158,7 @@ async function refreshMetrics() {
       : '<p style="color: #6e7681; padding: 16px;">No function calls recorded yet.</p>';
 
     document.getElementById('refresh-indicator').textContent = 'Updated ' + new Date().toLocaleTimeString();
-  } catch (e) {
+  } catch (e: unknown) {
     document.getElementById('refresh-indicator').textContent = 'Failed to fetch metrics';
   }
 }

@@ -201,7 +201,7 @@ export class MigrationPreview {
         await client.query(buildSetSearchPathSQL(shadowSchema))
         await client.query(request.migrationSQL)
         migrationResult = { applied: true, durationMs: Date.now() - migStart, error: undefined }
-      } catch (err) {
+      } catch (err: unknown) {
         migrationResult = {
           applied: false,
           durationMs: Date.now() - migStart,
@@ -369,7 +369,7 @@ export class MigrationPreview {
         originalDurationMs: query.avgDurationMs,
         shadowDurationMs: Date.now() - start,
       }
-    } catch (err) {
+    } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : String(err)
       const isTimeout = errMsg.includes("statement timeout")
 

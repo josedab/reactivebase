@@ -250,7 +250,7 @@ export class AuthzEngine {
    * Add a relation tuple (e.g., user "u1" is "editor" of document "d1").
    */
   addRelation(tuple: AuthzRelationTuple): void {
-    const key = this.tupleKey(tuple)
+    const _key = this.tupleKey(tuple)
     const lookupKey = `${tuple.resourceType}:${tuple.resourceId}:${tuple.relation}`
 
     let subjects = this.relations.get(lookupKey)

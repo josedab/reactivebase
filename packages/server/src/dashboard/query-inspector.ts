@@ -439,7 +439,7 @@ export class DashboardV2Engine {
 
   getMetrics(): DashboardV2Metrics {
     const allQueries = Array.from(this.queryStats.values())
-    const totalQueriesExec = allQueries.reduce((a, q) => a + q.totalExecutions, 0)
+    const _totalQueriesExec = allQueries.reduce((a, q) => a + q.totalExecutions, 0)
     const totalMutations = this.mutationLog.length
     const totalErrors = this.mutationLog.filter((m) => m.error).length
 
@@ -648,7 +648,7 @@ async function refresh() {
       seg('pool-active', p.active/maxP*100)+seg('pool-idle', p.idle/maxP*100)+seg('pool-waiting', p.waiting/maxP*100)+seg('pool-free', Math.max(0,100-((p.active+p.idle+p.waiting)/maxP*100)));
 
     document.getElementById('status').textContent = 'Updated ' + new Date().toLocaleTimeString();
-  } catch(e) {
+  } catch(e: unknown) {
     document.getElementById('status').textContent = 'Error: ' + e.message;
   }
 }

@@ -222,7 +222,7 @@ export class DatabaseFederation {
             idleConnections: result.idle,
             error: undefined,
           })
-        } catch (error) {
+        } catch (error: unknown) {
           this.updateHealth(name, {
             status: "error",
             error: error instanceof Error ? error.message : String(error),

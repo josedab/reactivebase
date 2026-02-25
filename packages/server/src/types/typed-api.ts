@@ -11,7 +11,7 @@
  *     → TypedFunctionReference<TArgs, TReturn> → useQuery returns TReturn
  */
 
-import type { SchemaDefinition, InferSchemaTypes, ColumnDefinitions, InferRow } from "../schema/index.js"
+import type { SchemaDefinition, ColumnDefinitions, InferRow } from "../schema/index.js"
 
 // --- Typed Function References ---
 

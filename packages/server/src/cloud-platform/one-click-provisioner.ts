@@ -292,7 +292,7 @@ export class OneClickProvisioner {
         durationMs: Date.now() - start,
         error: null,
       })
-    } catch (err) {
+    } catch (err: unknown) {
       steps.push({
         name: "Create project & environment",
         status: "failed",

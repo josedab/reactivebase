@@ -165,7 +165,7 @@ export class OtelInstrumentation {
       span.setStatus("ok")
       span.end()
       return { result, durationMs }
-    } catch (error) {
+    } catch (error: unknown) {
       const durationMs = performance.now() - startTime
       span.setAttribute("duration_ms", Math.round(durationMs * 100) / 100)
       span.setStatus("error", error instanceof Error ? error.message : String(error))

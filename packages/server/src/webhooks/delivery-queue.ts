@@ -3,8 +3,6 @@
  * delivery logs, and metrics. Extends the existing webhook system.
  */
 
-import { createHmac } from "node:crypto"
-
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type DeliveryStatus = "pending" | "in_progress" | "delivered" | "failed" | "dead_letter"
@@ -116,8 +114,8 @@ export class WebhookDeliveryQueue {
     webhookUrl: string,
     mutationName: string,
     payload: unknown,
-    secret?: string,
-    headers?: Record<string, string>,
+    _secret?: string,
+    _headers?: Record<string, string>,
   ): string {
     const id = generateDeliveryId()
     const record: DeliveryRecord = {
@@ -220,7 +218,7 @@ export class WebhookDeliveryQueue {
       } else {
         this.handleFailure(record, `HTTP ${response.status}: ${response.statusText}`)
       }
-    } catch (error) {
+    } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Unknown delivery error"
       this.handleFailure(record, message)
     } finally {
@@ -326,7 +324,7 @@ export class WebhookDeliveryQueue {
 // ─── Webhook Templates ──────────────────────────────────────────────────────
 
 export const webhookTemplates = {
-  slack(webhookUrl: string): WebhookTemplate {
+  slack(_webhookUrl: string): WebhookTemplate {
     return {
       name: "slack",
       formatPayload: (event: string, data: unknown) => ({
@@ -345,7 +343,7 @@ export const webhookTemplates = {
     }
   },
 
-  discord(webhookUrl: string): WebhookTemplate {
+  discord(_webhookUrl: string): WebhookTemplate {
     return {
       name: "discord",
       formatPayload: (event: string, data: unknown) => ({

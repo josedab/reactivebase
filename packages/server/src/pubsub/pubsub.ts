@@ -24,7 +24,7 @@ export interface RedisPubSubOptions {
   serverId?: string
 }
 
-const DEFAULT_CHANNEL = "reactivebase:changes"
+const _DEFAULT_CHANNEL = "reactivebase:changes"
 
 /**
  * Redis pub/sub adapter for cross-server invalidation.

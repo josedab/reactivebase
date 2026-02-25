@@ -9,7 +9,7 @@
  *   const html = dashboard.generateDashboardHTML()
  */
 
-import type { BranchRecord, BranchDiff, SchemaChange, DataChange } from "./branching.js"
+import type { BranchRecord, BranchDiff } from "./branching.js"
 import type { PreviewRecord } from "./github-action.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────

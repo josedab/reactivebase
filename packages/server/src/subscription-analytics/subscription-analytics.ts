@@ -138,10 +138,7 @@ export class SubscriptionAnalytics {
   constructor(options: SubscriptionAnalyticsOptions = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options }
 
-    this.computeTimer = setInterval(
-      () => this.recomputeCostScores(),
-      this.options.costComputeIntervalMs,
-    )
+    this.computeTimer = setInterval(() => this.recomputeCostScores(), this.options.costComputeIntervalMs)
   }
 
   /**
@@ -358,9 +355,7 @@ export class SubscriptionAnalytics {
 
     for (const record of this.records.values()) {
       // High re-execution frequency
-      const reExecsPerMinute = record.aliveSeconds > 0
-        ? (record.reExecutionCount / record.aliveSeconds) * 60
-        : 0
+      const reExecsPerMinute = record.aliveSeconds > 0 ? (record.reExecutionCount / record.aliveSeconds) * 60 : 0
 
       if (reExecsPerMinute > 10) {
         suggestions.push({
@@ -369,7 +364,8 @@ export class SubscriptionAnalytics {
           subscriptionId: record.subscriptionId,
           queryName: record.queryName,
           message: `Subscription re-executes ${reExecsPerMinute.toFixed(1)} times/minute`,
-          recommendation: "Consider adding more specific WHERE filters, using row-level tracking (L3), or debouncing invalidations.",
+          recommendation:
+            "Consider adding more specific WHERE filters, using row-level tracking (L3), or debouncing invalidations.",
           estimatedSavings: `~${Math.floor(record.totalCpuTimeMs * 0.5)}ms CPU saved with row-level tracking`,
         })
       }
@@ -488,13 +484,9 @@ export class SubscriptionAnalytics {
       record.aliveSeconds = (Date.now() - record.createdAt) / 1000
 
       // Cost score: weighted combination of CPU time, rows scanned, and re-execution frequency
-      const frequencyWeight = record.aliveSeconds > 0
-        ? (record.reExecutionCount / record.aliveSeconds) * 60
-        : 0
+      const frequencyWeight = record.aliveSeconds > 0 ? (record.reExecutionCount / record.aliveSeconds) * 60 : 0
       record.costScore =
-        record.totalCpuTimeMs * 0.4 +
-        record.totalRowsScanned * 0.001 * 0.3 +
-        frequencyWeight * 100 * 0.3
+        record.totalCpuTimeMs * 0.4 + record.totalRowsScanned * 0.001 * 0.3 + frequencyWeight * 100 * 0.3
     }
   }
 

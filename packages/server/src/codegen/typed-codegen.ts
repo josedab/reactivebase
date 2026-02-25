@@ -466,7 +466,7 @@ export function generateTypedDbContext(schema: ParsedSchema): string {
   lines.push("")
   lines.push("export interface TypedDatabaseContext {")
   for (const table of schema.tables) {
-    const typeName = capitalize(table.name.replace(/s$/, ""))
+    const _typeName = capitalize(table.name.replace(/s$/, ""))
     lines.push(`  ${table.name}: TypedTableAccessor<DataModel["${table.name}"]>`)
   }
   lines.push("  raw: <T = unknown>(sql: string, params?: unknown[]) => Promise<T[]>")

@@ -291,7 +291,7 @@ export class OutboxRelay {
       }
 
       return records.length
-    } catch (error) {
+    } catch (error: unknown) {
       await client.query("ROLLBACK").catch(() => {})
       throw error
     } finally {
@@ -364,7 +364,7 @@ export function httpDeliveryTarget(url: string, options: { headers?: Record<stri
             success: response.ok,
             error: response.ok ? undefined : `HTTP ${response.status}`,
           })
-        } catch (err) {
+        } catch (err: unknown) {
           results.push({
             eventId: event.id,
             success: false,

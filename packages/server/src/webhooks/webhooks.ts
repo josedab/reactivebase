@@ -6,7 +6,7 @@
  */
 
 import { createHmac, timingSafeEqual } from "node:crypto"
-import type { IncomingMessage, ServerResponse } from "node:http"
+import type { IncomingMessage } from "node:http"
 import type { ChangeEvent } from "../reactivity/index.js"
 
 // --- Inbound Webhooks ---
@@ -85,7 +85,7 @@ export class WebhookRegistry {
 
       const result = await webhook.handler(payload, headers)
       return { status: 200, result }
-    } catch (error) {
+    } catch (error: unknown) {
       return {
         status: 500,
         error: error instanceof Error ? error.message : "Webhook handler error",

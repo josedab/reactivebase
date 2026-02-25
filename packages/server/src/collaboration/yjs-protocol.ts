@@ -207,7 +207,7 @@ export function decodeUpdate(data: Uint8Array): YjsUpdate {
   offset = o2
   const { value: parentClock, offset: o3 } = readVarUint(data, offset)
   offset = o3
-  const { data: content, offset: o4 } = readVarBytes(data, offset)
+  const { data: content, offset: _o4 } = readVarBytes(data, offset)
 
   return { clientId, clock, parentClock, content, length: content.length }
 }

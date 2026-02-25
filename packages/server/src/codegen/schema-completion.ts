@@ -15,7 +15,7 @@
  *   const hover = provider.getHoverInfo("ctx.db.tasks")
  */
 
-import type { ParsedSchema, SchemaTable, SchemaField } from "../codegen/typed-codegen.js"
+import type { ParsedSchema, SchemaTable } from "../codegen/typed-codegen.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

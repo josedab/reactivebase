@@ -199,7 +199,7 @@ export class WalDecoder {
     }
   }
 
-  private decodeCommit(lsn: string, buffer: Buffer): WalChange {
+  private decodeCommit(lsn: string, _buffer: Buffer): WalChange {
     return {
       lsn,
       xid: this.currentXid,

@@ -269,7 +269,7 @@ export class StressTestSuite {
     }
 
     const startTime = performance.now()
-    let totalInvalidations = 0
+    let _totalInvalidations = 0
     let messagesDelivered = 0
     let messagesExpected = 0
 
@@ -284,7 +284,7 @@ export class StressTestSuite {
         for (let m = 0; m < 50; m++) {
           const changes: ChangeEvent[] = [{ table: tables[m % 5], operation: "update" }]
           const inv = evaluator.evaluate(changes)
-          totalInvalidations += inv.length
+          _totalInvalidations += inv.length
           messagesDelivered += inv.length
           messagesExpected += Math.floor((subscriptionCount - dropCount) / 5)
         }
@@ -295,7 +295,7 @@ export class StressTestSuite {
         for (let m = 0; m < 50; m++) {
           const changes: ChangeEvent[] = [{ table: tables[m % 5], operation: "update" }]
           const inv = evaluator.evaluate(changes)
-          totalInvalidations += inv.length
+          _totalInvalidations += inv.length
           messagesDelivered += inv.length
           messagesExpected += Math.floor(subscriptionCount / 5)
         }
@@ -306,7 +306,7 @@ export class StressTestSuite {
         for (let m = 0; m < 500; m++) {
           const changes: ChangeEvent[] = [{ table: tables[m % 5], operation: "insert" }]
           const inv = evaluator.evaluate(changes)
-          totalInvalidations += inv.length
+          _totalInvalidations += inv.length
           messagesDelivered += inv.length
           messagesExpected += Math.floor(subscriptionCount / 5)
         }

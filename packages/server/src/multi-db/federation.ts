@@ -18,7 +18,6 @@ import {
   FederationError,
   type DatabaseConfig,
   type FederationConfig,
-  type CrossDatabaseQuery,
   type FederatedQueryResult,
 } from "./multi-db.js"
 
@@ -219,7 +218,7 @@ export class ReplicaRouter {
    * Route a read query to the optimal data source.
    * Uses subscription load to determine whether to use a replica.
    */
-  routeRead(tableName?: string): string {
+  routeRead(_tableName?: string): string {
     if (this.replicas.length === 0) {
       return this.primaryName ?? [...this.dataSources.keys()][0]
     }

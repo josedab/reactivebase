@@ -5,7 +5,7 @@
 
 import type { Schema } from "../schema/index.js"
 import type { RelationDefinition } from "../schema/table.js"
-import type { IncludeConfig, OrderDirection } from "./query-builder.js"
+import type { IncludeConfig } from "./query-builder.js"
 
 export interface ResolvedRelation {
   relation: RelationDefinition
@@ -57,7 +57,7 @@ export function resolveRelations(
  */
 function parseRelation(
   relation: RelationDefinition,
-  currentTable: string,
+  _currentTable: string,
 ): { sourceColumn: string; targetTable: string; targetColumn: string } {
   const toParts = relation.to.split(".")
 
@@ -81,7 +81,7 @@ function parseRelation(
 /**
  * Build a lateral join subquery for a relation.
  */
-export function buildIncludeSubquery(resolved: ResolvedRelation, parentAlias: string, params: unknown[]): string {
+export function buildIncludeSubquery(resolved: ResolvedRelation, parentAlias: string, _params: unknown[]): string {
   const { targetTable, sourceColumn, targetColumn, config } = resolved
 
   let subquery = `SELECT json_agg(sub.*) FROM (

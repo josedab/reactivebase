@@ -489,7 +489,7 @@ export class MigrationCopilot {
       .filter(Boolean)
 
     for (const stmt of statements) {
-      const upper = stmt.toUpperCase()
+      const _upper = stmt.toUpperCase()
 
       if (/CREATE\s+TABLE\s+/i.test(stmt)) {
         const tableMatch = /CREATE\s+TABLE\s+"?(\w+)"?/i.exec(stmt)

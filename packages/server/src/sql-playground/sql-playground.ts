@@ -294,7 +294,7 @@ export class SqlPlayground {
   /**
    * Suggest indexes based on query analysis and plan.
    */
-  suggestIndexes(analysis: QueryAnalysis, plan?: QueryPlan, schema?: SchemaInfo): IndexSuggestion[] {
+  suggestIndexes(analysis: QueryAnalysis, plan?: QueryPlan, _schema?: SchemaInfo): IndexSuggestion[] {
     const suggestions: IndexSuggestion[] = []
 
     // Check for sequential scans on large tables

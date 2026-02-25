@@ -550,7 +550,7 @@ export class IncrementalViewMaintainer {
         const inner = this.computeNodeDelta(viewId, node.source, change, currentResult)
         if (inner.requiresFullRefresh) return inner
 
-        const newResult = computeAggregateDelta(node, inner.inserts, inner.deletes, inner.updates, currentResult)
+        const _newResult = computeAggregateDelta(node, inner.inserts, inner.deletes, inner.updates, currentResult)
 
         return {
           viewId,

@@ -211,7 +211,7 @@ export class TypeBridge {
     ]
 
     // Generate table row types
-    for (const [name, table] of Object.entries(manifest.tables)) {
+    for (const [_name, table] of Object.entries(manifest.tables)) {
       lines.push(`export interface ${table.typeName} {`)
       for (const [colName, col] of Object.entries(table.columns)) {
         const optional = col.nullable ? "?" : ""
@@ -225,7 +225,7 @@ export class TypeBridge {
     lines.push("export declare const api: {")
     const modules = new Map<string, FunctionSignature[]>()
 
-    for (const [key, fn] of Object.entries(manifest.functions)) {
+    for (const [_key, fn] of Object.entries(manifest.functions)) {
       const mod = fn.module || "_root"
       if (!modules.has(mod)) modules.set(mod, [])
       modules.get(mod)!.push(fn)

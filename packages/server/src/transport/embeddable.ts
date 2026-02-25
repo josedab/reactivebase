@@ -22,7 +22,7 @@
 
 import type { Pool } from "pg"
 import type { Schema } from "../schema/index.js"
-import type { RegisteredFunction, FunctionContext } from "../functions/index.js"
+import type { RegisteredFunction } from "../functions/index.js"
 import { executeQueryFunction, executeMutationFunction, executeActionFunction } from "../functions/index.js"
 import { createAuthContext, type AuthContext, type AuthProvider } from "../auth/index.js"
 import { ReactivityEngine } from "../reactivity/index.js"
@@ -210,7 +210,7 @@ export function createReactiveBaseMiddleware(config: EmbeddableConfig): Reactive
       }
 
       return jsonResponse(404, { error: "Not found" })
-    } catch (error) {
+    } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error))
       const statusCode = (err as { statusCode?: number }).statusCode ?? 500
 

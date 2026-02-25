@@ -14,7 +14,7 @@
  *   const template = generatePluginTemplate("my-plugin", "auth")
  */
 
-import type { PluginV2Definition, PluginCategory, ConfigField } from "./marketplace.js"
+import type { PluginV2Definition, PluginCategory } from "./marketplace.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

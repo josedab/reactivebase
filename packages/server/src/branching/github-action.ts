@@ -360,7 +360,7 @@ export class PreviewError extends Error {
  * and posts results as a PR comment.
  */
 export function generateMigrationPreviewStep(config: PreviewConfig = {}): string {
-  const c = { ...DEFAULT_CONFIG, ...config }
+  const _c = { ...DEFAULT_CONFIG, ...config }
 
   return `
       - name: Migration Impact Preview
@@ -402,7 +402,7 @@ export function generateMigrationPreviewStep(config: PreviewConfig = {}): string
                 issue_number: context.issue.number,
                 body: body
               });
-            } catch (e) {
+            } catch (e: unknown) {
               console.log('Migration report not available:', e.message);
             }
 `.trim()

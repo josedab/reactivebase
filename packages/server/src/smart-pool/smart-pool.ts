@@ -405,7 +405,7 @@ export class BatchInvalidationEvaluator {
     this.batchesProcessed++
 
     // Deduplicate by table set
-    const uniqueTables = new Set(batch.flatMap((inv) => inv.tables))
+    const _uniqueTables = new Set(batch.flatMap((inv) => inv.tables))
     const uniqueCallbacks = new Map<string, () => Promise<void>>()
 
     for (const inv of batch) {
@@ -513,7 +513,7 @@ export class SmartPool {
 
       this.deduplicator.resolve(entry.hash, result)
       return promise
-    } catch (error) {
+    } catch (error: unknown) {
       this.deduplicator.reject(entry.hash, error instanceof Error ? error : new Error(String(error)))
       throw error
     } finally {

@@ -3,7 +3,6 @@
  * Provides before/after hooks for queries, mutations, and actions.
  */
 
-import type { FunctionContext, RegisteredFunction } from "../functions/index.js"
 import type { AuthContext } from "../auth/index.js"
 
 export interface MiddlewareContext {

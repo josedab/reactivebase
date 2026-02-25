@@ -3,7 +3,7 @@
  * Generates TypeScript types and Postgres DDL.
  */
 
-import type { ColumnDefinitions, TableDefinition, InferRow } from "./table.js"
+import type { TableDefinition, InferRow } from "./table.js"
 
 export type SchemaDefinition = Record<string, TableDefinition>
 

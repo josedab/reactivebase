@@ -634,7 +634,7 @@ export class PlaygroundEngine {
       session.results = [...session.results.filter((r) => r.blockId !== blockId), result]
       session.updatedAt = Date.now()
       return result
-    } catch (err) {
+    } catch (err: unknown) {
       const result: ExecutionResult = {
         blockId,
         status: "error",
@@ -791,7 +791,7 @@ export class PlaygroundEngine {
     if (oldest) this.sessions.delete(oldest.id)
   }
 
-  private createMockContext(session: PlaygroundSession): PlaygroundContext {
+  private createMockContext(_session: PlaygroundSession): PlaygroundContext {
     return {
       tables: {},
       variables: {},
@@ -801,7 +801,7 @@ export class PlaygroundEngine {
 
   private evaluateCode(code: string, context: PlaygroundContext): unknown {
     const log: LogEntry[] = []
-    const mockConsole = {
+    const _mockConsole = {
       log: (...args: unknown[]) => {
         log.push({ level: "info", message: args.map(String).join(" "), timestamp: Date.now() })
       },
@@ -814,7 +814,7 @@ export class PlaygroundEngine {
     }
 
     // Static analysis: extract exported names and structure
-    const exports: Record<string, unknown> = {}
+    const _exports: Record<string, unknown> = {}
     const importPattern = /import\s+\{([^}]+)\}\s+from\s+["'][^"']+["']/g
     const exportPattern = /export\s+(?:const|function|default)\s+(\w+)/g
 
@@ -991,7 +991,7 @@ ${BUILTIN_TUTORIALS.map(
       try {
         output.innerHTML = '<span class="output-success">✓ Code parsed successfully. ' +
           code.split('\\n').filter(l => l.trim()).length + ' lines analyzed.</span>';
-      } catch(e) {
+      } catch(e: unknown) {
         output.innerHTML = '<span class="output-error">✗ ' + e.message + '</span>';
       }
       document.getElementById('exec-time').textContent = Math.round(performance.now() - start) + 'ms';
@@ -1039,7 +1039,7 @@ ${BUILTIN_TUTORIALS.map(
         const d = JSON.parse(atob(params.get('session')));
         editorContent = { schema: d.s || '', queries: d.q || '', mutations: d.m || '' };
         document.getElementById('code-editor').value = editorContent[currentTab];
-      } catch(e) {}
+      } catch(e: unknown) {}
     }
   </script>
 </body>

@@ -11,7 +11,7 @@ import type { Schema } from "../schema/index.js"
 import type { RegisteredFunction } from "../functions/index.js"
 import { executeQueryFunction } from "../functions/index.js"
 import type { AuthContext } from "../auth/index.js"
-import { SubscriptionRegistry, type Subscription } from "./subscription-registry.js"
+import { SubscriptionRegistry } from "./subscription-registry.js"
 import { InvalidationEvaluator, type ChangeEvent } from "./invalidation-evaluator.js"
 import { hashResult, hasResultChanged } from "./result-differ.js"
 
@@ -173,7 +173,7 @@ export class ReactivityEngine {
         result: execution.result,
         version: updatedSub.version,
       })
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(`Failed to re-execute subscription ${subscriptionId}:`, error)
     }
   }

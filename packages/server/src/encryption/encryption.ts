@@ -289,7 +289,7 @@ export class EncryptionEngine {
         mode: effectiveMode,
         version: ENCRYPTION_VERSION,
       }
-    } catch (err) {
+    } catch (err: unknown) {
       this.stats.encryptionErrors++
       throw new EncryptionError(`Encryption failed: ${err instanceof Error ? err.message : String(err)}`)
     }
@@ -311,7 +311,7 @@ export class EncryptionEngine {
       this.stats.totalDecryptions++
 
       return JSON.parse(decrypted.toString("utf-8"))
-    } catch (err) {
+    } catch (err: unknown) {
       this.stats.decryptionErrors++
       throw new EncryptionError(`Decryption failed: ${err instanceof Error ? err.message : String(err)}`)
     }

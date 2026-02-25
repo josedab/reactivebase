@@ -279,7 +279,7 @@ async function runQuery() {
     });
     const data = await resp.json();
     results.innerHTML = '<pre style="overflow:auto;max-height:400px">' + JSON.stringify(data, null, 2) + '</pre>';
-  } catch(e) {
+  } catch(e: unknown) {
     results.innerHTML = '<span style="color:#f85149">Error: ' + e.message + '</span>';
   }
 }

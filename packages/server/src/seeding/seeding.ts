@@ -137,10 +137,70 @@ export class SeedCycleError extends Error {
 
 // ─── Built-in Fake Data Generators ──────────────────────────────────────────
 
-const FIRST_NAMES = ["Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Hank", "Ivy", "Jack", "Karen", "Leo", "Mia", "Nate", "Olivia", "Pete", "Quinn", "Rosa", "Sam", "Tina"]
-const LAST_NAMES = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson"]
-const WORDS = ["lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit", "sed", "do", "eiusmod", "tempor", "incididunt"]
-const COMPANIES = ["Acme Corp", "GlobalTech", "Innovate Inc", "DataFlow", "CloudNine", "ByteWorks", "PixelPerfect", "CodeCraft"]
+const FIRST_NAMES = [
+  "Alice",
+  "Bob",
+  "Charlie",
+  "Diana",
+  "Eve",
+  "Frank",
+  "Grace",
+  "Hank",
+  "Ivy",
+  "Jack",
+  "Karen",
+  "Leo",
+  "Mia",
+  "Nate",
+  "Olivia",
+  "Pete",
+  "Quinn",
+  "Rosa",
+  "Sam",
+  "Tina",
+]
+const LAST_NAMES = [
+  "Smith",
+  "Johnson",
+  "Williams",
+  "Brown",
+  "Jones",
+  "Garcia",
+  "Miller",
+  "Davis",
+  "Rodriguez",
+  "Martinez",
+  "Hernandez",
+  "Lopez",
+  "Gonzalez",
+  "Wilson",
+  "Anderson",
+]
+const WORDS = [
+  "lorem",
+  "ipsum",
+  "dolor",
+  "sit",
+  "amet",
+  "consectetur",
+  "adipiscing",
+  "elit",
+  "sed",
+  "do",
+  "eiusmod",
+  "tempor",
+  "incididunt",
+]
+const COMPANIES = [
+  "Acme Corp",
+  "GlobalTech",
+  "Innovate Inc",
+  "DataFlow",
+  "CloudNine",
+  "ByteWorks",
+  "PixelPerfect",
+  "CodeCraft",
+]
 
 let idCounter = 0
 
@@ -151,7 +211,8 @@ function createFakeGenerators(): FakeDataGenerators {
     firstName: () => pick(FIRST_NAMES),
     lastName: () => pick(LAST_NAMES),
     fullName: () => `${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`,
-    email: () => `${pick(FIRST_NAMES).toLowerCase()}.${pick(LAST_NAMES).toLowerCase()}${Math.floor(Math.random() * 100)}@example.com`,
+    email: () =>
+      `${pick(FIRST_NAMES).toLowerCase()}.${pick(LAST_NAMES).toLowerCase()}${Math.floor(Math.random() * 100)}@example.com`,
     username: () => `${pick(FIRST_NAMES).toLowerCase()}${Math.floor(Math.random() * 1000)}`,
     phone: () => `+1${Math.floor(1000000000 + Math.random() * 9000000000)}`,
     uuid: () => `${hex(8)}-${hex(4)}-4${hex(3)}-${pick(["8", "9", "a", "b"])}${hex(3)}-${hex(12)}`,
@@ -269,10 +330,7 @@ export class SeedRegistry {
   /**
    * Execute seeds for a given environment.
    */
-  async execute(
-    environment: SeedEnvironment,
-    seedNames?: string[],
-  ): Promise<SeedExecutionResult> {
+  async execute(environment: SeedEnvironment, seedNames?: string[]): Promise<SeedExecutionResult> {
     const startTime = performance.now()
     const errors: Array<{ seed: string; error: string }> = []
     const recordsByTable: Record<string, number> = {}
@@ -321,7 +379,7 @@ export class SeedRegistry {
           recordsByTable[record.table] = (recordsByTable[record.table] ?? 0) + 1
           totalRecords++
         }
-      } catch (error) {
+      } catch (error: unknown) {
         errors.push({
           seed: name,
           error: error instanceof Error ? error.message : String(error),
@@ -391,10 +449,7 @@ export class SeedRegistry {
 /**
  * Define a seed.
  */
-export function defineSeed(
-  name: string,
-  config: Omit<SeedDefinition, "name">,
-): SeedDefinition {
+export function defineSeed(name: string, config: Omit<SeedDefinition, "name">): SeedDefinition {
   return { name, ...config }
 }
 

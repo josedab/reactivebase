@@ -19,9 +19,7 @@
 
 import {
   DaclEngine,
-  PolicyBuilder,
   allow,
-  deny,
   type PolicyCheckContext,
   type PolicyTestCase,
   type PolicyTestResult,

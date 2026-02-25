@@ -37,7 +37,7 @@ export interface ReactiveBaseConfig {
   }
 }
 
-const DEFAULT_CONFIG: Partial<ReactiveBaseConfig> = {
+const _DEFAULT_CONFIG: Partial<ReactiveBaseConfig> = {
   server: {
     port: 4000,
     hostname: "0.0.0.0",

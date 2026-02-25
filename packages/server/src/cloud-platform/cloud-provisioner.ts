@@ -14,7 +14,7 @@
  *   const manifest = provisioner.generateDeployManifest(project, env)
  */
 
-import type { CloudPlatform, CloudProjectRecord, EnvironmentRecord, DeploymentRecord } from "./cloud-platform.js"
+import type { CloudPlatform, CloudProjectRecord, EnvironmentRecord } from "./cloud-platform.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -525,7 +525,7 @@ export class CloudProvisioner {
     return promotion
   }
 
-  listPromotions(projectId: string): EnvironmentPromotion[] {
+  listPromotions(_projectId: string): EnvironmentPromotion[] {
     return Array.from(this.promotions.values())
   }
 

@@ -396,7 +396,7 @@ export class PermissionsDebugger {
             })
             break
           }
-        } catch (error) {
+        } catch (error: unknown) {
           rowPassed = false
           this.traceBuffer.push({
             timestamp: performance.now(),

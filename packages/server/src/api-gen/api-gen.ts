@@ -10,7 +10,6 @@
  *   DELETE /api/:table/:id       → delete
  */
 
-import type { IncomingMessage, ServerResponse } from "node:http"
 import type { Schema } from "../schema/index.js"
 
 export interface RestApiOptions {

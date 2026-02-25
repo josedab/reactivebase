@@ -470,7 +470,7 @@ BEFORE INSERT OR UPDATE ON "${table}"
 FOR EACH ROW EXECUTE FUNCTION "${fnName}"();`
   }
 
-  private generateDualWriteStopTrigger(table: string, column: string, prefix: string): string {
+  private generateDualWriteStopTrigger(table: string, column: string, _prefix: string): string {
     return `-- Dual-write stop for "${table}"."${column}": application should stop writing to this column`
   }
 

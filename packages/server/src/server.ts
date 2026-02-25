@@ -14,7 +14,7 @@ import type { Middleware } from "./middleware/index.js"
 import { MiddlewareManager } from "./middleware/index.js"
 import { MetricsCollector } from "./metrics/index.js"
 import { toPrometheusFormat } from "./metrics/index.js"
-import { schemaToVisualModel, generateDashboardHTML } from "./dashboard/index.js"
+import { schemaToVisualModel } from "./dashboard/index.js"
 import { generateFullDashboardHTML } from "./dashboard/index.js"
 import { TransportServer } from "./transport/index.js"
 import { ReactiveCdcAdapter } from "./cdc/index.js"
@@ -151,7 +151,7 @@ export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseCon
         "Cache-Control": "no-store",
       })
       res.end(JSON.stringify({ data: result.result }))
-    } catch (error) {
+    } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Internal server error"
       metrics.recordQuery("query:unknown", 0, true)
       res.writeHead(500, { "Content-Type": "application/json" })

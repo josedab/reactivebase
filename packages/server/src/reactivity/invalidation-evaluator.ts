@@ -8,7 +8,6 @@
  */
 
 import type { SubscriptionRegistry, Subscription } from "./subscription-registry.js"
-import type { QueryDependency } from "../query-builder/index.js"
 
 export interface ChangeEvent {
   table: string

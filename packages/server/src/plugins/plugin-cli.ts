@@ -114,7 +114,7 @@ export class PluginCLI {
           message: `✓ Plugin "${pluginName}@${definition.version}" installed successfully.`,
           data: { name: pluginName, version: definition.version, status: instance.status },
         }
-      } catch (err) {
+      } catch (err: unknown) {
         return {
           success: false,
           message: `Failed to install "${pluginName}": ${err instanceof Error ? err.message : String(err)}`,
@@ -147,7 +147,7 @@ export class PluginCLI {
         success: true,
         message: `✓ Plugin "${pluginName}" uninstalled successfully.`,
       }
-    } catch (err) {
+    } catch (err: unknown) {
       return {
         success: false,
         message: `Failed to uninstall "${pluginName}": ${err instanceof Error ? err.message : String(err)}`,

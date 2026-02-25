@@ -4,7 +4,7 @@
  */
 
 import { readdir, readFile, writeFile, mkdir } from "node:fs/promises"
-import { join, basename } from "node:path"
+import { join } from "node:path"
 import { existsSync } from "node:fs"
 import type { Schema } from "../schema/index.js"
 import { generateMigrationSQL } from "../schema/index.js"
@@ -147,7 +147,7 @@ export class MigrationManager {
           migration.name,
         ])
         applied.push(migration.version)
-      } catch (error) {
+      } catch (error: unknown) {
         return {
           applied,
           failed: migration.version,

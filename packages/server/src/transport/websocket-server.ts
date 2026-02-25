@@ -255,7 +255,7 @@ export class TransportServer {
         data: result,
         version,
       })
-    } catch (error) {
+    } catch (error: unknown) {
       this.metrics?.recordQuery(`query:${queryName}`, 0, true)
       this.send(conn, {
         type: "subscription_error",
@@ -322,7 +322,7 @@ export class TransportServer {
 
       // Process reactivity (invalidate affected subscriptions)
       await this.engine.processChanges(result.modifiedTables)
-    } catch (error) {
+    } catch (error: unknown) {
       const mwCtx: MiddlewareContext = {
         functionName: mutationName,
         functionType: "mutation",
@@ -377,7 +377,7 @@ export class TransportServer {
       const result = await executeActionFunction(this.pool, this.schema, fn, beforeResult.args, conn.auth)
       const finalResult = await this.middleware.runAfter(mwCtx, result)
       this.send(conn, { type: "action_result", requestId, data: finalResult })
-    } catch (error) {
+    } catch (error: unknown) {
       const mwCtx: MiddlewareContext = {
         functionName: actionName,
         functionType: "action",

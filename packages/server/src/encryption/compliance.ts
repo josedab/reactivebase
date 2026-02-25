@@ -248,7 +248,7 @@ export class ComplianceToolkit {
 
       request.status = "completed"
       request.completedAt = Date.now()
-    } catch (err) {
+    } catch (err: unknown) {
       request.status = "failed"
       request.error = err instanceof Error ? err.message : String(err)
     }

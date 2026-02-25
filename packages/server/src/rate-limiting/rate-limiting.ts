@@ -229,10 +229,7 @@ export class RateLimitEngine {
     if (rule.algorithm === "sliding_window") {
       this.slidingLimiters.set(rule.name, new SlidingWindowLimiter(rule.limit, rule.windowMs))
     } else {
-      this.tokenBucketLimiters.set(
-        rule.name,
-        new TokenBucketLimiter(rule.limit, rule.refillRate ?? 1, rule.windowMs),
-      )
+      this.tokenBucketLimiters.set(rule.name, new TokenBucketLimiter(rule.limit, rule.refillRate ?? 1, rule.windowMs))
     }
   }
 
@@ -309,11 +306,16 @@ export class RateLimitEngine {
     if (rule.keyExtractor) return rule.keyExtractor(ctx)
 
     switch (rule.scope) {
-      case "user": return `user:${ctx.userId}`
-      case "tenant": return `tenant:${ctx.tenantId}`
-      case "query": return `query:${ctx.functionName}`
-      case "ip": return `ip:${ctx.ip}`
-      case "global": return "global"
+      case "user":
+        return `user:${ctx.userId}`
+      case "tenant":
+        return `tenant:${ctx.tenantId}`
+      case "query":
+        return `query:${ctx.functionName}`
+      case "ip":
+        return `ip:${ctx.ip}`
+      case "global":
+        return "global"
     }
   }
 
@@ -417,9 +419,15 @@ export class UsageMeter {
   ): void {
     // Global metrics
     switch (functionType) {
-      case "query": this.metrics.queryExecutions++; break
-      case "mutation": this.metrics.mutationExecutions++; break
-      case "action": this.metrics.actionExecutions++; break
+      case "query":
+        this.metrics.queryExecutions++
+        break
+      case "mutation":
+        this.metrics.mutationExecutions++
+        break
+      case "action":
+        this.metrics.actionExecutions++
+        break
     }
     this.metrics.bytesTransferred += bytesTransferred
 
@@ -437,9 +445,15 @@ export class UsageMeter {
       }
       const tenant = this.metrics.byTenant[tenantId]
       switch (functionType) {
-        case "query": tenant.queryExecutions++; break
-        case "mutation": tenant.mutationExecutions++; break
-        case "action": tenant.actionExecutions++; break
+        case "query":
+          tenant.queryExecutions++
+          break
+        case "mutation":
+          tenant.mutationExecutions++
+          break
+        case "action":
+          tenant.actionExecutions++
+          break
       }
       tenant.bytesTransferred += bytesTransferred
     }

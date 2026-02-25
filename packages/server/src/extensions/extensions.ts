@@ -147,11 +147,13 @@ export class ExtensionDetector {
   /**
    * Detect which extensions are needed based on schema column types.
    */
-  detectFromSchema(tables: Array<{ name: string; columns: Record<string, { pgType: string; type: string }> }>): string[] {
+  detectFromSchema(
+    tables: Array<{ name: string; columns: Record<string, { pgType: string; type: string }> }>,
+  ): string[] {
     const needed = new Set<string>()
 
     for (const table of tables) {
-      for (const [colName, col] of Object.entries(table.columns)) {
+      for (const [_colName, col] of Object.entries(table.columns)) {
         // Vector columns require pgvector
         if (col.pgType.startsWith("vector") || col.type === "vector") {
           needed.add("pgvector")
@@ -175,11 +177,7 @@ export class ExtensionDetector {
   /**
    * Check extension compatibility with a cloud provider.
    */
-  checkCompatibility(
-    extensionNames: string[],
-    provider: CloudProvider,
-    pgVersion?: number,
-  ): ExtensionDetectionResult {
+  checkCompatibility(extensionNames: string[], provider: CloudProvider, pgVersion?: number): ExtensionDetectionResult {
     const required: PgExtensionInfo[] = []
     const missing: string[] = []
     const unsupported: Array<{ extension: string; provider: string; reason: string }> = []

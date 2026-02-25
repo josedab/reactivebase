@@ -1,7 +1,4 @@
-export {
-  SubscriptionAnalytics,
-  createSubscriptionAnalytics,
-} from "./subscription-analytics.js"
+export { SubscriptionAnalytics, createSubscriptionAnalytics } from "./subscription-analytics.js"
 export type {
   SubscriptionCostRecord,
   CostAttribution,

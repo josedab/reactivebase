@@ -10,7 +10,7 @@
  *   const shareUrl = engine.shareSession(session.sessionId)
  */
 
-import type { EmbeddedPoolAdapter, PGliteLike } from "../embedded/embedded.js"
+import type { EmbeddedPoolAdapter } from "../embedded/embedded.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -336,7 +336,7 @@ export function generateLivePlaygroundHTML(options: LivePlaygroundHTMLOptions = 
         });
         const data = await res.json();
         output.textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
+      } catch (err: unknown) {
         output.textContent = 'Error: ' + err.message;
       }
     }

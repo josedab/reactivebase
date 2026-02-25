@@ -153,7 +153,7 @@ export function generateServerModule(functions: ScannedFunction[], functionsDir:
 /**
  * Generate the _generated/dataModel.ts file with table types from schema.
  */
-export function generateDataModel(schemaSource: string): string {
+export function generateDataModel(_schemaSource: string): string {
   const lines: string[] = []
 
   lines.push("/* eslint-disable */")

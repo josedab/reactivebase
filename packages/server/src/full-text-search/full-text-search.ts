@@ -10,7 +10,15 @@ import type { QueryDependency } from "../query-builder/index.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type SearchLanguage = "simple" | "english" | "spanish" | "french" | "german" | "italian" | "portuguese" | "russian"
+export type SearchLanguage =
+  | "simple"
+  | "english"
+  | "spanish"
+  | "french"
+  | "german"
+  | "italian"
+  | "portuguese"
+  | "russian"
 export type FuzzyMatchType = "trigram" | "levenshtein" | "metaphone"
 export type SearchRankFunction = "ts_rank" | "ts_rank_cd"
 
@@ -261,12 +269,17 @@ export class SearchQueryBuilder<T = Record<string, unknown>> {
     return [{ table: this.plan.table, filters: {} }]
   }
 
-  private buildFullTextQuery(parts: string[], params: unknown[]): { sql: string; params: unknown[]; plan: SearchQueryPlan } {
+  private buildFullTextQuery(
+    parts: string[],
+    params: unknown[],
+  ): { sql: string; params: unknown[]; plan: SearchQueryPlan } {
     const { table, searchColumns, searchQuery, language, rankFunction } = this.plan
 
     // Build tsvector expression
     const tsvectorParts = searchColumns.map((col) => {
-      const weight = col.weight ? `setweight(to_tsvector('${col.language ?? language}', COALESCE("${col.column}", '')), '${col.weight}')` : `to_tsvector('${col.language ?? language}', COALESCE("${col.column}", ''))`
+      const weight = col.weight
+        ? `setweight(to_tsvector('${col.language ?? language}', COALESCE("${col.column}", '')), '${col.weight}')`
+        : `to_tsvector('${col.language ?? language}', COALESCE("${col.column}", ''))`
       return weight
     })
     const tsvector = tsvectorParts.length > 1 ? tsvectorParts.join(" || ") : tsvectorParts[0]
@@ -283,9 +296,9 @@ export class SearchQueryBuilder<T = Record<string, unknown>> {
       for (const col of searchColumns) {
         selectParts.push(
           `ts_headline('${col.language ?? language}', COALESCE("${col.column}", ''), ${tsquery}, ` +
-          `'StartSel=${hl.startTag ?? "<b>"}, StopSel=${hl.endTag ?? "</b>"}, ` +
-          `MaxWords=${hl.maxWords ?? 35}, MinWords=${hl.minWords ?? 15}, ` +
-          `FragmentDelimiter=${hl.fragmentDelimiter ?? " ... "}') AS "_hl_${col.column}"`
+            `'StartSel=${hl.startTag ?? "<b>"}, StopSel=${hl.endTag ?? "</b>"}, ` +
+            `MaxWords=${hl.maxWords ?? 35}, MinWords=${hl.minWords ?? 15}, ` +
+            `FragmentDelimiter=${hl.fragmentDelimiter ?? " ... "}') AS "_hl_${col.column}"`,
         )
       }
     }
@@ -315,7 +328,10 @@ export class SearchQueryBuilder<T = Record<string, unknown>> {
     return { sql: parts.join("\n"), params, plan: { ...this.plan } }
   }
 
-  private buildFuzzyQuery(parts: string[], params: unknown[]): { sql: string; params: unknown[]; plan: SearchQueryPlan } {
+  private buildFuzzyQuery(
+    parts: string[],
+    params: unknown[],
+  ): { sql: string; params: unknown[]; plan: SearchQueryPlan } {
     const { table, searchColumns, fuzzyQuery, fuzzyOptions } = this.plan
     const threshold = fuzzyOptions?.threshold ?? 0.3
     const matchType = fuzzyOptions?.matchType ?? "trigram"
@@ -383,24 +399,25 @@ export interface SearchableValidatorOptions {
 /**
  * Generate SQL for creating full-text search indexes on a table.
  */
-export function generateSearchIndexSQL(
-  table: string,
-  options: SearchableValidatorOptions,
-): string {
+export function generateSearchIndexSQL(table: string, options: SearchableValidatorOptions): string {
   const language = options.language ?? "english"
   const parts: string[] = []
 
   // Generated tsvector column (materialized for performance)
-  const tsvectorExpr = options.columns.map((col) => {
-    const weight = options.weights?.[col]
-    if (weight) {
-      return `setweight(to_tsvector('${language}', COALESCE("${col}", '')), '${weight}')`
-    }
-    return `to_tsvector('${language}', COALESCE("${col}", ''))`
-  }).join(" || ")
+  const tsvectorExpr = options.columns
+    .map((col) => {
+      const weight = options.weights?.[col]
+      if (weight) {
+        return `setweight(to_tsvector('${language}', COALESCE("${col}", '')), '${weight}')`
+      }
+      return `to_tsvector('${language}', COALESCE("${col}", ''))`
+    })
+    .join(" || ")
 
   // Add generated column
-  parts.push(`ALTER TABLE "${table}" ADD COLUMN IF NOT EXISTS "_search_vector" tsvector GENERATED ALWAYS AS (${tsvectorExpr}) STORED;`)
+  parts.push(
+    `ALTER TABLE "${table}" ADD COLUMN IF NOT EXISTS "_search_vector" tsvector GENERATED ALWAYS AS (${tsvectorExpr}) STORED;`,
+  )
 
   // GIN index on tsvector
   parts.push(`CREATE INDEX IF NOT EXISTS "idx_${table}_search" ON "${table}" USING GIN ("_search_vector");`)
@@ -408,7 +425,9 @@ export function generateSearchIndexSQL(
   // Optional pg_trgm index for fuzzy search
   if (options.enableFuzzy) {
     for (const col of options.columns) {
-      parts.push(`CREATE INDEX IF NOT EXISTS "idx_${table}_${col}_trgm" ON "${table}" USING GIN ("${col}" gin_trgm_ops);`)
+      parts.push(
+        `CREATE INDEX IF NOT EXISTS "idx_${table}_${col}_trgm" ON "${table}" USING GIN ("${col}" gin_trgm_ops);`,
+      )
     }
   }
 

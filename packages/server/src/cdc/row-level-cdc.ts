@@ -177,7 +177,7 @@ export class RowLevelCdcAdapter {
 
     const batchStart = performance.now()
     const batches = this.getBatches()
-    const changes = this.buffer.splice(0)
+    const _changes = this.buffer.splice(0)
 
     // Convert to ChangeEvents and forward
     const tables: string[] = []

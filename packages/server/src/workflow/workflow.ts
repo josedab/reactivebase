@@ -213,7 +213,7 @@ export class WorkflowContext {
         }
 
         return result
-      } catch (error) {
+      } catch (error: unknown) {
         lastError = error instanceof Error ? error : new Error(String(error))
         record.retryCount = attempt + 1
 
@@ -467,7 +467,7 @@ export class WorkflowEngine {
       instance.completedAt = Date.now()
       instance.steps = ctx.stepRecords
       instance.currentStep = null
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof WorkflowWaitingError) {
         instance.status = "waiting"
         instance.waitingFor = error.eventName

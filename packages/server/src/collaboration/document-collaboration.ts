@@ -17,7 +17,7 @@
  *   docs.onUpdate("doc-1", (update) => broadcastToClients(update))
  */
 
-import { encodeUpdate, decodeUpdate, mergeUpdates, hashClientId, type StateVector } from "./yjs-protocol.js"
+import { encodeUpdate, mergeUpdates } from "./yjs-protocol.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
