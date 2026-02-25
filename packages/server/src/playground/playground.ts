@@ -968,6 +968,8 @@ ${BUILTIN_TUTORIALS.map(
     let currentTutorial = null;
     let currentStepIdx = 0;
 
+    function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
     function switchTab(tab) {
       editorContent[currentTab] = document.getElementById('code-editor').value;
       currentTab = tab;
@@ -992,7 +994,7 @@ ${BUILTIN_TUTORIALS.map(
         output.innerHTML = '<span class="output-success">✓ Code parsed successfully. ' +
           code.split('\\n').filter(l => l.trim()).length + ' lines analyzed.</span>';
       } catch(e: unknown) {
-        output.innerHTML = '<span class="output-error">✗ ' + e.message + '</span>';
+        output.innerHTML = '<span class="output-error">✗ ' + escapeHtml(e.message) + '</span>';
       }
       document.getElementById('exec-time').textContent = Math.round(performance.now() - start) + 'ms';
     }
@@ -1022,7 +1024,7 @@ ${BUILTIN_TUTORIALS.map(
       ).join('');
       document.getElementById('tutorial-title').textContent = step.title;
       document.getElementById('tutorial-desc').textContent = step.description;
-      document.getElementById('tutorial-hints').innerHTML = step.hints.map(h => '<div class="hint">💡 ' + h + '</div>').join('');
+      document.getElementById('tutorial-hints').innerHTML = step.hints.map(h => '<div class="hint">💡 ' + escapeHtml(h) + '</div>').join('');
       document.getElementById('code-editor').value = step.code;
     }
 
@@ -1039,7 +1041,9 @@ ${BUILTIN_TUTORIALS.map(
         const d = JSON.parse(atob(params.get('session')));
         editorContent = { schema: d.s || '', queries: d.q || '', mutations: d.m || '' };
         document.getElementById('code-editor').value = editorContent[currentTab];
-      } catch(e: unknown) {}
+      } catch(e: unknown) {
+        console.error("Failed to restore session from URL:", e);
+      }
     }
   </script>
 </body>
