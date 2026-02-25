@@ -95,15 +95,15 @@ class SimpleInMemoryDB {
 }
 const listTasksFn = {
   type: "query",
-  handler: async (ctx: any, args: { userId: string }) => {
-    return ctx.db.tasks.where({ assigneeId: args.userId, done: false })
+  handler: async (ctx: unknown, args: { userId: string }) => {
+    return (ctx as { db: SimpleInMemoryDB }).db.where("tasks", { assigneeId: args.userId, done: false })
   },
 }
 
 const createTaskFn = {
   type: "mutation",
-  handler: async (ctx: any, args: { title: string; userId: string; priority?: string }) => {
-    return ctx.db.tasks.insert({
+  handler: async (ctx: unknown, args: { title: string; userId: string; priority?: string }) => {
+    return (ctx as { db: SimpleInMemoryDB }).db.insert("tasks", {
       title: args.title,
       assigneeId: args.userId,
       priority: args.priority ?? "medium",
@@ -114,15 +114,15 @@ const createTaskFn = {
 
 const completeTaskFn = {
   type: "mutation",
-  handler: async (ctx: any, args: { taskId: string }) => {
-    return ctx.db.tasks.update(args.taskId, { done: true })
+  handler: async (ctx: unknown, args: { taskId: string }) => {
+    return (ctx as { db: SimpleInMemoryDB }).db.update("tasks", args.taskId, { done: true })
   },
 }
 
 const deleteTaskFn = {
   type: "mutation",
-  handler: async (ctx: any, args: { taskId: string }) => {
-    await ctx.db.tasks.delete(args.taskId)
+  handler: async (ctx: unknown, args: { taskId: string }) => {
+    await (ctx as { db: SimpleInMemoryDB }).db.delete("tasks", args.taskId)
     return { success: true }
   },
 }

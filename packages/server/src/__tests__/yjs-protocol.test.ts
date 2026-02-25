@@ -175,9 +175,9 @@ describe("Awareness Protocol", () => {
     expect(decoded).toHaveLength(2)
     expect(decoded[0].clientId).toBe(1)
     expect(decoded[0].clock).toBe(5)
-    expect((decoded[0].state as any).user).toBe("Alice")
+    expect((decoded[0].state as Record<string, unknown>).user).toBe("Alice")
     expect(decoded[1].clientId).toBe(2)
-    expect((decoded[1].state as any).cursor.index).toBe(20)
+    expect(((decoded[1].state as Record<string, unknown>).cursor as Record<string, unknown>).index).toBe(20)
   })
 
   it("handles null state (client disconnected)", () => {

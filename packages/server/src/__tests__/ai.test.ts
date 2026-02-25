@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { mockAiProvider, createAiContext } from "../ai/ai.js"
+import { mockAiProvider, createAiContext, type AiProvider } from "../ai/ai.js"
 
 describe("mockAiProvider", () => {
   it("generates deterministic embeddings", async () => {
@@ -63,7 +63,7 @@ describe("createAiContext", () => {
   })
 
   it("throws when generate is not supported", async () => {
-    const provider: any = { name: "no-gen", embed: async (t: string[]) => t.map(() => [0]) }
+    const provider: AiProvider = { name: "no-gen", embed: async (t: string[]) => t.map(() => [0]) }
     const ctx = createAiContext(provider)
 
     await expect(ctx.generate("test")).rejects.toThrow("does not support generation")

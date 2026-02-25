@@ -2,6 +2,17 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { MockDatabase } from "../mock-database.js"
 import { TestServer } from "../test-server.js"
 
+interface TestCtx {
+  db: {
+    tasks: {
+      where: (filter: Record<string, unknown>) => Promise<unknown[]>
+      insert: (data: Record<string, unknown>) => Promise<unknown>
+      update: (id: string, data: Record<string, unknown>) => Promise<unknown>
+    }
+  }
+  auth: { userId: string | null; claims: Record<string, unknown> }
+}
+
 describe("MockDatabase", () => {
   let db: MockDatabase
 
@@ -48,7 +59,10 @@ describe("MockDatabase", () => {
     ])
 
     const ctx = db.createContext("readwrite")
-    const tasks = ctx["tasks"] as { where: Function; insert: Function }
+    const tasks = ctx["tasks"] as {
+      where: (filter: Record<string, unknown>) => Promise<unknown[]>
+      insert: (data: Record<string, unknown>) => Promise<unknown>
+    }
 
     const result = await tasks.where({ assigneeId: "u1" })
     expect(result).toHaveLength(2)
@@ -60,7 +74,7 @@ describe("MockDatabase", () => {
 
   it("prevents writes in read-only mode", async () => {
     const ctx = db.createContext("read")
-    const tasks = ctx["tasks"] as { insert: Function }
+    const tasks = ctx["tasks"] as { insert: (data: Record<string, unknown>) => Promise<unknown> }
 
     await expect(tasks.insert({ title: "fail" })).rejects.toThrow("read-only")
   })
@@ -68,7 +82,10 @@ describe("MockDatabase", () => {
   it("tracks read and write logs", async () => {
     db.seed("tasks", [{ title: "A" }])
     const ctx = db.createContext("readwrite")
-    const tasks = ctx["tasks"] as { where: Function; insert: Function }
+    const tasks = ctx["tasks"] as {
+      where: (filter: Record<string, unknown>) => Promise<unknown[]>
+      insert: (data: Record<string, unknown>) => Promise<unknown>
+    }
 
     await tasks.where({ done: false })
     await tasks.insert({ title: "B" })
@@ -84,14 +101,14 @@ describe("TestServer", () => {
 
   const listTasks = {
     type: "query",
-    handler: async (ctx: any, args: { userId: string }) => {
+    handler: async (ctx: TestCtx, args: { userId: string }) => {
       return ctx.db.tasks.where({ assigneeId: args.userId, done: false })
     },
   }
 
   const createTask = {
     type: "mutation",
-    handler: async (ctx: any, args: { title: string; userId: string }) => {
+    handler: async (ctx: TestCtx, args: { title: string; userId: string }) => {
       return ctx.db.tasks.insert({
         title: args.title,
         assigneeId: args.userId,
@@ -102,7 +119,7 @@ describe("TestServer", () => {
 
   const completeTask = {
     type: "mutation",
-    handler: async (ctx: any, args: { taskId: string }) => {
+    handler: async (ctx: TestCtx, args: { taskId: string }) => {
       return ctx.db.tasks.update(args.taskId, { done: true })
     },
   }
@@ -160,22 +177,22 @@ describe("TestServer", () => {
   it("supports auth context switching", async () => {
     const authQuery = {
       type: "query",
-      handler: async (ctx: any) => ({ userId: ctx.auth.userId }),
+      handler: async (ctx: TestCtx) => ({ userId: ctx.auth.userId }),
     }
 
     server.asUser("user-123", { role: "admin" })
     const result = await server.runQuery(authQuery)
-    expect((result.data as any).userId).toBe("user-123")
+    expect((result.data as { userId: string }).userId).toBe("user-123")
 
     server.asAnonymous()
     const result2 = await server.runQuery(authQuery)
-    expect((result2.data as any).userId).toBeNull()
+    expect((result2.data as { userId: string | null }).userId).toBeNull()
   })
 
   it("supports registered functions by name", async () => {
     server.registerFunctions({
-      "tasks.list": listTasks as any,
-      "tasks.create": createTask as any,
+      "tasks.list": listTasks,
+      "tasks.create": createTask,
     })
 
     await server.runMutation("tasks.create", { title: "Test", userId: "u1" })

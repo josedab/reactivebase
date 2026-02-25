@@ -7,6 +7,7 @@ import {
   happensBefore,
   areConcurrent,
   clocksEqual,
+  ConflictStrategy,
 } from "../offline/sync-engine.js"
 import { MemoryOfflineStorage } from "../offline/offline.js"
 
@@ -14,7 +15,7 @@ function createEngine(opts: Partial<{ clientId: string; conflictStrategy: string
   return new OfflineSyncEngine({
     storage: new MemoryOfflineStorage(),
     clientId: opts.clientId ?? "client-1",
-    conflictStrategy: (opts.conflictStrategy as any) ?? "last-write-wins",
+    conflictStrategy: (opts.conflictStrategy as ConflictStrategy) ?? "last-write-wins",
   })
 }
 
@@ -88,7 +89,7 @@ describe("OfflineSyncEngine", () => {
 
       const executed: string[] = []
       const result = await engine.sync(async (name, args) => {
-        executed.push((args as any).title)
+        executed.push((args as Record<string, unknown>).title as string)
       })
 
       expect(result.synced).toBe(2)
@@ -209,7 +210,7 @@ describe("OfflineSyncEngine", () => {
 
       const result = engine.resolveVersionConflict(client, server)
       expect(result.winner).toBe("merged")
-      expect((result.value as any).merged).toBe(true)
+      expect((result.value as Record<string, unknown>).merged).toBe(true)
     })
 
     it("uses causal ordering when not concurrent", () => {

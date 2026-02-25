@@ -201,7 +201,7 @@ describe("JobScheduler integration", () => {
 
     // Manually trigger one poll cycle
     const beforePollCalls = (pool.query as ReturnType<typeof vi.fn>).mock.calls.length
-    await (scheduler as any).poll()
+    await (scheduler as unknown as { poll(): Promise<void> }).poll()
 
     // Check if the row was processed (status should be "completed" after successful execution)
     const processedRows = pool._rows.filter((r) => r.action_ref === "instantAction")
@@ -222,7 +222,7 @@ describe("JobScheduler integration", () => {
     await scheduler.runAfter(0, "flakyAction", {})
 
     // First poll: fails, should retry
-    await (scheduler as any).poll()
+    await (scheduler as unknown as { poll(): Promise<void> }).poll()
     expect(attempts).toBe(1)
 
     // Verify job was rescheduled (status back to pending with incremented retries)
@@ -239,7 +239,7 @@ describe("JobScheduler integration", () => {
 
     await scheduler.runAfter(0, "deadAction", {}, 0) // max 0 retries
 
-    await (scheduler as any).poll()
+    await (scheduler as unknown as { poll(): Promise<void> }).poll()
 
     // With maxRetries=0, job should immediately go to dead status
     const allDeadAction = pool._rows.filter((r) => r.action_ref === "deadAction")

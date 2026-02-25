@@ -105,7 +105,7 @@ describe("PerformanceProfiler", () => {
       profiler.recordFanout("tasks", "delete", 2000, 500)
 
       expect(alerts.length).toBeGreaterThan(0)
-      expect((alerts[0] as any).type).toBe("high-fanout")
+      expect((alerts[0] as Record<string, unknown>).type).toBe("high-fanout")
     })
   })
 
