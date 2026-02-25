@@ -217,6 +217,32 @@ export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseCon
           return
         }
 
+        // Dashboard/metrics endpoints require authentication in production
+        if (req.url === "/dashboard" || req.url === "/dashboard/schema.json" || req.url === "/metrics") {
+          const dashboardToken = config.server?.dashboardToken
+          const isProduction = process.env.NODE_ENV === "production"
+
+          if (isProduction && !dashboardToken) {
+            res.writeHead(403, { "Content-Type": "application/json" })
+            res.end(
+              JSON.stringify({
+                error: "Dashboard endpoints are disabled in production. Set server.dashboardToken to enable.",
+              }),
+            )
+            return
+          }
+
+          if (dashboardToken) {
+            const authHeader = req.headers.authorization
+            const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : authHeader
+            if (token !== dashboardToken) {
+              res.writeHead(401, { "Content-Type": "application/json" })
+              res.end(JSON.stringify({ error: "Unauthorized — invalid or missing dashboard token" }))
+              return
+            }
+          }
+        }
+
         if (req.url === "/dashboard") {
           const model = schemaToVisualModel(schema)
           const html = generateFullDashboardHTML(model)

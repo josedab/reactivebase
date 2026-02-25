@@ -21,6 +21,8 @@ export interface ReactiveBaseConfig {
     heartbeatInterval?: number
     /** Allowed CORS origin(s). Set to '*' for any origin, or a specific origin string. Default: undefined (no CORS headers). */
     corsOrigin?: string
+    /** Token required to access /dashboard, /dashboard/schema.json, /metrics. If not set, these endpoints are disabled in production (NODE_ENV=production). */
+    dashboardToken?: string
   }
   /** Change Data Capture mode for reactivity invalidation */
   cdc?: {
