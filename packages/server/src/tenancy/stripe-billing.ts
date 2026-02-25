@@ -8,6 +8,7 @@
  *   const session = await stripe.createCheckoutSession("tenant_1", "pro", "https://app.com/billing")
  */
 
+import { createHmac, timingSafeEqual } from "node:crypto"
 import type { SaasBillingProvider } from "./saas-kit.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -226,10 +227,12 @@ export class StripeBillingProvider implements SaasBillingProvider {
       throw new Error("Invalid Stripe webhook signature format")
     }
 
-    // In production, verify HMAC-SHA256:
-    // expected = HMAC-SHA256(secret, `${parts.t}.${payload}`)
-    // Compare expected === parts.v1
-    // Skipped here to keep dependency-free; consumers should use crypto.createHmac
-    void secret
+    const expectedSig = createHmac("sha256", secret).update(`${parts.t}.${payload}`).digest("hex")
+
+    const expectedBuf = Buffer.from(expectedSig, "hex")
+    const actualBuf = Buffer.from(parts.v1, "hex")
+    if (expectedBuf.length !== actualBuf.length || !timingSafeEqual(expectedBuf, actualBuf)) {
+      throw new Error("Invalid Stripe webhook signature")
+    }
   }
 }
