@@ -45,7 +45,7 @@ if (!skipWizard && process.stdin.isTTY) {
   }
 }
 
-const { _dependencies, _devDependencies } = generateDependencies(wizardOptions)
+const { dependencies: _dependencies, devDependencies: _devDependencies } = generateDependencies(wizardOptions)
 
 // Create directory structure
 const dirs = ["", "convex", "_generated"]
