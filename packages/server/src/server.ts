@@ -82,11 +82,21 @@ export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseCon
 
   let httpServer: HttpServer | null = null
 
+  const MAX_BODY_SIZE = 1024 * 1024 // 1 MB
+
   /** Parse request body as JSON */
   async function readBody(req: IncomingMessage): Promise<unknown> {
     return new Promise((resolve, reject) => {
       const chunks: Buffer[] = []
-      req.on("data", (chunk: Buffer) => chunks.push(chunk))
+      let totalSize = 0
+      req.on("data", (chunk: Buffer) => {
+        totalSize += chunk.length
+        if (totalSize > MAX_BODY_SIZE) {
+          req.destroy(new Error("Request body too large"))
+          return
+        }
+        chunks.push(chunk)
+      })
       req.on("end", () => {
         try {
           resolve(JSON.parse(Buffer.concat(chunks).toString("utf-8")))
