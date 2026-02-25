@@ -5,11 +5,22 @@ All notable changes to ReactiveBase will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
 ## [0.1.0] — 2026-02-22
 
 ### Added
 
 #### Core Framework
+
 - **Reactive Query Engine** — filter-level dependency tracking, subscription invalidation, result diffing
 - **Automatic Transactions** — SERIALIZABLE Postgres transactions with auto-retry on serialization failures
 - **Type-Safe Query Builder** — fluent SQL builder with WHERE, JOIN, GROUP BY, ORDER BY, vector similarity
@@ -18,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Server Functions** — `query()`, `mutation()`, `action()` primitives with dependency tracking
 
 #### Auth & Security
+
 - **JWT Authentication** — HS256, RS256, JWKS auto-caching
 - **Custom & Token Providers** — pluggable auth verification
 - **RBAC Permissions** — `roles()`, `allow()`, declarative access control on functions
@@ -27,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Argument Validation** — `s.string().min(1).email()` DSL with auto-enforcement
 
 #### Infrastructure
+
 - **Job Scheduler** — Postgres-backed queue with FOR UPDATE SKIP LOCKED, cron parser, retry/dead-letter
 - **Redis Pub/Sub** — cross-server invalidation with in-memory fallback
 - **Webhooks** — inbound (HMAC-verified) and outbound (mutation-triggered)
@@ -37,11 +50,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CDC** — Postgres LISTEN/NOTIFY change data capture with event buffering
 
 #### AI & Intelligence
+
 - **AI Providers** — OpenAI, Ollama, mock provider adapters
 - **Vector Search** — `v.vector()` type, HNSW/IVFFlat indexes, `whereVectorSimilar()` with cosine/L2/inner_product
 - **RAG Context** — `createAiContext()` with embed, generate, and search
 
 #### Client SDKs
+
 - **@reactivebase/client** — WebSocket connection, query cache with optimistic updates, binary protocol, multi-tab dedup, offline persistence + sync
 - **@reactivebase/react** — `useQuery`, `useMutation`, `useAction` hooks
 - **@reactivebase/vue** — Vue 3 composables
@@ -51,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **@reactivebase/testing** — `TestServer`, `MockDatabase`, `snapshotReactiveUpdates`
 
 #### Developer Tools
+
 - **Type-Safe Codegen** — `scanFunctions()`, `generateApiModule()` with typed `FunctionReference<TArgs, TReturn>`
 - **Schema Migration Tools** — `convertPrismaToReactiveBase()`, `convertDrizzleToReactiveBase()`
 - **REST/GraphQL Auto-Generation** — `generateRestRoutes()`, `generateGraphQLSchema()`
@@ -65,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Prisma Migration CLI** — `@reactivebase/migrate-from-prisma` standalone tool
 
 #### Deployment & Ops
+
 - CI/CD with GitHub Actions (Node 20/22 matrix + automated npm release)
 - Docker, docker-compose, Fly.io, Railway, Render deployment templates
 - Docusaurus documentation site (10 pages + 2 blog posts)
