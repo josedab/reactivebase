@@ -1,0 +1,37 @@
+# CODEOWNERS — auto-assign reviewers for pull requests
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything
+* @josedab
+
+# Core packages
+packages/server/   @josedab
+packages/client/   @josedab
+packages/react/    @josedab
+
+# Framework integrations
+packages/nextjs/        @josedab
+packages/vue/           @josedab
+packages/svelte/        @josedab
+packages/react-native/  @josedab
+
+# Tooling
+packages/cli/                  @josedab
+packages/testing/              @josedab
+packages/create-reactivebase/  @josedab
+packages/vscode-extension/     @josedab
+
+# Infrastructure
+packages/edge/     @josedab
+packages/graphql/  @josedab
+
+# CI/CD & project config
+.github/       @josedab
+turbo.json     @josedab
+package.json   @josedab
+tsconfig.json  @josedab
+
+# Documentation
+docs/      @josedab
+website/   @josedab
+README.md  @josedab
