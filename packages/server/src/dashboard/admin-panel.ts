@@ -258,6 +258,7 @@ export function generateAdminPanelHTML(model: SchemaVisualModel, options: AdminP
 <script>
 const schema = ${modelJson};
 
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function showPanel(id) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -278,9 +279,9 @@ async function runQuery() {
       body: JSON.stringify(parsed)
     });
     const data = await resp.json();
-    results.innerHTML = '<pre style="overflow:auto;max-height:400px">' + JSON.stringify(data, null, 2) + '</pre>';
+    results.innerHTML = '<pre style="overflow:auto;max-height:400px">' + escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
   } catch(e: unknown) {
-    results.innerHTML = '<span style="color:#f85149">Error: ' + e.message + '</span>';
+    results.innerHTML = '<span style="color:#f85149">Error: ' + escapeHtml(e.message) + '</span>';
   }
 }
 

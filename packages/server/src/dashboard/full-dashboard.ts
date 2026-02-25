@@ -122,6 +122,8 @@ ${model.tables
 <script>
 const schema = ${modelJson};
 
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 function showTab(name) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -154,7 +156,7 @@ async function refreshMetrics() {
     // Per-function metrics
     const fns = [...Object.entries(m.queries.byFunction || {}), ...Object.entries(m.mutations.byFunction || {})];
     document.getElementById('function-metrics').innerHTML = fns.length > 0
-      ? fns.map(([name, fm]) => '<div class="log-entry">' + name + ' — ' + fm.calls + ' calls, avg ' + fm.avgLatencyMs.toFixed(1) + 'ms</div>').join('')
+      ? fns.map(([name, fm]) => '<div class="log-entry">' + escapeHtml(name) + ' — ' + fm.calls + ' calls, avg ' + fm.avgLatencyMs.toFixed(1) + 'ms</div>').join('')
       : '<p style="color: #6e7681; padding: 16px;">No function calls recorded yet.</p>';
 
     document.getElementById('refresh-indicator').textContent = 'Updated ' + new Date().toLocaleTimeString();

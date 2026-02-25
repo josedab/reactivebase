@@ -586,6 +586,8 @@ export function generateDashboardV2HTML(): string {
 </div>
 
 <script>
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 function showTab(name) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -616,27 +618,27 @@ async function refresh() {
     // Slow queries
     const sqBody = document.querySelector('#slow-queries-table tbody');
     sqBody.innerHTML = (m.slowQueries||[]).map(sq =>
-      '<tr><td>'+sq.queryName+'</td><td>'+fmt(sq.latencyMs)+'ms</td><td>'+new Date(sq.executedAt).toLocaleTimeString()+'</td></tr>'
+      '<tr><td>'+escapeHtml(sq.queryName)+'</td><td>'+fmt(sq.latencyMs)+'ms</td><td>'+new Date(sq.executedAt).toLocaleTimeString()+'</td></tr>'
     ).join('') || '<tr><td colspan="3" style="color:#6e7681">No slow queries</td></tr>';
 
     // Query inspector
     const qBody = document.querySelector('#query-table tbody');
     qBody.innerHTML = (m.topQueries||[]).map(q =>
-      '<tr><td>'+q.queryName+'</td><td>'+q.subscriberCount+'</td><td>'+q.totalExecutions+'</td>' +
+      '<tr><td>'+escapeHtml(q.queryName)+'</td><td>'+q.subscriberCount+'</td><td>'+q.totalExecutions+'</td>' +
       '<td>'+fmt(q.avgLatencyMs)+'ms</td><td>'+fmt(q.p50LatencyMs)+'ms</td><td>'+fmt(q.p95LatencyMs)+'ms</td><td>'+fmt(q.p99LatencyMs)+'ms</td>' +
       '<td>'+q.totalInvalidations+'</td></tr>'
     ).join('');
 
     // Heatmap
     document.getElementById('heatmap-grid').innerHTML = (m.subscriptionHeatmap||[]).map(h =>
-      '<div class="heat-cell '+heatClass(h.heat)+'"><strong>'+h.queryName+'</strong><br>'+h.table+'<br>'+h.subscriberCount+' subs, '+fmt(h.invalidationsPerMinute)+'/min</div>'
+      '<div class="heat-cell '+heatClass(h.heat)+'"><strong>'+escapeHtml(h.queryName)+'</strong><br>'+escapeHtml(h.table)+'<br>'+h.subscriberCount+' subs, '+fmt(h.invalidationsPerMinute)+'/min</div>'
     ).join('') || '<p style="color:#6e7681">No subscription data yet.</p>';
 
     // Mutations
     document.getElementById('mutation-list').innerHTML = (m.recentMutations||[]).map(mut =>
-      '<div class="mutation-entry"><span class="mutation-name">'+mut.mutationName+'</span> <span class="mutation-time">'+new Date(mut.executedAt).toLocaleTimeString()+' ('+fmt(mut.durationMs)+'ms)</span>' +
-      (mut.error ? '<div class="mutation-error">'+mut.error+'</div>' : '') +
-      '<div style="color:#8b949e;font-size:11px;margin-top:2px">Tables: '+mut.affectedTables.join(', ')+'</div></div>'
+      '<div class="mutation-entry"><span class="mutation-name">'+escapeHtml(mut.mutationName)+'</span> <span class="mutation-time">'+new Date(mut.executedAt).toLocaleTimeString()+' ('+fmt(mut.durationMs)+'ms)</span>' +
+      (mut.error ? '<div class="mutation-error">'+escapeHtml(mut.error)+'</div>' : '') +
+      '<div style="color:#8b949e;font-size:11px;margin-top:2px">Tables: '+escapeHtml(mut.affectedTables.join(', '))+'</div></div>'
     ).join('') || '<p style="color:#6e7681;padding:16px">No mutations recorded.</p>';
 
     // Pool
