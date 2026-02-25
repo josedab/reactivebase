@@ -29,8 +29,8 @@
     "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
-    "@reactivebase/server": "*",
-    "@reactivebase/client": "*"
+    "@reactivebase/server": "workspace:*",
+    "@reactivebase/client": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
@@ -53,5 +53,8 @@
   "files": [
     "dist",
     "README.md"
-  ]
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }

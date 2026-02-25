@@ -24,7 +24,7 @@
     "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
-    "@reactivebase/client": "*"
+    "@reactivebase/client": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
@@ -57,5 +57,8 @@
     "offline-first",
     "realtime",
     "typescript"
-  ]
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }

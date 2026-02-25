@@ -17,7 +17,7 @@
     "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
-    "@reactivebase/server": "*"
+    "@reactivebase/server": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
@@ -43,5 +43,8 @@
     "dev-server",
     "migrations",
     "typescript"
-  ]
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }

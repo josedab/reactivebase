@@ -16,7 +16,7 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@reactivebase/server": "*"
+    "@reactivebase/server": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
@@ -42,5 +42,8 @@
     "migration",
     "orm",
     "typescript"
-  ]
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }
