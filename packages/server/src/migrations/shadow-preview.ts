@@ -105,15 +105,26 @@ export interface IndexRecommendation {
 
 // ─── SQL Helpers ─────────────────────────────────────────────────────────────
 
+function sanitizeIdentifier(id: string): string {
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(id)) {
+    throw new Error(`Invalid SQL identifier: ${id}`)
+  }
+  return id
+}
+
 export function buildCreateShadowSchemaSQL(schemaName: string): string {
-  return `CREATE SCHEMA IF NOT EXISTS "${schemaName}";`
+  const safe = sanitizeIdentifier(schemaName)
+  return `CREATE SCHEMA IF NOT EXISTS "${safe}";`
 }
 
 export function buildDropShadowSchemaSQL(schemaName: string): string {
-  return `DROP SCHEMA IF EXISTS "${schemaName}" CASCADE;`
+  const safe = sanitizeIdentifier(schemaName)
+  return `DROP SCHEMA IF EXISTS "${safe}" CASCADE;`
 }
 
 export function buildCopySchemaSQL(sourceSchema: string, targetSchema: string): string {
+  const safeSource = sanitizeIdentifier(sourceSchema)
+  const safeTarget = sanitizeIdentifier(targetSchema)
   // Copy tables structure from source to target schema
   return `
 DO $$
@@ -121,15 +132,16 @@ DECLARE
   tbl RECORD;
 BEGIN
   FOR tbl IN
-    SELECT tablename FROM pg_tables WHERE schemaname = '${sourceSchema}'
+    SELECT tablename FROM pg_tables WHERE schemaname = '${safeSource}'
   LOOP
-    EXECUTE format('CREATE TABLE "${targetSchema}".%I (LIKE "${sourceSchema}".%I INCLUDING ALL)', tbl.tablename, tbl.tablename);
+    EXECUTE format('CREATE TABLE "${safeTarget}".%I (LIKE "${safeSource}".%I INCLUDING ALL)', tbl.tablename, tbl.tablename);
   END LOOP;
 END $$;`
 }
 
 export function buildSetSearchPathSQL(schemaName: string): string {
-  return `SET search_path TO "${schemaName}", public;`
+  const safe = sanitizeIdentifier(schemaName)
+  return `SET search_path TO "${safe}", public;`
 }
 
 export function buildExplainAnalyzeSQL(sql: string): string {
@@ -382,7 +394,9 @@ export class MigrationPreview {
         shadowDurationMs: Date.now() - start,
       }
     } finally {
-      await client.query("SET statement_timeout TO '0'").catch(() => {})
+      await client.query("SET statement_timeout TO '0'").catch((err) => {
+        console.error("Failed to reset statement_timeout:", err)
+      })
     }
   }
 
