@@ -512,7 +512,7 @@ export function buildEnableTemporalSQL(table: string): string {
   return `
 ALTER TABLE "${escaped}" ADD COLUMN IF NOT EXISTS _rb_valid_from TIMESTAMPTZ NOT NULL DEFAULT NOW();
 ALTER TABLE "${escaped}" ADD COLUMN IF NOT EXISTS _rb_valid_to TIMESTAMPTZ NOT NULL DEFAULT 'infinity';
-CREATE INDEX IF NOT EXISTS idx_${table}_temporal ON "${escaped}" (_rb_valid_from, _rb_valid_to);
+CREATE INDEX IF NOT EXISTS "idx_${escaped}_temporal" ON "${escaped}" (_rb_valid_from, _rb_valid_to);
 `.trim()
 }
 
