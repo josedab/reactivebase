@@ -3,6 +3,8 @@
 // Pre-computed aggregation pipelines and embeddable live-updating chart components
 // --------------------------------------------------------------------------
 
+import { createHmac } from "node:crypto"
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface AggregationPipeline {
@@ -484,15 +486,9 @@ export class AggregationEngine {
 // ── Embed Token Generator ──────────────────────────────────────────────────
 
 export function generateEmbedToken(dashboardId: string, secret: string): string {
-  // Simple HMAC-like token (use proper crypto in production)
   const payload = `${dashboardId}:${Date.now()}`
-  let hash = 0
-  const combined = payload + secret
-  for (let i = 0; i < combined.length; i++) {
-    const char = combined.charCodeAt(i)
-    hash = ((hash << 5) - hash + char) | 0
-  }
-  return Buffer.from(`${payload}:${Math.abs(hash).toString(36)}`).toString("base64url")
+  const signature = createHmac("sha256", secret).update(payload).digest("base64url")
+  return Buffer.from(`${payload}:${signature}`).toString("base64url")
 }
 
 export function generateEmbedSnippet(config: EmbedConfig): string {
