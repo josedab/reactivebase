@@ -163,6 +163,53 @@ npm run format
 
 Then verify with `npm run format:check`.
 
+### `npm run typecheck` fails on `create-reactivebase`
+
+If you see TS2339 errors in `create-reactivebase`, ensure the destructuring in `src/index.ts` matches the return type of `generateDependencies()` (should use `dependencies`/`devDependencies`, not prefixed with underscores).
+
+### Turbo cache issues
+
+If you see stale build artifacts or unexplained failures after switching branches:
+
+```bash
+npx turbo clean
+npm run build
+```
+
+### Port conflicts on `npm run dev`
+
+If port 4000 is already in use, either stop the other process or set a different port in `reactivebase.config.ts`:
+
+```ts
+export default defineConfig({
+  server: { port: 4001 },
+})
+```
+
+### Node version mismatch
+
+ReactiveBase requires Node.js ≥ 20. Check your version:
+
+```bash
+node --version
+```
+
+If you use `nvm`, the repo includes `.nvmrc`:
+
+```bash
+nvm use
+```
+
+### Workspace linking issues
+
+If packages can't resolve each other after a fresh clone:
+
+```bash
+rm -rf node_modules packages/*/node_modules
+npm install
+npm run build
+```
+
 ## Questions?
 
 - Open a GitHub Discussion for questions
