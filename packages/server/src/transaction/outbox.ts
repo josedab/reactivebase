@@ -384,7 +384,7 @@ export function consoleDeliveryTarget(): DeliveryTarget {
     name: "console",
     async deliver(events: OutboxRecord[]): Promise<DeliveryResult[]> {
       return events.map((event) => {
-        console.log(`[outbox] ${event.type}`, JSON.stringify(event.payload))
+        console.debug(`[outbox] ${event.type}`, JSON.stringify(event.payload))
         return { eventId: event.id, success: true }
       })
     },

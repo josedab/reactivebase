@@ -242,7 +242,7 @@ export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseCon
 
       return new Promise((resolve) => {
         httpServer!.listen(port, config.server?.hostname ?? "0.0.0.0", () => {
-          console.log(`ReactiveBase server running on port ${port}`)
+          console.info(`ReactiveBase server running on port ${port}`)
           resolve({ port, httpServer: httpServer! })
         })
       })

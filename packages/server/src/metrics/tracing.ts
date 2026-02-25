@@ -45,7 +45,7 @@ export class ConsoleTracer implements Tracer {
       },
       end() {
         const duration = (performance.now() - startTime).toFixed(2)
-        console.log(
+        console.debug(
           JSON.stringify({
             trace: name,
             duration_ms: parseFloat(duration),

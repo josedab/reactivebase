@@ -128,7 +128,7 @@ export async function createAutoPool(options?: EmbeddedPoolOptions): Promise<Emb
   // Explicit PGlite connection string
   if (dbUrl?.startsWith("pglite://")) {
     const dataDir = dbUrl.replace("pglite://", "") || ".reactivebase/data"
-    console.log(`Using embedded PGlite (data: ${dataDir})`)
+    console.info(`Using embedded PGlite (data: ${dataDir})`)
     return createEmbeddedPool({ ...options, dataDir })
   }
 
@@ -140,7 +140,7 @@ export async function createAutoPool(options?: EmbeddedPoolOptions): Promise<Emb
   }
 
   // Fallback: use PGlite with default data directory
-  console.log("No DATABASE_URL found — using embedded PGlite for local development")
+  console.info("No DATABASE_URL found — using embedded PGlite for local development")
   return createEmbeddedPool({
     ...options,
     dataDir: options?.dataDir ?? ".reactivebase/data",
