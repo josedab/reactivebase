@@ -156,6 +156,16 @@ export class ProcedureCompileError extends Error {
   }
 }
 
+const SAFE_DEFAULT_VALUE_RE =
+  /^(?:'[^']*'|\d+(?:\.\d+)?|true|false|NULL|gen_random_uuid\(\)|NOW\(\)|CURRENT_TIMESTAMP)$/i
+
+function sanitizeDefaultValue(value: string): string {
+  if (!SAFE_DEFAULT_VALUE_RE.test(value)) {
+    throw new Error(`Unsafe default value: ${value}`)
+  }
+  return value
+}
+
 /**
  * Compile a TypeScript procedure definition to PL/pgSQL.
  */
@@ -171,7 +181,7 @@ export function compileProcedure(def: ProcedureDefinition): string {
 
   // CREATE FUNCTION
   const paramList = def.params
-    .map((p) => `"${p.name}" ${p.type}${p.defaultValue ? ` DEFAULT ${p.defaultValue}` : ""}`)
+    .map((p) => `"${p.name}" ${p.type}${p.defaultValue ? ` DEFAULT ${sanitizeDefaultValue(p.defaultValue)}` : ""}`)
     .join(", ")
 
   let returnClause: string
@@ -205,7 +215,7 @@ export function compileProcedure(def: ProcedureDefinition): string {
     if (declares.length > 0) {
       parts.push("DECLARE")
       for (const d of declares) {
-        parts.push(`  "${d.name}" ${d.type}${d.defaultValue ? ` := ${d.defaultValue}` : ""};`)
+        parts.push(`  "${d.name}" ${d.type}${d.defaultValue ? ` := ${sanitizeDefaultValue(d.defaultValue)}` : ""};`)
       }
     }
 
@@ -220,8 +230,11 @@ export function compileProcedure(def: ProcedureDefinition): string {
     // Reactive NOTIFY for write operations
     if (def.writesTables && def.writesTables.length > 0) {
       for (const table of def.writesTables) {
+        // Escape for SQL string (single quotes) and JSON (double quotes)
+        const safeTable = table.replace(/'/g, "''").replace(/"/g, '\\"')
+        const safeName = def.name.replace(/'/g, "''").replace(/"/g, '\\"')
         parts.push(
-          `  PERFORM pg_notify('reactivebase_invalidation', '{"table":"${table}","operation":"procedure","procedure":"${def.name}"}');`,
+          `  PERFORM pg_notify('reactivebase_invalidation', '{"table":"${safeTable}","operation":"procedure","procedure":"${safeName}"}');`,
         )
       }
     }
@@ -559,6 +572,8 @@ const DEFAULT_REGISTRY_OPTIONS: Required<StoredProcedureRegistryOptions> = {
   notifyChannel: "reactivebase_invalidation",
 }
 
+const IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+
 /**
  * Registry that manages stored procedures and wires them to the reactivity engine.
  */
@@ -568,6 +583,9 @@ export class StoredProcedureRegistry {
 
   constructor(options: StoredProcedureRegistryOptions = {}) {
     this.options = { ...DEFAULT_REGISTRY_OPTIONS, ...options }
+    if (!IDENTIFIER_RE.test(this.options.notifyChannel)) {
+      throw new Error(`Invalid notifyChannel: "${this.options.notifyChannel}" — must match ${IDENTIFIER_RE}`)
+    }
   }
 
   /**
@@ -644,7 +662,7 @@ $$;`
    * Generate SQL for the LISTEN command (run on server connection).
    */
   generateListenSQL(): string {
-    return `LISTEN ${this.options.notifyChannel};`
+    return `LISTEN "${this.options.notifyChannel}";`
   }
 
   /**
