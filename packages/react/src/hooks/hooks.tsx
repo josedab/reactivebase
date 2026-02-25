@@ -120,7 +120,7 @@ export function useMutation<TArgs = unknown, TResult = unknown>(
       try {
         const result = await client.mutate(mutationName, args)
         return result as TResult
-      } catch (error) {
+      } catch (error: unknown) {
         // Rollback all optimistic updates on failure
         for (const rollback of rollbacks) {
           rollback()

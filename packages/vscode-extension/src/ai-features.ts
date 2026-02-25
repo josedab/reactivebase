@@ -15,7 +15,7 @@
  *   const completions = provider.getCompletions(document, position)
  */
 
-import type * as vscode from "vscode"
+import type * as _vscode from "vscode"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -76,7 +76,7 @@ const CHAIN_METHODS = [
   { label: ".count", detail: "Count matching rows", insertText: ".count()" },
 ]
 
-const VALIDATOR_TYPES: Record<string, string> = {
+const _VALIDATOR_TYPES: Record<string, string> = {
   text: "v.string()",
   number: "v.number()",
   boolean: "v.boolean()",
@@ -105,7 +105,7 @@ export class AiFeatureProvider {
     document: { getText: () => string; lineAt: (line: number) => { text: string } },
     position: { line: number; character: number },
   ): CompletionItem[] {
-    const text = document.getText()
+    const _text = document.getText()
     const lineText = document.lineAt(position.line).text
     const beforeCursor = lineText.substring(0, position.character)
     const items: CompletionItem[] = []

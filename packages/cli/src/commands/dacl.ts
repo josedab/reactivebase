@@ -3,7 +3,7 @@
  * Subcommands: list, test, generate-rls, coverage
  */
 
-import { readFileSync, existsSync, writeFileSync, mkdirSync } from "node:fs"
+import { existsSync, writeFileSync, mkdirSync } from "node:fs"
 import { join } from "node:path"
 
 export interface DaclCommandOptions {

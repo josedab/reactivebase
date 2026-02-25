@@ -8,7 +8,8 @@ import { createAuthContext, type AuthContext } from "@reactivebase/server"
 import { MockDatabase, type MockDatabaseContext } from "./mock-database.js"
 
 /** Generic handler function signature for queries, mutations, and actions. */
-export type FunctionHandler = (ctx: unknown, args: unknown) => unknown | Promise<unknown>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type FunctionHandler = (ctx: any, args: any) => unknown | Promise<unknown>
 
 export interface FunctionDefinition {
   type: string

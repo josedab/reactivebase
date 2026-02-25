@@ -4,7 +4,7 @@
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from "node:fs"
-import { join, resolve, extname } from "node:path"
+import { join, extname } from "node:path"
 
 export interface GeneratedFile {
   path: string

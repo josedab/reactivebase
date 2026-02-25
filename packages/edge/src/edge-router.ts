@@ -14,7 +14,7 @@
  *   const result = await edge.query("tasks.list", { userId: "u1" })
  */
 
-import { EdgeClient, createCacheKey, type PrefetchResult, type EdgeClientOptions } from "./index.js"
+import { EdgeClient, createCacheKey, type EdgeClientOptions } from "./index.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

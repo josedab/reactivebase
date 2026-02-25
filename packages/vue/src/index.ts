@@ -122,7 +122,7 @@ export function useMutation<TArgs = unknown, TResult = unknown>(
     try {
       const result = await client.mutate(mutationName, args)
       return result as TResult
-    } catch (err) {
+    } catch (err: unknown) {
       error.value = err instanceof Error ? err : new Error(String(err))
       throw err
     } finally {
@@ -156,7 +156,7 @@ export function useAction<TArgs = unknown, TResult = unknown>(
     try {
       const result = await client.runAction(actionName, args)
       return result as TResult
-    } catch (err) {
+    } catch (err: unknown) {
       error.value = err instanceof Error ? err : new Error(String(err))
       throw err
     } finally {

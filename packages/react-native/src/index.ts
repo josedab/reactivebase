@@ -369,7 +369,7 @@ export class SyncEngine {
           await executeMutation(mutation.mutationName, mutation.args)
           await this.mutationQueue.markCompleted(mutation.id)
           syncedCount++
-        } catch (error) {
+        } catch (error: unknown) {
           const err = error instanceof Error ? error : new Error(String(error))
           await this.mutationQueue.markFailed(mutation.id, err.message)
           this.events.onConflict?.(mutation, err)
@@ -379,7 +379,7 @@ export class SyncEngine {
       }
 
       this.events.onSyncComplete?.(syncedCount)
-    } catch (error) {
+    } catch (error: unknown) {
       this.events.onSyncError?.(error instanceof Error ? error : new Error(String(error)))
     } finally {
       this.syncInProgress = false

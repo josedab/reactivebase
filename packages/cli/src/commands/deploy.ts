@@ -116,7 +116,7 @@ export async function deploy(options: DeployOptions): Promise<DeployResult> {
       buildLogs: logs,
       durationMs: Date.now() - startTime,
     }
-  } catch (error) {
+  } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error)
     log(`❌ Deploy failed: ${msg}`)
     return {
@@ -190,7 +190,7 @@ function deriveAppName(projectDir: string, preview?: string): string {
   return preview ? `${base}-${preview}` : base
 }
 
-function validateProject(projectDir: string): void {
+function validateProject(_projectDir: string): void {
   // In production, validate package.json, schema, etc.
 }
 

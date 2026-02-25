@@ -8,7 +8,7 @@
 "use client"
 
 import { createContext, useContext, useMemo, useEffect, useState, type ReactNode } from "react"
-import { ReactiveBaseClient, type ReactiveBaseClientOptions } from "@reactivebase/client"
+import { ReactiveBaseClient } from "@reactivebase/client"
 
 // --- Preloaded Query Types ---
 

@@ -6,7 +6,7 @@
 
 import { mkdirSync, writeFileSync, existsSync } from "node:fs"
 import { join, resolve } from "node:path"
-import { runWizard, generateDependencies, generateConfigFile, generateEnvFile, type WizardOptions } from "./wizard.js"
+import { runWizard, generateDependencies, type WizardOptions } from "./wizard.js"
 
 const projectName = process.argv[2]
 const skipWizard = process.argv.includes("--yes") || process.argv.includes("-y")
@@ -45,7 +45,7 @@ if (!skipWizard && process.stdin.isTTY) {
   }
 }
 
-const { dependencies, devDependencies } = generateDependencies(wizardOptions)
+const { _dependencies, _devDependencies } = generateDependencies(wizardOptions)
 
 // Create directory structure
 const dirs = ["", "convex", "_generated"]

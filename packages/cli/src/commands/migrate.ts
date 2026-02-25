@@ -2,7 +2,7 @@
  * Migration CLI commands - generate, apply, status, rollback.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs"
+import { writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 
 export interface MigrateCommandOptions {

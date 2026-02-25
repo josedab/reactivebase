@@ -71,7 +71,7 @@ export function useSearch<T = unknown>(
         })
         setResults((result as { rows: T[] })?.rows ?? (result as T[]) ?? [])
         setTotalCount((result as { totalCount?: number })?.totalCount ?? 0)
-      } catch (err) {
+      } catch (err: unknown) {
         setError(err instanceof Error ? err : new Error(String(err)))
         setResults([])
       } finally {

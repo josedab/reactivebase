@@ -124,7 +124,7 @@ async function cmdGenerate(): Promise<void> {
     } else {
       vscode.window.showWarningMessage(`ReactiveBase: Generated types with ${result.errors.length} error(s)`)
     }
-  } catch (error) {
+  } catch (error: unknown) {
     updateStatusBar("error")
     const msg = error instanceof Error ? error.message : String(error)
     state.outputChannel.appendLine(`[${timestamp()}] Error: ${msg}`)
@@ -232,7 +232,7 @@ async function cmdValidateSchema(): Promise<void> {
       state.diagnosticCollection.set(vscode.Uri.file(schemaFile), diagnostics)
       vscode.window.showWarningMessage(`ReactiveBase: Schema has ${errors.length} error(s)`)
     }
-  } catch (error) {
+  } catch (_error: unknown) {
     vscode.window.showErrorMessage(`ReactiveBase: Failed to validate schema`)
   }
 }

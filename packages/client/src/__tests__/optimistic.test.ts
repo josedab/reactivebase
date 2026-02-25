@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { OptimisticUpdateManager } from "../optimistic/optimistic.js"
-import type { OptimisticCacheAdapter, OptimisticSnapshot } from "../optimistic/optimistic.js"
+import type { OptimisticCacheAdapter } from "../optimistic/optimistic.js"
 
 function createMockCache(): OptimisticCacheAdapter & { store: Map<string, { data: unknown; version: number }> } {
   const store = new Map<string, { data: unknown; version: number }>()

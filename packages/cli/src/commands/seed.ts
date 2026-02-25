@@ -58,7 +58,7 @@ export async function seedRun(options: SeedCommandOptions): Promise<void> {
   console.log("  console.log(`Seeded ${result.totalRecords} records`)")
 }
 
-export async function seedReset(options: SeedCommandOptions): Promise<void> {
+export async function seedReset(_options: SeedCommandOptions): Promise<void> {
   console.log("🗑️  Resetting seed data...")
   console.log("")
   console.log("To reset seeds programmatically:")

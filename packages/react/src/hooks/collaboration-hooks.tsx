@@ -10,7 +10,6 @@ import { useReactiveBaseClient } from "../provider/provider.js"
 import {
   OptimisticUpdateManager,
   type OptimisticCacheAdapter,
-  type OptimisticSnapshot,
   type OptimisticConflictResolver,
 } from "@reactivebase/client"
 import {

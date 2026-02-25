@@ -4,7 +4,7 @@ import { EdgeQueryRouter } from "../edge-router.js"
 // Mock fetch for testing
 function createMockFetch(responses: Record<string, unknown> = {}) {
   return async (input: string | URL | Request, init?: RequestInit) => {
-    const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url
+    const _url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url
     const body = init?.body ? JSON.parse(init.body as string) : {}
     const key = body.queryName ?? "default"
     const data = responses[key] ?? { data: [] }

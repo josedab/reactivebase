@@ -190,7 +190,7 @@ export class SyncManager {
         await this.executeMutation(mutation.mutationName, mutation.args)
         await this.queue.markComplete(mutation.id)
         synced++
-      } catch (error) {
+      } catch (error: unknown) {
         failed++
         errors.push({
           id: mutation.id,

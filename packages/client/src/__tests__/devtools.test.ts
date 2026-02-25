@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach } from "vitest"
 import { DevToolsInstrumentation } from "../devtools/devtools.js"
 import type { DevToolsEvent } from "../devtools/devtools.js"
 

@@ -3,7 +3,7 @@
  * Subcommands: list, stats, register, unregister
  */
 
-import { readFileSync, existsSync } from "node:fs"
+import { existsSync } from "node:fs"
 import { join } from "node:path"
 
 export interface IvmCommandOptions {
@@ -46,7 +46,7 @@ export async function ivmList(options: IvmCommandOptions): Promise<void> {
 /**
  * Show IVM runtime statistics.
  */
-export async function ivmStats(options: IvmCommandOptions): Promise<void> {
+export async function ivmStats(_options: IvmCommandOptions): Promise<void> {
   console.log("IVM Statistics")
   console.log("==============")
   console.log("")
@@ -70,7 +70,7 @@ export async function ivmStats(options: IvmCommandOptions): Promise<void> {
 /**
  * Show IVM eligibility analysis for current schema.
  */
-export async function ivmAnalyze(options: IvmCommandOptions): Promise<void> {
+export async function ivmAnalyze(_options: IvmCommandOptions): Promise<void> {
   console.log("IVM Eligibility Analysis")
   console.log("========================")
   console.log("")

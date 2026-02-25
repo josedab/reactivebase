@@ -3,7 +3,7 @@
  * Compiles TypeScript procedure definitions to PL/pgSQL migration files.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs"
+import { writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs"
 import { join, basename } from "node:path"
 
 export interface GenerateProceduresOptions {

@@ -546,7 +546,7 @@ export class GraphQLSubscriptionGateway {
         try {
           this.subscribe(message.id, parsed.rootField, parsed.variables)
           return [] // Ack is implicit; next events will follow
-        } catch (err) {
+        } catch (err: unknown) {
           return [
             {
               id: message.id,

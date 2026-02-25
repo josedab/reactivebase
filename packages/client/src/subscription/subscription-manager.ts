@@ -4,7 +4,7 @@
  */
 
 import { ConnectionManager, type ConnectionStatus } from "../connection/index.js"
-import { QueryCache, type CacheEntry } from "../cache/index.js"
+import { QueryCache } from "../cache/index.js"
 
 export interface SubscriptionHandle {
   id: string

@@ -10,7 +10,7 @@ import type { SyncBatchResult } from "../offline/sync-engine.js"
 
 function createMemorySQLiteAdapter(): SQLiteAdapter {
   const tables = new Map<string, Map<string, Record<string, unknown>>>()
-  let initialized = false
+  let _initialized = false
 
   return {
     async run(sql: string, params: unknown[] = []) {
@@ -21,7 +21,7 @@ function createMemorySQLiteAdapter(): SQLiteAdapter {
         if (match && !tables.has(match[1])) {
           tables.set(match[1], new Map())
         }
-        initialized = true
+        _initialized = true
         return
       }
 
@@ -423,7 +423,7 @@ describe("BackgroundSyncManager", () => {
     return { synced, failed: 0, conflicts: [], durationMs: 10 }
   }
 
-  function createFailResult(): SyncBatchResult {
+  function _createFailResult(): SyncBatchResult {
     return { synced: 0, failed: 1, conflicts: [], durationMs: 5 }
   }
 

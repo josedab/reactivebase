@@ -290,7 +290,7 @@ export class OfflineSyncEngine {
             await this.queue.markComplete(mutation.id)
             synced++
             this.backoffAttempt = 0
-          } catch (error) {
+          } catch (error: unknown) {
             const conflict = await this.resolveConflict(mutation, error, serverStateFetcher)
 
             if (conflict) {
@@ -312,7 +312,7 @@ export class OfflineSyncEngine {
       this.status.pendingMutations = await this.queue.size()
       this.updateStatus(this.status.pendingMutations > 0 ? "error" : "idle")
       this.backoffAttempt = 0
-    } catch (error) {
+    } catch (error: unknown) {
       this.status.lastError = error instanceof Error ? error.message : String(error)
       this.updateStatus("error")
       this.backoffAttempt++

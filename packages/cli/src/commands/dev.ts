@@ -24,7 +24,7 @@ export async function devServer(options: DevCommandOptions): Promise<void> {
   console.log("\nGenerating types...")
   try {
     writeGeneratedFiles(projectDir)
-  } catch (error) {
+  } catch (error: unknown) {
     console.warn("Type generation warning:", error instanceof Error ? error.message : error)
   }
 

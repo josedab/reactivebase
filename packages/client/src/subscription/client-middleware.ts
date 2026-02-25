@@ -242,7 +242,7 @@ export function retryMiddleware(
   } = {},
 ): ClientSubscriptionMiddleware {
   const maxRetries = options.maxRetries ?? 3
-  const backoffMs = options.backoffMs ?? 1000
+  const _backoffMs = options.backoffMs ?? 1000
 
   return {
     name: "retry",

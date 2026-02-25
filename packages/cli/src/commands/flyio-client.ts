@@ -96,7 +96,7 @@ export class FlyioClient {
 
   async createApp(name: string, _region: string = "iad"): Promise<FlyioApp> {
     const body = { app_name: name, org_slug: this.orgSlug }
-    const result = await this.request<Record<string, unknown>>("POST", "/apps", body)
+    const _result = await this.request<Record<string, unknown>>("POST", "/apps", body)
 
     return {
       name,
@@ -229,7 +229,7 @@ export class FlyioClient {
         url: `https://${appName}.fly.dev`,
         status: "success",
       }
-    } catch (error) {
+    } catch (error: unknown) {
       return {
         appName,
         machines: [],

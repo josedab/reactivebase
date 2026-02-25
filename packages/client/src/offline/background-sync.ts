@@ -254,7 +254,7 @@ export class BackgroundSyncManager {
       }
 
       return result
-    } catch (error) {
+    } catch (_error: unknown) {
       this.status.consecutiveFailures++
       this.status.pendingCount = await this.options.getPendingCount().catch(() => this.status.pendingCount)
       this.updateState("error")
