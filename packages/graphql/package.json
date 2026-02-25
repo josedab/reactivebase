@@ -23,7 +23,6 @@
     "clean": "rm -rf dist",
     "test:coverage": "vitest run --coverage"
   },
-  "peerDependencies": {},
   "devDependencies": {
     "tsup": "^8.0.0",
     "typescript": "^5.7.0",
