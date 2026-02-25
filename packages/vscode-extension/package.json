@@ -87,6 +87,7 @@
   },
   "scripts": {
     "build": "tsup src/extension.ts --format cjs --external vscode",
+    "dev": "tsup src/extension.ts --format cjs --external vscode --watch",
     "watch": "tsup src/extension.ts --format cjs --external vscode --watch",
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --passWithNoTests --coverage",
