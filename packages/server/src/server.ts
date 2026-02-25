@@ -190,6 +190,14 @@ export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseCon
       }
 
       httpServer = createServer((req, res) => {
+        // Security headers for all responses
+        res.setHeader("X-Frame-Options", "DENY")
+        res.setHeader("X-Content-Type-Options", "nosniff")
+        res.setHeader(
+          "Content-Security-Policy",
+          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+        )
+
         // CORS headers
         const corsOrigin = config.server?.corsOrigin
         if (corsOrigin) {
