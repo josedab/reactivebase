@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { PluginSDK, PluginTestHarness, validateWithJSONSchema } from "../plugins/plugin-sdk-v2.js"
-import type { PluginV2Config, PluginHook, HookContext, JSONSchema } from "../plugins/plugin-sdk-v2.js"
+import type { PluginV2Config, PluginHook, JSONSchema } from "../plugins/plugin-sdk-v2.js"
 import type { PluginV2Definition } from "../plugins/marketplace.js"
 import { s3StoragePlugin, posthogPlugin, ALL_BUILTIN_PLUGINS } from "../plugins/builtin-plugins.js"
 import { PluginCLI } from "../plugins/plugin-cli.js"
@@ -91,9 +91,9 @@ describe("PluginSDK", () => {
   })
 
   it("preserves lifecycle hooks in the definition", () => {
-    let installed = false
-    let started = false
-    let stopped = false
+    const _installed = false
+    const _started = false
+    const _stopped = false
 
     const config: PluginV2Config = {
       name: "lifecycle-plugin",

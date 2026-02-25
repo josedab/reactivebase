@@ -15,7 +15,7 @@ import { ComplianceToolkit, generateAccessLogTableSQL } from "../encryption/comp
 // Feature 10: Plugin Portal
 import { PluginPortal } from "../plugins/plugin-portal.js"
 // Feature 3: Tutorial Manager
-import { TutorialManager, INTERACTIVE_TUTORIALS } from "../playground/tutorial-manager.js"
+import { TutorialManager } from "../playground/tutorial-manager.js"
 
 // ─── Feature 3: Interactive Tutorials ─────────────────────────────────────────
 

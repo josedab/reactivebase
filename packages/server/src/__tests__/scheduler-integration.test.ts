@@ -200,7 +200,7 @@ describe("JobScheduler integration", () => {
     expect(inserted[0].status).toBe("pending")
 
     // Manually trigger one poll cycle
-    const beforePollCalls = (pool.query as ReturnType<typeof vi.fn>).mock.calls.length
+    const _beforePollCalls = (pool.query as ReturnType<typeof vi.fn>).mock.calls.length
     await (scheduler as unknown as { poll(): Promise<void> }).poll()
 
     // Check if the row was processed (status should be "completed" after successful execution)

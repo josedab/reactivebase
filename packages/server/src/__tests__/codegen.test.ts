@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { scanFunctions, generateApiModule, generateServerModule, groupByModule } from "../codegen/codegen.js"
-import { writeFile, mkdir, rm } from "node:fs/promises"
+import { writeFile, mkdir } from "node:fs/promises"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
 

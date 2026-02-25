@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { query, mutation, action } from "../functions/server-functions.js"
-import { s, ValidationError } from "../validation/index.js"
+import { s } from "../validation/index.js"
 
 describe("function-level argument validation", () => {
   it("query() accepts validate option", () => {

@@ -11,10 +11,10 @@ import { SubscriptionRegistry } from "../reactivity/subscription-registry.js"
 import { InvalidationEvaluator } from "../reactivity/invalidation-evaluator.js"
 import { hashResult, hasResultChanged, computeDiff } from "../reactivity/result-differ.js"
 import { MiddlewareManager } from "../middleware/middleware.js"
-import { enforceAccess, roles, allow } from "../permissions/permissions.js"
+import { enforceAccess, roles } from "../permissions/permissions.js"
 import { createAuthContext } from "../auth/auth.js"
 import { validateArgs, s, ValidationError } from "../validation/args-validation.js"
-import { RateLimiter, RateLimitError } from "../validation/rate-limit.js"
+import { RateLimiter } from "../validation/rate-limit.js"
 import { QueryBuilder } from "../query-builder/query-builder.js"
 import { MetricsCollector } from "../metrics/metrics.js"
 import { toPrometheusFormat } from "../metrics/prometheus.js"
@@ -22,7 +22,7 @@ import { InMemoryPubSubAdapter } from "../pubsub/pubsub.js"
 import type { ChangeEvent } from "../reactivity/invalidation-evaluator.js"
 
 // --- Schema for integration tests ---
-const schema = defineSchema({
+const _schema = defineSchema({
   users: defineTable({
     name: v.string(),
     email: v.string(),
@@ -93,14 +93,14 @@ class SimpleInMemoryDB {
     return this.table(tableName).delete(id)
   }
 }
-const listTasksFn = {
+const _listTasksFn = {
   type: "query",
   handler: async (ctx: unknown, args: { userId: string }) => {
     return (ctx as { db: SimpleInMemoryDB }).db.where("tasks", { assigneeId: args.userId, done: false })
   },
 }
 
-const createTaskFn = {
+const _createTaskFn = {
   type: "mutation",
   handler: async (ctx: unknown, args: { title: string; userId: string; priority?: string }) => {
     return (ctx as { db: SimpleInMemoryDB }).db.insert("tasks", {
@@ -112,14 +112,14 @@ const createTaskFn = {
   },
 }
 
-const completeTaskFn = {
+const _completeTaskFn = {
   type: "mutation",
   handler: async (ctx: unknown, args: { taskId: string }) => {
     return (ctx as { db: SimpleInMemoryDB }).db.update("tasks", args.taskId, { done: true })
   },
 }
 
-const deleteTaskFn = {
+const _deleteTaskFn = {
   type: "mutation",
   handler: async (ctx: unknown, args: { taskId: string }) => {
     await (ctx as { db: SimpleInMemoryDB }).db.delete("tasks", args.taskId)

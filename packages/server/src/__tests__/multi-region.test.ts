@@ -231,7 +231,7 @@ describe("RegionManager", () => {
 
   it("acknowledges replicated events", () => {
     const e1 = manager.createEvent("insert", "tasks", "t1", {})
-    const e2 = manager.createEvent("insert", "tasks", "t2", {})
+    const _e2 = manager.createEvent("insert", "tasks", "t2", {})
     expect(manager.getPendingEvents()).toHaveLength(2)
 
     manager.acknowledgeEvents([e1.id])

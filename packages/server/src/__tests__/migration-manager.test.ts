@@ -3,7 +3,6 @@ import { MigrationManager } from "../migrations/migration-manager.js"
 import { defineSchema, defineTable, v } from "../schema/index.js"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { rm } from "node:fs/promises"
 
 const testDir = join(tmpdir(), `rb-migrations-${Date.now()}`)
 const schema = defineSchema({
@@ -99,7 +98,7 @@ describe("MigrationManager with mock DB", () => {
     const dir = join(testDir, `skip-${Date.now()}`)
     const manager = new MigrationManager(dir, createMockQuery())
 
-    const generated = await manager.generate(schema, "init")
+    const _generated = await manager.generate(schema, "init")
 
     // Apply first time
     await manager.apply()

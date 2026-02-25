@@ -4,10 +4,10 @@ import {
   type TypedFunctionReference,
   type InferArgs,
   type InferReturn,
-  type TypedDatabaseContext,
+  type _TypedDatabaseContext,
   type TableRow,
 } from "../types/typed-api.js"
-import { defineSchema, defineTable, v, type InferSchemaTypes } from "../schema/index.js"
+import { defineTable, v, type InferSchemaTypes } from "../schema/index.js"
 
 describe("typedRef", () => {
   it("creates a typed function reference", () => {
@@ -20,7 +20,7 @@ describe("typedRef", () => {
 
 describe("InferSchemaTypes", () => {
   it("infers row types from schema definition", () => {
-    const schemaDef = {
+    const _schemaDef = {
       users: defineTable({
         name: v.string(),
         email: v.string(),
@@ -92,7 +92,7 @@ describe("Generated API type flow", () => {
 
 describe("TableRow utility", () => {
   it("extracts row type for a specific table", () => {
-    const schemaDef = {
+    const _schemaDef = {
       users: defineTable({ name: v.string() }),
     }
 

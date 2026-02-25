@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { IncrementalViewMaintainer, extractDependencies, isIvmEligible, evaluatePredicate } from "../ivm/ivm.js"
-import type { QueryAstNode, Row, FilterPredicate } from "../ivm/ivm.js"
+import type { QueryAstNode, Row } from "../ivm/ivm.js"
 
 describe("IVM Utilities", () => {
   describe("extractDependencies", () => {

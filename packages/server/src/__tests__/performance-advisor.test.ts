@@ -4,8 +4,8 @@ import {
   buildUnusedIndexesSQL,
   buildTableSeqScanSQL,
   buildIndexSuggestionsSQL,
-  type QueryRecord,
-  type InvalidationRecord,
+  type _QueryRecord,
+  type _InvalidationRecord,
 } from "../metrics/performance-advisor.js"
 
 describe("Performance Advisor SQL Helpers", () => {

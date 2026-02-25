@@ -43,7 +43,7 @@ describe("enforceAccess", () => {
   it("includes function name in error messages", async () => {
     try {
       await enforceAccess("authenticated", anon, "tasks.list")
-    } catch (e) {
+    } catch (e: unknown) {
       expect((e as Error).message).toContain("tasks.list")
     }
   })
@@ -51,7 +51,7 @@ describe("enforceAccess", () => {
   it("includes role list in error messages", async () => {
     try {
       await enforceAccess(roles("admin"), member, "admin.panel")
-    } catch (e) {
+    } catch (e: unknown) {
       expect((e as Error).message).toContain("admin")
     }
   })

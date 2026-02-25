@@ -30,8 +30,8 @@ describe("bench", () => {
       "variable",
       () => {
         // Do some work to create variance
-        let sum = 0
-        for (let i = 0; i < 100; i++) sum += i
+        let _sum = 0
+        for (let i = 0; i < 100; i++) _sum += i
       },
       { iterations: 100, warmup: 10 },
     )
@@ -48,8 +48,8 @@ describe("runSuite", () => {
       {
         name: "slower",
         fn: () => {
-          let s = 0
-          for (let i = 0; i < 1000; i++) s += i
+          let _s = 0
+          for (let i = 0; i < 1000; i++) _s += i
         },
         iterations: 50,
       },

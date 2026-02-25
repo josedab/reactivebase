@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect } from "vitest"
 import { RateLimiter, RateLimitError, rateLimit } from "../validation/rate-limit.js"
 import { validateArgs, ValidationError, s } from "../validation/args-validation.js"
 import { createAuthContext } from "../auth/auth.js"
@@ -120,7 +120,7 @@ describe("validateArgs", () => {
     const schema = { name: s.string(), age: s.number() }
     try {
       validateArgs({}, schema)
-    } catch (e) {
+    } catch (e: unknown) {
       expect((e as ValidationError).errors).toHaveLength(2)
     }
   })

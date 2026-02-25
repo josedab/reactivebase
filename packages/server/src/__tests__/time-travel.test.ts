@@ -217,7 +217,7 @@ describe("TimeTravelEngine", () => {
       engine.recordMutation({ mutationName: "old", table: "t", operation: "insert", rowId: "r1" })
 
       // Manually set the event timestamp to the past
-      const events = engine.getRecentEvents(1)
+      const _events = engine.getRecentEvents(1)
       // Use retentionDays: 0 means cutoff = now, but events recorded at now won't be pruned
       // So we test with a retention engine that has short retention and artificially old events
       const eng2 = new TimeTravelEngine({ retentionDays: 1 })

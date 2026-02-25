@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { vaultKeyProvider, gcpKmsKeyProvider, VaultError } from "../encryption/vault-provider.js"
+import { vaultKeyProvider, gcpKmsKeyProvider } from "../encryption/vault-provider.js"
 import { v } from "../schema/validators.js"
 
 describe("vaultKeyProvider", () => {

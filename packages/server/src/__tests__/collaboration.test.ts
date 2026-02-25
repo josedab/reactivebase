@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach } from "vitest"
 import { CollaborationManager } from "../collaboration/collaboration.js"
 import type { RoomAwarenessState } from "../collaboration/collaboration.js"
 

@@ -8,7 +8,6 @@ import {
   type ChangeNotification,
   type FederatedQueryResult,
 } from "../multi-db/federation.js"
-import { FederationError } from "../multi-db/multi-db.js"
 
 describe("defineDataSource", () => {
   it("creates a federated data source configuration", () => {

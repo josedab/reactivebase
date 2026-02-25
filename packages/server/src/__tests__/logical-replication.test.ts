@@ -285,7 +285,7 @@ describe("LogicalReplicator", () => {
 
   it("processes WAL data through decoder", () => {
     const replicator = new LogicalReplicator()
-    const decoder = replicator.getDecoder()
+    const _decoder = replicator.getDecoder()
 
     // Register a relation via the decoder
     const relBuf = buildRelationMessage(1, "public", "tasks", [{ name: "id", typeOid: 23, isKey: true }])

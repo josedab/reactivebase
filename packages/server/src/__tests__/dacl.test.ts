@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { DaclEngine, allow, deny, PolicyBuilder } from "../dacl/dacl.js"
+import { DaclEngine, allow, deny } from "../dacl/dacl.js"
 import type { PolicyCheckContext, PolicyTestCase } from "../dacl/dacl.js"
 
 function makeContext(overrides: Partial<PolicyCheckContext> = {}): PolicyCheckContext {

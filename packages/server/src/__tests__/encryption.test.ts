@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import {
   EncryptionEngine,
-  EncryptionError,
+  _EncryptionError,
   localKeyProvider,
   rotatingKeyProvider,
   generateEncryptionTableSQL,

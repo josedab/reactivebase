@@ -168,7 +168,7 @@ describe("SubscriptionShardManager", () => {
     it("identifies hot shards", () => {
       const mgr = createManager({ totalShards: 4 })
       // Register many subs that hash to the same shard
-      const targetShard = mgr.getShardForKey("hot-key")
+      const _targetShard = mgr.getShardForKey("hot-key")
       for (let i = 0; i < 10; i++) {
         // Directly add to shard tracking
         mgr.registerSubscription(`hot-key-${i}`)

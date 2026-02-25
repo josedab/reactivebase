@@ -9,7 +9,7 @@ import {
   buildMissingIndexCheckSQL,
   type PoolLike,
   type PoolClientLike,
-  type MigrationPreviewRequest,
+  type _MigrationPreviewRequest,
 } from "../migrations/shadow-preview.js"
 
 describe("Shadow Preview SQL Helpers", () => {

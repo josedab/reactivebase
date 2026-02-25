@@ -4,7 +4,7 @@ import {
   WorkflowContext,
   defineWorkflow,
   WorkflowError,
-  WorkflowStepError,
+  _WorkflowStepError,
   generateWorkflowTableSQL,
 } from "../workflow/workflow.js"
 

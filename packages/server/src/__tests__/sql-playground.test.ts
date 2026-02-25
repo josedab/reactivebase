@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { SqlPlayground } from "../sql-playground/sql-playground.js"
-import type { SchemaInfo, QueryPlan, QueryAnalysis } from "../sql-playground/sql-playground.js"
+import type { SchemaInfo, QueryPlan } from "../sql-playground/sql-playground.js"
 
 const sampleSchema: SchemaInfo = {
   tables: [

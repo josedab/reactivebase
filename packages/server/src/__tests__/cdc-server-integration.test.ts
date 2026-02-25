@@ -6,7 +6,7 @@ describe("ReactiveCdcAdapter server integration", () => {
     const processedTables: string[][] = []
 
     const adapter = new ReactiveCdcAdapter(
-      async (tables, events) => {
+      async (tables, _events) => {
         processedTables.push(tables)
       },
       { tables: ["tasks", "users"], batchSize: 5, rowLevelTracking: true },

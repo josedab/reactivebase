@@ -10,7 +10,7 @@ import {
   buildInsertProvisioningSQL,
   buildQueryTablesSQL,
 } from "../cloud-platform/one-click-provisioner.js"
-import type { ProvisioningResult, TableInfo, AutoScaleConfig } from "../cloud-platform/one-click-provisioner.js"
+import type { TableInfo } from "../cloud-platform/one-click-provisioner.js"
 
 // ─── OneClickProvisioner ─────────────────────────────────────────────────────
 

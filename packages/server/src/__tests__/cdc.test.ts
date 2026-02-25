@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect } from "vitest"
 import { CdcListener, ChangeEventBuffer, deduplicateEvents, type PgListenClient } from "../cdc/cdc.js"
 import { defineSchema, defineTable, v } from "../schema/index.js"
 import type { ChangeEvent } from "../reactivity/index.js"

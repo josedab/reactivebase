@@ -4,7 +4,6 @@ import { generateGitHubActionYAML, PRPreviewManager, PreviewError } from "../bra
 import { BranchDashboard } from "../branching/branch-dashboard.js"
 import { DatabaseBranching } from "../branching/branching.js"
 import type { NeonConfig } from "../branching/neon-branching.js"
-import type { PreviewConfig } from "../branching/github-action.js"
 
 // ─── Neon Branching Adapter ──────────────────────────────────────────────────
 

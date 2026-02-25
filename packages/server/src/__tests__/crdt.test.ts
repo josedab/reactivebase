@@ -187,7 +187,7 @@ describe("CrdtEngine", () => {
     it("inserts characters in order", () => {
       const doc = engine.createDocument("rga-1", "rga")
       const op1 = doc.insertAt(null, "H")
-      const op2 = doc.insertAt(op1.data.positionId as string, "i")
+      const _op2 = doc.insertAt(op1.data.positionId as string, "i")
 
       const snapshot = engine.getSnapshot("rga-1")
       expect(snapshot.state).toBe("Hi")

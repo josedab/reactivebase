@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { LogicalReplicator, WalDecoder, ChangeBatcher } from "../logical-replication/logical-replication.js"
+import { describe, it, expect } from "vitest"
+import { LogicalReplicator } from "../logical-replication/logical-replication.js"
 import type { WalChange } from "../logical-replication/logical-replication.js"
 import type { ChangeEvent } from "../reactivity/invalidation-evaluator.js"
 

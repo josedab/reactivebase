@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { TypeBridge } from "../type-bridge/type-bridge.js"
-import type { ScannedFunction, ScannedTable, TypeDescriptor, TypeManifest } from "../type-bridge/type-bridge.js"
+import type { ScannedFunction, ScannedTable, TypeDescriptor } from "../type-bridge/type-bridge.js"
 
 const sampleTables: ScannedTable[] = [
   {

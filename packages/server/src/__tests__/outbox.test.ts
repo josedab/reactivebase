@@ -16,7 +16,7 @@ import {
   type OutboxEvent,
   type OutboxRecord,
   type DeliveryTarget,
-  type DeliveryResult,
+  type _DeliveryResult,
 } from "../transaction/outbox.js"
 
 describe("Outbox SQL Helpers", () => {
