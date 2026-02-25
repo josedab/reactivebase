@@ -176,6 +176,16 @@ function sanitizeIdentifier(name: string): string {
   return name.replace(/[^a-zA-Z0-9_]/g, "")
 }
 
+const SAFE_DEFAULT_VALUE_RE =
+  /^(?:'[^']*'|\d+(?:\.\d+)?|true|false|NULL|gen_random_uuid\(\)|NOW\(\)|CURRENT_TIMESTAMP)$/i
+
+function sanitizeDefaultValue(value: string): string {
+  if (!SAFE_DEFAULT_VALUE_RE.test(value)) {
+    throw new Error(`Unsafe default value: ${value}`)
+  }
+  return value
+}
+
 // ─── Migration SQL Generation ────────────────────────────────────────────────
 
 function generateAddTableSQL(table: VisualTable): string {
@@ -183,7 +193,7 @@ function generateAddTableSQL(table: VisualTable): string {
     let def = `"${sanitizeIdentifier(c.name)}" ${mapColumnType(c.type)}`
     if (c.isId) def += " PRIMARY KEY"
     if (!c.isOptional && !c.isId) def += " NOT NULL"
-    if (c.defaultValue !== undefined) def += ` DEFAULT ${c.defaultValue}`
+    if (c.defaultValue !== undefined) def += ` DEFAULT ${sanitizeDefaultValue(c.defaultValue)}`
     return def
   })
   return `CREATE TABLE "${sanitizeIdentifier(table.name)}" (\n  ${columns.join(",\n  ")}\n);`
@@ -198,7 +208,7 @@ function generateAddColumnSQL(table: string, column: VisualColumn): string {
   const tbl = sanitizeIdentifier(table)
   let def = `ALTER TABLE "${tbl}" ADD COLUMN "${col}" ${mapColumnType(column.type)}`
   if (!column.isOptional) def += " NOT NULL"
-  if (column.defaultValue !== undefined) def += ` DEFAULT ${column.defaultValue}`
+  if (column.defaultValue !== undefined) def += ` DEFAULT ${sanitizeDefaultValue(column.defaultValue)}`
   return def + ";"
 }
 

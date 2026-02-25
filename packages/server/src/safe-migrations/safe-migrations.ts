@@ -95,6 +95,16 @@ const DEFAULT_OPTIONS: Required<ExpandContractOptions> = {
   statementTimeout: "30s",
 }
 
+const SAFE_DEFAULT_VALUE_RE =
+  /^(?:'[^']*'|\d+(?:\.\d+)?|true|false|NULL|gen_random_uuid\(\)|NOW\(\)|CURRENT_TIMESTAMP)$/i
+
+function sanitizeDefaultValue(value: string): string {
+  if (!SAFE_DEFAULT_VALUE_RE.test(value)) {
+    throw new SafeMigrationError(`Unsafe default value: ${value}`)
+  }
+  return value
+}
+
 // ─── Errors ──────────────────────────────────────────────────────────────────
 
 export class SafeMigrationError extends Error {
@@ -237,7 +247,7 @@ export class MigrationAnalyzer {
     for (const op of classified) {
       switch (op.type) {
         case "add_column": {
-          const defaultClause = op.defaultValue !== undefined ? ` DEFAULT ${op.defaultValue}` : ""
+          const defaultClause = op.defaultValue !== undefined ? ` DEFAULT ${sanitizeDefaultValue(op.defaultValue)}` : ""
           expandSQL.push(
             `ALTER TABLE "${op.table}" ADD COLUMN IF NOT EXISTS "${op.column}" ${op.newType ?? "text"}${defaultClause};`,
           )
@@ -315,7 +325,7 @@ export class MigrationAnalyzer {
 
         case "add_not_null": {
           backfillSQL.push(
-            `UPDATE "${op.table}" SET "${op.column}" = ${op.defaultValue ?? "''"} WHERE "${op.column}" IS NULL;`,
+            `UPDATE "${op.table}" SET "${op.column}" = ${sanitizeDefaultValue(op.defaultValue ?? "''")} WHERE "${op.column}" IS NULL;`,
           )
           contractSQL.push(`ALTER TABLE "${op.table}" ALTER COLUMN "${op.column}" SET NOT NULL;`)
           break

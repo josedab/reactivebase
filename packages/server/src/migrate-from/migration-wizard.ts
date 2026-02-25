@@ -327,6 +327,16 @@ export function analyzeFeatureGaps(source: "prisma" | "drizzle"): FeatureGap[] {
 
 // ─── Migration Wizard ────────────────────────────────────────────────────────
 
+const SAFE_DEFAULT_VALUE_RE =
+  /^(?:'[^']*'|\d+(?:\.\d+)?|true|false|NULL|gen_random_uuid\(\)|NOW\(\)|CURRENT_TIMESTAMP|[a-zA-Z_][a-zA-Z0-9_]*\(?\)?)$/i
+
+function sanitizeDefaultValue(value: string): string {
+  if (!SAFE_DEFAULT_VALUE_RE.test(value)) {
+    throw new Error(`Unsafe default value: ${value}`)
+  }
+  return value
+}
+
 export class MigrationWizard {
   /**
    * Analyze a project's source files to discover schema and routes.
@@ -619,7 +629,7 @@ export class MigrationWizard {
           sql += "TEXT"
       }
       if (!f.isOptional) sql += " NOT NULL"
-      if (f.defaultValue) sql += ` DEFAULT ${f.defaultValue}`
+      if (f.defaultValue) sql += ` DEFAULT ${sanitizeDefaultValue(f.defaultValue)}`
       return sql
     })
 
