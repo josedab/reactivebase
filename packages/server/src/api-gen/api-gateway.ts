@@ -180,18 +180,27 @@ VALUES ($1, $2, $3, $4, $5, to_timestamp($6::double precision / 1000), $7, $8, $
   }
 }
 
-export function buildValidateApiKeySQL(keyHash: string): string {
-  return `SELECT id, name, permissions, expires_at, is_revoked, rate_limit
+export function buildValidateApiKeySQL(keyHash: string): { sql: string; params: unknown[] } {
+  return {
+    sql: `SELECT id, name, permissions, expires_at, is_revoked, rate_limit
 FROM _reactivebase_api_keys
-WHERE key_hash = '${keyHash}' AND is_revoked = FALSE`
+WHERE key_hash = $1 AND is_revoked = FALSE`,
+    params: [keyHash],
+  }
 }
 
-export function buildRevokeApiKeySQL(keyId: string): string {
-  return `UPDATE _reactivebase_api_keys SET is_revoked = TRUE WHERE id = '${keyId}'`
+export function buildRevokeApiKeySQL(keyId: string): { sql: string; params: unknown[] } {
+  return {
+    sql: `UPDATE _reactivebase_api_keys SET is_revoked = TRUE WHERE id = $1`,
+    params: [keyId],
+  }
 }
 
-export function buildIncrementRequestCountSQL(keyId: string): string {
-  return `UPDATE _reactivebase_api_keys SET request_count = request_count + 1, last_used_at = NOW() WHERE id = '${keyId}'`
+export function buildIncrementRequestCountSQL(keyId: string): { sql: string; params: unknown[] } {
+  return {
+    sql: `UPDATE _reactivebase_api_keys SET request_count = request_count + 1, last_used_at = NOW() WHERE id = $1`,
+    params: [keyId],
+  }
 }
 
 // ─── API Gateway ─────────────────────────────────────────────────────────────
@@ -203,7 +212,7 @@ const DEFAULT_OPTIONS: Required<ApiGatewayOptions> = {
   serverUrl: "http://localhost:4000",
   basePath: "/api",
   enableApiKeys: true,
-  corsOrigins: ["*"],
+  corsOrigins: [],
   rateLimitPerMinute: 1000,
   versions: ["v1"],
 }
