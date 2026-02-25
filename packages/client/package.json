@@ -49,5 +49,8 @@
     "typescript",
     "websocket",
     "subscriptions"
-  ]
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }

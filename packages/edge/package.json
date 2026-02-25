@@ -47,5 +47,8 @@
     "edge",
     "workers",
     "typescript"
-  ]
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }

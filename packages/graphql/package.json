@@ -48,5 +48,8 @@
     "apollo",
     "urql",
     "typescript"
-  ]
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }

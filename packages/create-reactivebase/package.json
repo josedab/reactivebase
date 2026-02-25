@@ -35,5 +35,8 @@
     "create",
     "scaffolding",
     "typescript"
-  ]
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }

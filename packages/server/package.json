@@ -358,5 +358,8 @@
     "server",
     "queries",
     "mutations"
-  ]
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }
