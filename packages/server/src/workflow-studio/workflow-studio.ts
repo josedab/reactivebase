@@ -527,11 +527,51 @@ export class WorkflowDebugger {
     if (!bp.condition) return true
 
     try {
-      // Simple expression evaluation for conditions like "count > 5"
-      const fn = new Function(...Object.keys(variables), `return ${bp.condition}`)
-      return !!fn(...Object.values(variables))
+      // Safe expression evaluation using whitelist-based comparison
+      return this.evaluateCondition(bp.condition, variables)
     } catch {
       return true // Break on invalid condition for safety
+    }
+  }
+
+  private evaluateCondition(condition: string, variables: Record<string, unknown>): boolean {
+    // Parse simple conditions like "count > 5", "status === 'done'", "x != 0"
+    const match = condition.match(/^\s*([a-zA-Z_]\w*)\s*(===?|!==?|>=?|<=?)\s*(.+?)\s*$/)
+    if (!match) return true // Break on unparseable condition for safety
+
+    const [, varName, operator, rawValue] = match
+    const left = variables[varName]
+    if (left === undefined) return true
+
+    let right: unknown
+    const trimmed = rawValue.trim()
+    if (trimmed === "true") right = true
+    else if (trimmed === "false") right = false
+    else if (trimmed === "null") right = null
+    else if (trimmed === "undefined") right = undefined
+    else if (/^'[^']*'$/.test(trimmed) || /^"[^"]*"$/.test(trimmed)) right = trimmed.slice(1, -1)
+    else if (!isNaN(Number(trimmed))) right = Number(trimmed)
+    else right = trimmed
+
+    switch (operator) {
+      case "==":
+        return left == right
+      case "===":
+        return left === right
+      case "!=":
+        return left != right
+      case "!==":
+        return left !== right
+      case ">":
+        return (left as number) > (right as number)
+      case ">=":
+        return (left as number) >= (right as number)
+      case "<":
+        return (left as number) < (right as number)
+      case "<=":
+        return (left as number) <= (right as number)
+      default:
+        return true
     }
   }
 
