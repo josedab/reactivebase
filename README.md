@@ -307,3 +307,7 @@ npm run dev
 ## License
 
 MIT © ReactiveBase Contributors
+
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for planned features and milestones.
