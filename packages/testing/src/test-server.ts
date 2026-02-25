@@ -7,6 +7,14 @@ import type { Schema } from "@reactivebase/server"
 import { createAuthContext, type AuthContext } from "@reactivebase/server"
 import { MockDatabase, type MockDatabaseContext } from "./mock-database.js"
 
+/** Generic handler function signature for queries, mutations, and actions. */
+export type FunctionHandler = (ctx: unknown, args: unknown) => unknown | Promise<unknown>
+
+export interface FunctionDefinition {
+  type: string
+  handler: FunctionHandler
+}
+
 export interface TestServerOptions {
   schema?: Schema
   auth?: AuthContext
@@ -19,7 +27,7 @@ export interface TestServerOptions {
 export class TestServer {
   readonly db: MockDatabase
   private auth: AuthContext
-  private functions = new Map<string, { type: string; handler: Function }>()
+  private functions = new Map<string, FunctionDefinition>()
 
   constructor(options: TestServerOptions = {}) {
     this.db = new MockDatabase(options.schema)
@@ -29,7 +37,7 @@ export class TestServer {
   /**
    * Register functions for testing.
    */
-  registerFunctions(fns: Record<string, { type: string; handler: Function }>): void {
+  registerFunctions(fns: Record<string, FunctionDefinition>): void {
     for (const [name, fn] of Object.entries(fns)) {
       this.functions.set(name, fn)
     }
@@ -60,7 +68,7 @@ export class TestServer {
    * Run a query function and return the result.
    */
   async runQuery<T = unknown>(
-    fnOrRef: { handler: Function } | string,
+    fnOrRef: { handler: FunctionHandler } | string,
     args: unknown = {},
   ): Promise<QueryTestResult<T>> {
     const { handler } = this.resolveFunction(fnOrRef, "query")
@@ -82,7 +90,7 @@ export class TestServer {
    * Run a mutation function and return the result.
    */
   async runMutation<T = unknown>(
-    fnOrRef: { handler: Function } | string,
+    fnOrRef: { handler: FunctionHandler } | string,
     args: unknown = {},
   ): Promise<MutationTestResult<T>> {
     const { handler } = this.resolveFunction(fnOrRef, "mutation")
@@ -101,7 +109,7 @@ export class TestServer {
   /**
    * Run an action function.
    */
-  async runAction<T = unknown>(fnOrRef: { handler: Function } | string, args: unknown = {}): Promise<T> {
+  async runAction<T = unknown>(fnOrRef: { handler: FunctionHandler } | string, args: unknown = {}): Promise<T> {
     const { handler } = this.resolveFunction(fnOrRef, "action")
     const dbCtx = this.db.createContext("readwrite")
     const ctx = this.createFunctionContext(dbCtx)
@@ -114,7 +122,7 @@ export class TestServer {
    * Test that a mutation modifies specific tables.
    */
   async expectMutationToModify(
-    fnOrRef: { handler: Function } | string,
+    fnOrRef: { handler: FunctionHandler } | string,
     args: unknown,
     expectedTables: string[],
   ): Promise<void> {
@@ -133,7 +141,7 @@ export class TestServer {
    * Test that a query returns expected data.
    */
   async expectQueryToReturn<T = unknown>(
-    fnOrRef: { handler: Function } | string,
+    fnOrRef: { handler: FunctionHandler } | string,
     args: unknown,
     expected: T,
   ): Promise<void> {
@@ -150,10 +158,10 @@ export class TestServer {
    * and capture the query result after each mutation.
    */
   async snapshotReactiveUpdates<T = unknown>(
-    queryFn: { handler: Function } | string,
+    queryFn: { handler: FunctionHandler } | string,
     queryArgs: unknown,
     mutations: Array<{
-      fn: { handler: Function } | string
+      fn: { handler: FunctionHandler } | string
       args: unknown
     }>,
   ): Promise<ReactiveSnapshot<T>[]> {
@@ -186,9 +194,7 @@ export class TestServer {
    * Apply seed data to the test server.
    * Integrates with the seeding framework for reproducible test data.
    */
-  async withSeed(
-    seedRecords: Array<{ table: string; data: Record<string, unknown> }>,
-  ): Promise<void> {
+  async withSeed(seedRecords: Array<{ table: string; data: Record<string, unknown> }>): Promise<void> {
     const dbCtx = this.db.createContext("readwrite")
     for (const record of seedRecords) {
       const tableAccessor = dbCtx[record.table]
@@ -198,7 +204,7 @@ export class TestServer {
     }
   }
 
-  private resolveFunction(fnOrRef: { handler: Function } | string, _expectedType?: string) {
+  private resolveFunction(fnOrRef: { handler: FunctionHandler } | string, _expectedType?: string) {
     if (typeof fnOrRef === "string") {
       const fn = this.functions.get(fnOrRef)
       if (!fn) throw new Error(`Function not found: ${fnOrRef}`)

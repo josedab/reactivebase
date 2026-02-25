@@ -104,6 +104,7 @@ export class MockDatabase {
    * Create a database context suitable for passing to server functions.
    */
   createContext(mode: "read" | "readwrite" = "readwrite"): MockDatabaseContext {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this
     const dependencies: Array<{ table: string; filters: Record<string, unknown> }> = []
     const modifiedTables: string[] = []
@@ -219,7 +220,6 @@ export interface MockDatabaseContext {
 }
 
 function createMockQueryResult(rows: MockRow[]) {
-  const result = rows as unknown
   // Add chainable methods that return the same rows
   const builder = {
     orderBy: () => builder,
