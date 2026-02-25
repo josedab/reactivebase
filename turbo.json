@@ -23,7 +23,9 @@
     "typecheck": {
       "dependsOn": ["^build"]
     },
-    "lint": {},
+    "lint": {
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", "../../eslint.config.js"]
+    },
     "benchmark": {
       "dependsOn": ["build"],
       "cache": false
