@@ -77,6 +77,7 @@ export function buildTenantFilter(tenantId: string, column: string): { sql: stri
  */
 export function generateTenantSchemaSQL(tenantId: string, sourceSchema: string = "public"): string {
   const schemaName = `tenant_${sanitizeTenantId(tenantId)}`
+  const safeSource = sanitizeIdentifier(sourceSchema)
   return `
 CREATE SCHEMA IF NOT EXISTS "${schemaName}";
 
@@ -86,10 +87,10 @@ DECLARE
   tbl RECORD;
 BEGIN
   FOR tbl IN
-    SELECT tablename FROM pg_tables WHERE schemaname = '${sourceSchema}'
+    SELECT tablename FROM pg_tables WHERE schemaname = '${safeSource}'
       AND tablename NOT LIKE '\\_%'
   LOOP
-    EXECUTE format('CREATE TABLE IF NOT EXISTS "${schemaName}".%I (LIKE ${sourceSchema}.%I INCLUDING ALL)', tbl.tablename, tbl.tablename);
+    EXECUTE format('CREATE TABLE IF NOT EXISTS "${schemaName}".%I (LIKE ${safeSource}.%I INCLUDING ALL)', tbl.tablename, tbl.tablename);
   END LOOP;
 END $$;
 `
@@ -113,6 +114,13 @@ export function generateDropTenantSQL(tenantId: string): string {
 
 function sanitizeTenantId(id: string): string {
   return id.replace(/[^a-zA-Z0-9_]/g, "_")
+}
+
+function sanitizeIdentifier(id: string): string {
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(id)) {
+    throw new Error(`Invalid SQL identifier: ${id}`)
+  }
+  return id
 }
 
 /**
