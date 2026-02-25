@@ -20,6 +20,7 @@
     "format": "prettier --write 'packages/*/src/**/*.{ts,tsx}'",
     "format:check": "prettier --check 'packages/*/src/**/*.{ts,tsx}'",
     "benchmark": "turbo run benchmark",
+    "check": "turbo run build typecheck test lint && npm run format:check",
     "prepare": "husky"
   },
   "devDependencies": {
