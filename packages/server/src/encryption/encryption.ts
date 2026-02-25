@@ -267,7 +267,7 @@ export class EncryptionEngine {
       let iv: Buffer
       if (effectiveMode === "deterministic") {
         // Deterministic: derive IV from field name + plaintext for consistent encryption
-        iv = createHash("md5").update(`${fieldName}:${plaintext}`).digest()
+        iv = createHash("sha256").update(`${fieldName}:${plaintext}`).digest()
         iv = iv.subarray(0, 12)
       } else {
         iv = randomBytes(12)
