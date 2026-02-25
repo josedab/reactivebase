@@ -4,7 +4,7 @@
  */
 
 import { WebSocketServer, WebSocket } from "ws"
-import type { Server as HttpServer } from "node:http"
+import type { Server as HttpServer, IncomingMessage } from "node:http"
 import type { Pool } from "pg"
 import type { Schema } from "../schema/index.js"
 import type { RegisteredFunction } from "../functions/index.js"
@@ -33,11 +33,13 @@ interface ConnectionState {
   auth: AuthContext
   isAlive: boolean
   subscriptionCount: number
+  ip: string
 }
 
 export class TransportServer {
   private wss: WebSocketServer | null = null
   private connections = new Map<string, ConnectionState>()
+  private connectionsPerIp = new Map<string, number>()
   private engine: ReactivityEngine
   private functions = new Map<string, RegisteredFunction>()
   private authProviders: AuthProvider[] = []
@@ -83,7 +85,7 @@ export class TransportServer {
   attach(server: HttpServer): void {
     this.wss = new WebSocketServer({ server, path: "/ws" })
 
-    this.wss.on("connection", (ws) => this.handleConnection(ws))
+    this.wss.on("connection", (ws, req) => this.handleConnection(ws, req))
 
     // Start heartbeat
     this.heartbeatTimer = setInterval(() => this.heartbeat(), this.options.heartbeatInterval)
@@ -94,7 +96,7 @@ export class TransportServer {
    */
   listen(port: number): void {
     this.wss = new WebSocketServer({ port, path: "/ws" })
-    this.wss.on("connection", (ws) => this.handleConnection(ws))
+    this.wss.on("connection", (ws, req) => this.handleConnection(ws, req))
     this.heartbeatTimer = setInterval(() => this.heartbeat(), this.options.heartbeatInterval)
   }
 
@@ -111,6 +113,7 @@ export class TransportServer {
       conn.ws.close(1001, "Server shutting down")
     }
     this.connections.clear()
+    this.connectionsPerIp.clear()
 
     return new Promise((resolve) => {
       if (this.wss) {
@@ -136,7 +139,18 @@ export class TransportServer {
     return this.engine.registry.size
   }
 
-  private handleConnection(ws: WebSocket): void {
+  private handleConnection(ws: WebSocket, req?: IncomingMessage): void {
+    const ip =
+      req?.headers["x-forwarded-for"]?.toString().split(",")[0]?.trim() ?? req?.socket?.remoteAddress ?? "unknown"
+
+    // Enforce per-IP connection limit
+    const currentCount = this.connectionsPerIp.get(ip) ?? 0
+    if (currentCount >= this.options.maxConnectionsPerIp) {
+      ws.close(1008, "Too many connections from this IP")
+      return
+    }
+    this.connectionsPerIp.set(ip, currentCount + 1)
+
     const connectionId = this.generateConnectionId()
 
     const state: ConnectionState = {
@@ -145,6 +159,7 @@ export class TransportServer {
       auth: createAuthContext(null),
       isAlive: true,
       subscriptionCount: 0,
+      ip,
     }
 
     this.connections.set(connectionId, state)
@@ -157,6 +172,12 @@ export class TransportServer {
     ws.on("close", () => {
       this.engine.removeConnection(connectionId)
       this.connections.delete(connectionId)
+      const ipCount = this.connectionsPerIp.get(ip) ?? 1
+      if (ipCount <= 1) {
+        this.connectionsPerIp.delete(ip)
+      } else {
+        this.connectionsPerIp.set(ip, ipCount - 1)
+      }
       this.metrics?.setConnections(this.connections.size)
     })
 
@@ -421,6 +442,12 @@ export class TransportServer {
         conn.ws.terminate()
         this.engine.removeConnection(id)
         this.connections.delete(id)
+        const ipCount = this.connectionsPerIp.get(conn.ip) ?? 1
+        if (ipCount <= 1) {
+          this.connectionsPerIp.delete(conn.ip)
+        } else {
+          this.connectionsPerIp.set(conn.ip, ipCount - 1)
+        }
         continue
       }
       conn.isAlive = false
