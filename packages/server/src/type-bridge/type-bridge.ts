@@ -128,13 +128,15 @@ export interface TypedFunctionReference<
 }
 
 /** Extract args type from a function reference */
-export type ExtractArgs<T> = T extends TypedFunctionReference<any, infer A, any> ? A : never
+export type ExtractArgs<T> =
+  T extends TypedFunctionReference<"query" | "mutation" | "action", infer A, unknown> ? A : never
 
 /** Extract return type from a function reference */
-export type ExtractReturn<T> = T extends TypedFunctionReference<any, any, infer R> ? R : never
+export type ExtractReturn<T> =
+  T extends TypedFunctionReference<"query" | "mutation" | "action", unknown, infer R> ? R : never
 
 /** Extract function kind from a reference */
-export type ExtractKind<T> = T extends TypedFunctionReference<infer K, any, any> ? K : never
+export type ExtractKind<T> = T extends TypedFunctionReference<infer K, unknown, unknown> ? K : never
 
 /** Create a typed API namespace from a flat function map */
 export type TypedApiFromManifest<T extends Record<string, FunctionSignature>> = {
