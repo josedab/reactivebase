@@ -11,12 +11,14 @@ Hi [Name],
 I noticed [Company] is building [specific real-time feature / using Prisma+tRPC / evaluating backend frameworks]. I'd like to offer you a free 90-day pilot of ReactiveBase — an open-source reactive backend framework that replaces Prisma + tRPC + Socket.io + BullMQ with one TypeScript framework on Postgres.
 
 **What ReactiveBase provides:**
+
 - Every query is automatically live (no WebSocket setup)
 - Every mutation runs in a SERIALIZABLE Postgres transaction
 - Built-in: auth (JWT/JWKS), multi-tenancy, rate limiting, scheduling, file storage, AI/vector search
 - MIT licensed, self-hosted on your Postgres
 
 **The pilot includes:**
+
 - Dedicated support channel (Slack or Discord)
 - Architecture review for your use case
 - Help with migration from your current stack
@@ -43,10 +45,9 @@ Quick follow-up — wanted to share a concrete comparison:
 Prisma + tRPC + Socket.io + BullMQ + Redis
 
 **After (1 framework, ~20 lines):**
+
 ```typescript
-export const listTasks = query(async (ctx, { userId }) =>
-  ctx.db.tasks.where({ assigneeId: userId, done: false })
-)
+export const listTasks = query(async (ctx, { userId }) => ctx.db.tasks.where({ assigneeId: userId, done: false }))
 ```
 
 Every client subscribed to this query gets automatic updates when any task changes. No manual WebSocket setup, no cache invalidation, no subscription management.

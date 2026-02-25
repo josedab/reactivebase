@@ -12,6 +12,7 @@ Modern apps demand real-time data, but building it means assembling 5+ systems: 
 ReactiveBase is an open-source TypeScript framework that provides Convex-like developer experience on self-hosted Postgres. In this talk, I'll build a live collaborative task board with AI-powered semantic search in under 15 minutes, demonstrating reactive queries that auto-update (no manual subscriptions), automatic SERIALIZABLE transactions, vector similarity search with pgvector, and three React hooks that comprise the entire client API: useQuery, useMutation, useAction.
 
 **Outline:**
+
 1. The problem: assembling 5 tools for real-time (3 min)
 2. Live coding: schema → reactive query → React UI (8 min)
 3. Adding AI vector search in 5 lines (4 min)

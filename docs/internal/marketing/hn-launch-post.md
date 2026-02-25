@@ -7,12 +7,14 @@ Hi HN, I built ReactiveBase — an open-source reactive backend framework that g
 **The solution:** One framework. `query()` for reactive reads, `mutation()` for transactional writes, `action()` for background jobs. Every query is automatically live — clients get updates when data changes. Every mutation runs in a SERIALIZABLE Postgres transaction.
 
 **What's different from Convex?**
+
 - MIT license (Convex uses FSL)
 - Your Postgres (SQL, JSONB, PostGIS, pgvector)
 - 30 server modules (auth, scheduler, webhooks, storage, presence, multi-tenant, AI/vector, etc.)
 - Prisma migration tool: `npx @reactivebase/migrate-from-prisma`
 
 **Quick start:**
+
 ```
 npx create-reactivebase my-app
 cd my-app && npm install && npm run dev

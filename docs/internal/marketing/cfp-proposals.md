@@ -8,6 +8,7 @@
 Modern apps demand real-time data, but building it means assembling 5+ systems: ORM, API layer, WebSocket server, cache, job queue. What if one framework handled all of that on the Postgres you already run?
 
 In this talk, I'll show how ReactiveBase — an open-source TypeScript framework — provides Convex-like developer experience on self-hosted Postgres. I'll build a live collaborative task board with AI-powered semantic search in under 15 minutes, demonstrating:
+
 - Reactive queries that auto-update when data changes (no manual subscriptions)
 - Automatic SERIALIZABLE transactions (no partial writes)
 - Vector similarity search with pgvector (reactive semantic search)
