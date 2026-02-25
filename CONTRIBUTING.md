@@ -17,6 +17,9 @@ npm run build
 
 # Run all tests
 npm run test
+
+# Run all validations at once (build, typecheck, test, lint, format check)
+npm run check
 ```
 
 ## Project Architecture
@@ -92,7 +95,7 @@ packages/
 1. Fork the repo and create a branch from `main`
 2. Make your changes following the conventions above
 3. Add/update tests for your changes
-4. Run `npm run build && npm run test` (must pass)
+4. Run `npm run check` to validate everything (build, typecheck, test, lint, format)
 5. Open a PR with a clear description of what and why
 6. Wait for review — maintainers will respond within 48 hours
 
@@ -105,6 +108,19 @@ Look for issues labeled `good first issue` on GitHub. These are typically:
 - Improving error messages
 - Documentation improvements
 - Adding a new example app
+
+## Documentation Site
+
+The documentation site is built with [Docusaurus](https://docusaurus.io/) and lives in the `website/` directory.
+
+```bash
+# Start the docs site locally
+cd website
+npm install
+npm start
+```
+
+This opens the site at `http://localhost:3000`. Changes to docs files are hot-reloaded.
 
 ## Testing
 
