@@ -138,7 +138,7 @@ describe("generateNotifyTriggerSQL", () => {
   it("generates valid trigger SQL", () => {
     const sql = generateNotifyTriggerSQL("tasks")
 
-    expect(sql).toContain("CREATE OR REPLACE FUNCTION notify_tasks_changes()")
+    expect(sql).toContain('CREATE OR REPLACE FUNCTION "notify_tasks_changes"()')
     expect(sql).toContain("pg_notify")
     expect(sql).toContain("AFTER INSERT OR UPDATE OR DELETE")
     expect(sql).toContain('ON "tasks"')

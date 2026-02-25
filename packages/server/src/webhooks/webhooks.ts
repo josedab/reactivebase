@@ -205,14 +205,28 @@ export function parseNotifyPayload(payload: string): ChangeEvent | null {
   }
 }
 
+const IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+
+function validateIdentifier(name: string, label: string): void {
+  if (!IDENTIFIER_RE.test(name)) {
+    throw new Error(`Invalid ${label}: "${name}" — must match ${IDENTIFIER_RE}`)
+  }
+}
+
+function quoteIdentifier(name: string): string {
+  return `"${name.replace(/"/g, '""')}"`
+}
+
 /**
  * Generate SQL for a Postgres trigger that sends NOTIFY on table changes.
  */
 export function generateNotifyTriggerSQL(tableName: string, channel: string = "reactivebase_changes"): string {
+  validateIdentifier(tableName, "table name")
+  validateIdentifier(channel, "channel name")
   const functionName = `notify_${tableName}_changes`
 
   return `
-CREATE OR REPLACE FUNCTION ${functionName}()
+CREATE OR REPLACE FUNCTION ${quoteIdentifier(functionName)}()
 RETURNS trigger AS $$
 BEGIN
   PERFORM pg_notify('${channel}', json_build_object(
@@ -225,10 +239,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS ${functionName}_trigger ON "${tableName}";
-CREATE TRIGGER ${functionName}_trigger
-  AFTER INSERT OR UPDATE OR DELETE ON "${tableName}"
-  FOR EACH ROW EXECUTE FUNCTION ${functionName}();
+DROP TRIGGER IF EXISTS ${quoteIdentifier(functionName + "_trigger")} ON ${quoteIdentifier(tableName)};
+CREATE TRIGGER ${quoteIdentifier(functionName + "_trigger")}
+  AFTER INSERT OR UPDATE OR DELETE ON ${quoteIdentifier(tableName)}
+  FOR EACH ROW EXECUTE FUNCTION ${quoteIdentifier(functionName)}();
 `
 }
 
