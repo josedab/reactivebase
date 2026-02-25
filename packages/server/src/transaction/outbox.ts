@@ -292,7 +292,9 @@ export class OutboxRelay {
 
       return records.length
     } catch (error: unknown) {
-      await client.query("ROLLBACK").catch(() => {})
+      await client.query("ROLLBACK").catch((rollbackErr) => {
+        console.error("Failed to rollback transaction:", rollbackErr)
+      })
       throw error
     } finally {
       client.release()

@@ -152,7 +152,9 @@ export class WebhookDeliveryQueue {
     }, this.options.retryIntervalMs)
 
     // Process immediately
-    this.processQueue().catch(() => {})
+    this.processQueue().catch((err) => {
+      console.error("Webhook delivery queue initial processing error:", err)
+    })
   }
 
   /**
