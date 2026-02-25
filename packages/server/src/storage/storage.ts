@@ -6,7 +6,7 @@
 
 import { createHash, randomUUID } from "node:crypto"
 import { writeFile, readFile, unlink, mkdir } from "node:fs/promises"
-import { join, dirname } from "node:path"
+import { dirname, resolve, sep } from "node:path"
 import { existsSync } from "node:fs"
 
 export interface StorageBackend {
@@ -45,12 +45,25 @@ export class LocalStorageBackend implements StorageBackend {
     private baseUrl: string = "http://localhost:4000/storage",
   ) {}
 
+  /** Validate storageId to prevent path traversal */
+  private safePath(storageId: string): string {
+    if (storageId.includes(sep) || storageId.includes("/") || storageId.includes("\\") || storageId.includes("..")) {
+      throw new Error("Invalid storage ID")
+    }
+    const filePath = resolve(this.baseDir, storageId)
+    const resolvedBase = resolve(this.baseDir)
+    if (!filePath.startsWith(resolvedBase + sep) && filePath !== resolvedBase) {
+      throw new Error("Invalid storage ID")
+    }
+    return filePath
+  }
+
   async put(data: Buffer, options: StorageOptions): Promise<string> {
     const hash = createHash("sha256").update(data).digest("hex").substring(0, 16)
     const ext = extensionFromContentType(options.contentType)
     const storageId = `${randomUUID().substring(0, 8)}_${hash}${ext}`
 
-    const filePath = join(this.baseDir, storageId)
+    const filePath = this.safePath(storageId)
     await mkdir(dirname(filePath), { recursive: true })
     await writeFile(filePath, data)
 
@@ -62,7 +75,7 @@ export class LocalStorageBackend implements StorageBackend {
   }
 
   async delete(storageId: string): Promise<void> {
-    const filePath = join(this.baseDir, storageId)
+    const filePath = this.safePath(storageId)
     try {
       await unlink(filePath)
     } catch {
@@ -71,12 +84,12 @@ export class LocalStorageBackend implements StorageBackend {
   }
 
   async exists(storageId: string): Promise<boolean> {
-    return existsSync(join(this.baseDir, storageId))
+    return existsSync(this.safePath(storageId))
   }
 
   /** Read file contents (for serving) */
   async read(storageId: string): Promise<Buffer> {
-    return readFile(join(this.baseDir, storageId))
+    return readFile(this.safePath(storageId))
   }
 }
 
