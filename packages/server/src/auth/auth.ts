@@ -2,7 +2,7 @@
  * Authentication context available in all server functions.
  */
 
-import { createHmac, createPublicKey, createVerify, type KeyObject } from "node:crypto"
+import { createHmac, createPublicKey, createVerify, timingSafeEqual, type KeyObject } from "node:crypto"
 
 export interface AuthContext {
   userId: string | null
@@ -67,6 +67,14 @@ export function jwtProvider(options: JwtProviderOptions): AuthProvider {
       const header = JSON.parse(Buffer.from(headerB64, "base64url").toString("utf-8"))
       const alg = header.alg as string
 
+      // Enforce algorithm allowlist based on configured verification method
+      const allowedAlgorithms: string[] = []
+      if (options.secret) allowedAlgorithms.push("HS256")
+      if (options.publicKey || options.jwksUrl) allowedAlgorithms.push("RS256")
+      if (!allowedAlgorithms.includes(alg)) {
+        throw new AuthenticationError(`JWT algorithm "${alg}" not allowed; expected ${allowedAlgorithms.join(" or ")}`)
+      }
+
       const data = `${headerB64}.${payloadB64}`
 
       // Verify signature based on algorithm
@@ -76,7 +84,9 @@ export function jwtProvider(options: JwtProviderOptions): AuthProvider {
         }
         const expectedSig = createHmac("sha256", options.secret).update(data).digest("base64url")
 
-        if (expectedSig !== signatureB64) {
+        const expectedBuf = Buffer.from(expectedSig, "base64url")
+        const actualBuf = Buffer.from(signatureB64, "base64url")
+        if (expectedBuf.length !== actualBuf.length || !timingSafeEqual(expectedBuf, actualBuf)) {
           throw new AuthenticationError("Invalid JWT signature")
         }
       } else if (alg === "RS256") {
