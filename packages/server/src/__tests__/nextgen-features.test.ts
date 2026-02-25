@@ -445,16 +445,16 @@ describe("AnalyticsEngine", () => {
   })
 
   it("generates SQL", () => {
-    const sql = generateAnalyticsSQL({
+    const result = generateAnalyticsSQL({
       name: "daily_signups",
       table: "users",
       aggregation: "count",
       timeBucket: "day",
       timestampColumn: "created_at",
     })
-    expect(sql).toContain("COUNT")
-    expect(sql).toContain("date_trunc")
-    expect(sql).toContain("GROUP BY bucket")
+    expect(result.sql).toContain("COUNT")
+    expect(result.sql).toContain("date_trunc")
+    expect(result.sql).toContain("GROUP BY bucket")
   })
 
   it("tracks stats", () => {

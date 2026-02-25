@@ -88,7 +88,7 @@ export interface AnalyticsEngineStats {
 
 // ─── SQL Builders ────────────────────────────────────────────────────────────
 
-export function generateAnalyticsSQL(metric: AnalyticsMetricDef): string {
+export function generateAnalyticsSQL(metric: AnalyticsMetricDef): { sql: string; params: unknown[] } {
   const table = metric.table.replace(/[^a-zA-Z0-9_]/g, "")
   const tsCol = metric.timestampColumn ?? "created_at"
   const agg = buildAggregation(metric.aggregation, metric.column)
@@ -107,9 +107,11 @@ export function generateAnalyticsSQL(metric: AnalyticsMetricDef): string {
   sql += ` FROM "${table}"`
 
   const conditions: string[] = []
+  const params: unknown[] = []
   if (metric.filter) {
     for (const [key, val] of Object.entries(metric.filter)) {
-      conditions.push(`"${key.replace(/[^a-zA-Z0-9_]/g, "")}" = '${String(val)}'`)
+      params.push(val)
+      conditions.push(`"${key.replace(/[^a-zA-Z0-9_]/g, "")}" = $${params.length}`)
     }
   }
   if (conditions.length > 0) sql += ` WHERE ${conditions.join(" AND ")}`
@@ -121,7 +123,7 @@ export function generateAnalyticsSQL(metric: AnalyticsMetricDef): string {
   }
   if (metric.timeBucket) sql += ` ORDER BY bucket DESC`
 
-  return sql
+  return { sql, params }
 }
 
 function buildAggregation(type: AggregationType, column?: string): string {
@@ -275,7 +277,7 @@ export class AnalyticsEngine {
   /**
    * Generate SQL for creating materialized view of a metric.
    */
-  generateSQL(metricName: string): string {
+  generateSQL(metricName: string): { sql: string; params: unknown[] } {
     const metric = this.metrics.get(metricName)
     if (!metric) throw new Error(`Metric "${metricName}" not found`)
     return generateAnalyticsSQL(metric)
