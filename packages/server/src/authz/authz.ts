@@ -193,6 +193,14 @@ ORDER BY resource_type, resource_id`,
  * Generate a SQL WHERE clause from a permission check for use in RLS policies.
  */
 export function permissionToWhereClause(resourceType: string, relation: string, userIdParam: string = "$1"): string {
+  // Validate identifiers to prevent SQL injection in RLS policy fragments
+  const safeIdentifier = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+  if (!safeIdentifier.test(resourceType)) {
+    throw new Error(`Invalid resource type identifier: ${resourceType}`)
+  }
+  if (!safeIdentifier.test(relation)) {
+    throw new Error(`Invalid relation identifier: ${relation}`)
+  }
   return `EXISTS (
   SELECT 1 FROM _reactivebase_authz_tuples
   WHERE resource_type = '${resourceType}'
