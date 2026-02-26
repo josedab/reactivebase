@@ -20,7 +20,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["packages/cli/**/*.ts", "packages/create-reactivebase/**/*.ts"],
+    files: ["packages/cli/**/*.ts", "packages/create-reactivebase/**/*.ts", "packages/migrate-from-prisma/**/*.ts"],
     rules: {
       "no-console": "off",
     },
