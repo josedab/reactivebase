@@ -17,7 +17,7 @@
  *   const engine = new EncryptionEngine({ provider })
  */
 
-import { createHash } from "node:crypto"
+import { createHash, hkdfSync } from "node:crypto"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -101,13 +101,13 @@ export function vaultKeyProvider(options: VaultKeyProviderOptions): VaultKeyProv
     }
   }
 
-  // Derive a 256-bit key from the key name and version
+  // Derive a 256-bit key from the key name and version using HKDF
   function deriveKey(keyId: string): Buffer {
     const cached = derivedKeys.get(keyId)
     if (cached) return cached
 
-    const material = context ? `${keyName}:${keyId}:${context}` : `${keyName}:${keyId}`
-    const derived = createHash("sha256").update(material).digest()
+    const ikm = context ? `${keyName}:${keyId}:${context}` : `${keyName}:${keyId}`
+    const derived = Buffer.from(hkdfSync("sha256", ikm, "", "reactivebase-vault-key", 32))
     derivedKeys.set(keyId, derived)
     return derived
   }
