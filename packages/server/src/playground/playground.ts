@@ -692,10 +692,22 @@ export class PlaygroundEngine {
         break
       case "matches-pattern":
         if (step.validationPattern && result.status === "success") {
-          const regex = new RegExp(step.validationPattern)
-          const outputStr = typeof result.output === "string" ? result.output : JSON.stringify(result.output)
-          passed = regex.test(outputStr)
-          message = passed ? "Pattern matched — step complete!" : `Output doesn't match expected pattern`
+          try {
+            const pattern = step.validationPattern
+            // Reject patterns with potential catastrophic backtracking
+            if (/(\.\*){2,}|(\\\w\+){2,}\+|(\.\+){2,}|([^\\]\+){3,}/.test(pattern) || pattern.length > 1000) {
+              passed = false
+              message = "Validation pattern is too complex"
+            } else {
+              const regex = new RegExp(pattern)
+              const outputStr = typeof result.output === "string" ? result.output : JSON.stringify(result.output)
+              passed = regex.test(outputStr)
+              message = passed ? "Pattern matched — step complete!" : `Output doesn't match expected pattern`
+            }
+          } catch {
+            passed = false
+            message = "Invalid validation pattern"
+          }
         }
         break
       case "custom":

@@ -258,7 +258,17 @@ export class TutorialManager {
           if (!userCode.includes(`${rule.value}(`)) errors.push(rule.message)
           break
         case "matches":
-          if (!new RegExp(rule.value).test(userCode)) errors.push(rule.message)
+          try {
+            const pattern = rule.value
+            // Reject patterns with potential catastrophic backtracking
+            if (/(\.\*){2,}|(\\\w\+){2,}\+|(\.\+){2,}|([^\\]\+){3,}/.test(pattern) || pattern.length > 1000) {
+              errors.push("Validation pattern is too complex")
+            } else {
+              if (!new RegExp(pattern).test(userCode)) errors.push(rule.message)
+            }
+          } catch {
+            errors.push("Invalid validation pattern")
+          }
           break
       }
     }
