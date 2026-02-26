@@ -229,15 +229,32 @@ ON CONFLICT (query_name) DO UPDATE SET
   }
 }
 
+const SAFE_IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+const VALID_OPERATORS = new Set(["=", "!=", ">", "<", ">=", "<=", "like", "in", "is_null", "is_not_null"])
+const VALID_SORT_DIRECTIONS = new Set(["asc", "desc"])
+
+function assertSafeIdentifier(value: string, label: string): void {
+  if (!SAFE_IDENTIFIER_RE.test(value)) {
+    throw new Error(`Invalid ${label}: must be a valid identifier (letters, digits, underscores)`)
+  }
+}
+
 export function buildDataBrowserQuerySQL(options: DataBrowserOptions): {
   sql: string
   params: unknown[]
 } {
+  assertSafeIdentifier(options.table, "table name")
+
   const conditions: string[] = []
   const params: unknown[] = []
   let paramIdx = 1
 
   for (const filter of options.filters ?? []) {
+    if (!VALID_OPERATORS.has(filter.operator)) {
+      throw new Error(`Invalid filter operator: ${filter.operator}`)
+    }
+    assertSafeIdentifier(filter.column, "column name")
+
     switch (filter.operator) {
       case "is_null":
         conditions.push(`"${filter.column}" IS NULL`)
@@ -260,7 +277,17 @@ export function buildDataBrowserQuerySQL(options: DataBrowserOptions): {
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
-  const orderBy = options.sortBy ? `ORDER BY "${options.sortBy}" ${options.sortDirection ?? "asc"}` : "ORDER BY 1"
+
+  let orderBy = "ORDER BY 1"
+  if (options.sortBy) {
+    assertSafeIdentifier(options.sortBy, "sortBy column")
+    const dir = options.sortDirection ?? "asc"
+    if (!VALID_SORT_DIRECTIONS.has(dir)) {
+      throw new Error(`Invalid sort direction: ${dir}`)
+    }
+    orderBy = `ORDER BY "${options.sortBy}" ${dir}`
+  }
+
   const page = options.page ?? 1
   const pageSize = options.pageSize ?? 50
   const offset = (page - 1) * pageSize
