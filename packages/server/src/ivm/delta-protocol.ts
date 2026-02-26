@@ -112,19 +112,24 @@ export class DeltaPatchDecoder {
    */
   decode(data: Uint8Array): DeltaPatch {
     const payload = new TextDecoder().decode(data)
-    const parsed = JSON.parse(payload)
+    let parsed: Record<string, unknown>
+    try {
+      parsed = JSON.parse(payload)
+    } catch {
+      throw new Error("Failed to decode delta patch: invalid JSON")
+    }
 
     this.stats.totalDecoded++
     this.stats.totalBytesDecoded += data.length
     this.stats.avgPatchSizeBytes = Math.round(this.stats.totalBytesDecoded / this.stats.totalDecoded)
 
     return {
-      viewId: parsed.v,
-      sequence: parsed.s,
-      inserts: parsed.i,
-      deletes: parsed.d,
-      updates: parsed.u,
-      checksum: parsed.c,
+      viewId: parsed.v as string,
+      sequence: parsed.s as number,
+      inserts: parsed.i as Row[],
+      deletes: parsed.d as Row[],
+      updates: parsed.u as Array<{ old: Row; new: Row }>,
+      checksum: parsed.c as number,
     }
   }
 
