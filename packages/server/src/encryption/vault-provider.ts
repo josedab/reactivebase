@@ -34,6 +34,8 @@ export interface VaultKeyProviderOptions {
   context?: string
   /** Request timeout in ms (default: 5000) */
   timeoutMs?: number
+  /** If true, throw on Vault connection failures instead of falling back to local tracking */
+  strictMode?: boolean
 }
 
 export interface VaultKeyInfo {
@@ -58,7 +60,15 @@ export interface VaultKeyProvider {
 // ─── Vault Key Provider ──────────────────────────────────────────────────────
 
 export function vaultKeyProvider(options: VaultKeyProviderOptions): VaultKeyProvider {
-  const { address, token, transitMount = "transit", keyName = "reactivebase-key", context, timeoutMs = 5000 } = options
+  const {
+    address,
+    token,
+    transitMount = "transit",
+    keyName = "reactivebase-key",
+    context,
+    timeoutMs = 5000,
+    strictMode = false,
+  } = options
 
   const baseUrl = `${address.replace(/\/$/, "")}/v1/${transitMount}`
 
@@ -115,8 +125,13 @@ export function vaultKeyProvider(options: VaultKeyProviderOptions): VaultKeyProv
           data?: { latest_version?: number }
         }
         currentVersion = result?.data?.latest_version ?? currentVersion
-      } catch {
-        // Fall back to local tracking if Vault is unreachable
+      } catch (err) {
+        console.warn(
+          `[ReactiveBase] Vault unreachable in getCurrentKeyId, falling back to local version: ${err instanceof Error ? err.message : err}`,
+        )
+        if (strictMode) {
+          throw err
+        }
       }
       return `v${currentVersion}`
     },
@@ -136,7 +151,13 @@ export function vaultKeyProvider(options: VaultKeyProviderOptions): VaultKeyProv
           data?: { latest_version?: number }
         }
         currentVersion = result?.data?.latest_version ?? currentVersion + 1
-      } catch {
+      } catch (err) {
+        console.warn(
+          `[ReactiveBase] Vault unreachable in rotateKey, incrementing local version: ${err instanceof Error ? err.message : err}`,
+        )
+        if (strictMode) {
+          throw err
+        }
         currentVersion++
       }
       return `v${currentVersion}`
