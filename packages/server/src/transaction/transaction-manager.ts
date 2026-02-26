@@ -15,6 +15,8 @@ const DEFAULT_OPTIONS: TransactionOptions = {
   isolationLevel: "SERIALIZABLE",
 }
 
+const VALID_ISOLATION_LEVELS = new Set(["SERIALIZABLE", "READ COMMITTED", "REPEATABLE READ"])
+
 export interface TransactionResult<T> {
   result: T
   retries: number
@@ -37,6 +39,9 @@ export async function executeTransaction<T>(
     const client = await pool.connect()
 
     try {
+      if (!VALID_ISOLATION_LEVELS.has(opts.isolationLevel)) {
+        throw new Error(`Invalid isolation level: ${opts.isolationLevel}`)
+      }
       await client.query(`BEGIN ISOLATION LEVEL ${opts.isolationLevel}`)
       const result = await fn(client)
       await client.query("COMMIT")
