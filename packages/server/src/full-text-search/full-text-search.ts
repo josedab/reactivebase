@@ -117,6 +117,24 @@ export class SearchError extends Error {
   }
 }
 
+const VALID_SEARCH_LANGUAGES = new Set<string>([
+  "simple",
+  "english",
+  "spanish",
+  "french",
+  "german",
+  "italian",
+  "portuguese",
+  "russian",
+])
+
+function validateLanguage(language: string): string {
+  if (!VALID_SEARCH_LANGUAGES.has(language)) {
+    throw new SearchError(`Invalid search language: ${language}`)
+  }
+  return language
+}
+
 // ─── Search Query Builder ────────────────────────────────────────────────────
 
 export interface SearchQueryPlan {
@@ -277,15 +295,17 @@ export class SearchQueryBuilder<T = Record<string, unknown>> {
 
     // Build tsvector expression
     const tsvectorParts = searchColumns.map((col) => {
+      const lang = validateLanguage(col.language ?? language)
       const weight = col.weight
-        ? `setweight(to_tsvector('${col.language ?? language}', COALESCE("${col.column}", '')), '${col.weight}')`
-        : `to_tsvector('${col.language ?? language}', COALESCE("${col.column}", ''))`
+        ? `setweight(to_tsvector('${lang}', COALESCE("${col.column}", '')), '${col.weight}')`
+        : `to_tsvector('${lang}', COALESCE("${col.column}", ''))`
       return weight
     })
     const tsvector = tsvectorParts.length > 1 ? tsvectorParts.join(" || ") : tsvectorParts[0]
 
     params.push(searchQuery)
-    const tsquery = `plainto_tsquery('${language}', $${params.length})`
+    const validatedLang = validateLanguage(language)
+    const tsquery = `plainto_tsquery('${validatedLang}', $${params.length})`
 
     // SELECT clause
     const selectParts = [`"${table}".*`, `${rankFunction}(${tsvector}, ${tsquery}) AS "_rank"`]
@@ -294,8 +314,9 @@ export class SearchQueryBuilder<T = Record<string, unknown>> {
     if (this.plan.highlightOptions) {
       const hl = this.plan.highlightOptions
       for (const col of searchColumns) {
+        const hlLang = validateLanguage(col.language ?? language)
         selectParts.push(
-          `ts_headline('${col.language ?? language}', COALESCE("${col.column}", ''), ${tsquery}, ` +
+          `ts_headline('${hlLang}', COALESCE("${col.column}", ''), ${tsquery}, ` +
             `'StartSel=${hl.startTag ?? "<b>"}, StopSel=${hl.endTag ?? "</b>"}, ` +
             `MaxWords=${hl.maxWords ?? 35}, MinWords=${hl.minWords ?? 15}, ` +
             `FragmentDelimiter=${hl.fragmentDelimiter ?? " ... "}') AS "_hl_${col.column}"`,
