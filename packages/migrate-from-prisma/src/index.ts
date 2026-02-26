@@ -24,7 +24,7 @@ function getArg(name: string, fallback: string): string {
 const inputPath = getArg("input", "prisma/schema.prisma")
 const outputDir = getArg("output", ".")
 
-console.log(`
+console.info(`
   🔄 ReactiveBase Prisma Migration Tool
   
   Input:  ${resolve(inputPath)}
@@ -41,7 +41,7 @@ if (!existsSync(inputPath)) {
 const prismaSchema = readFileSync(inputPath, "utf-8")
 
 // Convert to ReactiveBase schema
-console.log("  📝 Parsing Prisma schema...")
+console.info("  📝 Parsing Prisma schema...")
 const reactiveBaseSchema = convertPrismaToReactiveBase(prismaSchema)
 
 // Write output
@@ -51,7 +51,7 @@ mkdirSync(convexDir, { recursive: true })
 const schemaPath = join(convexDir, "schema.ts")
 writeFileSync(schemaPath, reactiveBaseSchema, "utf-8")
 
-console.log(`  ✅ Generated: ${schemaPath}`)
+console.info(`  ✅ Generated: ${schemaPath}`)
 
 // Generate a basic server.ts if it doesn't exist
 const serverPath = join(outputDir, "server.ts")
@@ -75,10 +75,10 @@ server.start().then(({ port }) => {
 `,
     "utf-8",
   )
-  console.log(`  ✅ Generated: ${serverPath}`)
+  console.info(`  ✅ Generated: ${serverPath}`)
 }
 
-console.log(`
+console.info(`
   🎉 Migration complete!
 
   Next steps:
