@@ -364,7 +364,7 @@ export class DaclEngine {
       const command = this.actionToRlsCommand(policy.action)
       const roleCheck =
         policy.roles.length > 0
-          ? `current_setting('app.user_role') IN (${policy.roles.map((r) => `'${r}'`).join(", ")})`
+          ? `current_setting('app.user_role') IN (${policy.roles.map((r) => `'${r.replace(/'/g, "''")}'`).join(", ")})`
           : "true"
 
       const using = policy.effect === "allow" ? roleCheck : `NOT (${roleCheck})`
