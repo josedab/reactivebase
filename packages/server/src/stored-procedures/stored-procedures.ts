@@ -156,6 +156,15 @@ export class ProcedureCompileError extends Error {
   }
 }
 
+const SAFE_IDENTIFIER_RE = /^[a-z_][a-z0-9_]*$/i
+
+function validateIdentifier(value: string, context: string): string {
+  if (!SAFE_IDENTIFIER_RE.test(value)) {
+    throw new ProcedureCompileError("(compiler)", `Unsafe ${context}: ${value}`)
+  }
+  return value
+}
+
 const SAFE_DEFAULT_VALUE_RE =
   /^(?:'[^']*'|\d+(?:\.\d+)?|true|false|NULL|gen_random_uuid\(\)|NOW\(\)|CURRENT_TIMESTAMP)$/i
 
@@ -277,29 +286,39 @@ function compileStatement(stmt: ProcedureStatement, indent: number): string {
     }
 
     case "insert": {
+      validateIdentifier(stmt.table, "table name")
+      stmt.columns.forEach((c) => validateIdentifier(c, "column name"))
       const cols = stmt.columns.map((c) => `"${c}"`).join(", ")
       const vals = stmt.values.join(", ")
       let sql = `${pad}INSERT INTO "${stmt.table}" (${cols}) VALUES (${vals})`
       if (stmt.returning && stmt.into) {
+        validateIdentifier(stmt.into, "variable name")
         sql += ` RETURNING ${stmt.returning} INTO "${stmt.into}"`
       }
       return sql + ";"
     }
 
     case "update": {
+      validateIdentifier(stmt.table, "table name")
       const setClauses = Object.entries(stmt.set)
-        .map(([col, val]) => `"${col}" = ${val}`)
+        .map(([col, val]) => {
+          validateIdentifier(col, "column name")
+          return `"${col}" = ${val}`
+        })
         .join(", ")
       let sql = `${pad}UPDATE "${stmt.table}" SET ${setClauses} WHERE ${stmt.where}`
       if (stmt.returning && stmt.into) {
+        validateIdentifier(stmt.into, "variable name")
         sql += ` RETURNING ${stmt.returning} INTO "${stmt.into}"`
       }
       return sql + ";"
     }
 
     case "delete": {
+      validateIdentifier(stmt.table, "table name")
       let sql = `${pad}DELETE FROM "${stmt.table}" WHERE ${stmt.where}`
       if (stmt.returning && stmt.into) {
+        validateIdentifier(stmt.into, "variable name")
         sql += ` RETURNING ${stmt.returning} INTO "${stmt.into}"`
       }
       return sql + ";"
