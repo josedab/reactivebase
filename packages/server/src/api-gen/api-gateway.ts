@@ -18,6 +18,7 @@
  */
 
 import type { Schema } from "../schema/index.js"
+import { randomBytes, createHash } from "node:crypto"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -723,14 +724,9 @@ export class ApiGateway {
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
 function randomId(): string {
-  return Math.random().toString(36).substring(2, 10) + Date.now().toString(36)
+  return randomBytes(16).toString("hex")
 }
 
 function simpleHash(key: string): string {
-  let hash = 0x811c9dc5
-  for (let i = 0; i < key.length; i++) {
-    hash ^= key.charCodeAt(i)
-    hash = (hash * 0x01000193) >>> 0
-  }
-  return hash.toString(16).padStart(8, "0")
+  return createHash("sha256").update(key).digest("hex")
 }
