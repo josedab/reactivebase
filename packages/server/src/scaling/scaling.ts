@@ -192,7 +192,7 @@ export class ConsistentHashRing {
   }
 
   private hash(key: string): number {
-    const h = createHash("md5").update(key).digest()
+    const h = createHash("sha256").update(key).digest()
     return ((h[0] << 24) | (h[1] << 16) | (h[2] << 8) | h[3]) >>> 0
   }
 
