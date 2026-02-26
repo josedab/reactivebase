@@ -4,6 +4,7 @@
  */
 
 import { createServer, type Server as HttpServer, type IncomingMessage, type ServerResponse } from "node:http"
+import { timingSafeEqual } from "node:crypto"
 import { Pool } from "pg"
 import type { Schema } from "./schema/index.js"
 import type { RegisteredFunction } from "./functions/index.js"
@@ -197,6 +198,9 @@ export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseCon
           "Content-Security-Policy",
           "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
         )
+        if (process.env.NODE_ENV === "production") {
+          res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+        }
 
         // CORS headers
         const corsOrigin = config.server?.corsOrigin
@@ -235,7 +239,9 @@ export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseCon
           if (dashboardToken) {
             const authHeader = req.headers.authorization
             const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : authHeader
-            if (token !== dashboardToken) {
+            const tokenBuf = Buffer.from(token ?? "", "utf-8")
+            const expectedBuf = Buffer.from(dashboardToken, "utf-8")
+            if (tokenBuf.length !== expectedBuf.length || !timingSafeEqual(tokenBuf, expectedBuf)) {
               res.writeHead(401, { "Content-Type": "application/json" })
               res.end(JSON.stringify({ error: "Unauthorized — invalid or missing dashboard token" }))
               return
