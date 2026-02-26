@@ -25,6 +25,8 @@ const DEFAULT_OPTIONS: Required<CdcOptions> = {
 
 export type CdcHandler = (events: ChangeEvent[]) => Promise<void> | void
 
+const SAFE_PG_IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+
 /**
  * CDC Listener that uses Postgres LISTEN/NOTIFY to detect external changes.
  */
@@ -50,6 +52,9 @@ export class CdcListener {
    * Requires a dedicated pg client (separate from the pool).
    */
   async start(client: PgListenClient): Promise<void> {
+    if (!SAFE_PG_IDENTIFIER_RE.test(this.options.channel)) {
+      throw new Error(`Invalid CDC channel name: must be a valid PostgreSQL identifier`)
+    }
     this.client = client
     this.listening = true
 
