@@ -68,6 +68,10 @@ export class JobScheduler {
    */
   async initialize(): Promise<void> {
     const { tableName } = this.options
+    const maxRetries = this.options.defaultMaxRetries
+    if (!Number.isInteger(maxRetries) || maxRetries < 0) {
+      throw new Error(`Invalid defaultMaxRetries: must be a non-negative integer, got ${maxRetries}`)
+    }
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS "${tableName}" (
         id text PRIMARY KEY DEFAULT gen_random_uuid(),
