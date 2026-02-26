@@ -155,14 +155,18 @@ export class OutboundWebhookManager {
       headers["X-ReactiveBase-Signature"] = `sha256=${signature}`
     }
 
-    const response = await fetch(hook.url, {
-      method: "POST",
-      headers,
-      body,
-    })
+    try {
+      const response = await fetch(hook.url, {
+        method: "POST",
+        headers,
+        body,
+      })
 
-    if (!response.ok) {
-      console.error(`Outbound webhook to ${hook.url} failed: ${response.status}`)
+      if (!response.ok) {
+        console.error(`Outbound webhook to ${hook.url} failed: ${response.status}`)
+      }
+    } catch (err) {
+      console.error(`Outbound webhook to ${hook.url} network error: ${err instanceof Error ? err.message : err}`)
     }
   }
 
