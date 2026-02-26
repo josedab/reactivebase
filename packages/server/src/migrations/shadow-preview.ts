@@ -371,7 +371,11 @@ export class MigrationPreview {
     const start = Date.now()
     try {
       await client.query(buildSetSearchPathSQL(shadowSchema))
-      await client.query(`SET statement_timeout TO '${this.options.queryTimeoutMs}ms'`)
+      const timeoutMs = Number(this.options.queryTimeoutMs)
+      if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
+        throw new Error(`Invalid queryTimeoutMs: ${this.options.queryTimeoutMs}`)
+      }
+      await client.query(`SET statement_timeout TO $1`, [`${timeoutMs}ms`])
       await client.query(query.sql, query.params ?? [])
 
       return {
