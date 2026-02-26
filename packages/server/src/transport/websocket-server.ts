@@ -243,6 +243,7 @@ export class TransportServer {
       success: false,
       error: "Authentication failed",
     })
+    conn.ws.close(4001, "Authentication failed")
   }
 
   private async handleSubscribe(
