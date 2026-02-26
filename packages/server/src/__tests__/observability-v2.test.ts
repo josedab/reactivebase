@@ -39,7 +39,7 @@ describe("OtelInstrumentation", () => {
   })
 
   it("creates spans with ConsoleTracer", async () => {
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {})
+    const consoleSpy = vi.spyOn(console, "debug").mockImplementation(() => {})
     const inst = new OtelInstrumentation(new ConsoleTracer())
     await inst.instrumentQuery("tasks.list", async () => "ok")
     expect(consoleSpy).toHaveBeenCalled()
