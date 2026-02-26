@@ -72,7 +72,12 @@ export function decodeShareState(encoded: string): ShareableState {
   } else {
     json = atob(encoded)
   }
-  const state = JSON.parse(json) as ShareableState
+  let state: ShareableState
+  try {
+    state = JSON.parse(json) as ShareableState
+  } catch {
+    throw new Error("Invalid share state: malformed JSON")
+  }
   if (!state.schema || typeof state.version !== "number") {
     throw new Error("Invalid share state: missing required fields")
   }
