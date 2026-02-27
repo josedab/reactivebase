@@ -29,3 +29,11 @@ npx @reactivebase/migrate-from-prisma --input path/to/schema.prisma --output ./m
 - ✅ `@@index`, `@@unique`
 - ✅ Optional fields (`?`)
 - ✅ Array fields (`[]`)
+
+## Documentation
+
+Full documentation is available at [reactivebase.dev](https://reactivebase.dev).
+
+## License
+
+MIT

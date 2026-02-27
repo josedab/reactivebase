@@ -12,23 +12,23 @@ Real-time type generation, schema validation, and inline diagnostics for Reactiv
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `ReactiveBase: Generate Types` | One-shot type generation |
+| Command                          | Description                                |
+| -------------------------------- | ------------------------------------------ |
+| `ReactiveBase: Generate Types`   | One-shot type generation                   |
 | `ReactiveBase: Start Watch Mode` | Watch for file changes and auto-regenerate |
-| `ReactiveBase: Stop Watch Mode` | Stop watching |
-| `ReactiveBase: Show Status` | Show extension status in output panel |
-| `ReactiveBase: Validate Schema` | Validate `schema.ts` for errors |
+| `ReactiveBase: Stop Watch Mode`  | Stop watching                              |
+| `ReactiveBase: Show Status`      | Show extension status in output panel      |
+| `ReactiveBase: Validate Schema`  | Validate `schema.ts` for errors            |
 
 ## Settings
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `reactivebase.functionsDir` | `./convex` | Directory with function files |
-| `reactivebase.outputDir` | `./_generated` | Output directory for generated types |
-| `reactivebase.autoGenerate` | `true` | Auto-start watch mode on activation |
-| `reactivebase.watchDebounceMs` | `300` | Debounce delay for regeneration |
-| `reactivebase.showDiagnostics` | `true` | Show inline diagnostics |
+| Setting                        | Default        | Description                          |
+| ------------------------------ | -------------- | ------------------------------------ |
+| `reactivebase.functionsDir`    | `./convex`     | Directory with function files        |
+| `reactivebase.outputDir`       | `./_generated` | Output directory for generated types |
+| `reactivebase.autoGenerate`    | `true`         | Auto-start watch mode on activation  |
+| `reactivebase.watchDebounceMs` | `300`          | Debounce delay for regeneration      |
+| `reactivebase.showDiagnostics` | `true`         | Show inline diagnostics              |
 
 ## Development
 
@@ -47,3 +47,7 @@ npm run build
 npm run package   # Creates .vsix file
 npm run publish   # Publishes to VS Code Marketplace
 ```
+
+## Documentation
+
+Full documentation is available at [reactivebase.dev](https://reactivebase.dev).
