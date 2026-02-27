@@ -63,11 +63,33 @@ import { openaiProvider, ollamaProvider, mockAiProvider, createAiContext } from 
 
 ### React (`@reactivebase/react`)
 
+#### Core Hooks
+
 | Hook | Description |
 |------|-------------|
 | `useQuery(ref, args)` | Subscribe to a reactive query |
 | `useMutation(ref, config?)` | Get a mutation caller with optimistic updates |
 | `useAction(ref)` | Get an action caller |
+| `useAggregateQuery(ref, args, opts?)` | Subscribe to an aggregate query (count, sum, etc.) |
+
+#### Collaboration Hooks
+
+| Hook | Description |
+|------|-------------|
+| `useOptimistic(opts)` | Optimistic update state management |
+| `useCursors()` | Track collaborator cursor positions |
+| `useTypingUsers()` | Track which users are currently typing |
+| `useSelections()` | Track collaborator text/element selections |
+| `useDevTools()` | Access ReactiveBase DevTools state |
+
+#### CRDT Hooks
+
+| Hook | Description |
+|------|-------------|
+| `useCollabText(docId)` | Collaborative real-time text editing (CRDT-backed) |
+| `useCollabList(docId)` | Collaborative real-time list (CRDT-backed) |
+| `useCollabMap(docId)` | Collaborative real-time key-value map (CRDT-backed) |
+| `useCollabCounter(docId)` | Collaborative real-time counter (CRDT-backed) |
 
 ### Vue (`@reactivebase/vue`)
 
@@ -104,3 +126,64 @@ import { openaiProvider, ollamaProvider, mockAiProvider, createAiContext } from 
 |-------|-------------|
 | `TestServer` | In-memory test server |
 | `MockDatabase` | Mock database for unit tests |
+
+### GraphQL (`@reactivebase/graphql`)
+
+```typescript
+import { GraphQLSubscriptionGateway, GraphQLGatewayError } from "@reactivebase/graphql"
+```
+
+| Export | Description |
+|--------|-------------|
+| `GraphQLSubscriptionGateway` | Auto-generates GraphQL schema from ReactiveBase schema with subscriptions |
+| `GraphQLGatewayError` | Error class for gateway operations |
+
+**Types:**
+
+| Type | Description |
+|------|-------------|
+| `GraphQLGatewayOptions` | Gateway configuration (schema, scalars, subscriptions, relay, basePath) |
+| `GraphQLRequest` | Incoming GraphQL request (query, variables, operationName) |
+| `GraphQLResponse` | GraphQL response with data and errors |
+| `GraphQLError` | Structured GraphQL error |
+| `GraphQLSubscriptionEvent` | Subscription push event |
+| `SubscriptionTransportMessage` | graphql-ws protocol message |
+| `GraphQLFieldDefinition` | Field definition in generated schema |
+| `GraphQLTypeDefinition` | Type definition in generated schema |
+| `GeneratedGraphQLSchema` | Full generated schema with SDL, types, and mappings |
+| `SubscriptionMapping` | Mapping from subscription field to table/query |
+| `SubscriptionHandle` | Handle returned from `subscribe()` with `onData` and `unsubscribe` |
+
+**Client Utilities:**
+
+| Method | Description |
+|--------|-------------|
+| `gateway.generateApolloClientConfig(wsUrl, httpUrl?)` | Generate Apollo Client setup snippet |
+| `gateway.generateUrqlClientConfig(wsUrl, httpUrl?)` | Generate urql client setup snippet |
+| `gateway.generateTypeDefinitions()` | Generate TypeScript types from schema |
+
+### React Native (`@reactivebase/react-native`)
+
+```typescript
+import { MutationQueue, SyncEngine, OfflineQueryCache } from "@reactivebase/react-native"
+```
+
+| Export | Description |
+|--------|-------------|
+| `MutationQueue` | Offline mutation queue with retry and conflict resolution |
+| `OfflineQueryCache` | TTL-based offline query cache with LRU eviction |
+| `SyncEngine` | Network-aware sync engine with reconnection and mutation replay |
+| `InMemoryOfflineStorage` | In-memory `OfflineStorage` implementation (for testing) |
+
+**Interfaces:**
+
+| Type | Description |
+|------|-------------|
+| `OfflineStorage` | Storage adapter interface (get, set, delete, getAllKeys, clear) |
+| `QueuedMutation` | Queued mutation with status, retry count, and error |
+| `ConflictStrategy` | `"last-write-wins"` \| `"client-wins"` \| `"server-wins"` \| `"custom"` |
+| `ConflictResolver` | Custom conflict resolution function |
+| `MutationQueueOptions` | Queue config (maxRetries, conflictStrategy, conflictResolver) |
+| `SyncEngineOptions` | Sync config (reconnectInterval, maxReconnectAttempts, syncBatchSize) |
+| `SyncEngineEvents` | Event callbacks (onStatusChange, onSyncStart, onSyncComplete, onConflict) |
+| `NetworkStatus` | `"online"` \| `"offline"` \| `"reconnecting"` |
