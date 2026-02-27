@@ -28,7 +28,7 @@ ReactiveBase is a Turborepo monorepo with 15 packages:
 
 ```
 packages/
-├── server/          ← Core server framework (30 modules)
+├── server/          ← Core server framework (48 modules)
 │   └── src/
 │       ├── schema/          Schema definition, validators, migrations
 │       ├── functions/       query(), mutation(), action() primitives
