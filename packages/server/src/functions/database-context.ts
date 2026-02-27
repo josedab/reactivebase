@@ -7,6 +7,7 @@ import type { PoolClient } from "pg"
 import { QueryBuilder, AggregateQueryBuilder, type QueryDependency } from "../query-builder/index.js"
 import type { Schema } from "../schema/index.js"
 import type { ComputedFieldFn } from "../schema/index.js"
+import { ReadOnlyError, RecordNotFoundError } from "../errors.js"
 
 export interface TableAccessor<TRow = Record<string, unknown>> {
   where(columnOrObject: string | Partial<TRow>, operatorOrValue?: unknown, value?: unknown): QueryBuilder<TRow>
@@ -141,7 +142,7 @@ function createTableAccessor(
 
   const guardWrite = () => {
     if (mode === "read") {
-      throw new Error(`Cannot perform write operations in a read-only query. Use a mutation instead.`)
+      throw new ReadOnlyError()
     }
   }
 
@@ -160,7 +161,7 @@ function createTableAccessor(
     async getOrThrow(id: string) {
       const row = await this.get(id)
       if (!row) {
-        throw new Error(`Record not found in "${tableName}" with id "${id}"`)
+        throw new RecordNotFoundError(tableName, id)
       }
       return row
     },
@@ -197,7 +198,7 @@ RETURNING *`
 
       const result = await client.query(sql, values)
       if (result.rows.length === 0) {
-        throw new Error(`Record not found in "${tableName}" with id "${id}"`)
+        throw new RecordNotFoundError(tableName, id)
       }
       return result.rows[0]
     },
@@ -208,7 +209,7 @@ RETURNING *`
 
       const result = await client.query(`DELETE FROM "${tableName}" WHERE "id" = $1`, [id])
       if (result.rowCount === 0) {
-        throw new Error(`Record not found in "${tableName}" with id "${id}"`)
+        throw new RecordNotFoundError(tableName, id)
       }
     },
 

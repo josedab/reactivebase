@@ -14,6 +14,13 @@ import { writeOutboxEvent, type OutboxEvent, type OutboxRecord } from "../transa
 import type { QueryDependency } from "../query-builder/index.js"
 import { enforceAccess, type AccessRule } from "../permissions/index.js"
 import { validateArgs, type ValidationSchema } from "../validation/index.js"
+import {
+  EmitOutsideMutationError,
+  QueryContextRequiredError,
+  FunctionNotFoundError,
+  NotQueryFunctionError,
+  CircularDependencyError,
+} from "../errors.js"
 
 export interface FunctionContext {
   db: TrackedDatabaseContext
@@ -285,24 +292,24 @@ function createFunctionContext(
     auth,
     async emit(event: OutboxEvent): Promise<OutboxRecord> {
       if (!txClient) {
-        throw new Error("ctx.emit() is only available inside mutation handlers")
+        throw new EmitOutsideMutationError()
       }
       return writeOutboxEvent(txClient, event)
     },
     async query<TResult = unknown>(queryRef: { _name: string } | string, args?: unknown): Promise<TResult> {
       if (!queryContext) {
-        throw new Error("ctx.query() requires a query resolution context")
+        throw new QueryContextRequiredError()
       }
 
       const name = typeof queryRef === "string" ? queryRef : queryRef._name
       const fn = queryContext.registry.get(name)
-      if (!fn) throw new Error(`Query function not found: "${name}"`)
-      if (fn.type !== "query") throw new Error(`"${name}" is not a query function`)
+      if (!fn) throw new FunctionNotFoundError(name)
+      if (fn.type !== "query") throw new NotQueryFunctionError(name)
 
       // Circular dependency detection
       if (queryContext.callStack.has(name)) {
         const cycle = [...queryContext.callStack, name].join(" → ")
-        throw new Error(`Circular query dependency detected: ${cycle}`)
+        throw new CircularDependencyError(cycle)
       }
 
       queryContext.callStack.add(name)
