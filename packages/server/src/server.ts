@@ -1,6 +1,8 @@
 /**
- * ReactiveBase Server - the main entry point for creating a reactive backend.
+ * ReactiveBase Server — the main entry point for creating a reactive backend.
  * Combines all subsystems: schema, functions, reactivity, transport, auth.
+ *
+ * @module
  */
 
 import { createServer, type Server as HttpServer, type IncomingMessage, type ServerResponse } from "node:http"
@@ -35,6 +37,14 @@ export interface ReactiveBaseServer {
   getCdcAdapter(): ReactiveCdcAdapter | null
 }
 
+/**
+ * Create a new ReactiveBase server instance.
+ *
+ * @param schema - The database schema created via `defineSchema()`
+ * @param config - Server configuration including database connection, port, auth, and CDC settings
+ * @returns A {@link ReactiveBaseServer} with methods to register functions, add middleware, and start/stop the server
+ * @throws {Error} If `JWT_SECRET` is not set when `NODE_ENV` is `"production"`
+ */
 export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseConfig): ReactiveBaseServer {
   // Enforce JWT_SECRET in production to prevent use of insecure defaults
   if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {

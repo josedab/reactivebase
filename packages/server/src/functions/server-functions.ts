@@ -108,6 +108,10 @@ type QueryHandler<TArgs, TResult> = (ctx: FunctionContext, args: TArgs) => Promi
 
 /**
  * Define a reactive query function.
+ *
+ * @param handler - Async function receiving a {@link FunctionContext} and typed arguments, returning query results
+ * @param options - Query options including access control, validation, and reactivity settings
+ * @returns A {@link RegisteredFunction} that can be registered with the server
  */
 export function query<TArgs, TResult>(
   handler: QueryHandler<TArgs, TResult>,
@@ -123,6 +127,9 @@ export function query<TArgs, TResult>(
 
 /**
  * Define a mutation function (with optional object-style definition).
+ *
+ * @param handlerOrConfig - Either an async handler function, or a config object with `handler` and mutation options
+ * @returns A {@link RegisteredFunction} that can be registered with the server
  */
 export function mutation<TArgs, TResult>(
   handlerOrConfig: QueryHandler<TArgs, TResult> | (MutationOptions & { handler: QueryHandler<TArgs, TResult> }),
@@ -147,6 +154,10 @@ export function mutation<TArgs, TResult>(
 
 /**
  * Define an action function (background job).
+ *
+ * @param handler - Async function receiving a {@link FunctionContext} and typed arguments
+ * @param options - Action options including access control and validation
+ * @returns A {@link RegisteredFunction} that can be registered with the server
  */
 export function action<TArgs, TResult>(
   handler: QueryHandler<TArgs, TResult>,
@@ -164,6 +175,14 @@ export function action<TArgs, TResult>(
 
 /**
  * Execute a query function with dependency tracking.
+ *
+ * @param pool - PostgreSQL connection pool
+ * @param schema - The database schema
+ * @param fn - The registered query function to execute
+ * @param args - Arguments to pass to the query handler
+ * @param auth - Authentication context for access control
+ * @param functionRegistry - Optional registry for query composition via `ctx.query()`
+ * @returns Query result and table dependencies for reactivity tracking
  */
 export async function executeQueryFunction(
   pool: Pool,
@@ -205,6 +224,13 @@ export async function executeQueryFunction(
 
 /**
  * Execute a mutation function within a serializable transaction.
+ *
+ * @param pool - PostgreSQL connection pool
+ * @param schema - The database schema
+ * @param fn - The registered mutation function to execute
+ * @param args - Arguments to pass to the mutation handler
+ * @param auth - Authentication context for access control
+ * @returns Mutation result, modified tables, and any scheduled actions
  */
 export async function executeMutationFunction(
   pool: Pool,
@@ -245,6 +271,13 @@ export async function executeMutationFunction(
 
 /**
  * Execute an action function (no transaction wrapping).
+ *
+ * @param pool - PostgreSQL connection pool
+ * @param schema - The database schema
+ * @param fn - The registered action function to execute
+ * @param args - Arguments to pass to the action handler
+ * @param auth - Authentication context for access control
+ * @returns The action handler's return value
  */
 export async function executeActionFunction(
   pool: Pool,
