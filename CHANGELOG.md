@@ -9,11 +9,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Structured error hierarchy** — domain-specific error types (`SchemaValidationError`, `InvalidMessageError`, etc.) replacing string errors
+- **Graceful shutdown** — proper pool cleanup and SIGTERM handling
+- **Structured logging module** — leveled logger with JSON output
+- **Dashboard authentication** — token-based auth for the metrics dashboard
+- **Security response headers** — HSTS and other security headers on all responses
+- **Configurable CORS origin** — `cors.origin` server config option
+- **Embeddable in-process transport** — run client and server in the same process
+- **Federation extensions & replica routing** — multi-database federation support
+- **Live migration preview** — shadow execution for safe migration previews
+- **Automated performance advisor** — metrics-based query optimization suggestions
+- **`ctx.emit()` and `ctx.query()` composition** — function composition primitives
+- **Transactional outbox pattern** — reliable event delivery from mutations
+- **Declarative data access policies** — fine-grained authorization rules
+- **Middleware support for Vue and Svelte adapters** — framework adapter middleware pipeline
+- **`useAggregateQuery` hook** — React hook for aggregate queries with dependent query support
+- **Subscription lifecycle middleware** — client-side subscription middleware pipeline
+- **Virtual field evaluation** — computed/virtual fields in database context
+- **Aggregate query builder** — fluent API for GROUP BY / aggregate queries
+- **Computed and virtual field validators** — `v.computed()` and `v.virtual()` schema types
+- **Reactive full-text search** — `tsvector`-based full-text search with live updates
+- Client SDK packages for React Native, Vue, Svelte, Next.js, and Edge runtimes
+- VS Code extension with watch mode, diagnostics, and schema validation
+- 5 example applications (basic-todo, collaborative-board, collaborative-editor, project-manager, saas-dashboard)
+
 ### Changed
+
+- Replace `Math.random` with `crypto.randomUUID` / `crypto.randomBytes` across server and client
+- Use structured error types instead of string errors in functions, schema, and transport modules
+- Use `console.info` instead of `console.log` in migrate-from-prisma
 
 ### Fixed
 
-### Removed
+- **Security:** enforce `JWT_SECRET` in production — remove insecure defaults
+- **Security:** use parameterized queries in logical replication, migrations, stored procedures, and dashboard
+- **Security:** validate and escape SQL identifiers in authz, encryption, stored procedures, CDC, and triggers
+- **Security:** use timing-safe comparison for dashboard token authentication
+- **Security:** replace MD5 with SHA-256 for consistent hash ring
+- **Security:** use HKDF for cryptographic key derivation in vault
+- **Security:** close WebSocket connection on authentication failure
+- **Security:** guard against ReDoS in playground validation patterns
+- **Security:** use `crypto.randomInt` for partition selection in event streaming
+- Detect tenant ID collisions after sanitization
+- Add payload size limit and input validation for webhooks
+- Catch network errors in outbound webhook delivery
+- Validate language parameter against allowlist in search
+- Escape single quotes in RLS policy role names
+- Validate scheduler `defaultMaxRetries` option
+- Handle invalid JSON in IVM delta patch decoding and playground share state
+- Quote index names in temporal SQL generation
+- Sanitize default values in generated SQL
 
 ## [0.1.0] — 2026-02-22
 
