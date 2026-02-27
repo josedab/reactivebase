@@ -49,6 +49,10 @@ export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseCon
     max: config.database.poolSize ?? 20,
   })
 
+  pool.on("error", (err) => {
+    console.error("Unexpected database pool error:", err.message)
+  })
+
   const middlewareManager = new MiddlewareManager()
   const metrics = new MetricsCollector()
 
@@ -90,6 +94,7 @@ export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseCon
   }
 
   let httpServer: HttpServer | null = null
+  let isShuttingDown = false
 
   const MAX_BODY_SIZE = 1024 * 1024 // 1 MB
 
@@ -301,7 +306,30 @@ export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseCon
 
       transport.attach(httpServer)
 
-      return new Promise((resolve) => {
+      const gracefulShutdown = async (signal: string) => {
+        if (isShuttingDown) return
+        isShuttingDown = true
+        console.info(`Received ${signal}, starting graceful shutdown...`)
+
+        // Stop accepting new connections
+        if (httpServer) {
+          await new Promise<void>((res) => httpServer!.close(() => res()))
+        }
+        if (cdcAdapter) {
+          await cdcAdapter.stopBuffering()
+        }
+        await transport.close()
+        await pool.end()
+
+        console.info("Graceful shutdown complete")
+        process.exit(0)
+      }
+
+      process.on("SIGTERM", () => gracefulShutdown("SIGTERM"))
+      process.on("SIGINT", () => gracefulShutdown("SIGINT"))
+
+      return new Promise((resolve, reject) => {
+        httpServer!.on("error", (err: Error) => reject(err))
         httpServer!.listen(port, config.server?.hostname ?? "0.0.0.0", () => {
           console.info(`ReactiveBase server running on port ${port}`)
           resolve({ port, httpServer: httpServer! })
