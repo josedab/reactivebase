@@ -5,6 +5,8 @@
  * faker integration, and environment-aware profiles (dev, staging, test).
  */
 
+import { randomBytes } from "node:crypto"
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type SeedEnvironment = "dev" | "staging" | "test" | "production" | string
@@ -243,7 +245,9 @@ function createFakeGenerators(): FakeDataGenerators {
 }
 
 function hex(len: number): string {
-  return Array.from({ length: len }, () => Math.floor(Math.random() * 16).toString(16)).join("")
+  return randomBytes(Math.ceil(len / 2))
+    .toString("hex")
+    .slice(0, len)
 }
 
 // ─── Seed Registry ──────────────────────────────────────────────────────────
