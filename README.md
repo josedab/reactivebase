@@ -255,6 +255,35 @@ reactivebase migrate --apply      # Apply pending migrations
 reactivebase migrate --status     # Show migration status
 ```
 
+### Complete CLI Reference
+
+| Command                    | Subcommand / Flag | Description                                                      |
+| -------------------------- | ----------------- | ---------------------------------------------------------------- |
+| `reactivebase dev`         |                   | Start development server with hot reload                         |
+| `reactivebase generate`    |                   | Generate TypeScript types from schema                            |
+| `reactivebase migrate`     | `--generate`      | Generate migration SQL from schema diff                          |
+|                            | `--apply`         | Apply pending migrations                                         |
+|                            | `--status`        | Show migration status                                            |
+| `reactivebase dacl`        | `list`            | List all declarative access control policies                     |
+|                            | `test`            | Run DACL policy tests                                            |
+|                            | `generate-rls`    | Generate Postgres RLS from DACL policies                         |
+|                            | `coverage`        | Report DACL policy coverage                                      |
+| `reactivebase ivm`         | `list`            | List incremental view maintenance views                          |
+|                            | `stats`           | Show IVM statistics                                              |
+|                            | `analyze`         | Analyze IVM performance                                          |
+| `reactivebase auth:debug`  | `--user <id>`     | Debug auth for a specific user                                   |
+|                            | `--query <name>`  | Debug auth for a specific query                                  |
+|                            | `--table <name>`  | Debug auth for a specific table                                  |
+| `reactivebase seed`        | _(default)_       | Run seed file (supports `--profile`, `--env`)                    |
+| `reactivebase seed:reset`  |                   | Reset all seeded data                                            |
+| `reactivebase seed:status` |                   | Show seed status                                                 |
+| `reactivebase deploy`      | _(default)_       | Deploy to Fly.io or Railway (`--provider`, `--region`, `--name`) |
+|                            | `--cloud`         | Deploy to ReactiveBase Cloud (`--name`, `--region`, `--plan`)    |
+|                            | `--preview`       | Deploy preview environment (`--pr`, `--branch`)                  |
+|                            | `--destroy <app>` | Destroy a preview deployment                                     |
+|                            | `--logs <app>`    | Tail logs for a deployment                                       |
+| `reactivebase functions`   | `list`            | List all registered functions                                    |
+
 Example `reactivebase dev` output:
 
 ```
