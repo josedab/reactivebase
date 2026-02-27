@@ -3,6 +3,8 @@
  * Defines the wire protocol between client and server.
  */
 
+import { InvalidMessageError } from "../errors.js"
+
 // --- Client → Server Messages ---
 
 export interface SubscribeMessage {
@@ -129,7 +131,7 @@ export function parseClientMessage(raw: string): ClientMessage {
   const msg = JSON.parse(raw)
 
   if (!msg || typeof msg !== "object" || !msg.type) {
-    throw new Error("Invalid message: missing type field")
+    throw new InvalidMessageError("missing type field")
   }
 
   return msg as ClientMessage
