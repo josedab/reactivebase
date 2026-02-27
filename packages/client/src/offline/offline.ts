@@ -98,7 +98,7 @@ export class MutationQueue {
   ) {}
 
   async enqueue(mutationName: string, args: unknown): Promise<string> {
-    const id = `mut_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
+    const id = `mut_${Date.now()}_${crypto.randomUUID().substring(0, 6)}`
     const entry: PendingMutation = {
       id,
       mutationName,

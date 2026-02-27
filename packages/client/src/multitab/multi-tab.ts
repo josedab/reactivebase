@@ -24,7 +24,7 @@ export class MultiTabCoordinator {
     private channelName: string = "reactivebase_tabs",
     channelFactory?: () => BroadcastChannelLike,
   ) {
-    this.tabId = `tab_${Math.random().toString(36).substring(2, 8)}_${Date.now()}`
+    this.tabId = `tab_${crypto.randomUUID().substring(0, 8)}_${Date.now()}`
 
     if (channelFactory) {
       this.channel = channelFactory()

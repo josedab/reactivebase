@@ -83,7 +83,7 @@ export class MutationQueue {
 
   async enqueue(mutationName: string, args: unknown): Promise<QueuedMutation> {
     const mutation: QueuedMutation = {
-      id: `mut_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+      id: `mut_${Date.now()}_${crypto.randomUUID().substring(0, 8)}`,
       mutationName,
       args,
       createdAt: Date.now(),
