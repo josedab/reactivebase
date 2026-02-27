@@ -4,6 +4,7 @@
  */
 
 import type { TableDefinition, InferRow } from "./table.js"
+import { SchemaValidationError } from "../errors.js"
 
 export type SchemaDefinition = Record<string, TableDefinition>
 
@@ -50,7 +51,7 @@ function validateSchema(definition: SchemaDefinition): void {
 
   for (const [name, table] of Object.entries(definition)) {
     if (tableNames.has(name)) {
-      throw new Error(`Duplicate table name: "${name}"`)
+      throw new SchemaValidationError(`Duplicate table name: "${name}"`)
     }
     tableNames.add(name)
 
@@ -58,7 +59,9 @@ function validateSchema(definition: SchemaDefinition): void {
     for (const index of table.indexes) {
       for (const col of index.columns) {
         if (!(col in table.columns)) {
-          throw new Error(`Index "${index.name}" on table "${name}" references non-existent column "${col}"`)
+          throw new SchemaValidationError(
+            `Index "${index.name}" on table "${name}" references non-existent column "${col}"`,
+          )
         }
       }
     }
@@ -66,7 +69,7 @@ function validateSchema(definition: SchemaDefinition): void {
     // Validate foreign key references
     for (const [colName, validator] of Object.entries(table.columns)) {
       if (validator.referencedTable && !definition[validator.referencedTable]) {
-        throw new Error(
+        throw new SchemaValidationError(
           `Column "${colName}" in table "${name}" references non-existent table "${validator.referencedTable}"`,
         )
       }
