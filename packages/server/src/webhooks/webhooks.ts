@@ -34,6 +34,13 @@ export interface WebhookResult {
 export class WebhookRegistry {
   private webhooks = new Map<string, WebhookDefinition>()
 
+  /** Maximum webhook payload size in bytes (default: 1MB) */
+  private maxPayloadSize: number
+
+  constructor(options?: { maxPayloadSize?: number }) {
+    this.maxPayloadSize = options?.maxPayloadSize ?? 1_048_576
+  }
+
   /**
    * Register a webhook handler.
    */
@@ -77,7 +84,24 @@ export class WebhookRegistry {
     }
 
     try {
-      const payload = JSON.parse(body.toString("utf-8"))
+      if (body.length > this.maxPayloadSize) {
+        return {
+          status: 413,
+          error: `Payload too large: ${body.length} bytes exceeds limit of ${this.maxPayloadSize} bytes`,
+        }
+      }
+
+      let payload: unknown
+      try {
+        payload = JSON.parse(body.toString("utf-8"))
+      } catch {
+        return { status: 400, error: "Invalid JSON payload" }
+      }
+
+      if (payload === null || (typeof payload !== "object" && !Array.isArray(payload))) {
+        return { status: 400, error: "Webhook payload must be a JSON object or array" }
+      }
+
       const headers: Record<string, string> = {}
       for (const [key, value] of Object.entries(req.headers)) {
         if (typeof value === "string") headers[key] = value
@@ -165,7 +189,7 @@ export class OutboundWebhookManager {
       if (!response.ok) {
         console.error(`Outbound webhook to ${hook.url} failed: ${response.status}`)
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(`Outbound webhook to ${hook.url} network error: ${err instanceof Error ? err.message : err}`)
     }
   }
