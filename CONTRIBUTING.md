@@ -228,6 +228,52 @@ npm run build
 
 ## Questions?
 
+## Release Process
+
+### How Releases Work
+
+ReactiveBase uses **tag-based releases**. When a Git tag matching `v*` (e.g., `v0.2.0`) is pushed, the CI pipeline automatically publishes all packages.
+
+### CI vs Manual Publishing
+
+| Method             | File                            | When to use                                         |
+| ------------------ | ------------------------------- | --------------------------------------------------- |
+| **CI (automated)** | `.github/workflows/release.yml` | Standard releases — triggered by pushing a `v*` tag |
+| **Manual**         | `scripts/publish.sh`            | Emergency hotfixes or when CI is unavailable        |
+
+Both publish the same 14 packages to npm in dependency order.
+
+### NPM_TOKEN GitHub Secret
+
+The `NPM_TOKEN` secret is an npm access token with publish permissions for the `@reactivebase` scope. It is configured as a GitHub repository secret and used by the `release.yml` workflow via `NODE_AUTH_TOKEN`.
+
+To rotate the token:
+
+1. Generate a new token at [npmjs.com/settings/tokens](https://www.npmjs.com/settings/tokens)
+2. Update the `NPM_TOKEN` secret in GitHub repository settings → Secrets and variables → Actions
+
+### Version Bumping
+
+1. Update the `version` field in all `packages/*/package.json` files to the new version
+2. Update cross-package dependency versions if needed
+3. Commit the version bump
+4. Create and push the tag: `git tag v0.2.0 && git push origin v0.2.0`
+
+### Publish Order
+
+Packages are published in dependency order to ensure downstream packages can resolve their dependencies:
+
+1. `@reactivebase/server` (core — no internal deps)
+2. `@reactivebase/client` (depends on server types)
+3. `@reactivebase/react`, `vue`, `svelte` (depend on client)
+4. `@reactivebase/nextjs`, `edge` (depend on client + server)
+5. `@reactivebase/testing`, `cli` (depend on server)
+6. `@reactivebase/reactivebase` (umbrella re-export)
+7. `create-reactivebase`, `migrate-from-prisma` (standalone tools)
+8. `@reactivebase/graphql`, `react-native` (framework extensions)
+
+> **Note:** The VS Code extension (`packages/vscode-extension`) is published separately to the VS Code Marketplace, not npm.
+
 - Open a GitHub Discussion for questions
 - Join our Discord server for real-time chat
 - Check the [documentation site](https://reactivebase.dev) for guides
