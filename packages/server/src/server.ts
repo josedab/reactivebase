@@ -36,6 +36,14 @@ export interface ReactiveBaseServer {
 }
 
 export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseConfig): ReactiveBaseServer {
+  // Enforce JWT_SECRET in production to prevent use of insecure defaults
+  if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
+    throw new Error(
+      "JWT_SECRET environment variable must be set in production. " +
+        "Generate a secure random string: openssl rand -base64 32",
+    )
+  }
+
   const pool = new Pool({
     connectionString: config.database.connectionString,
     max: config.database.poolSize ?? 20,
