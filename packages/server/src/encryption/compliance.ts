@@ -118,12 +118,17 @@ CREATE TABLE IF NOT EXISTS _reactivebase_erasure_requests (
 }
 
 export function buildRetentionPruneSQL(policy: RetentionPolicy): string {
-  const table = policy.table.replace(/[^a-zA-Z0-9_]/g, "")
-  const tsCol = policy.timestampColumn.replace(/[^a-zA-Z0-9_]/g, "")
-  if (policy.action === "delete") {
-    return `DELETE FROM "${table}" WHERE "${tsCol}" < NOW() - INTERVAL '${policy.retentionDays} days';`
+  const IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+  if (!IDENTIFIER_RE.test(policy.table)) {
+    throw new Error(`Invalid table name: "${policy.table}" — must be a valid SQL identifier`)
   }
-  return `-- Anonymize/archive for ${table} requires custom implementation`
+  if (!IDENTIFIER_RE.test(policy.timestampColumn)) {
+    throw new Error(`Invalid timestamp column: "${policy.timestampColumn}" — must be a valid SQL identifier`)
+  }
+  if (policy.action === "delete") {
+    return `DELETE FROM "${policy.table}" WHERE "${policy.timestampColumn}" < NOW() - INTERVAL '${policy.retentionDays} days';`
+  }
+  return `-- Anonymize/archive for ${policy.table} requires custom implementation`
 }
 
 // ─── PII Detection Patterns ─────────────────────────────────────────────────

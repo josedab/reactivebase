@@ -125,7 +125,7 @@ export function vaultKeyProvider(options: VaultKeyProviderOptions): VaultKeyProv
           data?: { latest_version?: number }
         }
         currentVersion = result?.data?.latest_version ?? currentVersion
-      } catch (err) {
+      } catch (err: unknown) {
         console.warn(
           `[ReactiveBase] Vault unreachable in getCurrentKeyId, falling back to local version: ${err instanceof Error ? err.message : err}`,
         )
@@ -151,7 +151,7 @@ export function vaultKeyProvider(options: VaultKeyProviderOptions): VaultKeyProv
           data?: { latest_version?: number }
         }
         currentVersion = result?.data?.latest_version ?? currentVersion + 1
-      } catch (err) {
+      } catch (err: unknown) {
         console.warn(
           `[ReactiveBase] Vault unreachable in rotateKey, incrementing local version: ${err instanceof Error ? err.message : err}`,
         )
