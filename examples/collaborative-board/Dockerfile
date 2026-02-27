@@ -2,9 +2,10 @@ FROM node:20-slim AS base
 WORKDIR /app
 
 COPY package.json ./
-RUN npm install --omit=dev 2>/dev/null || npm install
+RUN npm install
 
 COPY . .
+RUN npm run build
 
 EXPOSE 4000
-CMD ["node", "--loader", "ts-node/esm", "server.ts"]
+CMD ["node", "dist/server.js"]
