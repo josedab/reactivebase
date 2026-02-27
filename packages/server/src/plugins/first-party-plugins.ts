@@ -298,7 +298,7 @@ import type { PluginV2Definition } from "@reactivebase/server"
 const ${name}Plugin: PluginV2Definition = {
   name: "${name}",
   version: "0.1.0",
-  description: "TODO: Describe your plugin",
+  description: "A brief description of what your plugin does",
   author: "Your Name",
   keywords: ["${category}", "${name}"],
   category: "${category}",
