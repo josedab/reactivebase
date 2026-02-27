@@ -77,13 +77,13 @@ docker run -d \
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_URL` | Yes | - | Postgres connection string |
-| `REDIS_URL` | No | - | Redis URL for multi-server pub/sub |
-| `PORT` | No | 4000 | HTTP/WebSocket server port |
-| `JWT_SECRET` | No | - | Secret for JWT HS256 verification |
-| `NODE_ENV` | No | development | Set to `production` for production |
+| Variable       | Required | Default     | Description                        |
+| -------------- | -------- | ----------- | ---------------------------------- |
+| `DATABASE_URL` | Yes      | -           | Postgres connection string         |
+| `REDIS_URL`    | No       | -           | Redis URL for multi-server pub/sub |
+| `PORT`         | No       | 4000        | HTTP/WebSocket server port         |
+| `JWT_SECRET`   | No       | -           | Secret for JWT HS256 verification  |
+| `NODE_ENV`     | No       | development | Set to `production` for production |
 
 ## Production Checklist
 
@@ -95,3 +95,84 @@ docker run -d \
 - [ ] Configure monitoring (Prometheus scrape from `/metrics`)
 - [ ] Set resource limits (CPU, memory)
 - [ ] Enable health checks
+- [ ] Configure graceful shutdown (see below)
+
+## Graceful Shutdown
+
+ReactiveBase handles `SIGTERM` and `SIGINT` signals automatically:
+
+1. Stops accepting new connections
+2. Closes the HTTP server (drains in-flight requests)
+3. Stops CDC buffering (if using logical replication)
+4. Closes WebSocket transport and active subscriptions
+5. Releases the database connection pool
+
+### Docker
+
+The default Docker image uses `node` as PID 1, which correctly receives
+`SIGTERM` from `docker stop`. The default stop timeout is 10 seconds.
+
+```bash
+# Give the container time to drain connections (30s)
+docker stop --time 30 my-container
+```
+
+To increase the default stop timeout in `docker-compose.yml`:
+
+```yaml
+services:
+  reactivebase:
+    # ...
+    stop_grace_period: 30s
+```
+
+### Kubernetes
+
+The Helm chart configures graceful shutdown out of the box. For manual
+deployments, add these settings to your Pod spec:
+
+```yaml
+spec:
+  terminationGracePeriodSeconds: 30
+  containers:
+    - name: reactivebase
+      lifecycle:
+        preStop:
+          exec:
+            # Brief pause to allow load balancer to deregister the pod
+            command: ["sh", "-c", "sleep 5"]
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 4000
+        initialDelaySeconds: 10
+        periodSeconds: 15
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 4000
+        initialDelaySeconds: 5
+        periodSeconds: 5
+```
+
+**How it works during a rolling update:**
+
+1. Kubernetes sends `SIGTERM` to the pod
+2. The `preStop` hook sleeps 5 seconds, allowing the Service to remove the pod
+   from its endpoints (prevents new traffic during shutdown)
+3. ReactiveBase begins graceful shutdown — drains connections and releases resources
+4. After `terminationGracePeriodSeconds` (30s), Kubernetes sends `SIGKILL` if
+   the process is still running
+
+### Health Check Endpoint
+
+The root path (`/`) returns connection and subscription counts, suitable for
+both liveness and readiness probes:
+
+```json
+{
+  "status": "ok",
+  "connections": 42,
+  "subscriptions": 156
+}
+```

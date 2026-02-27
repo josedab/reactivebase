@@ -29,6 +29,9 @@ COPY --from=build /app/package.json ./
 # ReactiveBase server port
 EXPOSE 4000
 
+# Graceful shutdown via SIGTERM
+STOPSIGNAL SIGTERM
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
   CMD curl -f http://localhost:4000/ || exit 1
