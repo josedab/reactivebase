@@ -20,6 +20,12 @@
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+/** A parameterized SQL query safe for use with pg client.query(). */
+export interface ParameterizedQuery {
+  text: string
+  values: unknown[]
+}
+
 export interface LogicalReplicatorOptions {
   /** Postgres connection string with replication=database parameter */
   connectionString?: string
@@ -601,10 +607,13 @@ export class LogicalReplicator {
   }
 
   /**
-   * Generate SQL to create the replication slot.
+   * Generate parameterized SQL to create the replication slot.
    */
-  generateSlotSQL(): string {
-    return `SELECT pg_create_logical_replication_slot('${this.options.slotName}', 'pgoutput');`
+  generateSlotSQL(): ParameterizedQuery {
+    return {
+      text: `SELECT pg_create_logical_replication_slot($1, 'pgoutput');`,
+      values: [this.options.slotName],
+    }
   }
 
   /**
@@ -615,48 +624,63 @@ export class LogicalReplicator {
   }
 
   /**
-   * Generate SQL to check replication slot status.
+   * Generate parameterized SQL to check replication slot status.
    */
-  generateSlotStatusSQL(): string {
-    return `SELECT slot_name, plugin, slot_type, active, restart_lsn, confirmed_flush_lsn
+  generateSlotStatusSQL(): ParameterizedQuery {
+    return {
+      text: `SELECT slot_name, plugin, slot_type, active, restart_lsn, confirmed_flush_lsn
             FROM pg_replication_slots
-            WHERE slot_name = '${this.options.slotName}';`
+            WHERE slot_name = $1;`,
+      values: [this.options.slotName],
+    }
   }
 
   /**
-   * Generate SQL to read changes from the replication slot (polling mode).
+   * Generate parameterized SQL to read changes from the replication slot (polling mode).
    */
-  generatePeekChangesSQL(maxChanges: number = 100): string {
-    return `SELECT lsn, xid, data FROM pg_logical_slot_peek_binary_changes(
-      '${this.options.slotName}', NULL, ${maxChanges},
+  generatePeekChangesSQL(maxChanges: number = 100): ParameterizedQuery {
+    return {
+      text: `SELECT lsn, xid, data FROM pg_logical_slot_peek_binary_changes(
+      $1, NULL, $2,
       'proto_version', '1',
-      'publication_names', '${this.options.publicationName}'
-    );`
+      'publication_names', $3
+    );`,
+      values: [this.options.slotName, maxChanges, this.options.publicationName],
+    }
   }
 
   /**
-   * Generate SQL to consume (advance past) changes from the replication slot.
+   * Generate parameterized SQL to consume (advance past) changes from the replication slot.
    */
-  generateConsumeChangesSQL(maxChanges: number = 100): string {
-    return `SELECT lsn, xid, data FROM pg_logical_slot_get_binary_changes(
-      '${this.options.slotName}', NULL, ${maxChanges},
+  generateConsumeChangesSQL(maxChanges: number = 100): ParameterizedQuery {
+    return {
+      text: `SELECT lsn, xid, data FROM pg_logical_slot_get_binary_changes(
+      $1, NULL, $2,
       'proto_version', '1',
-      'publication_names', '${this.options.publicationName}'
-    );`
+      'publication_names', $3
+    );`,
+      values: [this.options.slotName, maxChanges, this.options.publicationName],
+    }
   }
 
   /**
-   * Generate SQL to confirm that changes up to an LSN have been processed.
+   * Generate parameterized SQL to confirm that changes up to an LSN have been processed.
    */
-  generateConfirmLsnSQL(lsn: string): string {
-    return `SELECT pg_replication_slot_advance('${this.options.slotName}', '${lsn}');`
+  generateConfirmLsnSQL(lsn: string): ParameterizedQuery {
+    return {
+      text: `SELECT pg_replication_slot_advance($1, $2);`,
+      values: [this.options.slotName, lsn],
+    }
   }
 
   /**
-   * Generate SQL to drop the replication slot.
+   * Generate parameterized SQL to drop the replication slot.
    */
-  generateDropSlotSQL(): string {
-    return `SELECT pg_drop_replication_slot('${this.options.slotName}');`
+  generateDropSlotSQL(): ParameterizedQuery {
+    return {
+      text: `SELECT pg_drop_replication_slot($1);`,
+      values: [this.options.slotName],
+    }
   }
 
   /**
@@ -669,8 +693,8 @@ export class LogicalReplicator {
   /**
    * Generate full setup SQL for logical replication.
    */
-  generateSetupSQL(tables?: string[]): string[] {
-    const sqls: string[] = [this.generatePublicationSQL(), this.generateSlotSQL()]
+  generateSetupSQL(tables?: string[]): (string | ParameterizedQuery)[] {
+    const sqls: (string | ParameterizedQuery)[] = [this.generatePublicationSQL(), this.generateSlotSQL()]
     const targetTables = tables ?? this.options.tables
     if (targetTables.length > 0 && this.options.includeOldTuples) {
       sqls.push(...this.generateReplicaIdentitySQL(targetTables))
@@ -681,7 +705,7 @@ export class LogicalReplicator {
   /**
    * Generate full teardown SQL.
    */
-  generateTeardownSQL(): string[] {
+  generateTeardownSQL(): (string | ParameterizedQuery)[] {
     return [this.generateDropSlotSQL(), this.generateDropPublicationSQL()]
   }
 

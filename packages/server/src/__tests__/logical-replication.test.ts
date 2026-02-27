@@ -239,8 +239,10 @@ describe("LogicalReplicator", () => {
 
   it("generates replication slot SQL", () => {
     const replicator = new LogicalReplicator({ slotName: "my_slot" })
-    expect(replicator.generateSlotSQL()).toContain("my_slot")
-    expect(replicator.generateSlotSQL()).toContain("pgoutput")
+    const query = replicator.generateSlotSQL()
+    expect(query.text).toContain("pg_create_logical_replication_slot")
+    expect(query.text).toContain("pgoutput")
+    expect(query.values).toContain("my_slot")
   })
 
   it("generates replica identity SQL", () => {
@@ -264,7 +266,8 @@ describe("LogicalReplicator", () => {
     const replicator = new LogicalReplicator()
     const sqls = replicator.generateTeardownSQL()
     expect(sqls).toHaveLength(2)
-    expect(sqls[0]).toContain("pg_drop_replication_slot")
+    const dropSlot = sqls[0] as { text: string; values: unknown[] }
+    expect(dropSlot.text).toContain("pg_drop_replication_slot")
     expect(sqls[1]).toContain("DROP PUBLICATION")
   })
 
