@@ -60,6 +60,17 @@ ReactiveBase has 48 server modules — but you don't need to learn them all at o
 
 ---
 
+## 🔌 Path 5: Extend with Plugins & Workflows
+
+**Goal**: Add reusable plugins and orchestrate multi-step processes.
+
+1. [Plugins](./plugins.md) — Define, register, and test plugins
+2. [Workflows](./workflows.md) — Multi-step orchestration with retries and compensation
+
+**After this path**: You can extend ReactiveBase with custom integrations and run complex background workflows.
+
+---
+
 ## 📚 Reference
 
 - [API Reference](../api-reference.md) — Complete API documentation
