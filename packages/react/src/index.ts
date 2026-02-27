@@ -1,6 +1,10 @@
+/** @module @reactivebase/react - React hooks for reactive data */
+
+/** React context provider and client access hook */
 export { ReactiveBaseProvider, useReactiveBaseClient } from "./provider/index.js"
 export type { ReactiveBaseProviderProps } from "./provider/index.js"
 
+/** Core hooks: useQuery (live data), useMutation (transactional writes), useAction (background jobs) */
 export { useQuery, useMutation, useAction, useAggregateQuery } from "./hooks/index.js"
 export type {
   FunctionReference,
@@ -11,6 +15,7 @@ export type {
   UseQueryOptions,
 } from "./hooks/index.js"
 
+/** Collaboration hooks: optimistic updates, cursors, typing indicators, selections */
 export { useOptimistic, useCursors, useTypingUsers, useSelections, useDevTools } from "./hooks/index.js"
 export type {
   UseOptimisticOptions,
@@ -22,7 +27,7 @@ export type {
   UseDevToolsReturn,
 } from "./hooks/index.js"
 
-// CRDT Collaborative Editing Hooks
+/** CRDT collaborative editing hooks for real-time shared data structures */
 export { useCollabText, useCollabList, useCollabMap, useCollabCounter } from "./hooks/index.js"
 export type {
   UseCollabTextReturn,

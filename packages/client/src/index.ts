@@ -1,13 +1,18 @@
+/** @module @reactivebase/client - Framework-agnostic client SDK */
+
+/** WebSocket connection manager with automatic reconnection */
 export { ConnectionManager } from "./connection/index.js"
 export type { ConnectionOptions, ConnectionStatus } from "./connection/index.js"
 
+/** Query result cache with TTL and invalidation support */
 export { QueryCache } from "./cache/index.js"
 export type { CacheEntry } from "./cache/index.js"
 
+/** Core client: manages subscriptions, multiplexes queries over WebSocket */
 export { ReactiveBaseClient } from "./subscription/index.js"
 export type { ReactiveBaseClientOptions, SubscriptionHandle, QueryListener } from "./subscription/index.js"
 
-// Client Subscription Middleware
+/** Client-side subscription middleware: logging, retry, analytics */
 export {
   ClientMiddlewarePipeline,
   loggingMiddleware,
@@ -24,13 +29,17 @@ export type {
   AnalyticsMetric,
 } from "./subscription/index.js"
 
+/** Binary protocol encoding/decoding for WebSocket messages */
 export { encodeMessage, decodeMessage, isBinaryMessage, compressionRatio } from "./protocol/index.js"
 
+/** Multi-tab coordination: leader election and cross-tab cache sharing */
 export { MultiTabCoordinator } from "./multitab/index.js"
 export type { TabMessage, TabRole, BroadcastChannelLike } from "./multitab/index.js"
 
+/** Offline support: persistent cache, mutation queue, sync engine */
 export { PersistentCache, MutationQueue, SyncManager, MemoryOfflineStorage } from "./offline/index.js"
 export type { OfflineStorage, OfflineOptions, PendingMutation, CachedQuery, SyncResult } from "./offline/index.js"
+/** Offline sync with vector clocks for conflict detection */
 export {
   OfflineSyncEngine,
   createVectorClock,
@@ -52,15 +61,15 @@ export type {
   DeltaChange,
 } from "./offline/index.js"
 
-// SQLite Cache
+/** SQLite-backed cache adapter for offline persistence */
 export { SQLiteCacheAdapter, generateCacheTableSQL } from "./offline/index.js"
 export type { SQLiteAdapter, SQLiteCacheOptions, CacheMetadata } from "./offline/index.js"
 
-// Conflict Resolver
+/** Conflict resolution strategies for offline mutations */
 export { ConflictResolver } from "./offline/index.js"
 export type { ConflictStrategyType, Conflict, ConflictResolutionConfig, ConflictLogEntry } from "./offline/index.js"
 
-// Background Sync
+/** Background sync with connectivity awareness and priority queuing */
 export { BackgroundSyncManager } from "./offline/index.js"
 export type {
   BackgroundSyncStatus,
@@ -70,7 +79,7 @@ export type {
   PriorityMutation,
 } from "./offline/index.js"
 
-// Optimistic Updates
+/** Optimistic updates: instant UI feedback with server reconciliation */
 export { OptimisticUpdateManager } from "./optimistic/index.js"
 export type {
   OptimisticUpdate,
@@ -81,7 +90,7 @@ export type {
   OptimisticCacheAdapter,
 } from "./optimistic/index.js"
 
-// DevTools Instrumentation
+/** DevTools instrumentation: subscription tracking, cache stats, performance */
 export { DevToolsInstrumentation } from "./devtools/index.js"
 export type {
   DevToolsEvent,
