@@ -326,4 +326,9 @@ describe("Authorization SQL builders", () => {
     expect(clause).toContain("_reactivebase_authz_tuples")
     expect(clause).toContain("relation = 'viewer'")
   })
+
+  it("rejects invalid userIdParam in WHERE clause", () => {
+    expect(() => permissionToWhereClause("document", "viewer", "current_user")).toThrow("Invalid userIdParam")
+    expect(() => permissionToWhereClause("document", "viewer", "'; DROP TABLE --")).toThrow("Invalid userIdParam")
+  })
 })

@@ -201,11 +201,18 @@ export function permissionToWhereClause(resourceType: string, relation: string, 
   if (!safeIdentifier.test(relation)) {
     throw new Error(`Invalid relation identifier: ${relation}`)
   }
+  // Defense-in-depth: validate userIdParam is a positional parameter ($N)
+  if (!/^\$\d+$/.test(userIdParam)) {
+    throw new Error(`Invalid userIdParam: ${userIdParam}. Must be a positional parameter like $1`)
+  }
+  // Double-escape single quotes as secondary safeguard
+  const safeResourceType = resourceType.replace(/'/g, "''")
+  const safeRelation = relation.replace(/'/g, "''")
   return `EXISTS (
   SELECT 1 FROM _reactivebase_authz_tuples
-  WHERE resource_type = '${resourceType}'
+  WHERE resource_type = '${safeResourceType}'
     AND resource_id = id::text
-    AND relation = '${relation}'
+    AND relation = '${safeRelation}'
     AND subject_id = ${userIdParam}
 )`
 }
