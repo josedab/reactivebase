@@ -1,0 +1,18 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["packages/server/src/index.ts", "packages/client/src/index.ts", "packages/react/src/index.ts"],
+  "out": "website/docs/api",
+  "plugin": ["typedoc-plugin-markdown"],
+  "outputFileStrategy": "modules",
+  "readme": "none",
+  "name": "ReactiveBase API Reference",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "skipErrorChecking": true,
+  "tsconfig": "tsconfig.json",
+  "githubPages": false,
+  "hideGenerator": true,
+  "categorizeByGroup": true,
+  "sort": ["source-order"]
+}
