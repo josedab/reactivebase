@@ -9,8 +9,10 @@ interface TestCtx {
       insert: (data: Record<string, unknown>) => Promise<unknown>
       update: (id: string, data: Record<string, unknown>) => Promise<unknown>
     }
+    [key: string]: unknown
   }
   auth: { userId: string | null; claims: Record<string, unknown> }
+  [key: string]: unknown
 }
 
 describe("MockDatabase", () => {

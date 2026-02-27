@@ -7,13 +7,32 @@ import type { Schema } from "@reactivebase/server"
 import { createAuthContext, type AuthContext } from "@reactivebase/server"
 import { MockDatabase, type MockDatabaseContext } from "./mock-database.js"
 
+/** Context object passed to function handlers during testing. */
+export interface TestFunctionContext {
+  db: MockDatabaseContext
+  auth: AuthContext
+  scheduler: {
+    runAfter(...args: unknown[]): Promise<string>
+    runAt(...args: unknown[]): Promise<string>
+  }
+  log: {
+    debug(...args: unknown[]): void
+    info(...args: unknown[]): void
+    warn(...args: unknown[]): void
+    error(...args: unknown[]): void
+  }
+  [key: string]: unknown
+}
+
 /** Generic handler function signature for queries, mutations, and actions. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type FunctionHandler = (ctx: any, args: any) => unknown | Promise<unknown>
+export type FunctionHandler = (ctx: TestFunctionContext, args: Record<string, unknown>) => unknown | Promise<unknown>
+
+/** A reference to a function handler, accepting narrower handler types via generics. */
+export type FunctionRef = { handler: (...args: never[]) => unknown | Promise<unknown> }
 
 export interface FunctionDefinition {
   type: string
-  handler: FunctionHandler
+  handler: (...args: never[]) => unknown | Promise<unknown>
 }
 
 export interface TestServerOptions {
@@ -69,14 +88,14 @@ export class TestServer {
    * Run a query function and return the result.
    */
   async runQuery<T = unknown>(
-    fnOrRef: { handler: FunctionHandler } | string,
-    args: unknown = {},
+    fnOrRef: FunctionRef | string,
+    args: Record<string, unknown> = {},
   ): Promise<QueryTestResult<T>> {
     const { handler } = this.resolveFunction(fnOrRef, "query")
     const dbCtx = this.db.createContext("read")
     const ctx = this.createFunctionContext(dbCtx)
 
-    const result = await handler(ctx, args)
+    const result = await (handler as FunctionHandler)(ctx, args)
 
     // If result is thenable (mock query builder), await it
     const resolved = result && typeof result === "object" && "then" in result ? await result : result
@@ -91,14 +110,14 @@ export class TestServer {
    * Run a mutation function and return the result.
    */
   async runMutation<T = unknown>(
-    fnOrRef: { handler: FunctionHandler } | string,
-    args: unknown = {},
+    fnOrRef: FunctionRef | string,
+    args: Record<string, unknown> = {},
   ): Promise<MutationTestResult<T>> {
     const { handler } = this.resolveFunction(fnOrRef, "mutation")
     const dbCtx = this.db.createContext("readwrite")
     const ctx = this.createFunctionContext(dbCtx)
 
-    const result = await handler(ctx, args)
+    const result = await (handler as FunctionHandler)(ctx, args)
     const resolved = result && typeof result === "object" && "then" in result ? await result : result
 
     return {
@@ -110,12 +129,12 @@ export class TestServer {
   /**
    * Run an action function.
    */
-  async runAction<T = unknown>(fnOrRef: { handler: FunctionHandler } | string, args: unknown = {}): Promise<T> {
+  async runAction<T = unknown>(fnOrRef: FunctionRef | string, args: Record<string, unknown> = {}): Promise<T> {
     const { handler } = this.resolveFunction(fnOrRef, "action")
     const dbCtx = this.db.createContext("readwrite")
     const ctx = this.createFunctionContext(dbCtx)
 
-    const result = await handler(ctx, args)
+    const result = await (handler as FunctionHandler)(ctx, args)
     return (result && typeof result === "object" && "then" in result ? await result : result) as T
   }
 
@@ -123,8 +142,8 @@ export class TestServer {
    * Test that a mutation modifies specific tables.
    */
   async expectMutationToModify(
-    fnOrRef: { handler: FunctionHandler } | string,
-    args: unknown,
+    fnOrRef: FunctionRef | string,
+    args: Record<string, unknown>,
     expectedTables: string[],
   ): Promise<void> {
     const result = await this.runMutation(fnOrRef, args)
@@ -142,8 +161,8 @@ export class TestServer {
    * Test that a query returns expected data.
    */
   async expectQueryToReturn<T = unknown>(
-    fnOrRef: { handler: FunctionHandler } | string,
-    args: unknown,
+    fnOrRef: FunctionRef | string,
+    args: Record<string, unknown>,
     expected: T,
   ): Promise<void> {
     const result = await this.runQuery(fnOrRef, args)
@@ -159,11 +178,11 @@ export class TestServer {
    * and capture the query result after each mutation.
    */
   async snapshotReactiveUpdates<T = unknown>(
-    queryFn: { handler: FunctionHandler } | string,
-    queryArgs: unknown,
+    queryFn: FunctionRef | string,
+    queryArgs: Record<string, unknown>,
     mutations: Array<{
-      fn: { handler: FunctionHandler } | string
-      args: unknown
+      fn: FunctionRef | string
+      args: Record<string, unknown>
     }>,
   ): Promise<ReactiveSnapshot<T>[]> {
     const snapshots: ReactiveSnapshot<T>[] = []
@@ -205,7 +224,7 @@ export class TestServer {
     }
   }
 
-  private resolveFunction(fnOrRef: { handler: FunctionHandler } | string, _expectedType?: string) {
+  private resolveFunction(fnOrRef: FunctionRef | string, _expectedType?: string): FunctionRef {
     if (typeof fnOrRef === "string") {
       const fn = this.functions.get(fnOrRef)
       if (!fn) throw new Error(`Function not found: ${fnOrRef}`)
