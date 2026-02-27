@@ -23,6 +23,7 @@ export interface EndpointSpec {
   auth?: "required" | "optional" | "none"
   description?: string
   deprecated?: boolean
+  deprecatedMessage?: string
 }
 
 export interface TypeSpec {
@@ -333,7 +334,11 @@ function generateTypescript(spec: ProtocolSpec, options: CodegenOptions): Genera
     const inputType = ep.input ? typeMappers.typescript(ep.input) : "void"
     const outputType = typeMappers.typescript(ep.output)
     const inputParam = ep.input ? `input: ${inputType}` : ""
-    const deprecated = ep.deprecated ? "  /** @deprecated */\n" : ""
+    const deprecated = ep.deprecated
+      ? ep.deprecatedMessage
+        ? `  /** @deprecated ${ep.deprecatedMessage} */\n`
+        : "  /** @deprecated */\n"
+      : ""
 
     clientContent += `${deprecated}  async ${ep.name}(${inputParam}): Promise<${outputType}> {\n`
     clientContent += `    return this.request("${ep.path}", "${ep.method}"${ep.input ? ", input" : ""});\n`
