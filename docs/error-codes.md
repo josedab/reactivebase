@@ -1,6 +1,37 @@
 # Error Codes Reference
 
-All custom error classes in `@reactivebase/server`, grouped by module.
+All custom error classes across `@reactivebase/*` packages, grouped by module.
+
+## Core Errors
+
+These errors are defined in `packages/server/src/errors.ts` and form the foundation of ReactiveBase's error hierarchy.
+
+| Error Class                 | Code                      | Message Template                                                              |
+| --------------------------- | ------------------------- | ----------------------------------------------------------------------------- |
+| `ReactiveBaseError`         | (varies)                  | Base error class for all ReactiveBase domain errors                           |
+| `ReadOnlyError`             | `READ_ONLY_VIOLATION`     | Cannot perform write operations in a read-only query. Use a mutation instead. |
+| `RecordNotFoundError`       | `RECORD_NOT_FOUND`        | Record not found in "${tableName}" with id "${id}"                            |
+| `FunctionNotFoundError`     | `FUNCTION_NOT_FOUND`      | Query function not found: "${name}"                                           |
+| `NotQueryFunctionError`     | `NOT_QUERY_FUNCTION`      | "${name}" is not a query function                                             |
+| `CircularDependencyError`   | `CIRCULAR_DEPENDENCY`     | Circular query dependency detected: ${cycle}                                  |
+| `EmitOutsideMutationError`  | `EMIT_OUTSIDE_MUTATION`   | ctx.emit() is only available inside mutation handlers                         |
+| `QueryContextRequiredError` | `QUERY_CONTEXT_REQUIRED`  | ctx.query() requires a query resolution context                               |
+| `InvalidMessageError`       | `INVALID_MESSAGE`         | Invalid message: ${detail}                                                    |
+| `SchemaValidationError`     | `SCHEMA_VALIDATION_ERROR` | (dynamic message)                                                             |
+
+## GraphQL Package (`@reactivebase/graphql`)
+
+| Error Class           | Module            | Message Template  |
+| --------------------- | ----------------- | ----------------- |
+| `GraphQLGatewayError` | `graphql-gateway` | (dynamic message) |
+
+## Edge Package (`@reactivebase/edge`)
+
+| Error Class      | Module | Message Template                                                      |
+| ---------------- | ------ | --------------------------------------------------------------------- |
+| `EdgeQueryError` | `edge` | Query "${queryName}" failed: ${status} (includes statusCode and body) |
+
+## Server Package (`@reactivebase/server`)
 
 | Error Class              | Module              | Message Template                                                                 |
 | ------------------------ | ------------------- | -------------------------------------------------------------------------------- |
@@ -16,7 +47,6 @@ All custom error classes in `@reactivebase/server`, grouped by module.
 | `CrdtError`              | `crdt`              | (dynamic message)                                                                |
 | `DatabaseAdapterError`   | `multi-db`          | (dynamic message)                                                                |
 | `DatabaseManagerError`   | `cloud-platform`    | (dynamic message)                                                                |
-| `EdgeQueryError`         | `edge-query`        | (dynamic message)                                                                |
 | `EncryptionError`        | `encryption`        | (dynamic message)                                                                |
 | `EventSourcingError`     | `event-sourcing`    | (dynamic message)                                                                |
 | `FederationError`        | `multi-db`          | (dynamic message)                                                                |
@@ -51,7 +81,7 @@ All custom error classes in `@reactivebase/server`, grouped by module.
 
 ---
 
-## Details by Module
+## Details by Module (Server Package)
 
 ### analytics
 
@@ -148,6 +178,7 @@ All custom error classes in `@reactivebase/server`, grouped by module.
 - **Source**: `packages/server/src/edge-query/edge-query.ts`
 - **Message**: (dynamic message)
 - **Resolution**: Check the edge-query module documentation for configuration and usage details.
+- **Note**: This is a server-side edge query error, distinct from `EdgeQueryError` in `@reactivebase/edge`.
 
 ### encryption
 
