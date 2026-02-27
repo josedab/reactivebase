@@ -109,6 +109,8 @@ Look for issues labeled `good first issue` on GitHub. These are typically:
 - Documentation improvements
 - Adding a new example app
 
+For deeper contributor guidance, see [docs/ONBOARDING.md](docs/ONBOARDING.md).
+
 ## Documentation Site
 
 The documentation site is built with [Docusaurus](https://docusaurus.io/) and lives in the `website/` directory.
@@ -121,6 +123,57 @@ npm start
 ```
 
 This opens the site at `http://localhost:3000`. Changes to docs files are hot-reloaded.
+
+## Build Pipeline
+
+ReactiveBase uses [Turborepo](https://turbo.build/) to orchestrate builds across packages. Understanding the task dependency graph helps when debugging build issues or running selective builds.
+
+### Task Dependencies
+
+| Task            | Depends On                   | Cached             | Outputs        |
+| --------------- | ---------------------------- | ------------------ | -------------- |
+| `build`         | `^build` (upstream packages) | ✅                 | `dist/**`      |
+| `test`          | `build` (same package)       | ✅                 | —              |
+| `test:coverage` | `build` (same package)       | ✅                 | `coverage/**`  |
+| `typecheck`     | `^build` (upstream packages) | ✅                 | —              |
+| `lint`          | —                            | ✅ (scoped inputs) | —              |
+| `dev`           | —                            | ❌                 | — (persistent) |
+| `test:watch`    | —                            | ❌                 | — (persistent) |
+| `benchmark`     | `build`                      | ❌                 | —              |
+| `clean`         | —                            | ❌                 | —              |
+
+**Key relationships:**
+
+- `^build` means "build all upstream dependency packages first" — ensures `@reactivebase/react` builds after `@reactivebase/client` and `@reactivebase/server`.
+- `test` depends on `build` within the same package, so tests always run against fresh build output.
+- `lint` only processes `src/**/*.ts`, `src/**/*.tsx`, and `eslint.config.js` — changes to test files won't invalidate the lint cache.
+
+### Caching Behavior
+
+Turbo caches task outputs by default. Tasks marked `"cache": false` always re-run:
+
+- **`dev`**, **`test:watch`**: Persistent long-running processes — never cached.
+- **`benchmark`**, **`clean`**: Side-effectful tasks — never cached.
+
+To force a clean build (bypass all caches):
+
+```bash
+npx turbo clean
+npm run build
+```
+
+### Running Specific Packages
+
+```bash
+# Build only the server package and its dependencies
+npx turbo run build --filter=@reactivebase/server
+
+# Test only React hooks (builds server + client first)
+npx turbo run test --filter=@reactivebase/react
+
+# Build everything except the VS Code extension
+npx turbo run build --filter='!@reactivebase/vscode-extension'
+```
 
 ## Testing
 
