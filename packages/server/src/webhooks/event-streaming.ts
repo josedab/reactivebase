@@ -19,7 +19,7 @@
  *   manager.publish("tasks", { type: "insert", data: { id: "1" } })
  */
 
-import { createHmac } from "node:crypto"
+import { createHmac, randomInt } from "node:crypto"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -205,7 +205,7 @@ export class KafkaStreamAdapter implements EventStreamAdapter {
       case "key":
         return hashCode(event.id) % 12
       default:
-        return Math.floor(Math.random() * 12)
+        return randomInt(12)
     }
   }
 }
