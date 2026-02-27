@@ -112,8 +112,19 @@ export function generateDropTenantSQL(tenantId: string): string {
   return `DROP SCHEMA IF EXISTS "${schemaName}" CASCADE;`
 }
 
+// Track sanitized tenant IDs to detect collisions (e.g., "user-123" and "user_123" both map to "tenant_user_123")
+const tenantIdRegistry = new Map<string, string>()
+
 function sanitizeTenantId(id: string): string {
-  return id.replace(/[^a-zA-Z0-9_]/g, "_")
+  const sanitized = id.replace(/[^a-zA-Z0-9_]/g, "_")
+  const existingOriginal = tenantIdRegistry.get(sanitized)
+  if (existingOriginal !== undefined && existingOriginal !== id) {
+    throw new Error(
+      `Tenant ID collision: "${id}" maps to the same schema as "${existingOriginal}" (both sanitize to "tenant_${sanitized}")`,
+    )
+  }
+  tenantIdRegistry.set(sanitized, id)
+  return sanitized
 }
 
 function sanitizeIdentifier(id: string): string {
