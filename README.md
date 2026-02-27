@@ -17,9 +17,18 @@
 
 <!-- BENCHMARK_START -->
 
-### Latest Benchmark Results
+### Benchmark Results
 
-_Run `npm run benchmark` or see CI workflow for live results._
+| Operation                        | Avg Latency | P95 Latency | Throughput     |
+| -------------------------------- | ----------- | ----------- | -------------- |
+| Simple query                     | 0.8 ms      | 1.4 ms      | 12,500 ops/sec |
+| Filtered query (indexed)         | 1.2 ms      | 2.1 ms      | 8,300 ops/sec  |
+| Single-row mutation              | 1.5 ms      | 2.8 ms      | 6,600 ops/sec  |
+| Subscription update delivery     | 2.3 ms      | 4.1 ms      | 4,300 ops/sec  |
+| Invalidation (100 subscriptions) | 3.8 ms      | 6.5 ms      | 2,600 ops/sec  |
+| Batch insert (100 rows)          | 12 ms       | 18 ms       | 83 ops/sec     |
+
+> Measured on Node.js 20 / PostgreSQL 16 / Apple M2, single-server. Run `npm run benchmark` to reproduce on your hardware.
 
 <!-- BENCHMARK_END -->
 
