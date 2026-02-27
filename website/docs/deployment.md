@@ -45,3 +45,13 @@ See [deploy/README.md](https://github.com/reactivebase/reactivebase/tree/main/de
 | `/metrics` | Prometheus / JSON metrics |
 | `/dashboard` | Visual schema viewer |
 | `/api/*` | Auto-generated REST API |
+
+## Platform-Specific Guides
+
+For advanced deployment scenarios, see the dedicated guides:
+
+| Guide | Description |
+|-------|-------------|
+| [Kubernetes (Helm & Operator)](https://github.com/reactivebase/reactivebase/tree/main/deploy/kubernetes/README.md) | Helm chart configuration and Kubernetes operator |
+| [Grafana Monitoring](https://github.com/reactivebase/reactivebase/tree/main/deploy/grafana/README.md) | Monitoring dashboards and alerting |
+| [Terraform](https://github.com/reactivebase/reactivebase/tree/main/deploy/terraform/README.md) | Infrastructure as code modules |
