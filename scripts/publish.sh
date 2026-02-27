@@ -43,6 +43,8 @@ PACKAGES=(
   "packages/reactivebase"
   "packages/create-reactivebase"
   "packages/migrate-from-prisma"
+  "packages/graphql"
+  "packages/react-native"
 )
 
 echo ""
