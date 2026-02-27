@@ -55,6 +55,14 @@ npm install
 npm run dev
 ```
 
+Expected output:
+
+```
+✔ Created project in ./my-app
+  ReactiveBase server listening on http://localhost:4000
+  Dashboard available at http://localhost:4000/dashboard
+```
+
 ## How It Works
 
 ### 1. Define Your Schema
@@ -124,7 +132,7 @@ function TaskList({ userId }: { userId: string }) {
 }
 ```
 
-## Architecture
+The React component renders a live-updating task list. Clicking "Done" triggers the mutation, and all subscribed clients see the update automatically — no manual refetch needed.
 
 ```
 Client (React/Vue/Svelte)
@@ -247,6 +255,15 @@ reactivebase migrate --apply      # Apply pending migrations
 reactivebase migrate --status     # Show migration status
 ```
 
+Example `reactivebase dev` output:
+
+```
+ReactiveBase dev server v0.1.0
+  Watching convex/ for changes...
+  Server listening on http://localhost:4000
+  Dashboard: http://localhost:4000/dashboard
+```
+
 ## Configuration
 
 ```typescript
@@ -271,6 +288,19 @@ export default defineConfig({
   },
 })
 ```
+
+## Configuration Reference
+
+| Variable       | Required | Default       | Description                        |
+| -------------- | -------- | ------------- | ---------------------------------- |
+| `DATABASE_URL` | ✅       | —             | PostgreSQL connection string       |
+| `PORT`         |          | `4000`        | HTTP/WebSocket server port         |
+| `NODE_ENV`     |          | `development` | `development` or `production`      |
+| `REDIS_URL`    |          | —             | Redis URL for multi-server pub/sub |
+| `JWT_SECRET`   | In prod  | —             | Secret for HS256 JWT signing       |
+| `LOG_LEVEL`    |          | `info`        | `debug`, `info`, `warn`, `error`   |
+
+For deployment guides (Docker, Fly.io, Railway, Render, Kubernetes), see [deploy/README.md](deploy/README.md).
 
 ## Infrastructure Requirements
 
