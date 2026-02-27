@@ -3,6 +3,8 @@
 // Drag-and-drop workflow designer with real-time monitoring and debugging
 // --------------------------------------------------------------------------
 
+import { randomUUID } from "node:crypto"
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface WorkflowNode {
@@ -655,7 +657,7 @@ export class WorkflowStudio {
     }
 
     const execution: WorkflowExecution = {
-      id: `exec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      id: `exec_${randomUUID()}`,
       workflowId,
       status: "running",
       startedAt: Date.now(),
@@ -788,7 +790,7 @@ export class WorkflowStudio {
 
     const design: WorkflowDesign = {
       ...template.design,
-      id: `wf_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      id: `wf_${randomUUID()}`,
       name,
       createdAt: Date.now(),
       updatedAt: Date.now(),

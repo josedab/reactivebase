@@ -8,6 +8,8 @@
  *   const result = tutorials.validateStep("hello-world", 0, userCode)
  */
 
+import { randomUUID } from "node:crypto"
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface InteractiveTutorial {
@@ -297,7 +299,7 @@ export class TutorialManager {
   // ─── Share / Export ─────────────────────────────────────────────────────
 
   createShareState(schema: string, queries: string, mutations: string): PlaygroundShareState {
-    const id = Math.random().toString(36).substring(2, 10)
+    const id = randomUUID().substring(0, 8)
     return {
       id,
       schema,

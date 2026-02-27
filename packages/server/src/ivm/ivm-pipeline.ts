@@ -14,6 +14,7 @@ import { IncrementalViewMaintainer } from "./ivm.js"
 import type { DataChange, Row, QueryAstNode, ViewDelta, IvmStats } from "./ivm.js"
 import { DeltaPatchEncoder, computeChecksum } from "./delta-protocol.js"
 import type { DeltaPatch } from "./delta-protocol.js"
+import { randomUUID } from "node:crypto"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -57,7 +58,7 @@ export class IvmPipeline {
   private totalComputationTimeMs = 0
 
   private generateId(prefix: string): string {
-    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    return `${prefix}_${randomUUID()}`
   }
 
   // ─── View Management ───────────────────────────────────────────────────

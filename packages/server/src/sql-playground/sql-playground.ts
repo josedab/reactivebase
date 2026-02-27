@@ -10,6 +10,8 @@
  *   const aiQuery = await playground.naturalLanguageToSql("Show overdue tasks", schema)
  */
 
+import { randomUUID } from "node:crypto"
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface SqlPlaygroundOptions {
@@ -358,7 +360,7 @@ export class SqlPlayground {
 
   addToHistory(entry: Omit<QueryHistoryEntry, "id">): QueryHistoryEntry {
     const historyEntry: QueryHistoryEntry = {
-      id: `qh_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      id: `qh_${randomUUID()}`,
       ...entry,
     }
     this.history.unshift(historyEntry)

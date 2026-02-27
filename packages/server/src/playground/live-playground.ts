@@ -11,6 +11,7 @@
  */
 
 import type { EmbeddedPoolAdapter } from "../embedded/embedded.js"
+import { randomUUID } from "node:crypto"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -106,7 +107,7 @@ export class LivePlaygroundEngine {
    * Create a sandboxed playground session with an embedded PGlite instance.
    */
   async createSession(config: LivePlaygroundConfig = {}): Promise<LivePlaygroundSession> {
-    const sessionId = `live-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
+    const sessionId = `live-${randomUUID()}`
     const now = Date.now()
     const ttl = config.ttlMs ?? DEFAULT_TTL_MS
 

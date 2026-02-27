@@ -3,6 +3,8 @@
  * delivery logs, and metrics. Extends the existing webhook system.
  */
 
+import { randomUUID } from "node:crypto"
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type DeliveryStatus = "pending" | "in_progress" | "delivered" | "failed" | "dead_letter"
@@ -513,5 +515,5 @@ export function createWebhookSimulator(maxDeliveries?: number): WebhookSimulator
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function generateDeliveryId(): string {
-  return `whd_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`
+  return `whd_${randomUUID()}`
 }

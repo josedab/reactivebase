@@ -3,7 +3,7 @@
 // Reactive file URLs, server-side transforms, CDN integration, uploads
 // --------------------------------------------------------------------------
 
-import { createHmac } from "node:crypto"
+import { createHmac, randomUUID } from "node:crypto"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -392,7 +392,7 @@ export class MediaPipeline {
       throw new MediaPipelineError(validation.error!, "VALIDATION_ERROR")
     }
 
-    const id = `media_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    const id = `media_${randomUUID()}`
     const prefix = params.prefix ? `${params.prefix}/` : ""
     const storageKey = `${bucket}/${prefix}${id}/${filename}`
     const url = this.urls.buildUrl(storageKey)

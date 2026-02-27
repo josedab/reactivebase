@@ -3,6 +3,8 @@
 // CDN-like caching for reactive queries with invalidation propagation
 // --------------------------------------------------------------------------
 
+import { randomUUID } from "node:crypto"
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface EdgeRegion {
@@ -460,7 +462,7 @@ export class EdgeQueryLayer {
     const origin = originRegion || this.getPrimaryRegion() || "unknown"
 
     const message: InvalidationMessage = {
-      id: `inv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      id: `inv_${randomUUID()}`,
       tables,
       rowKeys,
       originRegion: origin,

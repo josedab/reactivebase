@@ -15,6 +15,7 @@
 
 import type { WalChangeEvent, ProcessChangesCallback, CdcAdapterStats } from "./reactive-cdc.js"
 import type { ChangeEvent } from "../reactivity/invalidation-evaluator.js"
+import { randomUUID } from "node:crypto"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -82,7 +83,7 @@ export class RowLevelCdcAdapter {
   }
 
   private generateId(prefix: string): string {
-    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    return `${prefix}_${randomUUID()}`
   }
 
   // ─── Subscription Management ────────────────────────────────────────────

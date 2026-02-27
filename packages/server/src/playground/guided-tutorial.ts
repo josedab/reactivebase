@@ -10,6 +10,7 @@
  */
 
 import type { ValidationRule } from "./tutorial-manager.js"
+import { randomUUID } from "node:crypto"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -234,7 +235,7 @@ export class GuidedTutorialEngine {
     const tutorial = this.tutorials.get(tutorialId)
     if (!tutorial) throw new Error(`Tutorial not found: ${tutorialId}`)
 
-    const sessionId = `guided-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
+    const sessionId = `guided-${randomUUID()}`
     const session: GuidedTutorialSession = {
       sessionId,
       tutorialId,

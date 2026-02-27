@@ -15,6 +15,8 @@
  *   engine.applyRemoteOperation(op)
  */
 
+import { randomUUID } from "node:crypto"
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface CrdtOperation {
@@ -212,7 +214,7 @@ export function buildCompactOperationsSQL(docId: string, beforeClock: number): {
 // ─── CrdtEngine ──────────────────────────────────────────────────────────────
 
 const DEFAULT_OPTIONS: Required<CrdtEngineOptions> = {
-  nodeId: `node-${Math.random().toString(36).substring(2, 10)}`,
+  nodeId: `node-${randomUUID().substring(0, 8)}`,
   compactionThreshold: 1000,
   onOperation: () => {},
   onStateChange: () => {},
@@ -658,7 +660,7 @@ export class CrdtDocumentHandle {
   /** OR-Set: add an element. */
   add(element: unknown): CrdtOperation {
     this.assertType("or-set")
-    const tag = `${Date.now()}:${this.engine.nodeId}:${Math.random().toString(36).substring(2, 8)}`
+    const tag = `${Date.now()}:${this.engine.nodeId}:${randomUUID().substring(0, 8)}`
     return this.engine._applyLocal(this.doc.id, { kind: "or-add", element, tag } as OrSetOp)
   }
 

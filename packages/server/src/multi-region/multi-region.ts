@@ -15,6 +15,8 @@
  *   await region.start()
  */
 
+import { randomUUID } from "node:crypto"
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface RegionConfig {
@@ -322,7 +324,7 @@ export class RegionManager {
     this.clock = incrementClock(this.clock, this.regionId)
 
     const event: ReplicationEvent = {
-      id: `evt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      id: `evt_${randomUUID()}`,
       sourceRegion: this.regionId,
       targetRegion: "*", // Broadcast
       type,

@@ -3,6 +3,8 @@
 // Typed event store with projections, snapshots, and replay debugging
 // --------------------------------------------------------------------------
 
+import { randomUUID } from "node:crypto"
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface DomainEvent<T = unknown> {
@@ -390,7 +392,7 @@ export class EventStore {
       this.globalVersion++
 
       const domainEvent: DomainEvent = {
-        id: `evt_${this.globalVersion}_${Math.random().toString(36).slice(2, 8)}`,
+        id: `evt_${this.globalVersion}_${randomUUID().slice(0, 8)}`,
         streamId,
         type: evt.type,
         data: evt.data,
@@ -538,7 +540,7 @@ export class EventStore {
     const maxVersion = events.length > 0 ? events[events.length - 1].version : 0
 
     const session: ReplaySession = {
-      id: `replay_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      id: `replay_${randomUUID()}`,
       streamId,
       fromVersion,
       toVersion: toVersion ?? maxVersion,

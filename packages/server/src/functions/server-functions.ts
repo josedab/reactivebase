@@ -4,6 +4,7 @@
  */
 
 import type { Pool, PoolClient } from "pg"
+import { randomUUID } from "node:crypto"
 import type { AuthContext } from "../auth/index.js"
 import type { TrackedDatabaseContext } from "./database-context.js"
 import { createDatabaseContext } from "./database-context.js"
@@ -368,5 +369,5 @@ async function resolveQueryResult(client: PoolClient, result: unknown): Promise<
 }
 
 function generateId(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36)
+  return randomUUID()
 }

@@ -12,6 +12,8 @@
 
 import type { Row } from "./ivm.js"
 
+import { randomUUID } from "node:crypto"
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface DeltaPatch {
@@ -60,7 +62,7 @@ export class DeltaPatchEncoder {
   }
 
   private generateId(prefix: string): string {
-    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    return `${prefix}_${randomUUID()}`
   }
 
   /**
@@ -104,7 +106,7 @@ export class DeltaPatchDecoder {
   }
 
   private generateId(prefix: string): string {
-    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    return `${prefix}_${randomUUID()}`
   }
 
   /**
@@ -167,7 +169,7 @@ export class PatchAccumulator {
   private patches = new Map<string, DeltaPatch[]>()
 
   private generateId(prefix: string): string {
-    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    return `${prefix}_${randomUUID()}`
   }
 
   /**

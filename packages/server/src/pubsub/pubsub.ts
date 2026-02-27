@@ -6,6 +6,7 @@
  */
 
 import type { ChangeEvent } from "../reactivity/index.js"
+import { randomUUID } from "node:crypto"
 
 export interface PubSubAdapter {
   /** Publish a change set to all servers */
@@ -169,5 +170,5 @@ export interface RedisLike {
 }
 
 function generateServerId(): string {
-  return `srv_${Math.random().toString(36).substring(2, 8)}_${Date.now().toString(36)}`
+  return `srv_${randomUUID().substring(0, 8)}_${Date.now().toString(36)}`
 }

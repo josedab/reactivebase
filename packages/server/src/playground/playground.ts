@@ -15,6 +15,8 @@
  *   const html = generatePlaygroundHTML({ title: "My Playground" })
  */
 
+import { randomUUID } from "node:crypto"
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface PlaygroundSession {
@@ -553,7 +555,7 @@ export class PlaygroundEngine {
   // ─── Session Management ──────────────────────────────────────────────────
 
   createSession(title?: string, templateId?: string): PlaygroundSession {
-    const id = `pg-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
+    const id = `pg-${randomUUID()}`
     const template = templateId ? PLAYGROUND_TEMPLATES.find((t) => t.id === templateId) : undefined
 
     if (templateId && !template) {
