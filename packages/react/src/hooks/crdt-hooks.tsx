@@ -82,6 +82,12 @@ export interface CollabDocumentInfo {
 
 // ─── useCollabText ───────────────────────────────────────────────────────────
 
+/**
+ * Hook for CRDT-backed collaborative text editing.
+ *
+ * @param docId - Unique identifier for the collaborative document
+ * @returns A {@link UseCollabTextReturn} with the current text, insert/delete/set operations, and loading state
+ */
 export function useCollabText(docId: string): UseCollabTextReturn {
   const client = useReactiveBaseClient()
   const [text, setTextState] = useState("")
@@ -144,6 +150,12 @@ export function useCollabText(docId: string): UseCollabTextReturn {
 
 // ─── useCollabList ───────────────────────────────────────────────────────────
 
+/**
+ * Hook for CRDT-backed collaborative lists.
+ *
+ * @param docId - Unique identifier for the collaborative list
+ * @returns A {@link UseCollabListReturn} with current items, push/remove operations, and loading state
+ */
 export function useCollabList<T = unknown>(docId: string): UseCollabListReturn<T> {
   const client = useReactiveBaseClient()
   const [items, setItems] = useState<T[]>([])
@@ -192,6 +204,12 @@ export function useCollabList<T = unknown>(docId: string): UseCollabListReturn<T
 
 // ─── useCollabMap ────────────────────────────────────────────────────────────
 
+/**
+ * Hook for CRDT-backed collaborative maps.
+ *
+ * @param docId - Unique identifier for the collaborative map
+ * @returns A {@link UseCollabMapReturn} with current entries, get/set/delete operations, and loading state
+ */
 export function useCollabMap<T = unknown>(docId: string): UseCollabMapReturn<T> {
   const client = useReactiveBaseClient()
   const [entries, setEntries] = useState<Record<string, T>>({})
@@ -244,6 +262,12 @@ export function useCollabMap<T = unknown>(docId: string): UseCollabMapReturn<T> 
 
 // ─── useCollabCounter ────────────────────────────────────────────────────────
 
+/**
+ * Hook for CRDT-backed collaborative counters.
+ *
+ * @param docId - Unique identifier for the collaborative counter
+ * @returns A {@link UseCollabCounterReturn} with current value, increment/decrement operations, and loading state
+ */
 export function useCollabCounter(docId: string): UseCollabCounterReturn {
   const client = useReactiveBaseClient()
   const [value, setValue] = useState(0)

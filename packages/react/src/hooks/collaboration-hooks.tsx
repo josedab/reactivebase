@@ -62,6 +62,10 @@ export interface UseOptimisticReturn<T> {
  *   } catch {
  *     rollback(mutationId)
  *   }
+ *
+ * @param serverData - The current server-authoritative data
+ * @param options - Options for timeout, max snapshots, and conflict resolution
+ * @returns An object with the current data and functions to apply/confirm/rollback optimistic updates
  */
 export function useOptimistic<T>(serverData: T, options: UseOptimisticOptions = {}): UseOptimisticReturn<T> {
   const [localData, setLocalData] = useState<T>(serverData)
@@ -190,6 +194,9 @@ export interface CollaborationState {
  *
  * Usage:
  *   const { cursors, updateCursor, clearCursor } = useCursors("doc-123")
+ *
+ * @param roomId - Unique identifier for the collaboration room
+ * @returns Object with remote `cursors` array, `updateCursor` to broadcast position, and `clearCursor` to remove
  */
 export function useCursors(roomId: string): {
   cursors: CursorData[]
@@ -229,6 +236,9 @@ export function useCursors(roomId: string): {
  * Usage:
  *   const { typingUsers, setTyping } = useTypingUsers("doc-123")
  *   onKeyDown={() => setTyping(true)}
+ *
+ * @param roomId - Unique identifier for the collaboration room
+ * @returns Object with `typingUsers` array and `setTyping` to toggle typing state
  */
 export function useTypingUsers(roomId: string): {
   typingUsers: TypingUser[]
@@ -262,6 +272,9 @@ export function useTypingUsers(roomId: string): {
  *
  * Usage:
  *   const { selections, updateSelection, clearSelection } = useSelections("doc-123")
+ *
+ * @param roomId - Unique identifier for the collaboration room
+ * @returns Object with `selections` array, `updateSelection` to broadcast, and `clearSelection` to remove
  */
 export function useSelections(roomId: string): {
   selections: SelectionData[]
@@ -323,6 +336,9 @@ export interface UseDevToolsReturn {
  *
  * Usage:
  *   const { summary, subscriptions, mutations } = useDevTools()
+ *
+ * @param refreshIntervalMs - Polling interval in milliseconds (default: 2000)
+ * @returns A {@link UseDevToolsReturn} with stats, controls, and snapshot capabilities
  */
 export function useDevTools(refreshIntervalMs: number = 2000): UseDevToolsReturn {
   const [enabled, setEnabled] = useState(false)

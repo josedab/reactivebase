@@ -44,6 +44,11 @@ export interface UseQueryOptions {
  * Dependent query pattern:
  *   const user = useQuery(api.users.get, { id: userId })
  *   const tasks = useQuery(api.tasks.listByUser, { userId: user?.id }, { enabled: !!user })
+ *
+ * @param queryRef - A typed {@link FunctionReference} or query name string
+ * @param args - Arguments to pass to the query function
+ * @param options - Query options (e.g., `enabled` to defer execution)
+ * @returns The query result, or `undefined` while loading. Throws on error.
  */
 export function useQuery<TResult = unknown, TArgs = unknown>(
   queryRef: FunctionReference<TArgs, TResult> | string,
@@ -89,6 +94,10 @@ export function useQuery<TResult = unknown, TArgs = unknown>(
 /**
  * Returns a function that calls a server mutation.
  * Supports optimistic updates with automatic rollback on failure.
+ *
+ * @param mutationRef - A typed {@link FunctionReference} or mutation name string
+ * @param config - Optional config with an `optimisticUpdate` callback for local cache updates
+ * @returns An async function that accepts mutation arguments and returns the server result
  */
 export function useMutation<TArgs = unknown, TResult = unknown>(
   mutationRef: FunctionReference<TArgs, TResult> | string,
@@ -134,6 +143,9 @@ export function useMutation<TArgs = unknown, TResult = unknown>(
 
 /**
  * Returns a function that triggers a background action.
+ *
+ * @param actionRef - A typed {@link FunctionReference} or action name string
+ * @returns An async function that accepts action arguments and returns the server result
  */
 export function useAction<TArgs = unknown, TResult = unknown>(
   actionRef: FunctionReference<TArgs, TResult> | string,
@@ -169,6 +181,11 @@ export interface AggregateQueryResult<T = unknown> {
  *
  * Usage:
  *   const { data, isLoading } = useAggregateQuery(api.tasks.taskStats, { userId: "u1" })
+ *
+ * @param queryRef - A typed {@link FunctionReference} or query name string
+ * @param args - Arguments to pass to the aggregate query
+ * @param options - Query options (e.g., `enabled` to defer execution)
+ * @returns An {@link AggregateQueryResult} with `data`, `isLoading`, and `error` fields
  */
 export function useAggregateQuery<TResult = unknown, TArgs = unknown>(
   queryRef: FunctionReference<TArgs, TResult> | string,
