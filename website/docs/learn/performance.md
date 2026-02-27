@@ -84,6 +84,71 @@ analytics.subscribe("daily_signups", (result) => {
 })
 ```
 
+## Change Data Capture (CDC)
+
+ReactiveBase uses Change Data Capture to detect database mutations and invalidate reactive subscriptions. Configure CDC mode via `defineConfig()`:
+
+```typescript
+import { defineConfig } from "@reactivebase/server"
+
+export default defineConfig({
+  database: { connectionString: process.env.DATABASE_URL! },
+  cdc: {
+    mode: "listen-notify",    // or "logical-replication"
+    tables: ["tasks", "users"], // Default: all schema tables
+    batchSize: 100,            // WAL event batch size (default: 100)
+    flushIntervalMs: 10,       // Batch flush interval in ms (default: 10)
+  },
+})
+```
+
+### CDC Modes
+
+| Mode | How It Works | Pros | Cons |
+|------|-------------|------|------|
+| `listen-notify` (default) | Uses Postgres `LISTEN`/`NOTIFY` channels. Triggers fire `pg_notify()` on row changes. | Zero setup — works with any Postgres. Low overhead for moderate write volumes. | Notification payload limited to 8KB. Missed if no listener is connected. |
+| `logical-replication` | Streams the Postgres Write-Ahead Log (WAL) via a replication slot. | Complete change history — no missed events. Full row data. Efficient for high write throughput. | Requires Postgres config changes. Replication slots consume disk if consumer falls behind. |
+
+### Postgres Prerequisites for Logical Replication
+
+If you choose `logical-replication` mode, configure Postgres:
+
+1. **Set WAL level** in `postgresql.conf`:
+
+   ```ini
+   wal_level = logical
+   max_replication_slots = 4   # At least 1 per ReactiveBase instance
+   max_wal_senders = 4
+   ```
+
+2. **Restart Postgres** for the changes to take effect.
+
+3. **Grant replication privileges** to the database user:
+
+   ```sql
+   ALTER ROLE myuser REPLICATION;
+   ```
+
+4. **Verify** the configuration:
+
+   ```sql
+   SHOW wal_level;  -- Should return "logical"
+   ```
+
+### When to Use Each Mode
+
+- **`listen-notify`**: Development, staging, low-to-medium write volumes (< 1K writes/sec). No Postgres configuration required.
+- **`logical-replication`**: Production with high write volumes, multi-server deployments where every instance must see every change, or when you need guaranteed delivery of change events.
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `mode` | `"listen-notify"` \| `"logical-replication"` | `"listen-notify"` | CDC strategy |
+| `tables` | `string[]` | All schema tables | Tables to track for changes |
+| `batchSize` | `number` | `100` | Number of WAL events to process per batch (logical-replication only) |
+| `flushIntervalMs` | `number` | `10` | Maximum time in ms to buffer events before flushing (logical-replication only) |
+
 ## Kubernetes Scaling
 
 Deploy with auto-scaling based on subscription count:
