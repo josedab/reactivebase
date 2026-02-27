@@ -143,13 +143,13 @@ spec:
             command: ["sh", "-c", "sleep 5"]
       livenessProbe:
         httpGet:
-          path: /
+          path: /api/v1/health
           port: 4000
         initialDelaySeconds: 10
         periodSeconds: 15
       readinessProbe:
         httpGet:
-          path: /
+          path: /api/v1/health
           port: 4000
         initialDelaySeconds: 5
         periodSeconds: 5
@@ -166,13 +166,26 @@ spec:
 
 ### Health Check Endpoint
 
-The root path (`/`) returns connection and subscription counts, suitable for
+The `/api/v1/health` path returns server health information, suitable for
 both liveness and readiness probes:
 
 ```json
 {
-  "status": "ok",
-  "connections": 42,
-  "subscriptions": 156
+  "status": "healthy",
+  "version": "0.1.0",
+  "timestamp": "2025-01-15T10:30:00.000Z",
+  "transports": {
+    "rest": "/api/v1/*",
+    "graphql": "/graphql",
+    "websocket": "/ws"
+  }
 }
 ```
+
+## Platform-Specific Guides
+
+| Guide                                | Description                                      |
+| ------------------------------------ | ------------------------------------------------ |
+| [Kubernetes](./kubernetes/README.md) | Helm chart configuration and Kubernetes operator |
+| [Grafana](./grafana/README.md)       | Monitoring dashboards and alerting               |
+| [Terraform](./terraform/README.md)   | Infrastructure as code modules                   |

@@ -55,7 +55,7 @@ autoscaling:
 postgresql:
   enabled: true
   auth:
-    postgresPassword: ""  # Set via --set or secret
+    postgresPassword: "" # Set via --set or secret
     database: reactivebase
   primary:
     persistence:
@@ -99,7 +99,8 @@ config:
   # Node.js options
   nodeOptions: "--max-old-space-size=384"
 
-# Health checks
+# Health checks — probes hit /api/v1/health which returns
+# {"status": "healthy", "version": ..., "timestamp": ..., "transports": {...}}
 health:
   livenessProbe:
     httpGet:
