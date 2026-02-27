@@ -39,7 +39,7 @@ See [deploy/README.md](https://github.com/reactivebase/reactivebase/tree/main/de
 
 | Path | Description |
 |------|-------------|
-| `/` | Health check |
+| `/api/v1/health` | Health check |
 | `/ws` | WebSocket subscriptions |
 | `/query` | HTTP query execution (SSR) |
 | `/metrics` | Prometheus / JSON metrics |
