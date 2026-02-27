@@ -4,20 +4,20 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'packages/server/**'
-      - 'packages/client/**'
+      - "packages/server/**"
+      - "packages/client/**"
   push:
     branches: [main]
     paths:
-      - 'packages/server/**'
-      - 'packages/client/**'
+      - "packages/server/**"
+      - "packages/client/**"
   workflow_dispatch:
     inputs:
       subscription_levels:
-        description: 'Subscription levels (comma-separated)'
-        default: '1000,5000,10000'
+        description: "Subscription levels (comma-separated)"
+        default: "1000,5000,10000"
       enable_chaos:
-        description: 'Enable chaos tests'
+        description: "Enable chaos tests"
         type: boolean
         default: true
 
@@ -127,6 +127,37 @@ jobs:
             /tmp/benchmark-report.md
             /tmp/benchmark-report.json
           retention-days: 90
+
+      - name: Store benchmark results for tracking
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          node -e "
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('/tmp/benchmark-report.json', 'utf8'));
+          const s = report.summary;
+          // Convert to github-action-benchmark customSmallerIsBetter format
+          const benchmarks = [
+            { name: 'p99 Latency (ms)', unit: 'ms', value: s.overallP99LatencyMs },
+            { name: 'Peak Memory (MB)', unit: 'MB', value: s.peakMemoryMb },
+            { name: 'Max Subscriptions', unit: 'subscriptions', value: -s.maxSubscriptions },
+            { name: 'Max Invalidations/sec', unit: 'ops/sec', value: -s.maxInvalidationsPerSecond },
+          ];
+          fs.writeFileSync('/tmp/benchmark-tracking.json', JSON.stringify(benchmarks, null, 2));
+          "
+
+      - name: Track benchmark trend
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: ReactiveBase Performance
+          tool: customSmallerIsBetter
+          output-file-path: /tmp/benchmark-tracking.json
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: dev/bench
+          auto-push: true
+          alert-threshold: "150%"
+          comment-on-alert: true
+          fail-on-alert: false
 
       - name: Update README benchmarks (main only)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
