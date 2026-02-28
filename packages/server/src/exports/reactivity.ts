@@ -94,3 +94,27 @@ export type {
   InvalidationTrigger,
   SubscriptionAnalyticsOptions,
 } from "../subscription-analytics/index.js"
+
+// Reactive Computed Tables
+export {
+  ComputedTableEngine,
+  ComputedTableError,
+  buildCreateComputedTableSQL,
+  buildRefreshComputedTableSQL,
+  buildDropComputedTableSQL,
+  buildCreateTriggerSQL,
+  buildCreateMetadataTableSQL,
+  buildUpsertMetadataSQL,
+  defineComputedAggregation,
+  defineComputedJoin,
+} from "../computed-tables/index.js"
+export type {
+  ComputedTableDefinition,
+  ComputedRefreshStrategy,
+  ComputedIndexDef,
+  ComputedColumnDef,
+  ComputedTableState,
+  DependencyGraph,
+  ComputedRefreshResult,
+  ComputedTableStats,
+} from "../computed-tables/index.js"
