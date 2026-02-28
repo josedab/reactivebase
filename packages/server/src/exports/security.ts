@@ -41,3 +41,25 @@ export type {
   VaultKeyProvider,
   GcpKmsKeyProviderOptions,
 } from "../encryption/index.js"
+
+// MLS Protocol — E2E Encryption for Collaboration
+export {
+  MlsKeyManager,
+  EncryptedCrdtBridge,
+  KeyEscrow,
+  MlsError,
+  generateMlsGroupTableSQL,
+  generateMlsKeyHistoryTableSQL,
+  generateMlsAuditTableSQL,
+  buildInsertMlsAuditSQL,
+} from "../encryption/index.js"
+export type {
+  MlsGroup,
+  MlsGroupMember,
+  DeviceInfo,
+  KeySchedule,
+  EncryptedOperation,
+  EscrowConfig,
+  AccessGrant,
+  KeyAuditEntry,
+} from "../encryption/index.js"
