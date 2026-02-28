@@ -1,0 +1,301 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "type": "datasource",
+      "pluginId": "prometheus"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "ReactiveBase detailed observability — query latency, subscriptions, invalidations, connections, errors, WebSocket, and CDC metrics",
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "Query Performance",
+      "type": "row"
+    },
+    {
+      "id": 1,
+      "title": "Query Latency Histogram (P50 / P95 / P99)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 1, "w": 12, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "showPoints": "auto",
+            "pointSize": 5
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(reactivebase_query_duration_seconds_bucket{instance=~\"$instance\"}[5m]))",
+          "legendFormat": "P50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(reactivebase_query_duration_seconds_bucket{instance=~\"$instance\"}[5m]))",
+          "legendFormat": "P95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(reactivebase_query_duration_seconds_bucket{instance=~\"$instance\"}[5m]))",
+          "legendFormat": "P99"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Error Rate",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 1, "w": 12, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": { "fixedColor": "red", "mode": "fixed" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.01 },
+              { "color": "red", "value": 0.05 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(reactivebase_errors_total{instance=~\"$instance\"}[5m]) / (rate(reactivebase_queries_total{instance=~\"$instance\"}[5m]) + rate(reactivebase_mutations_total{instance=~\"$instance\"}[5m]) + 0.001)",
+          "legendFormat": "Error Rate"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "id": 101,
+      "title": "Subscriptions & Reactivity",
+      "type": "row"
+    },
+    {
+      "id": 3,
+      "title": "Subscription Count Over Time",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 10, "w": 12, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 15 }
+        }
+      },
+      "targets": [
+        {
+          "expr": "reactivebase_subscriptions_active{instance=~\"$instance\"}",
+          "legendFormat": "Active Subscriptions"
+        },
+        {
+          "expr": "rate(reactivebase_subscriptions_created_total{instance=~\"$instance\"}[5m])",
+          "legendFormat": "Created/s"
+        },
+        {
+          "expr": "rate(reactivebase_subscriptions_removed_total{instance=~\"$instance\"}[5m])",
+          "legendFormat": "Removed/s"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Invalidation Rate by Table",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 10, "w": 12, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "bars", "fillOpacity": 80, "stacking": { "mode": "normal" } }
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(reactivebase_invalidations_total{instance=~\"$instance\"}[5m])",
+          "legendFormat": "{{table}}"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
+      "id": 102,
+      "title": "Connections & Infrastructure",
+      "type": "row"
+    },
+    {
+      "id": 5,
+      "title": "Connection Pool Utilization",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 19, "w": 8, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 20 }
+        }
+      },
+      "targets": [
+        {
+          "expr": "reactivebase_pg_pool_total{instance=~\"$instance\"}",
+          "legendFormat": "Total"
+        },
+        {
+          "expr": "reactivebase_pg_pool_active{instance=~\"$instance\"}",
+          "legendFormat": "Active"
+        },
+        {
+          "expr": "reactivebase_pg_pool_idle{instance=~\"$instance\"}",
+          "legendFormat": "Idle"
+        },
+        {
+          "expr": "reactivebase_pg_pool_waiting{instance=~\"$instance\"}",
+          "legendFormat": "Waiting"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "WebSocket Connection Count",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 19, "w": 8, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "blue", "mode": "fixed" },
+          "custom": { "drawStyle": "line", "fillOpacity": 10 }
+        }
+      },
+      "targets": [
+        {
+          "expr": "reactivebase_connections_active{instance=~\"$instance\"}",
+          "legendFormat": "WebSocket Connections"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "CDC Lag",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 19, "w": 8, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "palette-classic" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 30 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "reactivebase_cdc_lag_seconds{instance=~\"$instance\"}",
+          "legendFormat": "CDC Lag ({{slot}})"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 },
+      "id": 103,
+      "title": "Slow Queries & Diagnostics",
+      "type": "row"
+    },
+    {
+      "id": 8,
+      "title": "Slow Query Log (Top 10 by avg duration)",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 28, "w": 24, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "targets": [
+        {
+          "expr": "topk(10, reactivebase_query_duration_seconds_sum{instance=~\"$instance\"} / reactivebase_query_duration_seconds_count{instance=~\"$instance\"})",
+          "legendFormat": "{{query_name}}",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true },
+            "renameByName": {
+              "Value": "Avg Duration (s)",
+              "__name__": "Metric",
+              "query_name": "Query"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["reactivebase", "observability", "detailed"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "All", "value": "$__all" },
+        "datasource": "${DS_PROMETHEUS}",
+        "definition": "label_values(reactivebase_queries_total, instance)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Instance",
+        "multi": true,
+        "name": "instance",
+        "query": "label_values(reactivebase_queries_total, instance)",
+        "refresh": 2,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "ReactiveBase — Detailed Observability",
+  "uid": "reactivebase-detailed",
+  "version": 1
+}
