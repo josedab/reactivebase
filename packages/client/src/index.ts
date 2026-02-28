@@ -121,3 +121,7 @@ export type {
   DevToolsOptions,
   DevToolsSummary,
 } from "./devtools/index.js"
+
+/** Reactive Query Composition: subscribe to derived/combined/transformed queries */
+export { subscribeDerived, subscribeTransformed } from "./composition/index.js"
+export type { DerivedSubscriptionHandle, ComposedQueryOptions } from "./composition/index.js"
