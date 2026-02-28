@@ -209,6 +209,18 @@ async function main(): Promise<void> {
       break
     }
 
+
+    case "optimize": {
+      const { optimize: optimizeCmd } = await import("./commands/optimize.js")
+      await optimizeCmd({
+        projectDir: process.cwd(),
+        connectionString: process.env.DATABASE_URL,
+        json: args.includes("--json"),
+        apply: args.includes("--apply"),
+      })
+      break
+    }
+
     case "--help":
     case "-h":
     case undefined:
