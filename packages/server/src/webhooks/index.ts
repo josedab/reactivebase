@@ -52,3 +52,16 @@ export type {
 // Circuit Breaker
 export { CircuitBreakerRegistry, CircuitOpenError, withCircuitBreaker } from "./circuit-breaker.js"
 export type { CircuitState, CircuitBreakerOptions, CircuitBreakerStats } from "./circuit-breaker.js"
+
+// Declarative Webhook Subscriptions
+export {
+  WebhookSubscriptionManager,
+  defineWebhookSubscription,
+  generateSubscriptionTableSQL,
+} from "./declarative-subscriptions.js"
+export type {
+  WebhookSubscription,
+  WebhookEventType,
+  DataChangeEvent,
+  WebhookSubscriptionManagerOptions,
+} from "./declarative-subscriptions.js"
