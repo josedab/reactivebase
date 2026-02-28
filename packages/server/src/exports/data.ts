@@ -1,3 +1,20 @@
+// Multi-Model Query Interface
+export {
+  MultiModelQueryBuilder,
+  RelationalQueryBuilder,
+  DocumentQueryBuilder,
+  GraphQueryBuilder,
+  MultiModelError,
+} from "../multi-model/index.js"
+export type {
+  MultiModelQueryResult,
+  RelationalJoin,
+  WhereCondition,
+  OrderByClause,
+  DocumentMatch,
+  GraphTraversal,
+} from "../multi-model/index.js"
+
 // Embedded Postgres
 export {
   EmbeddedPoolAdapter,
