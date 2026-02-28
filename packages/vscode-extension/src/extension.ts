@@ -88,6 +88,9 @@ export function activate(context: vscode.ExtensionContext): void {
   if (config.get<boolean>("autoGenerate", true)) {
     cmdWatchStart()
   }
+
+  // Register AI copilot commands
+  registerCopilotCommands(context)
 }
 
 export function deactivate(): void {
@@ -97,6 +100,31 @@ export function deactivate(): void {
   if (state?.debounceTimer) {
     clearTimeout(state.debounceTimer)
   }
+}
+
+// ─── Copilot Commands ────────────────────────────────────────────────────────
+
+function registerCopilotCommands(context: vscode.ExtensionContext): void {
+  const { CopilotCommandProvider, buildCommandContext } = require("./copilot-commands")
+  const provider = new CopilotCommandProvider(state.outputChannel)
+  const commands = provider.registerCommands()
+
+  for (const cmd of commands) {
+    context.subscriptions.push(
+      vscode.commands.registerCommand(cmd.id, async () => {
+        const ctx = buildCommandContext(state.outputChannel)
+        const result = await cmd.handler(ctx)
+
+        if (result.success) {
+          vscode.window.showInformationMessage(`ReactiveBase: ${result.message}`)
+        } else {
+          vscode.window.showWarningMessage(`ReactiveBase: ${result.message}`)
+        }
+      }),
+    )
+  }
+
+  state.outputChannel.appendLine(`[${timestamp()}] Copilot commands registered (${commands.length} commands)`)
 }
 
 // ─── Commands ────────────────────────────────────────────────────────────────
