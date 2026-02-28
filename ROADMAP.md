@@ -21,18 +21,17 @@ This document outlines the planned development direction for ReactiveBase. It is
 
 ### Medium-Term
 
-- GraphQL subscriptions gateway GA
-- React Native offline-first improvements
 - Plugin ecosystem expansion (more first-party plugins)
 - Visual schema designer improvements
 - Improved migration tooling for Drizzle and other ORMs
+- Row-level (Level 3) dependency tracking for high-precision invalidation
+- Usage-based pricing for cloud tier
+- SOC 2 Type II compliance
 
 ### Long-Term
 
-- Managed cloud offering (ReactiveBase Cloud)
-- Multi-region replication
-- Edge compute integration
-- Collaborative real-time editing primitives
+- Managed cloud offering (ReactiveBase Cloud) with auto-scaling
+- Global edge deployment for low-latency query execution
 
 ## Completed
 
@@ -45,6 +44,11 @@ This document outlines the planned development direction for ReactiveBase. It is
 - ✅ File storage (S3, local, in-memory)
 - ✅ Job scheduler with cron support
 - ✅ Docusaurus documentation site
+- ✅ GraphQL subscriptions gateway (`@reactivebase/graphql`)
+- ✅ React Native offline-first with mutation queue and sync engine (`@reactivebase/react-native`)
+- ✅ Edge compute integration (`@reactivebase/edge`)
+- ✅ Multi-region replication (`packages/server/src/multi-region/`)
+- ✅ Collaborative real-time editing with CRDT and Yjs protocol (`packages/server/src/collaboration/`, `crdt/`)
 
 ## Feedback
 
