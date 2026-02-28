@@ -32,3 +32,27 @@ export {
   computeChunks,
   generateClientProxy,
 } from "../rpc-splitting/index.js"
+export type {
+  FunctionManifestEntry,
+  FunctionManifest,
+  ChunkDefinition,
+  SplitConfig,
+  LazyFunctionOptions,
+  FunctionLoader,
+  InvokeResult,
+  RegistryStats as RpcRegistryStats,
+} from "../rpc-splitting/index.js"
+
+// Portable Function Runtime (Wasm)
+export { WasmFunctionRuntime, WasmRuntimeError } from "../wasm-runtime/index.js"
+export type {
+  WasmRuntimeOptions,
+  RuntimeTarget,
+  WasmModule,
+  ModuleMetadata,
+  HostFunction,
+  ExecutionContext as WasmExecutionContext,
+  ExecutionResult as WasmExecutionResult,
+  RuntimeStats as WasmRuntimeStats,
+  PortableBundle,
+} from "../wasm-runtime/index.js"
