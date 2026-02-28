@@ -49,3 +49,14 @@ export type {
 /** File hooks for reactive file state tracking */
 export { useFile } from "./hooks/index.js"
 export type { FileState, UseFileOptions, UseFileReturn } from "./hooks/index.js"
+
+/** Pre-built reactive UI components */
+export { ReactiveTable, ReactiveForm, PresenceAvatars } from "./components.js"
+export type {
+  ReactiveTableColumn,
+  ReactiveTableProps,
+  ReactiveFormField,
+  ReactiveFormProps,
+  PresenceUser,
+  PresenceAvatarsProps,
+} from "./components.js"
