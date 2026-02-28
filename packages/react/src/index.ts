@@ -36,3 +36,12 @@ export type {
   UseCollabCounterReturn,
   CollabDocumentInfo,
 } from "./hooks/index.js"
+
+/** Local-first query hooks for offline SQLite-backed data access */
+export { useLocalQuery, useLocalMutation } from "./hooks/index.js"
+export type {
+  LocalQueryOptions,
+  UseLocalQueryReturn,
+  LocalQueryFilter,
+  UseLocalMutationReturn,
+} from "./hooks/index.js"

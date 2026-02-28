@@ -32,3 +32,12 @@ export type {
 // Full-Text Search Hooks
 export { useSearch, SearchInput } from "./search-hooks.js"
 export type { UseSearchOptions, UseSearchReturn, SearchInputProps } from "./search-hooks.js"
+
+// Local-First Query Hooks
+export { useLocalQuery, useLocalMutation } from "./local-query-hooks.js"
+export type {
+  LocalQueryOptions,
+  UseLocalQueryReturn,
+  LocalQueryFilter,
+  UseLocalMutationReturn,
+} from "./local-query-hooks.js"
