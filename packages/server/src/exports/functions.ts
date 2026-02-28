@@ -23,3 +23,12 @@ export {
   InvalidMessageError,
   SchemaValidationError,
 } from "../errors.js"
+
+// Type-Safe RPC Code Splitting
+export {
+  LazyFunctionRegistry,
+  RpcSplitError,
+  generateFunctionManifest,
+  computeChunks,
+  generateClientProxy,
+} from "../rpc-splitting/index.js"
