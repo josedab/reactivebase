@@ -203,6 +203,12 @@ async function main(): Promise<void> {
       break
     }
 
+    case "add": {
+      const { pluginAdd } = await import("./commands/plugin-add.js")
+      await pluginAdd(args.slice(1))
+      break
+    }
+
     case "--help":
     case "-h":
     case undefined:
@@ -233,6 +239,7 @@ Commands:
   migrate          Database migration commands
   deploy           Deploy to cloud (Fly.io/Railway/ReactiveBase Cloud)
   deploy --cloud   Deploy to ReactiveBase Cloud (managed)
+  add <plugin>     Add a plugin (npm install + configure + types)
   functions list   List all defined functions
   dacl             Access control policy management
   ivm              Incremental view maintenance
