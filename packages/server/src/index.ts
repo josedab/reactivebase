@@ -40,3 +40,5 @@ export * from "./exports/server.js"
 export * from "./exports/tenant.js"
 /** Transport: WebSocket protocol, horizontal scaling, cluster management */
 export * from "./exports/transport.js"
+/** Distributed Transactions: 2PC coordinator, saga runtime, dead letter recovery */
+export * from "./exports/distributed-tx.js"
