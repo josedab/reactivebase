@@ -41,3 +41,7 @@ export type {
   LocalQueryFilter,
   UseLocalMutationReturn,
 } from "./local-query-hooks.js"
+
+// File Hooks
+export { useFile } from "./file-hooks.js"
+export type { FileState, UseFileOptions, UseFileReturn } from "./file-hooks.js"

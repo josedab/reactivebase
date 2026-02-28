@@ -45,3 +45,7 @@ export type {
   LocalQueryFilter,
   UseLocalMutationReturn,
 } from "./hooks/index.js"
+
+/** File hooks for reactive file state tracking */
+export { useFile } from "./hooks/index.js"
+export type { FileState, UseFileOptions, UseFileReturn } from "./hooks/index.js"
