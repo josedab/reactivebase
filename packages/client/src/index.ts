@@ -79,6 +79,23 @@ export type {
   PriorityMutation,
 } from "./offline/index.js"
 
+/** Local-first sync engine with CRDT-based bidirectional sync */
+export { LocalFirstSyncEngine, BidirectionalSyncProtocol, WriteAheadLog } from "./offline/index.js"
+export type {
+  LocalFirstSyncOptions,
+  LocalFirstSyncStatus,
+  SchemaDefinition,
+  TableDefinition,
+  ColumnDefinition,
+  IndexDefinition,
+  WriteAheadEntry,
+  SyncProtocolMessage,
+  SyncChange,
+  BandwidthConfig,
+  LocalQuery,
+  SyncConnection,
+} from "./offline/index.js"
+
 /** Optimistic updates: instant UI feedback with server reconciliation */
 export { OptimisticUpdateManager } from "./optimistic/index.js"
 export type {

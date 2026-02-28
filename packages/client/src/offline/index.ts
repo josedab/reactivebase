@@ -40,3 +40,20 @@ export type {
   BackgroundSyncOptions,
   PriorityMutation,
 } from "./background-sync.js"
+
+// Local-First Sync Engine
+export { LocalFirstSyncEngine, BidirectionalSyncProtocol, WriteAheadLog } from "./local-first-sync.js"
+export type {
+  LocalFirstSyncOptions,
+  LocalFirstSyncStatus,
+  SchemaDefinition,
+  TableDefinition,
+  ColumnDefinition,
+  IndexDefinition,
+  WriteAheadEntry,
+  SyncProtocolMessage,
+  SyncChange,
+  BandwidthConfig,
+  LocalQuery,
+  SyncConnection,
+} from "./local-first-sync.js"
