@@ -42,3 +42,5 @@ export * from "./exports/tenant.js"
 export * from "./exports/transport.js"
 /** Distributed Transactions: 2PC coordinator, saga runtime, dead letter recovery */
 export * from "./exports/distributed-tx.js"
+/** Reactive Query Composition: DAG-based derived queries with incremental propagation */
+export * from "./exports/query-composition.js"
