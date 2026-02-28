@@ -40,3 +40,24 @@ export type { PreviewConfig, PreviewRecord } from "./github-action.js"
 export { BranchDashboard } from "./branch-dashboard.js"
 
 export type { BranchTreeNode, DashboardBranching, DashboardPreviewSource } from "./branch-dashboard.js"
+
+// Preview Environment Manager
+export {
+  PreviewEnvironmentManager,
+  PreviewEnvironmentError,
+  buildCreatePreviewEnvTableSQL,
+  buildUpsertPreviewEnvSQL,
+  buildGetExpiredPreviewsSQL,
+  buildDeletePreviewEnvSQL,
+} from "./preview-environment.js"
+
+export type {
+  PreviewEnvironmentOptions,
+  PreviewTrigger,
+  PreviewEnvironment,
+  PreviewEnvStatus,
+  MigrationApplyStatus,
+  HealthStatus,
+  CreatePreviewRequest,
+  PreviewEnvironmentStats,
+} from "./preview-environment.js"

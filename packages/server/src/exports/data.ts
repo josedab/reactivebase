@@ -151,6 +151,15 @@ export {
 export { NeonBranchingAdapter, NeonBranchingError } from "../branching/index.js"
 export { generateGitHubActionYAML, PRPreviewManager } from "../branching/index.js"
 export { BranchDashboard } from "../branching/index.js"
+export {
+  PreviewEnvironmentManager,
+  PreviewEnvironmentError,
+  buildCreatePreviewEnvTableSQL,
+  buildUpsertPreviewEnvSQL,
+  buildGetExpiredPreviewsSQL,
+  buildDeletePreviewEnvSQL,
+} from "../branching/index.js"
+
 export type {
   DatabaseBranchingOptions,
   BranchStrategy,
@@ -165,6 +174,16 @@ export type {
 export type { NeonConfig, NeonBranch, NeonEndpoint } from "../branching/index.js"
 export type { PreviewConfig, PreviewRecord } from "../branching/index.js"
 export type { BranchTreeNode } from "../branching/index.js"
+export type {
+  PreviewEnvironmentOptions,
+  PreviewTrigger,
+  PreviewEnvironment,
+  PreviewEnvStatus,
+  MigrationApplyStatus,
+  HealthStatus,
+  CreatePreviewRequest,
+  PreviewEnvironmentStats,
+} from "../branching/index.js"
 
 // Embedded Analytics & Materialized Dashboards
 export {
