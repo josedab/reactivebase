@@ -46,6 +46,18 @@ export type {
 export { AlertEngine, builtInRules } from "./alert-engine.js"
 export type { AlertRule as AlertEngineRule, Alert, AlertAction, AlertSeverity } from "./alert-engine.js"
 
+// Query Flamegraph & Alert Rule Engine
+export { QueryFlamegraph, AlertRuleEngine, defaultAlertRules } from "./query-flamegraph.js"
+export type {
+  FlameNode,
+  FlameTrace,
+  FlamePhase,
+  AlertRuleDefinition,
+  AlertSeverityLevel,
+  ActiveAlert,
+  AlertEvaluation,
+} from "./query-flamegraph.js"
+
 // Performance Advisor
 export {
   PerformanceAdvisor,

@@ -42,3 +42,13 @@ export type {
   AlertAction,
   AlertSeverity,
 } from "../metrics/index.js"
+export { QueryFlamegraph, AlertRuleEngine, defaultAlertRules } from "../metrics/index.js"
+export type {
+  FlameNode,
+  FlameTrace,
+  FlamePhase,
+  AlertRuleDefinition,
+  AlertSeverityLevel,
+  ActiveAlert,
+  AlertEvaluation,
+} from "../metrics/index.js"
