@@ -75,3 +75,15 @@ export type {
   RecommendationSeverity,
   AdvisorReport,
 } from "./performance-advisor.js"
+
+// Adaptive Query Optimizer
+export { AdaptiveQueryOptimizer } from "./adaptive-optimizer.js"
+export type {
+  QueryPattern,
+  SubscriptionProfile,
+  IndexSuggestion,
+  NPlusOneIssue,
+  SubscriptionOptimization,
+  OptimizationReport,
+  AdaptiveOptimizerOptions,
+} from "./adaptive-optimizer.js"
