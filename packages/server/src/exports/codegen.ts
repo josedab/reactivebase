@@ -89,6 +89,21 @@ export type {
 export { generateFederatedSchema, generateResolverSkeleton, getSubscriptionMappings } from "../api-gen/federation.js"
 export type { FederationOptions, FederatedSchema, SubscriptionMapping } from "../api-gen/federation.js"
 
+// GraphQL Federation Gateway
+export { FederationGateway, FederationGatewayError } from "../graphql-federation/index.js"
+export type {
+  SubgraphConfig,
+  SubgraphState,
+  ComposedSchema,
+  SchemaConflict,
+  QueryPlan,
+  QueryPlanStep,
+  GatewayExecutionResult,
+  GatewayError as FederationGatewayErrorResult,
+  FederationGatewayOptions,
+  GatewayStats as FederationGatewayStats,
+} from "../graphql-federation/index.js"
+
 // Type Bridge (E2E Type Safety)
 export { TypeBridge } from "../type-bridge/index.js"
 export type {
