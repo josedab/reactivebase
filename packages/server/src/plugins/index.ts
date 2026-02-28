@@ -62,3 +62,23 @@ export { s3StoragePlugin, posthogPlugin, ALL_BUILTIN_PLUGINS, BUILTIN_PLUGIN_MET
 // Plugin CLI
 export { PluginCLI } from "./plugin-cli.js"
 export type { PluginCLIConfig, CLIResult } from "./plugin-cli.js"
+
+// Plugin Registry Backend & Installer
+export {
+  PluginRegistryBackend,
+  PluginInstaller,
+  PluginWebUI,
+  PluginRegistryError,
+  buildCreatePluginRegistrySQL,
+  buildInsertPluginSQL,
+  buildSearchPluginsSQL,
+} from "./registry-backend.js"
+export type {
+  RegistrySearchOptions,
+  NpmPackageInfo,
+  PluginVersion,
+  PluginCompatibilityResult,
+  InstallerOptions,
+  PluginInstallResult,
+  WebUIOptions,
+} from "./registry-backend.js"

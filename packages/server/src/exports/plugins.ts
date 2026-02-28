@@ -45,3 +45,23 @@ export type {
   PortalStats,
 } from "../plugins/index.js"
 export type { PluginV2Config, PluginHook, PluginCLIConfig, CLIResult } from "../plugins/index.js"
+
+// Plugin Registry Backend & Installer
+export {
+  PluginRegistryBackend,
+  PluginInstaller,
+  PluginWebUI,
+  PluginRegistryError,
+  buildCreatePluginRegistrySQL,
+  buildInsertPluginSQL,
+  buildSearchPluginsSQL,
+} from "../plugins/index.js"
+export type {
+  RegistrySearchOptions,
+  NpmPackageInfo,
+  PluginVersion,
+  PluginCompatibilityResult,
+  InstallerOptions,
+  PluginInstallResult,
+  WebUIOptions,
+} from "../plugins/index.js"
