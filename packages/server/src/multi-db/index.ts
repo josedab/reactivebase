@@ -25,6 +25,16 @@ export {
   translateColumnType,
   translateCreateTable,
   DatabaseAdapterError,
+  createPostgresPoolAdapter,
+  createSQLitePoolAdapter,
+  createMySQLPoolAdapter,
+  createPostgresCdcAdapter,
+  createMySQLCdcAdapter,
+  createSQLiteCdcAdapter,
+  createMigrationAdapter,
+  getMigrationsTableSQL,
+  getMigrationLockSQL,
+  createAdapterBundle,
 } from "./database-adapter.js"
 export type {
   DatabaseAdapter,
@@ -35,6 +45,19 @@ export type {
   PostgresAdapterOptions,
   SQLiteAdapterOptions,
   MySQLAdapterOptions,
+  ConnectionPoolAdapter,
+  PooledConnection,
+  CdcChangeEvent,
+  CdcPosition,
+  CdcChangeCallback,
+  CdcAdapter,
+  PostgresCdcOptions,
+  MySQLCdcOptions,
+  SQLiteCdcOptions,
+  AppliedMigration,
+  MigrationAdapter,
+  AdapterBundle,
+  AdapterBundleOptions,
 } from "./database-adapter.js"
 
 // Federation Extensions (defineDataSource, cross-source, reactive federation)

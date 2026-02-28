@@ -419,3 +419,515 @@ export class DatabaseAdapterError extends Error {
     this.name = "DatabaseAdapterError"
   }
 }
+
+// ─── Connection Pool Adapter ─────────────────────────────────────────────────
+
+export interface ConnectionPoolAdapter {
+  /** Total number of connections in the pool (active + idle) */
+  readonly totalCount: number
+  /** Number of connections currently in use */
+  readonly activeCount: number
+  /** Number of idle connections available */
+  readonly idleCount: number
+  /** Number of queued requests waiting for a connection */
+  readonly waitingCount: number
+
+  /** Acquire a connection from the pool */
+  acquire(): Promise<PooledConnection>
+  /** Release a connection back to the pool */
+  release(connection: PooledConnection): void
+  /** Register a callback invoked when the pool is drained (all connections returned) */
+  onDrain(callback: () => void): void
+}
+
+export interface PooledConnection {
+  /** Unique identifier for this pooled connection */
+  readonly id: string
+  /** Execute a query on this specific connection */
+  query<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]>
+  /** Execute a statement on this specific connection */
+  execute(sql: string, params?: unknown[]): Promise<{ affectedRows: number; lastInsertId?: string }>
+}
+
+export function createPostgresPoolAdapter(options: PostgresAdapterOptions): ConnectionPoolAdapter {
+  const poolSize = options.poolSize ?? 10
+  let drainCallback: (() => void) | undefined
+
+  return {
+    get totalCount(): number {
+      return poolSize
+    },
+    get activeCount(): number {
+      return 0
+    },
+    get idleCount(): number {
+      return poolSize
+    },
+    get waitingCount(): number {
+      return 0
+    },
+
+    async acquire(): Promise<PooledConnection> {
+      // In production: acquire from pg.Pool
+      return createStubPooledConnection("postgres")
+    },
+
+    release(_connection: PooledConnection): void {
+      // In production: release back to pg.Pool
+      if (this.activeCount === 0 && drainCallback) {
+        drainCallback()
+      }
+    },
+
+    onDrain(callback: () => void): void {
+      drainCallback = callback
+    },
+  }
+}
+
+export function createSQLitePoolAdapter(_options: SQLiteAdapterOptions): ConnectionPoolAdapter {
+  let drainCallback: (() => void) | undefined
+
+  return {
+    get totalCount(): number {
+      return 1
+    },
+    get activeCount(): number {
+      return 0
+    },
+    get idleCount(): number {
+      return 1
+    },
+    get waitingCount(): number {
+      return 0
+    },
+
+    async acquire(): Promise<PooledConnection> {
+      // SQLite is single-connection; returns the sole connection
+      return createStubPooledConnection("sqlite")
+    },
+
+    release(_connection: PooledConnection): void {
+      if (drainCallback) {
+        drainCallback()
+      }
+    },
+
+    onDrain(callback: () => void): void {
+      drainCallback = callback
+    },
+  }
+}
+
+export function createMySQLPoolAdapter(options: MySQLAdapterOptions): ConnectionPoolAdapter {
+  const poolSize = options.poolSize ?? 10
+  let drainCallback: (() => void) | undefined
+
+  return {
+    get totalCount(): number {
+      return poolSize
+    },
+    get activeCount(): number {
+      return 0
+    },
+    get idleCount(): number {
+      return poolSize
+    },
+    get waitingCount(): number {
+      return 0
+    },
+
+    async acquire(): Promise<PooledConnection> {
+      // In production: acquire from mysql2 pool
+      return createStubPooledConnection("mysql")
+    },
+
+    release(_connection: PooledConnection): void {
+      if (this.activeCount === 0 && drainCallback) {
+        drainCallback()
+      }
+    },
+
+    onDrain(callback: () => void): void {
+      drainCallback = callback
+    },
+  }
+}
+
+function createStubPooledConnection(dialect: string): PooledConnection {
+  return {
+    id: `${dialect}-${Date.now()}`,
+    async query<T>(_sql: string, _params?: unknown[]): Promise<T[]> {
+      return [] as T[]
+    },
+    async execute(_sql: string, _params?: unknown[]): Promise<{ affectedRows: number; lastInsertId?: string }> {
+      return { affectedRows: 0 }
+    },
+  }
+}
+
+// ─── Change Data Capture (CDC) Adapter ───────────────────────────────────────
+
+/** A change event emitted by the CDC adapter */
+export interface CdcChangeEvent {
+  /** Table where the change occurred */
+  table: string
+  /** Type of change */
+  operation: "INSERT" | "UPDATE" | "DELETE"
+  /** Row data after the change (null for DELETE) */
+  newRow: Record<string, unknown> | null
+  /** Row data before the change (null for INSERT) */
+  oldRow: Record<string, unknown> | null
+  /** Dialect-specific position marker */
+  position: CdcPosition
+}
+
+/** Dialect-specific position in the change stream */
+export type CdcPosition =
+  | { type: "lsn"; lsn: string }
+  | { type: "binlog"; file: string; position: number }
+  | { type: "wal_offset"; offset: number }
+
+export type CdcChangeCallback = (event: CdcChangeEvent) => void
+
+export interface CdcAdapter {
+  /** Start listening for changes on the specified tables */
+  startListening(tables: string[], callback: CdcChangeCallback): Promise<void>
+  /** Stop listening for changes */
+  stopListening(): Promise<void>
+  /** Get the current position in the change stream */
+  getPosition(): Promise<CdcPosition>
+}
+
+/** Options for the Postgres CDC adapter (logical replication) */
+export interface PostgresCdcOptions {
+  /** Replication slot name */
+  slotName?: string
+  /** Publication name */
+  publicationName?: string
+  /** Connection string for the replication connection */
+  connectionString: string
+}
+
+/** Create a Postgres CDC adapter using logical replication (pgoutput) */
+export function createPostgresCdcAdapter(options: PostgresCdcOptions): CdcAdapter {
+  let listening = false
+  const currentLsn = "0/0"
+  void options
+
+  return {
+    async startListening(tables: string[], callback: CdcChangeCallback): Promise<void> {
+      // In production: CREATE_REPLICATION_SLOT, START_REPLICATION with pgoutput plugin
+      listening = true
+      void tables
+      void callback
+    },
+
+    async stopListening(): Promise<void> {
+      // In production: close replication stream, drop slot if temporary
+      listening = false
+    },
+
+    async getPosition(): Promise<CdcPosition> {
+      void listening
+      return { type: "lsn", lsn: currentLsn }
+    },
+  }
+}
+
+/** Options for the MySQL CDC adapter (binlog replication) */
+export interface MySQLCdcOptions {
+  /** MySQL server ID for the replication client */
+  serverId?: number
+  /** Connection string */
+  connectionString: string
+}
+
+/** Create a MySQL CDC adapter using binlog replication */
+export function createMySQLCdcAdapter(options: MySQLCdcOptions): CdcAdapter {
+  let listening = false
+  const currentFile = "mysql-bin.000001"
+  const currentPosition = 4
+  void options
+
+  return {
+    async startListening(tables: string[], callback: CdcChangeCallback): Promise<void> {
+      // In production: use SHOW MASTER STATUS, then read binlog events via COM_BINLOG_DUMP
+      listening = true
+      void tables
+      void callback
+    },
+
+    async stopListening(): Promise<void> {
+      listening = false
+    },
+
+    async getPosition(): Promise<CdcPosition> {
+      void listening
+      return { type: "binlog", file: currentFile, position: currentPosition }
+    },
+  }
+}
+
+/** Options for the SQLite CDC adapter (polling-based) */
+export interface SQLiteCdcOptions {
+  /** Database URL */
+  url: string
+  /** Polling interval in milliseconds (default: 1000) */
+  pollIntervalMs?: number
+}
+
+/** Create a SQLite CDC adapter using polling-based change detection */
+export function createSQLiteCdcAdapter(options: SQLiteCdcOptions): CdcAdapter {
+  let listening = false
+  const currentOffset = 0
+  let pollTimer: ReturnType<typeof setInterval> | undefined
+  void options
+
+  return {
+    async startListening(tables: string[], callback: CdcChangeCallback): Promise<void> {
+      // In production: poll sqlite3_total_changes() or WAL hook at configured interval
+      listening = true
+      const interval = options.pollIntervalMs ?? 1000
+      pollTimer = setInterval(() => {
+        // Poll for changes in tracked tables
+        void tables
+        void callback
+      }, interval)
+    },
+
+    async stopListening(): Promise<void> {
+      listening = false
+      if (pollTimer) {
+        clearInterval(pollTimer)
+        pollTimer = undefined
+      }
+    },
+
+    async getPosition(): Promise<CdcPosition> {
+      void listening
+      return { type: "wal_offset", offset: currentOffset }
+    },
+  }
+}
+
+// ─── Migration Adapter ───────────────────────────────────────────────────────
+
+export interface AppliedMigration {
+  /** Migration name (unique identifier) */
+  name: string
+  /** SHA-256 checksum of the migration SQL */
+  checksum: string
+  /** Timestamp when the migration was applied */
+  appliedAt: string
+}
+
+export interface MigrationAdapter {
+  /** Create the migrations tracking table if it does not exist */
+  createMigrationsTable(): Promise<void>
+  /** Get the list of migrations that have already been applied */
+  getAppliedMigrations(): Promise<AppliedMigration[]>
+  /** Apply a migration and record it in the tracking table */
+  applyMigration(name: string, sql: string, checksum: string): Promise<void>
+  /** Rollback a migration and remove it from the tracking table */
+  rollbackMigration(name: string, sql: string): Promise<void>
+  /** Acquire an advisory lock to prevent concurrent migration runs */
+  lockMigrations(): Promise<void>
+  /** Release the advisory lock */
+  unlockMigrations(): Promise<void>
+}
+
+// ─── Dialect-specific Migrations Table SQL ───────────────────────────────────
+
+/** Generate CREATE TABLE DDL for the migrations table, per dialect */
+export function getMigrationsTableSQL(dialect: DatabaseDialect): string {
+  switch (dialect) {
+    case "postgres":
+      return [
+        `CREATE TABLE IF NOT EXISTS "_reactivebase_migrations" (`,
+        `  "name" TEXT PRIMARY KEY,`,
+        `  "checksum" TEXT NOT NULL,`,
+        `  "applied_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
+        `)`,
+      ].join("\n")
+    case "mysql":
+      return [
+        "CREATE TABLE IF NOT EXISTS `_reactivebase_migrations` (",
+        "  `name` VARCHAR(255) PRIMARY KEY,",
+        "  `checksum` VARCHAR(64) NOT NULL,",
+        "  `applied_at` DATETIME NOT NULL DEFAULT NOW()",
+        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+      ].join("\n")
+    case "sqlite":
+      return [
+        `CREATE TABLE IF NOT EXISTS "_reactivebase_migrations" (`,
+        `  "name" TEXT PRIMARY KEY,`,
+        `  "checksum" TEXT NOT NULL,`,
+        `  "applied_at" TEXT NOT NULL DEFAULT (datetime('now'))`,
+        `)`,
+      ].join("\n")
+  }
+}
+
+/** Generate the advisory lock SQL for preventing concurrent migrations */
+export function getMigrationLockSQL(dialect: DatabaseDialect): { lock: string; unlock: string } {
+  switch (dialect) {
+    case "postgres":
+      // Use Postgres advisory lock with a fixed lock ID
+      return {
+        lock: "SELECT pg_advisory_lock(72616265)",
+        unlock: "SELECT pg_advisory_unlock(72616265)",
+      }
+    case "mysql":
+      return {
+        lock: "SELECT GET_LOCK('_reactivebase_migrations_lock', 10)",
+        unlock: "SELECT RELEASE_LOCK('_reactivebase_migrations_lock')",
+      }
+    case "sqlite":
+      // SQLite is single-writer; use BEGIN EXCLUSIVE as a lock mechanism
+      return {
+        lock: "BEGIN EXCLUSIVE",
+        unlock: "COMMIT",
+      }
+  }
+}
+
+export function createMigrationAdapter(adapter: DatabaseAdapter): MigrationAdapter {
+  const dialect = adapter.dialect
+  const lockSQL = getMigrationLockSQL(dialect)
+
+  return {
+    async createMigrationsTable(): Promise<void> {
+      await adapter.execute(getMigrationsTableSQL(dialect))
+    },
+
+    async getAppliedMigrations(): Promise<AppliedMigration[]> {
+      const quote = dialect === "mysql" ? "`" : '"'
+      const table = `${quote}_reactivebase_migrations${quote}`
+      const rows = await adapter.query<{ name: string; checksum: string; applied_at: string }>(
+        `SELECT ${quote}name${quote}, ${quote}checksum${quote}, ${quote}applied_at${quote} FROM ${table} ORDER BY ${quote}applied_at${quote} ASC`,
+      )
+      return rows.map((r) => ({ name: r.name, checksum: r.checksum, appliedAt: r.applied_at }))
+    },
+
+    async applyMigration(name: string, sql: string, checksum: string): Promise<void> {
+      const tx = await adapter.beginTransaction()
+      try {
+        await tx.execute(sql)
+        const translator = getTranslator(dialect)
+        const quote = dialect === "mysql" ? "`" : '"'
+        const table = `${quote}_reactivebase_migrations${quote}`
+        const insertSQL = `INSERT INTO ${table} (${quote}name${quote}, ${quote}checksum${quote}, ${quote}applied_at${quote}) VALUES ($1, $2, ${translator.now()})`
+        await tx.execute(translator.translateParams(insertSQL), [name, checksum])
+        await tx.commit()
+      } catch (err) {
+        await tx.rollback()
+        throw err
+      }
+    },
+
+    async rollbackMigration(name: string, sql: string): Promise<void> {
+      const tx = await adapter.beginTransaction()
+      try {
+        await tx.execute(sql)
+        const translator = getTranslator(dialect)
+        const quote = dialect === "mysql" ? "`" : '"'
+        const table = `${quote}_reactivebase_migrations${quote}`
+        const deleteSQL = `DELETE FROM ${table} WHERE ${quote}name${quote} = $1`
+        await tx.execute(translator.translateParams(deleteSQL), [name])
+        await tx.commit()
+      } catch (err) {
+        await tx.rollback()
+        throw err
+      }
+    },
+
+    async lockMigrations(): Promise<void> {
+      await adapter.execute(lockSQL.lock)
+    },
+
+    async unlockMigrations(): Promise<void> {
+      await adapter.execute(lockSQL.unlock)
+    },
+  }
+}
+
+// ─── Adapter Bundle Factory ──────────────────────────────────────────────────
+
+export interface AdapterBundle {
+  /** Core database adapter */
+  adapter: DatabaseAdapter
+  /** Change data capture adapter */
+  cdc: CdcAdapter
+  /** Migration adapter */
+  migrations: MigrationAdapter
+  /** Connection pool adapter */
+  pool: ConnectionPoolAdapter
+}
+
+export interface AdapterBundleOptions {
+  /** Database connection string or URL */
+  connectionString: string
+  /** Connection pool size (ignored for SQLite) */
+  poolSize?: number
+  /** SSL configuration (Postgres and MySQL only) */
+  ssl?: boolean | "require"
+  /** Replication slot name (Postgres CDC only) */
+  cdcSlotName?: string
+  /** Polling interval for SQLite CDC in milliseconds */
+  cdcPollIntervalMs?: number
+}
+
+/** Create a complete adapter bundle for the given dialect */
+export function createAdapterBundle(dialect: DatabaseDialect, options: AdapterBundleOptions): AdapterBundle {
+  switch (dialect) {
+    case "postgres": {
+      const pgOpts: PostgresAdapterOptions = {
+        connectionString: options.connectionString,
+        poolSize: options.poolSize,
+        ssl: options.ssl,
+      }
+      const adapter = createPostgresAdapter(pgOpts)
+      return {
+        adapter,
+        cdc: createPostgresCdcAdapter({
+          connectionString: options.connectionString,
+          slotName: options.cdcSlotName,
+        }),
+        migrations: createMigrationAdapter(adapter),
+        pool: createPostgresPoolAdapter(pgOpts),
+      }
+    }
+    case "mysql": {
+      const myOpts: MySQLAdapterOptions = {
+        connectionString: options.connectionString,
+        poolSize: options.poolSize,
+        ssl: typeof options.ssl === "string" ? true : options.ssl,
+      }
+      const adapter = createMySQLAdapter(myOpts)
+      return {
+        adapter,
+        cdc: createMySQLCdcAdapter({
+          connectionString: options.connectionString,
+        }),
+        migrations: createMigrationAdapter(adapter),
+        pool: createMySQLPoolAdapter(myOpts),
+      }
+    }
+    case "sqlite": {
+      const sqliteOpts: SQLiteAdapterOptions = {
+        url: options.connectionString,
+      }
+      const adapter = createSQLiteAdapter(sqliteOpts)
+      return {
+        adapter,
+        cdc: createSQLiteCdcAdapter({
+          url: options.connectionString,
+          pollIntervalMs: options.cdcPollIntervalMs,
+        }),
+        migrations: createMigrationAdapter(adapter),
+        pool: createSQLitePoolAdapter(sqliteOpts),
+      }
+    }
+  }
+}
