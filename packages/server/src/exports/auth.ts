@@ -10,6 +10,18 @@ export {
 } from "../auth/index.js"
 export type { AuthContext, AuthProvider, JwtProviderOptions, RlsPolicy } from "../auth/index.js"
 
+// Zero-Config Auth Providers
+export {
+  googleAuth,
+  githubAuth,
+  magicLinkAuth,
+  anonymousAuth,
+  multiProvider,
+  autoDetectProviders,
+  zeroConfigAuth,
+  generateMagicLinkToken,
+} from "../auth/index.js"
+
 // Permissions
 export { roles, allow, enforceAccess } from "../permissions/index.js"
 export type { AccessRule, RoleRule, CustomRule } from "../permissions/index.js"
