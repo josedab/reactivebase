@@ -65,3 +65,7 @@ export type {
   DataChangeEvent,
   WebhookSubscriptionManagerOptions,
 } from "./declarative-subscriptions.js"
+
+// SSE Stream Adapter
+export { SseStreamAdapter } from "./sse-adapter.js"
+export type { SseClient, SseWriter, SseAdapterOptions } from "./sse-adapter.js"
