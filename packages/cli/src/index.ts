@@ -221,6 +221,16 @@ async function main(): Promise<void> {
       break
     }
 
+    case "insights": {
+      const { insights: insightsCmd } = await import("./commands/insights.js")
+      await insightsCmd({
+        projectDir: process.cwd(),
+        json: args.includes("--json"),
+        threshold: getFlag("--threshold"),
+      })
+      break
+    }
+
     case "--help":
     case "-h":
     case undefined:
