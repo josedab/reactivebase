@@ -156,3 +156,19 @@ export function createAction<TArgs = unknown, TResult = unknown>(
     },
   }
 }
+
+// Pre-built reactive UI stores
+export { reactiveTableStore, reactiveFormStore, presenceAvatarsStore } from "./components.js"
+export type {
+  SvelteTableColumn,
+  ReactiveTableStoreOptions,
+  ReactiveTableState,
+  ReactiveTableStore,
+  SvelteFormField,
+  ReactiveFormStoreOptions,
+  ReactiveFormState,
+  ReactiveFormStore,
+  SveltePresenceUser,
+  PresenceAvatarsStoreOptions,
+  PresenceAvatarsState,
+} from "./components.js"
