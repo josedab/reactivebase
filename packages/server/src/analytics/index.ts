@@ -36,3 +36,23 @@ export type {
   AnalyticsOptions,
   AnalyticsStats,
 } from "./analytics.js"
+
+// Embedded Analytics Query Engine
+export {
+  EmbeddedAnalyticsQueryEngine,
+  AnalyticsQueryError,
+} from "./embedded-analytics-query.js"
+
+export type {
+  TimeSeriesQuery,
+  TimeBucket as AnalyticsTimeBucket,
+  MetricDefinition,
+  FilterCondition,
+  TimeRange,
+  FunnelQuery,
+  FunnelStep,
+  FunnelResult,
+  RetentionQuery,
+  TopNQuery,
+  AnalyticsQueryResult,
+} from "./embedded-analytics-query.js"
