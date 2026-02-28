@@ -25,3 +25,17 @@ export type {
   MigrationImpact as AiMigrationImpact,
   RollbackPlan,
 } from "../ai-assistant/index.js"
+
+// AI Schema & Query Copilot
+export { SchemaCopilot, QueryBuilderAssistant as CopilotQueryBuilderAssistant } from "../ai/index.js"
+export { CREATE_CONVERSATION_TABLE_SQL, buildUpsertConversationSql, buildLoadConversationSql } from "../ai/index.js"
+export type {
+  SchemaCopilotOptions,
+  ConversationMessage,
+  ConversationHistory,
+  CopilotSchemaGenerationResult,
+  IndexSuggestion as CopilotIndexSuggestion,
+  MigrationResult,
+  CopilotQueryExplanation,
+  OptimizationSuggestion as CopilotOptimizationSuggestion,
+} from "../ai/index.js"
