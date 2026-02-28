@@ -113,6 +113,30 @@ export type {
   ReplicationStats as MultiRegionReplicationStats,
 } from "../multi-region/index.js"
 
+// Kubernetes Operator & Managed Cloud
+export {
+  KubernetesOperator,
+  ControlPlaneDashboard,
+  GitHubIntegration,
+  generateTenantTableSQL,
+  generateGitHubConnectionTableSQL,
+  buildInsertTenantSQL,
+  buildQueryTenantsSQL,
+} from "../cloud-platform/index.js"
+export type {
+  ReactiveBaseCluster,
+  TenantConfig,
+  TenantStatus,
+  ClusterHealth,
+  ProjectCreateRequest,
+  DeploymentLogEntry,
+  BillingInfo,
+  UsageMetrics as KubernetesUsageMetrics,
+  BillingBreakdownItem,
+  GitHubWebhookPayload,
+  GitHubConnection,
+} from "../cloud-platform/index.js"
+
 // Edge-First Global Query Layer
 export {
   EdgeQueryLayer,

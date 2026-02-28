@@ -86,3 +86,27 @@ export type {
   ConnectionPoolStats,
   QueryResult,
 } from "./one-click-provisioner.js"
+
+// Kubernetes Operator & Managed Cloud
+export {
+  KubernetesOperator,
+  ControlPlaneDashboard,
+  GitHubIntegration,
+  generateTenantTableSQL,
+  generateGitHubConnectionTableSQL,
+  buildInsertTenantSQL,
+  buildQueryTenantsSQL,
+} from "./kubernetes-operator.js"
+export type {
+  ReactiveBaseCluster,
+  TenantConfig,
+  TenantStatus,
+  ClusterHealth,
+  ProjectCreateRequest,
+  DeploymentLogEntry,
+  BillingInfo,
+  UsageMetrics,
+  BillingBreakdownItem,
+  GitHubWebhookPayload,
+  GitHubConnection,
+} from "./kubernetes-operator.js"
