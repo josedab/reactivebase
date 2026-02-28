@@ -26,3 +26,20 @@ export type {
   StepStatus,
   StepOptions,
 } from "../workflow/index.js"
+
+// Workflow Studio – Code Generator & Visualizer
+export {
+  WorkflowCodeGenerator,
+  StepTypeRegistry,
+  ExecutionVisualizer,
+} from "../workflow-studio/index.js"
+export type {
+  GeneratedCode,
+  StepTypeDefinition,
+  StepInput,
+  StepOutput,
+  ExecutionTimeline,
+  TimelineEntry as WorkflowTimelineEntry,
+  ExecutionGraphNode,
+  AuditLogEntry as WorkflowAuditLogEntry,
+} from "../workflow-studio/index.js"

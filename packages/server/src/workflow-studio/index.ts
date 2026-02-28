@@ -28,3 +28,20 @@ export type {
   ValidationError,
   MonitoringSnapshot,
 } from "./workflow-studio.js"
+
+export {
+  WorkflowCodeGenerator,
+  StepTypeRegistry,
+  ExecutionVisualizer,
+} from "./code-generator.js"
+
+export type {
+  GeneratedCode,
+  StepTypeDefinition,
+  StepInput,
+  StepOutput,
+  ExecutionTimeline,
+  TimelineEntry,
+  ExecutionGraphNode,
+  AuditLogEntry,
+} from "./code-generator.js"
