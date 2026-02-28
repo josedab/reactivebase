@@ -48,3 +48,7 @@ export type {
   WebhookTemplate,
   SimulatedDelivery,
 } from "./delivery-queue.js"
+
+// Circuit Breaker
+export { CircuitBreakerRegistry, CircuitOpenError, withCircuitBreaker } from "./circuit-breaker.js"
+export type { CircuitState, CircuitBreakerOptions, CircuitBreakerStats } from "./circuit-breaker.js"
