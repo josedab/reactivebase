@@ -11,16 +11,22 @@ export type { ReactivityEngineOptions, SubscriptionUpdate, UpdateCallback } from
 export {
   RowLevelTracker,
   BloomFilter,
+  AutoLevelTracker,
+  QueryPrimaryKeyCapture,
   generateRowTrackingTableSQL,
   buildUpsertRowTrackingSQL,
   buildDeleteRowTrackingSQL,
   buildGetAffectedSubscriptionsSQL,
+  buildGetTableStatsSQL,
 } from "./row-level-tracker.js"
 export type {
   RowLevelTrackerOptions,
   RowTrackingState,
   RowInvalidationResult,
   RowLevelStats,
+  TrackingLevel,
+  LevelDecision,
+  AutoLevelTrackerOptions,
 } from "./row-level-tracker.js"
 
 // Edge Prefetch Cache

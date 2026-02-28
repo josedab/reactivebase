@@ -4,16 +4,22 @@ export type { SubscriptionUpdate } from "../reactivity/index.js"
 export {
   RowLevelTracker,
   BloomFilter,
+  AutoLevelTracker,
+  QueryPrimaryKeyCapture,
   generateRowTrackingTableSQL,
   buildUpsertRowTrackingSQL,
   buildDeleteRowTrackingSQL,
   buildGetAffectedSubscriptionsSQL,
+  buildGetTableStatsSQL,
 } from "../reactivity/index.js"
 export type {
   RowLevelTrackerOptions,
   RowTrackingState,
   RowInvalidationResult,
   RowLevelStats,
+  TrackingLevel,
+  LevelDecision,
+  AutoLevelTrackerOptions,
 } from "../reactivity/index.js"
 export { EdgePrefetchCache } from "../reactivity/index.js"
 export type { EdgePrefetchOptions, CachedQueryResult, EdgeCacheStats } from "../reactivity/index.js"

@@ -402,3 +402,209 @@ export class RowLevelTracker {
     this.tracking.clear()
   }
 }
+
+// ─── Auto-Level Types ────────────────────────────────────────────────────────
+
+/** Tracking granularity level */
+export type TrackingLevel = 1 | 2 | 3
+
+/** Decision returned by the auto-level tracker */
+export interface LevelDecision {
+  level: TrackingLevel
+  reason: string
+}
+
+export interface AutoLevelTrackerOptions {
+  /** Row count threshold to enable Level 2 (filter-level) tracking (default: 1000) */
+  tableSizeThresholdL2?: number
+  /** Row count threshold to enable Level 3 (row-level) tracking (default: 100000) */
+  tableSizeThresholdL3?: number
+  /** Subscription count per table to prefer Level 3 (default: 10) */
+  subscriptionThresholdL3?: number
+  /** Options forwarded to the internal RowLevelTracker */
+  rowLevelTrackerOptions?: RowLevelTrackerOptions
+}
+
+// ─── Auto-Level Tracker ──────────────────────────────────────────────────────
+
+const DEFAULT_AUTO_LEVEL_OPTIONS: Required<Omit<AutoLevelTrackerOptions, "rowLevelTrackerOptions">> = {
+  tableSizeThresholdL2: 1_000,
+  tableSizeThresholdL3: 100_000,
+  subscriptionThresholdL3: 10,
+}
+
+/**
+ * Automatically selects the optimal tracking level (1/2/3) based on
+ * table size and subscription count. Delegates to an internal
+ * RowLevelTracker when Level 3 is chosen.
+ */
+export class AutoLevelTracker {
+  private options: Required<Omit<AutoLevelTrackerOptions, "rowLevelTrackerOptions">>
+  private rowTracker: RowLevelTracker
+
+  constructor(options: AutoLevelTrackerOptions = {}) {
+    const { rowLevelTrackerOptions, ...rest } = options
+    this.options = { ...DEFAULT_AUTO_LEVEL_OPTIONS, ...rest }
+    this.rowTracker = new RowLevelTracker(rowLevelTrackerOptions)
+  }
+
+  /** Access the underlying RowLevelTracker used for Level 3. */
+  get tracker(): RowLevelTracker {
+    return this.rowTracker
+  }
+
+  /**
+   * Determine the appropriate tracking level for a table.
+   */
+  determineLevel(table: string, tableRowCount: number, subscriptionCount: number): LevelDecision {
+    // Small tables — table-level invalidation is sufficient
+    if (tableRowCount < this.options.tableSizeThresholdL2) {
+      return {
+        level: 1,
+        reason: `table ${table} has ${tableRowCount} rows (< L2 threshold ${this.options.tableSizeThresholdL2})`,
+      }
+    }
+
+    // Large tables with many subscriptions — row-level pays off
+    if (
+      tableRowCount >= this.options.tableSizeThresholdL3 &&
+      subscriptionCount >= this.options.subscriptionThresholdL3
+    ) {
+      return {
+        level: 3,
+        reason: `table ${table} has ${tableRowCount} rows (>= L3 threshold) and ${subscriptionCount} subscriptions (>= ${this.options.subscriptionThresholdL3})`,
+      }
+    }
+
+    // Everything in between — filter-level
+    return { level: 2, reason: `table ${table} has ${tableRowCount} rows (>= L2 threshold, below L3 criteria)` }
+  }
+
+  /**
+   * Evaluate changes using the automatically determined level.
+   *
+   * - Level 1: always invalidate all subscriptions for the table.
+   * - Level 2: always invalidate (caller is expected to apply filter logic).
+   * - Level 3: delegate to RowLevelTracker for precise row matching.
+   */
+  evaluateChangesAutoLevel(
+    table: string,
+    changedRowIds: string[],
+    operation: "insert" | "update" | "delete",
+    tableRowCount: number,
+    subscriptionCount: number,
+  ): { level: TrackingLevel; results: RowInvalidationResult[] } {
+    const { level } = this.determineLevel(table, tableRowCount, subscriptionCount)
+
+    if (level === 3) {
+      return { level, results: this.rowTracker.evaluateChanges(table, changedRowIds, operation) }
+    }
+
+    // For L1/L2 we report all subscriptions as needing invalidation
+    const results: RowInvalidationResult[] = this.rowTracker.evaluateChanges(table, changedRowIds, operation)
+
+    // If the row tracker has no subscriptions for this table, return empty
+    if (results.length === 0) {
+      return { level, results: [] }
+    }
+
+    // Override: force invalidation for every subscription at L1/L2
+    return {
+      level,
+      results: results.map((r) => ({
+        ...r,
+        shouldInvalidate: true,
+        reason: "fallback" as const,
+      })),
+    }
+  }
+
+  /**
+   * Reset the underlying row-level tracker.
+   */
+  reset(): void {
+    this.rowTracker.reset()
+  }
+}
+
+// ─── Query Primary Key Capture ───────────────────────────────────────────────
+
+/**
+ * Captures primary key values from query result rows and optionally
+ * feeds them into a RowLevelTracker for automatic row-level tracking.
+ */
+export class QueryPrimaryKeyCapture {
+  private keysByQuery = new Map<string, Set<string>>()
+  private rowTracker: RowLevelTracker | null
+
+  constructor(rowTracker?: RowLevelTracker) {
+    this.rowTracker = rowTracker ?? null
+  }
+
+  /**
+   * Extract primary key values from query result rows.
+   */
+  capturePrimaryKeys(queryName: string, rows: Record<string, unknown>[], primaryKeyColumn: string): Set<string> {
+    const keys = new Set<string>()
+    for (const row of rows) {
+      const value = row[primaryKeyColumn]
+      if (value !== undefined && value !== null) {
+        keys.add(String(value))
+      }
+    }
+    this.keysByQuery.set(queryName, keys)
+    return keys
+  }
+
+  /**
+   * Get the tracked primary keys for a query.
+   */
+  getTrackedKeys(queryName: string): Set<string> {
+    return this.keysByQuery.get(queryName) ?? new Set()
+  }
+
+  /**
+   * Clear tracked keys for a query.
+   */
+  clearTrackedKeys(queryName: string): void {
+    this.keysByQuery.delete(queryName)
+  }
+
+  /**
+   * Capture primary keys and automatically track them in the RowLevelTracker.
+   */
+  captureAndTrack(
+    subscriptionId: string,
+    table: string,
+    rows: Record<string, unknown>[],
+    pkColumn: string,
+  ): RowTrackingState | null {
+    const keys = this.capturePrimaryKeys(subscriptionId, rows, pkColumn)
+
+    if (!this.rowTracker) {
+      return null
+    }
+
+    return this.rowTracker.trackResult(subscriptionId, table, [...keys])
+  }
+
+  /**
+   * Reset all captured keys.
+   */
+  reset(): void {
+    this.keysByQuery.clear()
+  }
+}
+
+// ─── Table Stats SQL ─────────────────────────────────────────────────────────
+
+/**
+ * Build a SQL statement that returns the approximate row count for a table.
+ * Uses the pg_class catalog for a fast estimate.
+ */
+export function buildGetTableStatsSQL(table: string): { sql: string; params: unknown[] } {
+  return {
+    sql: `SELECT reltuples::bigint AS row_count FROM pg_class WHERE relname = $1`,
+    params: [table],
+  }
+}
