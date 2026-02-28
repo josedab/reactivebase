@@ -34,3 +34,19 @@ export type {
   PerformanceRegression,
   IndexRecommendation,
 } from "./shadow-preview.js"
+
+// Migration Safety Net
+export { MigrationSafetyNet, MigrationSafetyError } from "./migration-safety.js"
+export type {
+  MigrationSafetyOptions,
+  MigrationValidator,
+  ValidationContext,
+  IssueSeverity,
+  ValidationIssue,
+  MigrationSafetyReport,
+  BreakingChangeInfo,
+  BreakingChangeType,
+  LockAnalysis,
+  DataLossRisk,
+  ImpactedObject,
+} from "./migration-safety.js"

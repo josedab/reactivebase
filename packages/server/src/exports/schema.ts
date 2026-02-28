@@ -61,6 +61,22 @@ export type {
   DryRunResult,
 } from "../migrations/index.js"
 
+// Migration Safety Net
+export { MigrationSafetyNet, MigrationSafetyError } from "../migrations/index.js"
+export type {
+  MigrationSafetyOptions,
+  MigrationValidator,
+  ValidationContext,
+  IssueSeverity,
+  ValidationIssue,
+  MigrationSafetyReport,
+  BreakingChangeInfo,
+  BreakingChangeType as SafetyBreakingChangeType,
+  LockAnalysis,
+  DataLossRisk,
+  ImpactedObject,
+} from "../migrations/index.js"
+
 // Schema Designer
 export { SchemaDesigner } from "../schema-designer/index.js"
 export type {
