@@ -62,3 +62,24 @@ export type {
   StepSubmissionResult,
   TutorialProgress,
 } from "./guided-tutorial.js"
+
+// Schema Explorer & Interactive Tools
+export {
+  SchemaExplorer,
+  AuthContextSwitcher,
+  LiveQueryTester,
+  SubscriptionDebugger,
+  generateSchemaPlaygroundHTML,
+} from "./schema-explorer.js"
+export type {
+  SchemaNode,
+  ColumnInfo,
+  IndexInfo,
+  RelationInfo,
+  SchemaVisualization,
+  AuthContextProfile,
+  LiveQueryTest,
+  SubscriptionDebugEntry,
+  SchemaDefinitionInput,
+  SchemaPlaygroundHTMLOptions,
+} from "./schema-explorer.js"
