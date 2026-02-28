@@ -39,3 +39,13 @@ export type { StripeConfig, StripeWebhookEvent, CheckoutSession, Invoice } from 
 // Tenant Admin Dashboard
 export { TenantAdminDashboard } from "./tenant-admin.js"
 export type { TenantOverview, TenantDetail, RevenueSummary, TenantActivity } from "./tenant-admin.js"
+
+// Isolation Profiles
+export { createIsolationProfile } from "./isolation-profiles.js"
+export type {
+  IsolationStrategy,
+  IsolationProfileConfig,
+  IsolationProfile,
+  ProvisionResult,
+  TenantStatus,
+} from "./isolation-profiles.js"
