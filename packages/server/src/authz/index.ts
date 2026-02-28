@@ -36,3 +36,29 @@ export type {
   PolicySimulationRequest,
   PolicySimulationResult,
 } from "./policy.js"
+
+// Data Governance Policies
+export {
+  defineDataGovernance,
+  applyGovernanceMasking,
+  generateRetentionSQL,
+  generateValidationSQL,
+  generateAuditTriggerSQL,
+  validateGovernance,
+  generateAllGovernanceSQL,
+  GovernanceError,
+} from "./data-governance.js"
+export type {
+  DataClassification,
+  MaskingStrategy,
+  RetentionAction,
+  DataGovernanceSchema,
+  TableGovernancePolicy,
+  FieldGovernancePolicy,
+  RetentionPolicy,
+  AuditPolicy,
+  ValidationRule,
+  ResidencyPolicy,
+  GovernanceConfig,
+  GovernanceViolation,
+} from "./data-governance.js"

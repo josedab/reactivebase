@@ -54,6 +54,18 @@ export type {
   PermissionConfig,
 } from "../authz/index.js"
 
+// Data Governance Policies
+export {
+  defineDataGovernance,
+  applyGovernanceMasking,
+  generateRetentionSQL,
+  generateValidationSQL,
+  generateAuditTriggerSQL,
+  validateGovernance,
+  generateAllGovernanceSQL,
+  GovernanceError,
+} from "../authz/index.js"
+
 // Declarative Access Control Language (DACL)
 export { DaclEngine, PolicyBuilder, allow as daclAllow, deny as daclDeny } from "../dacl/index.js"
 export type {
