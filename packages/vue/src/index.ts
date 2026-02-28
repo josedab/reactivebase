@@ -166,3 +166,17 @@ export function useAction<TArgs = unknown, TResult = unknown>(
 
   return { run, isLoading, error }
 }
+
+// Pre-built reactive UI composables
+export { useReactiveTable, useReactiveForm, usePresenceAvatars } from "./components.js"
+export type {
+  VueTableColumn,
+  UseReactiveTableOptions,
+  UseReactiveTableReturn,
+  VueFormField,
+  UseReactiveFormOptions,
+  UseReactiveFormReturn,
+  VuePresenceUser,
+  UsePresenceAvatarsOptions,
+  UsePresenceAvatarsReturn,
+} from "./components.js"
