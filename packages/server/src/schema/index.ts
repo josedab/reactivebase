@@ -6,3 +6,20 @@ export { defineSchema } from "./schema.js"
 export type { Schema, SchemaDefinition, InferSchemaTypes } from "./schema.js"
 export { generateMigrationSQL, generateCreateTableSQL, generateIndexSQL } from "./migrations.js"
 export type { Migration } from "./migrations.js"
+
+// Schema Version Registry
+export {
+  SchemaVersionRegistry,
+  generateSchemaRegistryTableSQL,
+} from "./schema-registry.js"
+export type {
+  SchemaVersion,
+  SchemaTableSnapshot,
+  SchemaColumnSnapshot,
+  CompatibilityResult,
+  BreakingChange,
+  CompatibilityWarning,
+  SchemaAddition,
+  EvolutionAnalytics,
+  DeprecationWarning,
+} from "./schema-registry.js"
