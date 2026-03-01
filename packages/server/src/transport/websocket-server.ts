@@ -319,7 +319,7 @@ export class TransportServer {
         functionType: "mutation",
         args,
         auth: conn.auth,
-        state: new Map(),
+        state: Object.freeze({}),
       }
 
       const beforeResult = await this.middleware.runBefore(mwCtx)
@@ -350,7 +350,7 @@ export class TransportServer {
         functionType: "mutation",
         args,
         auth: conn.auth,
-        state: new Map(),
+        state: Object.freeze({}),
       }
       await this.middleware.runOnError(mwCtx, error instanceof Error ? error : new Error(String(error)))
       this.metrics?.recordMutation(`mutation:${mutationName}`, 0, true)
@@ -387,7 +387,7 @@ export class TransportServer {
         functionType: "action",
         args,
         auth: conn.auth,
-        state: new Map(),
+        state: Object.freeze({}),
       }
 
       const beforeResult = await this.middleware.runBefore(mwCtx)
@@ -405,7 +405,7 @@ export class TransportServer {
         functionType: "action",
         args,
         auth: conn.auth,
-        state: new Map(),
+        state: Object.freeze({}),
       }
       await this.middleware.runOnError(mwCtx, error instanceof Error ? error : new Error(String(error)))
       this.send(conn, {
