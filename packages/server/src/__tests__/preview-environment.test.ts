@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import {
   PreviewEnvironmentManager,
-  PreviewEnvironmentError,
   buildCreatePreviewEnvTableSQL,
   buildUpsertPreviewEnvSQL,
   buildGetExpiredPreviewsSQL,
 } from "../branching/preview-environment.js"
+import type { CreatePreviewRequest } from "../branching/preview-environment.js"
 import { DatabaseBranching } from "../branching/branching.js"
 
 describe("PreviewEnvironmentManager", () => {
@@ -108,7 +108,7 @@ describe("PreviewEnvironmentManager", () => {
   })
 
   it("throws on missing trigger", async () => {
-    await expect(manager.create({} as any)).rejects.toThrow("Trigger type is required")
+    await expect(manager.create({} as unknown as CreatePreviewRequest)).rejects.toThrow("Trigger type is required")
   })
 
   it("throws on update of non-existent preview", async () => {
