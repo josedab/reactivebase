@@ -52,3 +52,5 @@ export * from "./exports/session-resumption.js"
 export * from "./exports/query-debugger.js"
 /** Schema-Driven E2E Test Generator: auto-generate test suites from schema */
 export * from "./exports/test-generator.js"
+/** Blue-Green Deployments: zero-downtime, canary rollout, auto-rollback */
+export * from "./exports/blue-green.js"
