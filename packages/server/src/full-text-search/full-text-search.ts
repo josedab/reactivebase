@@ -128,6 +128,26 @@ const VALID_SEARCH_LANGUAGES = new Set<string>([
   "russian",
 ])
 
+const SAFE_IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+
+function validateColumnName(name: string): string {
+  if (!SAFE_IDENTIFIER_RE.test(name)) {
+    throw new SearchError(`Invalid column name: ${name}`)
+  }
+  return name
+}
+
+function sanitizeHighlightTag(tag: string): string {
+  return tag.replace(/'/g, "''")
+}
+
+function validateFinitePositive(value: number, label: string): number {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new SearchError(`Invalid ${label}: must be a finite non-negative number`)
+  }
+  return value
+}
+
 function validateLanguage(language: string): string {
   if (!VALID_SEARCH_LANGUAGES.has(language)) {
     throw new SearchError(`Invalid search language: ${language}`)
@@ -296,9 +316,10 @@ export class SearchQueryBuilder<T = Record<string, unknown>> {
     // Build tsvector expression
     const tsvectorParts = searchColumns.map((col) => {
       const lang = validateLanguage(col.language ?? language)
+      const safeCol = validateColumnName(col.column)
       const weight = col.weight
-        ? `setweight(to_tsvector('${lang}', COALESCE("${col.column}", '')), '${col.weight}')`
-        : `to_tsvector('${lang}', COALESCE("${col.column}", ''))`
+        ? `setweight(to_tsvector('${lang}', COALESCE("${safeCol}", '')), '${col.weight}')`
+        : `to_tsvector('${lang}', COALESCE("${safeCol}", ''))`
       return weight
     })
     const tsvector = tsvectorParts.length > 1 ? tsvectorParts.join(" || ") : tsvectorParts[0]
@@ -313,13 +334,19 @@ export class SearchQueryBuilder<T = Record<string, unknown>> {
     // Highlighting
     if (this.plan.highlightOptions) {
       const hl = this.plan.highlightOptions
+      const startTag = sanitizeHighlightTag(hl.startTag ?? "<b>")
+      const endTag = sanitizeHighlightTag(hl.endTag ?? "</b>")
+      const maxWords = validateFinitePositive(hl.maxWords ?? 35, "maxWords")
+      const minWords = validateFinitePositive(hl.minWords ?? 15, "minWords")
+      const fragmentDelimiter = sanitizeHighlightTag(hl.fragmentDelimiter ?? " ... ")
       for (const col of searchColumns) {
         const hlLang = validateLanguage(col.language ?? language)
+        const safeCol = validateColumnName(col.column)
         selectParts.push(
-          `ts_headline('${hlLang}', COALESCE("${col.column}", ''), ${tsquery}, ` +
-            `'StartSel=${hl.startTag ?? "<b>"}, StopSel=${hl.endTag ?? "</b>"}, ` +
-            `MaxWords=${hl.maxWords ?? 35}, MinWords=${hl.minWords ?? 15}, ` +
-            `FragmentDelimiter=${hl.fragmentDelimiter ?? " ... "}') AS "_hl_${col.column}"`,
+          `ts_headline('${hlLang}', COALESCE("${safeCol}", ''), ${tsquery}, ` +
+            `'StartSel=${startTag}, StopSel=${endTag}, ` +
+            `MaxWords=${maxWords}, MinWords=${minWords}, ` +
+            `FragmentDelimiter=${fragmentDelimiter}') AS "_hl_${safeCol}"`,
         )
       }
     }
@@ -330,21 +357,32 @@ export class SearchQueryBuilder<T = Record<string, unknown>> {
 
     // Additional filters
     for (const filter of this.plan.filters) {
+      const safeFilterCol = validateColumnName(filter.column)
       params.push(filter.value)
-      parts.push(`AND "${filter.column}" ${filter.operator} $${params.length}`)
+      parts.push(`AND "${safeFilterCol}" ${filter.operator} $${params.length}`)
     }
 
     // Min rank filter
     if (this.plan.minRank !== undefined) {
-      parts.push(`AND ${rankFunction}(${tsvector}, ${tsquery}) >= ${this.plan.minRank}`)
+      validateFinitePositive(this.plan.minRank, "minRank")
+      params.push(this.plan.minRank)
+      parts.push(`AND ${rankFunction}(${tsvector}, ${tsquery}) >= $${params.length}`)
     }
 
     // ORDER BY rank
     parts.push(`ORDER BY "_rank" DESC`)
 
     // LIMIT / OFFSET
-    if (this.plan.limit !== undefined) parts.push(`LIMIT ${this.plan.limit}`)
-    if (this.plan.offset !== undefined) parts.push(`OFFSET ${this.plan.offset}`)
+    if (this.plan.limit !== undefined) {
+      validateFinitePositive(this.plan.limit, "limit")
+      params.push(this.plan.limit)
+      parts.push(`LIMIT $${params.length}`)
+    }
+    if (this.plan.offset !== undefined) {
+      validateFinitePositive(this.plan.offset, "offset")
+      params.push(this.plan.offset)
+      parts.push(`OFFSET $${params.length}`)
+    }
 
     return { sql: parts.join("\n"), params, plan: { ...this.plan } }
   }
@@ -355,14 +393,22 @@ export class SearchQueryBuilder<T = Record<string, unknown>> {
   ): { sql: string; params: unknown[]; plan: SearchQueryPlan } {
     const { table, searchColumns, fuzzyQuery, fuzzyOptions } = this.plan
     const threshold = fuzzyOptions?.threshold ?? 0.3
+    validateFinitePositive(threshold, "threshold")
     const matchType = fuzzyOptions?.matchType ?? "trigram"
 
     if (matchType === "trigram") {
       // pg_trgm similarity search
-      const simColumns = searchColumns.map((col) => `similarity("${col.column}", $1)`).join(" + ")
-      const orConditions = searchColumns.map((col) => `similarity("${col.column}", $1) > ${threshold}`).join(" OR ")
-
       params.push(fuzzyQuery)
+      const queryParam = `$${params.length}`
+      params.push(threshold)
+      const thresholdParam = `$${params.length}`
+
+      const simColumns = searchColumns
+        .map((col) => `similarity("${validateColumnName(col.column)}", ${queryParam})`)
+        .join(" + ")
+      const orConditions = searchColumns
+        .map((col) => `similarity("${validateColumnName(col.column)}", ${queryParam}) > ${thresholdParam}`)
+        .join(" OR ")
 
       parts.push(`SELECT "${table}".*, (${simColumns}) / ${searchColumns.length} AS "_rank"`)
       parts.push(`FROM "${table}"`)
@@ -370,23 +416,35 @@ export class SearchQueryBuilder<T = Record<string, unknown>> {
 
       // Additional filters
       for (const filter of this.plan.filters) {
+        const safeFilterCol = validateColumnName(filter.column)
         params.push(filter.value)
-        parts.push(`AND "${filter.column}" ${filter.operator} $${params.length}`)
+        parts.push(`AND "${safeFilterCol}" ${filter.operator} $${params.length}`)
       }
 
       parts.push(`ORDER BY "_rank" DESC`)
     } else {
       // Levenshtein distance
-      const distColumns = searchColumns.map((col) => `levenshtein("${col.column}", $1)`).join(" + ")
       params.push(fuzzyQuery)
+      const queryParam = `$${params.length}`
+      const distColumns = searchColumns
+        .map((col) => `levenshtein("${validateColumnName(col.column)}", ${queryParam})`)
+        .join(" + ")
 
       parts.push(`SELECT "${table}".*, ${distColumns} AS "_distance"`)
       parts.push(`FROM "${table}"`)
       parts.push(`ORDER BY "_distance" ASC`)
     }
 
-    if (this.plan.limit !== undefined) parts.push(`LIMIT ${this.plan.limit}`)
-    if (this.plan.offset !== undefined) parts.push(`OFFSET ${this.plan.offset}`)
+    if (this.plan.limit !== undefined) {
+      validateFinitePositive(this.plan.limit, "limit")
+      params.push(this.plan.limit)
+      parts.push(`LIMIT $${params.length}`)
+    }
+    if (this.plan.offset !== undefined) {
+      validateFinitePositive(this.plan.offset, "offset")
+      params.push(this.plan.offset)
+      parts.push(`OFFSET $${params.length}`)
+    }
 
     return { sql: parts.join("\n"), params, plan: { ...this.plan } }
   }
