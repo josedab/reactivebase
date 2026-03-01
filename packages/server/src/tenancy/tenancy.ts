@@ -46,18 +46,24 @@ export function createTenancyMiddleware(config: TenancyConfig): Middleware {
       const tenantId = getTenantId(ctx.auth, opts.claimKey)
 
       if (!tenantId && opts.mode === "row") {
-        // Store tenantId in middleware state for the database context to use
-        ctx.state.set("_tenantId", null)
-        ctx.state.set("_tenantColumn", opts.column)
-        ctx.state.set("_tenantMode", opts.mode)
-        ctx.state.set("_tenantExclude", opts.excludeTables)
-        return
+        return {
+          state: {
+            _tenantId: null,
+            _tenantColumn: opts.column,
+            _tenantMode: opts.mode,
+            _tenantExclude: opts.excludeTables,
+          },
+        }
       }
 
-      ctx.state.set("_tenantId", tenantId)
-      ctx.state.set("_tenantColumn", opts.column)
-      ctx.state.set("_tenantMode", opts.mode)
-      ctx.state.set("_tenantExclude", opts.excludeTables)
+      return {
+        state: {
+          _tenantId: tenantId,
+          _tenantColumn: opts.column,
+          _tenantMode: opts.mode,
+          _tenantExclude: opts.excludeTables,
+        },
+      }
     },
   }
 }
@@ -146,13 +152,13 @@ export interface TenantContext {
 /**
  * Extract tenant context from middleware state.
  */
-export function getTenantFromState(state: Map<string, unknown>): TenantContext | null {
-  const mode = state.get("_tenantMode") as string | undefined
+export function getTenantFromState(state: Readonly<Record<string, unknown>>): TenantContext | null {
+  const mode = state._tenantMode as string | undefined
   if (!mode) return null
 
   return {
-    tenantId: state.get("_tenantId") as string | null,
+    tenantId: state._tenantId as string | null,
     mode: mode as "row" | "schema",
-    column: (state.get("_tenantColumn") as string) ?? "tenantId",
+    column: (state._tenantColumn as string) ?? "tenantId",
   }
 }

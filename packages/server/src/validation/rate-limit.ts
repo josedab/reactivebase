@@ -112,7 +112,7 @@ export function rateLimit(options: RateLimitOptions): Middleware {
         throw new RateLimitError(result.resetAt - Date.now())
       }
 
-      ctx.state.set("_rateLimit_remaining", result.remaining)
+      return { state: { _rateLimit_remaining: result.remaining } }
     },
   }
 }

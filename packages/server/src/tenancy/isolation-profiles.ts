@@ -114,13 +114,17 @@ class SharedSchemaProfile implements IsolationProfile {
           throw new Error("Tenant context required but not found in auth claims")
         }
 
-        ctx.state.set("_tenantId", tenantId)
-        ctx.state.set("_tenantColumn", this.config.column)
-        ctx.state.set("_tenantMode", "row")
-        ctx.state.set("_tenantExclude", this.config.excludeTables)
-        ctx.state.set("_isolationStrategy", this.strategy)
-
         if (tenantId) this.recordAccess(tenantId)
+
+        return {
+          state: {
+            _tenantId: tenantId,
+            _tenantColumn: this.config.column,
+            _tenantMode: "row" as const,
+            _tenantExclude: this.config.excludeTables,
+            _isolationStrategy: this.strategy,
+          },
+        }
       },
     }
   }
@@ -188,17 +192,21 @@ class SchemaPerTenantProfile implements IsolationProfile {
           throw new Error("Tenant context required but not found in auth claims")
         }
 
-        ctx.state.set("_tenantId", tenantId)
-        ctx.state.set("_tenantMode", "schema")
-        ctx.state.set("_tenantExclude", this.config.excludeTables)
-        ctx.state.set("_isolationStrategy", this.strategy)
+        const stateUpdates: Record<string, unknown> = {
+          _tenantId: tenantId,
+          _tenantMode: "schema" as const,
+          _tenantExclude: this.config.excludeTables,
+          _isolationStrategy: this.strategy,
+        }
 
         if (tenantId) {
           const schemaName = `tenant_${sanitize(tenantId)}`
-          ctx.state.set("_tenantSchema", schemaName)
-          ctx.state.set("_searchPath", `"${schemaName}", public`)
+          stateUpdates._tenantSchema = schemaName
+          stateUpdates._searchPath = `"${schemaName}", public`
           this.recordAccess(tenantId)
         }
+
+        return { state: stateUpdates }
       },
     }
   }
@@ -276,15 +284,19 @@ class DbPerTenantProfile implements IsolationProfile {
           throw new Error("Tenant context required but not found in auth claims")
         }
 
-        ctx.state.set("_tenantId", tenantId)
-        ctx.state.set("_tenantMode", "database")
-        ctx.state.set("_isolationStrategy", this.strategy)
+        const stateUpdates: Record<string, unknown> = {
+          _tenantId: tenantId,
+          _tenantMode: "database" as const,
+          _isolationStrategy: this.strategy,
+        }
 
         if (tenantId) {
           const dbUrl = this.getTenantDatabaseUrl(tenantId)
-          ctx.state.set("_tenantDatabaseUrl", dbUrl)
+          stateUpdates._tenantDatabaseUrl = dbUrl
           this.recordAccess(tenantId)
         }
+
+        return { state: stateUpdates }
       },
     }
   }
