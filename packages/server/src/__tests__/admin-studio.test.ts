@@ -210,9 +210,9 @@ describe("buildDataBrowserSQL", () => {
       filters: [],
     })
     expect(sql).toContain('FROM "users"')
-    expect(sql).toContain("LIMIT 20")
-    expect(sql).toContain("OFFSET 0")
-    expect(params).toHaveLength(0)
+    expect(sql).toContain("LIMIT $1")
+    expect(sql).toContain("OFFSET $2")
+    expect(params).toEqual([20, 0])
   })
 
   it("generates WHERE clauses for filters", () => {
@@ -228,7 +228,7 @@ describe("buildDataBrowserSQL", () => {
     expect(sql).toContain("WHERE")
     expect(sql).toContain('"done" = $1')
     expect(sql).toContain('"title" ILIKE $2')
-    expect(params).toEqual([false, "%bug%"])
+    expect(params).toEqual([false, "%bug%", 10, 0])
   })
 
   it("handles is_null and is_not_null operators", () => {
@@ -239,7 +239,7 @@ describe("buildDataBrowserSQL", () => {
       filters: [{ column: "bio", operator: "is_null" }],
     })
     expect(sql).toContain('"bio" IS NULL')
-    expect(params).toHaveLength(0)
+    expect(params).toEqual([10, 0])
   })
 
   it("applies sorting", () => {
@@ -255,13 +255,13 @@ describe("buildDataBrowserSQL", () => {
   })
 
   it("calculates correct offset for page 3", () => {
-    const { sql } = buildDataBrowserSQL({
+    const { params } = buildDataBrowserSQL({
       table: "tasks",
       page: 3,
       pageSize: 25,
       filters: [],
     })
-    expect(sql).toContain("OFFSET 50")
+    expect(params).toContain(50)
   })
 })
 

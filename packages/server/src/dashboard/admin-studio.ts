@@ -146,7 +146,12 @@ export function buildDataBrowserSQL(query: DataBrowserQuery): { sql: string; par
   const sortDir = query.sortDirection === "desc" ? "DESC" : "ASC"
   const offset = (query.page - 1) * query.pageSize
 
-  const sql = `SELECT * FROM "${tableName}" ${whereClause} ORDER BY "${sortCol}" ${sortDir} LIMIT ${query.pageSize} OFFSET ${offset}`
+  params.push(query.pageSize)
+  const limitParam = `$${paramIdx++}`
+  params.push(offset)
+  const offsetParam = `$${paramIdx++}`
+
+  const sql = `SELECT * FROM "${tableName}" ${whereClause} ORDER BY "${sortCol}" ${sortDir} LIMIT ${limitParam} OFFSET ${offsetParam}`
   return { sql, params }
 }
 
