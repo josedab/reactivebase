@@ -32,7 +32,7 @@ async function main(): Promise<void> {
         const { generateTestsCommand } = await import("./commands/generate-tests.js")
         await generateTestsCommand({
           projectDir: process.cwd(),
-          coverage: (getFlag("--coverage", "standard") as "basic" | "standard" | "high"),
+          coverage: getFlag("--coverage", "standard") as "basic" | "standard" | "high",
           outputDir: args.includes("--output") ? getFlag("--output", "") : undefined,
           dryRun: args.includes("--dry-run"),
         })
@@ -216,7 +216,6 @@ async function main(): Promise<void> {
       await pluginAdd(args.slice(1))
       break
     }
-
 
     case "optimize": {
       const { optimize: optimizeCmd } = await import("./commands/optimize.js")

@@ -16,6 +16,7 @@ import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs"
 import * as crypto from "crypto"
+import { CopilotCommandProvider, buildCommandContext } from "./copilot-commands.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -105,7 +106,6 @@ export function deactivate(): void {
 // ─── Copilot Commands ────────────────────────────────────────────────────────
 
 function registerCopilotCommands(context: vscode.ExtensionContext): void {
-  const { CopilotCommandProvider, buildCommandContext } = require("./copilot-commands")
   const provider = new CopilotCommandProvider(state.outputChannel)
   const commands = provider.registerCommands()
 

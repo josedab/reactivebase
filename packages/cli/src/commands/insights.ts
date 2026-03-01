@@ -139,7 +139,9 @@ export async function insights(options: InsightsOptions): Promise<void> {
 
   // Summary
   console.log("━".repeat(60))
-  console.log(`  Grade: ${grade}  |  Complexity: ${complexityScore}/100  |  Dead fns: ${deadFunctions.length}  |  High risk: ${highRiskCount}`)
+  console.log(
+    `  Grade: ${grade}  |  Complexity: ${complexityScore}/100  |  Dead fns: ${deadFunctions.length}  |  High risk: ${highRiskCount}`,
+  )
   console.log("━".repeat(60))
 
   // Check thresholds for CI
@@ -166,13 +168,6 @@ interface FsUtils {
 }
 
 function analyzeSchemaComplexity(projectDir: string, fs: FsUtils): SchemaComplexity {
-  let totalTables = 0
-  let totalColumns = 0
-  let totalRelations = 0
-  let totalIndexes = 0
-  let maxColumnsTable: { name: string; count: number } | null = null
-  const tableNames: string[] = []
-
   const schemaDir = fs.join(projectDir, "src", "schema")
   if (!fs.existsSync(schemaDir)) {
     // Try alternative locations
@@ -290,7 +285,13 @@ function detectDeadFunctions(projectDir: string, fs: FsUtils): DeadFunction[] {
         const refs = (allContent.match(regex) ?? []).length
         // If only referenced once (its own definition), it might be dead
         if (refs <= 1) {
-          const type = content.includes("query(") ? "query" : content.includes("mutation(") ? "mutation" : content.includes("action(") ? "action" : "unknown"
+          const type = content.includes("query(")
+            ? "query"
+            : content.includes("mutation(")
+              ? "mutation"
+              : content.includes("action(")
+                ? "action"
+                : "unknown"
           dead.push({
             name: fnName,
             file: `src/functions/${file}`,
@@ -367,11 +368,7 @@ function predictPerformance(schema: SchemaComplexity): PerformancePrediction[] {
   return predictions
 }
 
-function computeGrade(
-  complexity: number,
-  deadFunctions: number,
-  highRisk: number,
-): "A" | "B" | "C" | "D" | "F" {
+function computeGrade(complexity: number, deadFunctions: number, highRisk: number): "A" | "B" | "C" | "D" | "F" {
   const score = 100 - complexity * 0.4 - deadFunctions * 5 - highRisk * 15
   if (score >= 80) return "A"
   if (score >= 60) return "B"

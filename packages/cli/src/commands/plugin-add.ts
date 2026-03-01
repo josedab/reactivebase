@@ -10,7 +10,7 @@
  */
 
 import { execSync } from "child_process"
-import { writeFileSync, mkdirSync, existsSync, readFileSync } from "fs"
+import { writeFileSync, mkdirSync, readFileSync } from "fs"
 import { join } from "path"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -74,11 +74,19 @@ export class PluginAddCommand {
       if (known) {
         resolvedName = known.npmPackage
         resolvedVersion = options.version ?? known.version
-        steps.push({ name: "resolve", status: "done", message: `Resolved ${pluginName} → ${resolvedName}@${resolvedVersion}` })
+        steps.push({
+          name: "resolve",
+          status: "done",
+          message: `Resolved ${pluginName} → ${resolvedName}@${resolvedVersion}`,
+        })
         console.log(`  ✓ Resolved: ${resolvedName}@${resolvedVersion}`)
       } else if (pluginName.startsWith("@reactivebase/plugin-") || pluginName.startsWith("reactivebase-plugin-")) {
         // Treat as npm package name directly
-        steps.push({ name: "resolve", status: "done", message: `Using npm package: ${resolvedName}@${resolvedVersion}` })
+        steps.push({
+          name: "resolve",
+          status: "done",
+          message: `Using npm package: ${resolvedName}@${resolvedVersion}`,
+        })
         console.log(`  ✓ Package: ${resolvedName}@${resolvedVersion}`)
       } else {
         // Try npm registry lookup
@@ -131,7 +139,13 @@ export class PluginAddCommand {
         const msg = err instanceof Error ? err.message : String(err)
         steps.push({ name: "install", status: "failed", message: msg })
         console.log(`  ✗ Install failed: ${msg}`)
-        return { success: false, pluginName: resolvedName, version: resolvedVersion, steps, durationMs: Date.now() - startTime }
+        return {
+          success: false,
+          pluginName: resolvedName,
+          version: resolvedVersion,
+          steps,
+          durationMs: Date.now() - startTime,
+        }
       }
     }
 

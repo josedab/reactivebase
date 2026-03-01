@@ -46,11 +46,13 @@ export async function doctor(options: DoctorOptions): Promise<void> {
     console.log("   Set DATABASE_URL to enable full health check.\n")
 
     if (json) {
-      console.log(JSON.stringify({
-        healthy: null,
-        extensions: patterns.map((p) => ({ name: p.extension, status: "unchecked", reason: p.reason })),
-        recommendations: ["Set DATABASE_URL to enable extension health check"],
-      }))
+      console.log(
+        JSON.stringify({
+          healthy: null,
+          extensions: patterns.map((p) => ({ name: p.extension, status: "unchecked", reason: p.reason })),
+          recommendations: ["Set DATABASE_URL to enable extension health check"],
+        }),
+      )
     }
     return
   }

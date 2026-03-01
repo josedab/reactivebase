@@ -10,7 +10,7 @@
  *   $form.submit()
  */
 
-import { queryStore, createMutation, getReactiveBaseClient } from "./index.js"
+import { queryStore, createMutation } from "./index.js"
 import type { Readable } from "./index.js"
 
 // ─── ReactiveTable Store ─────────────────────────────────────────────────────
@@ -279,11 +279,7 @@ export function presenceAvatarsStore(options: PresenceAvatarsStoreOptions): Read
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function sortData(
-  data: Record<string, unknown>[],
-  key: string | null,
-  dir: "asc" | "desc",
-): Record<string, unknown>[] {
+function sortData(data: Record<string, unknown>[], key: string | null, dir: "asc" | "desc"): Record<string, unknown>[] {
   if (!key) return data
   return [...data].sort((a, b) => {
     const cmp = String(a[key] ?? "").localeCompare(String(b[key] ?? ""))

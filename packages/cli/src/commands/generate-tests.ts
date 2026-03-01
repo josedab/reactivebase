@@ -5,7 +5,7 @@
  */
 
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "fs"
-import { join, resolve } from "path"
+import { join } from "path"
 
 export interface GenerateTestsOptions {
   projectDir: string
