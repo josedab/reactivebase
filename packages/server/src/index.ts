@@ -46,3 +46,5 @@ export * from "./exports/distributed-tx.js"
 export * from "./exports/query-composition.js"
 /** Connection Health Intelligence: monitoring, circuit breakers, adaptive scaling */
 export * from "./exports/connection-health.js"
+/** Session Resumption: stateful reconnection with differential sync */
+export * from "./exports/session-resumption.js"
