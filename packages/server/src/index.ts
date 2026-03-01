@@ -50,3 +50,5 @@ export * from "./exports/connection-health.js"
 export * from "./exports/session-resumption.js"
 /** Query Debugger: live dependency graphs, invalidation traces, profiling */
 export * from "./exports/query-debugger.js"
+/** Schema-Driven E2E Test Generator: auto-generate test suites from schema */
+export * from "./exports/test-generator.js"
