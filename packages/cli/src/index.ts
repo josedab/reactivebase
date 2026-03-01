@@ -250,6 +250,16 @@ async function main(): Promise<void> {
       break
     }
 
+    case "init": {
+      const { initProject } = await import("./commands/init-profile.js")
+      await initProject({
+        projectDir: process.cwd(),
+        profile: getFlag("--profile", "minimal"),
+        json: args.includes("--json"),
+      })
+      break
+    }
+
     case "--help":
     case "-h":
     case undefined:
@@ -282,6 +292,7 @@ Commands:
   deploy           Deploy to cloud (Fly.io/Railway/ReactiveBase Cloud)
   deploy --cloud   Deploy to ReactiveBase Cloud (managed)
   doctor           Check PostgreSQL extension health
+  init --profile   Initialize project with a config profile
   add <plugin>     Add a plugin (npm install + configure + types)
   functions list   List all defined functions
   dacl             Access control policy management
