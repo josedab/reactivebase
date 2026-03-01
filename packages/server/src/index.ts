@@ -58,3 +58,5 @@ export * from "./exports/blue-green.js"
 export * from "./exports/pg-extensions.js"
 /** Universal Database Seeding DSL: declarative test data generation */
 export * from "./exports/seeding-dsl.js"
+/** Portable Configuration Profiles: composable config bundles for deployment scenarios */
+export * from "./exports/config-profiles.js"
