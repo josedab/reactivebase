@@ -360,8 +360,8 @@ export class PluginInstaller {
         npmArgs.push("--registry", options.registry)
       }
 
-      const { execSync } = await import("child_process")
-      execSync(`npm ${npmArgs.join(" ")}`, {
+      const { execFileSync } = await import("child_process")
+      execFileSync("npm", npmArgs, {
         cwd: options.projectDir ?? this.projectDir,
         stdio: "pipe",
       })
@@ -467,8 +467,8 @@ export class PluginInstaller {
     const startTime = Date.now()
 
     try {
-      const { execSync } = await import("child_process")
-      execSync(`npm uninstall ${name}`, {
+      const { execFileSync } = await import("child_process")
+      execFileSync("npm", ["uninstall", name], {
         cwd: this.projectDir,
         stdio: "pipe",
       })

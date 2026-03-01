@@ -9,7 +9,7 @@
  *   reactivebase add @reactivebase/plugin-resend --skip-types --dry-run
  */
 
-import { execSync } from "child_process"
+import { execFileSync } from "child_process"
 import { writeFileSync, mkdirSync, readFileSync } from "fs"
 import { join } from "path"
 
@@ -129,7 +129,7 @@ export class PluginAddCommand {
       console.log("  ◦ Installing package...")
       try {
         const versionSpec = options.version ? `${resolvedName}@${options.version}` : resolvedName
-        execSync(`npm install ${versionSpec}`, { cwd: dir, stdio: "pipe" })
+        execFileSync("npm", ["install", versionSpec], { cwd: dir, stdio: "pipe" })
 
         // Resolve installed version
         resolvedVersion = this._resolveInstalledVersion(resolvedName, dir)
