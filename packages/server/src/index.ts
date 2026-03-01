@@ -56,3 +56,5 @@ export * from "./exports/test-generator.js"
 export * from "./exports/blue-green.js"
 /** Postgres Extension Auto-Provisioner: detect, install, and validate extensions */
 export * from "./exports/pg-extensions.js"
+/** Universal Database Seeding DSL: declarative test data generation */
+export * from "./exports/seeding-dsl.js"
