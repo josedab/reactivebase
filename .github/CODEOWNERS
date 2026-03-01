@@ -35,3 +35,7 @@ tsconfig.json  @josedab
 docs/      @josedab
 website/   @josedab
 README.md  @josedab
+
+# Examples & deployment
+examples/  @josedab
+deploy/    @josedab
