@@ -301,7 +301,7 @@ export class SchemaCopilot {
   startConversation(): ConversationHistory {
     const now = Date.now()
     this.conversation = {
-      id: `conv_${now}_${Math.random().toString(36).slice(2, 8)}`,
+      id: `conv_${now}_${crypto.randomUUID()}`,
       messages: [
         {
           role: "system",

@@ -303,7 +303,7 @@ export class LiveQueryTester {
     durationMs: number = 0,
   ): LiveQueryTest {
     const entry: LiveQueryTest = {
-      id: `qt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      id: `qt_${Date.now()}_${crypto.randomUUID()}`,
       functionName,
       args,
       authContext,

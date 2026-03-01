@@ -123,7 +123,7 @@ export class ConflictResolver {
     base?: VersionedRow<T>,
   ): Promise<ResolutionResult<T>> {
     const conflict: ConflictRecord<T> = {
-      id: `conflict_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      id: `conflict_${Date.now()}_${crypto.randomUUID()}`,
       table,
       rowId,
       localVersion: local,
