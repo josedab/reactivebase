@@ -221,18 +221,24 @@ function generateDropColumnSQL(table: string, column: string): string {
   return `ALTER TABLE "${sanitizeIdentifier(table)}" DROP COLUMN IF EXISTS "${sanitizeIdentifier(column)}";`
 }
 
+const COLUMN_TYPE_MAP: Record<string, string> = {
+  string: "text",
+  number: "double precision",
+  integer: "integer",
+  boolean: "boolean",
+  timestamp: "timestamptz",
+  json: "jsonb",
+  id: "text",
+  vector: "vector",
+}
+
 function mapColumnType(type: string): string {
-  const mapping: Record<string, string> = {
-    string: "text",
-    number: "double precision",
-    integer: "integer",
-    boolean: "boolean",
-    timestamp: "timestamptz",
-    json: "jsonb",
-    id: "text",
-    vector: "vector",
+  const mapped = COLUMN_TYPE_MAP[type]
+  if (!mapped) {
+    console.warn(`Unknown column type "${type}", defaulting to "text"`)
+    return "text"
   }
-  return mapping[type] ?? "text"
+  return mapped
 }
 
 // ─── Admin Studio ────────────────────────────────────────────────────────────
