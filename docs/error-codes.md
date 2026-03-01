@@ -89,7 +89,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/analytics/analytics.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the analytics module documentation for configuration and usage details.
+- **Resolution**: Verify your analytics pipeline configuration (aggregations, time windows). Ensure the target tables exist and have the expected columns for the metrics you're collecting.
 
 ### auth
 
@@ -97,13 +97,13 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/auth/auth.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the auth module documentation for configuration and usage details.
+- **Resolution**: Verify the JWT token is valid and not expired. Check that your auth provider configuration (secret, issuer, audience) in `defineConfig()` matches the token issuer's settings.
 
 #### `AuthorizationError`
 
 - **Source**: `packages/server/src/auth/auth.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the auth module documentation for configuration and usage details.
+- **Resolution**: Ensure the authenticated user has the required role or permission. Review your `allow()` / `deny()` rules in the function definition and verify the user's claims include the expected roles.
 
 ### auth-debugger
 
@@ -111,7 +111,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/auth-debugger/auth-debugger.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the auth-debugger module documentation for configuration and usage details.
+- **Resolution**: The auth debugger encountered an issue tracing the auth pipeline. Run with verbose logging enabled (`authDebug: true` in config) to see which middleware step failed.
 
 ### authz
 
@@ -119,7 +119,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/authz/authz.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the authz module documentation for configuration and usage details.
+- **Resolution**: Check that the RBAC roles and permissions are defined correctly. Verify the user's token includes the required claims and that `allow()` rules match the function being called.
 
 ### branching
 
@@ -127,19 +127,19 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/branching/branching.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the branching module documentation for configuration and usage details.
+- **Resolution**: Ensure the source branch exists and the database connection is available. Check that the branch name doesn't conflict with an existing branch and that you have sufficient permissions.
 
 #### `PreviewError`
 
 - **Source**: `packages/server/src/branching/github-action.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the branching module documentation for configuration and usage details.
+- **Resolution**: Verify the GitHub PR configuration and that the preview environment quota hasn't been exceeded. Check `maxPreviews` in your branching config and ensure the PR number is valid.
 
 #### `NeonBranchingError`
 
 - **Source**: `packages/server/src/branching/neon-branching.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the branching module documentation for configuration and usage details.
+- **Resolution**: Verify your Neon API key and project ID are correct. Ensure the parent branch exists and the Neon project has available compute capacity for a new branch.
 
 ### cloud
 
@@ -147,7 +147,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/cloud/cloud.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the cloud module documentation for configuration and usage details.
+- **Resolution**: Check your cloud API credentials and network connectivity. Verify the project ID exists and that your account has the required permissions for the operation.
 
 ### cloud-platform
 
@@ -155,13 +155,13 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/cloud-platform/one-click-provisioner.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the cloud-platform module documentation for configuration and usage details.
+- **Resolution**: Check the provisioning pipeline step that failed. Common issues: missing infrastructure permissions, resource quotas exceeded, or invalid deploy manifest configuration.
 
 #### `DatabaseManagerError`
 
 - **Source**: `packages/server/src/cloud-platform/one-click-provisioner.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the cloud-platform module documentation for configuration and usage details.
+- **Resolution**: Verify the database connection string and credentials. Ensure the target Postgres instance is reachable and the user has CREATE/ALTER privileges.
 
 ### crdt
 
@@ -169,7 +169,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/crdt/crdt.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the crdt module documentation for configuration and usage details.
+- **Resolution**: Check that the CRDT document type matches the expected schema. Ensure operations are applied to the correct document ID and that concurrent edits don't violate type constraints.
 
 ### edge-query
 
@@ -177,7 +177,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/edge-query/edge-query.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the edge-query module documentation for configuration and usage details.
+- **Resolution**: Verify the edge query cache configuration and that the upstream server is reachable. Check that the query name matches a registered server query and the serialization format is compatible.
 - **Note**: This is a server-side edge query error, distinct from `EdgeQueryError` in `@reactivebase/edge`.
 
 ### encryption
@@ -186,13 +186,13 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/encryption/encryption.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the encryption module documentation for configuration and usage details.
+- **Resolution**: Verify the encryption key is the correct length for the algorithm (e.g., 32 bytes for AES-256). Ensure the key hasn't been rotated without re-encrypting existing data.
 
 #### `VaultError`
 
 - **Source**: `packages/server/src/encryption/vault-provider.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the encryption module documentation for configuration and usage details.
+- **Resolution**: Check your vault/KMS provider credentials and connectivity. Ensure the key ID exists in the provider and your IAM permissions allow encrypt/decrypt operations.
 
 ### event-sourcing
 
@@ -200,7 +200,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/event-sourcing/event-sourcing.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the event-sourcing module documentation for configuration and usage details.
+- **Resolution**: Verify the event store table exists and the event schema matches. Check for version conflicts if using optimistic concurrency, and ensure projections are registered before replaying events.
 
 ### full-text-search
 
@@ -208,7 +208,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/full-text-search/full-text-search.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the full-text-search module documentation for configuration and usage details.
+- **Resolution**: Ensure the search index has been created for the target table. Verify the search query syntax is valid and that the `tsvector` column exists on the table.
 
 ### media-pipeline
 
@@ -216,7 +216,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/media-pipeline/media-pipeline.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the media-pipeline module documentation for configuration and usage details.
+- **Resolution**: Check that the input file format is supported and the storage backend is accessible. Verify pipeline step configuration (resize dimensions, output format) and that temporary storage has sufficient space.
 
 ### multi-db
 
@@ -224,13 +224,13 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/multi-db/database-adapter.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the multi-db module documentation for configuration and usage details.
+- **Resolution**: Verify the database adapter type matches your database engine. Check the connection string format and credentials, and ensure the target database accepts connections.
 
 #### `FederationError`
 
 - **Source**: `packages/server/src/multi-db/multi-db.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the multi-db module documentation for configuration and usage details.
+- **Resolution**: Ensure all federated database nodes are reachable. Check that table sharding/routing rules are consistent and that cross-database references use the correct adapter identifiers.
 
 ### multiplayer
 
@@ -238,7 +238,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/multiplayer/multiplayer.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the multiplayer module documentation for configuration and usage details.
+- **Resolution**: Verify the room ID exists and the user has permission to join. Check that the WebSocket transport is connected and the multiplayer document schema matches the expected format.
 
 ### playground
 
@@ -246,7 +246,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/playground/playground.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the playground module documentation for configuration and usage details.
+- **Resolution**: Ensure the SQL playground is enabled in your server config. Verify the query syntax is valid SQL and that the connected database user has permission to execute the statement.
 
 ### plugins
 
@@ -254,7 +254,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/plugins/marketplace.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the plugins module documentation for configuration and usage details.
+- **Resolution**: Check network connectivity to the plugin registry. Verify the plugin name and version exist in the marketplace, and that your project meets the plugin's peer dependency requirements.
 
 ### rate-limiting
 
@@ -262,7 +262,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/rate-limiting/rate-limiting.ts`
 - **Message**: Rate limit exceeded (rule: "${rule}", scope: ${scope}). Retry after ${Math.ceil(retryAfterMs / 1000)}s
-- **Resolution**: Check the rate-limiting module documentation for configuration and usage details.
+- **Resolution**: Wait for the `retryAfter` duration before retrying. To adjust limits, update the rate limit rules in your server config. Check the `scope` value to understand which limit was hit (per-user, per-IP, global).
 
 ### safe-migrations
 
@@ -270,13 +270,13 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/safe-migrations/safe-migrations.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the safe-migrations module documentation for configuration and usage details.
+- **Resolution**: Review the migration plan for potentially destructive operations. Use `--allow-destructive` to override safety checks if the data loss is intentional, or revise the migration to be non-destructive.
 
 #### `UnsafeMigrationError`
 
 - **Source**: `packages/server/src/safe-migrations/safe-migrations.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the safe-migrations module documentation for configuration and usage details.
+- **Resolution**: The migration contains an unsafe operation (e.g., dropping a column with data). Add a separate migration to back up the data first, or use `--allow-destructive` if data loss is acceptable.
 
 ### schema-registry
 
@@ -284,7 +284,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/schema-registry/schema-registry.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the schema-registry module documentation for configuration and usage details.
+- **Resolution**: Verify the schema version exists in the registry. Check for conflicting schema names and ensure the schema definition passes validation before registration.
 
 ### seeding
 
@@ -292,19 +292,19 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/seeding/seeding.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the seeding module documentation for configuration and usage details.
+- **Resolution**: Check that seed data conforms to the table schema and required fields are populated. Ensure foreign key references point to existing records or seeds that run first.
 
 #### `SeedDependencyError`
 
 - **Source**: `packages/server/src/seeding/seeding.ts`
 - **Message**: Seed "${seedName}" depends on "${missingDependency}" which is not registered
-- **Resolution**: Check the seeding module documentation for configuration and usage details.
+- **Resolution**: Register the missing seed dependency before the dependent seed. Verify the dependency name matches exactly (case-sensitive) and that it's included in your seed configuration.
 
 #### `SeedCycleError`
 
 - **Source**: `packages/server/src/seeding/seeding.ts`
 - **Message**: Circular dependency detected in seeds: ${cycle.join(" → ")}
-- **Resolution**: Check the seeding module documentation for configuration and usage details.
+- **Resolution**: Break the circular dependency by removing one `dependsOn` edge in the cycle. Consider merging the cyclically-dependent seeds into a single seed, or use nullable foreign keys to decouple them.
 
 ### smart-pool
 
@@ -312,13 +312,13 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/smart-pool/smart-pool.ts`
 - **Message**: Database backpressure: ${pendingCount} pending queries (max: ${maxPending}). Try again later.
-- **Resolution**: Check the smart-pool module documentation for configuration and usage details.
+- **Resolution**: Reduce concurrent query load or increase `maxPending` in pool config. Investigate slow queries that may be holding connections. Consider adding query timeouts or optimizing expensive queries.
 
 #### `PoolExhaustedError`
 
 - **Source**: `packages/server/src/smart-pool/smart-pool.ts`
 - **Message**: Connection pool exhausted: ${activeConnections}/${maxConnections} connections in use
-- **Resolution**: Check the smart-pool module documentation for configuration and usage details.
+- **Resolution**: Increase `poolSize` in your database config, or reduce long-held connections. Check for connection leaks (missing `release()` calls) and ensure transactions are committed/rolled back promptly.
 
 ### stored-procedures
 
@@ -326,7 +326,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/stored-procedures/stored-procedures.ts`
 - **Message**: Compile error in procedure "${procedureName}": ${message}
-- **Resolution**: Check the stored-procedures module documentation for configuration and usage details.
+- **Resolution**: Review the procedure's SQL body for syntax errors. Verify that referenced tables, columns, and types exist in the current schema. Test the SQL directly against Postgres to isolate the issue.
 
 ### transaction
 
@@ -334,7 +334,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/transaction/outbox.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the transaction module documentation for configuration and usage details.
+- **Resolution**: Check that the outbox table exists and is writable. Verify the outbox processor is running and that messages aren't stuck in a failed state. Inspect the dead-letter queue for unprocessable entries.
 
 ### universal-sdk
 
@@ -342,7 +342,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/universal-sdk/universal-sdk.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the universal-sdk module documentation for configuration and usage details.
+- **Resolution**: Verify the SDK platform target (browser, Node, edge) matches your runtime. Check that the server URL is correct and the SDK version is compatible with the server version.
 
 ### validation
 
@@ -350,13 +350,13 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/validation/args-validation.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the validation module documentation for configuration and usage details.
+- **Resolution**: Check the mutation/query arguments against the expected schema. The error message indicates which field failed validation. Use `v.*` validators in your function definition to see the expected types.
 
 #### `RateLimitError`
 
 - **Source**: `packages/server/src/validation/rate-limit.ts`
 - **Message**: Rate limit exceeded. Retry after ${Math.ceil(retryAfterMs / 1000)}s
-- **Resolution**: Check the validation module documentation for configuration and usage details.
+- **Resolution**: Wait the indicated duration before retrying. To adjust the limit, modify the `rateLimit` option in your function definition (e.g., `rateLimit: { max: 100, windowMs: 60000 }`).
 
 ### webhooks
 
@@ -364,7 +364,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/webhooks/delivery-queue.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the webhooks module documentation for configuration and usage details.
+- **Resolution**: Verify the webhook endpoint URL is reachable and returns a 2xx status. Check the HMAC signature configuration if receiving 401/403 errors. Review the delivery queue for retry attempts and failure reasons.
 
 ### workflow
 
@@ -372,25 +372,25 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/workflow/workflow.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the workflow module documentation for configuration and usage details.
+- **Resolution**: Check the workflow definition for invalid step configurations. Verify all referenced steps exist and that input/output types match between connected steps.
 
 #### `WorkflowStepError`
 
 - **Source**: `packages/server/src/workflow/workflow.ts`
 - **Message**: Step "${stepName}" failed: ${message}
-- **Resolution**: Check the workflow module documentation for configuration and usage details.
+- **Resolution**: Inspect the inner error message for the specific step failure. Check the step handler's input arguments and ensure external dependencies (APIs, databases) are available.
 
 #### `WorkflowWaitingError`
 
 - **Source**: `packages/server/src/workflow/workflow.ts`
 - **Message**: Workflow waiting for event: ${eventName}
-- **Resolution**: Check the workflow module documentation for configuration and usage details.
+- **Resolution**: This is informational — the workflow is paused waiting for an external event. Send the expected event using `workflow.sendEvent(eventName, payload)` to resume execution.
 
 #### `WorkflowCancelledError`
 
 - **Source**: `packages/server/src/workflow/workflow.ts`
 - **Message**: Workflow ${workflowId} was cancelled
-- **Resolution**: Check the workflow module documentation for configuration and usage details.
+- **Resolution**: The workflow was explicitly cancelled via `workflow.cancel()`. If this was unintentional, restart the workflow. Check if a timeout or external system triggered the cancellation.
 
 ### workflow-studio
 
@@ -398,7 +398,7 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/workflow-studio/workflow-studio.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the workflow-studio module documentation for configuration and usage details.
+- **Resolution**: Verify the workflow studio server is running and the workflow definition is valid JSON. Check that referenced workflow IDs exist and the visual graph data hasn't been corrupted.
 
 ### zanzibar
 
@@ -406,4 +406,4 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 
 - **Source**: `packages/server/src/zanzibar/zanzibar.ts`
 - **Message**: (dynamic message)
-- **Resolution**: Check the zanzibar module documentation for configuration and usage details.
+- **Resolution**: Review your Zanzibar relationship tuples and permission model. Verify that the namespace, relation, and object IDs are valid, and that the permission check query references existing tuple definitions.
