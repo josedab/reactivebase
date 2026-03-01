@@ -26,7 +26,7 @@ const PROFILES: Record<string, { description: string; config: Record<string, unk
     description: "Multi-tenant SaaS with auth, pooling, and caching",
     config: {
       database: { poolSize: 20, statementTimeout: 10_000 },
-      server: { port: 4000, corsOrigin: "*", heartbeatInterval: 30_000 },
+      server: { port: 4000, heartbeatInterval: 30_000 },
       auth: { provider: "jwt", tokenExpiration: 3600, refreshEnabled: true },
       cdc: { mode: "logical-replication", batchSize: 100 },
       cache: { enabled: true, ttlMs: 60_000 },
