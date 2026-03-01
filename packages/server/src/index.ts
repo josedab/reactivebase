@@ -54,3 +54,5 @@ export * from "./exports/query-debugger.js"
 export * from "./exports/test-generator.js"
 /** Blue-Green Deployments: zero-downtime, canary rollout, auto-rollback */
 export * from "./exports/blue-green.js"
+/** Postgres Extension Auto-Provisioner: detect, install, and validate extensions */
+export * from "./exports/pg-extensions.js"
