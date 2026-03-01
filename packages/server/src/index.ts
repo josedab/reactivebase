@@ -44,3 +44,5 @@ export * from "./exports/transport.js"
 export * from "./exports/distributed-tx.js"
 /** Reactive Query Composition: DAG-based derived queries with incremental propagation */
 export * from "./exports/query-composition.js"
+/** Connection Health Intelligence: monitoring, circuit breakers, adaptive scaling */
+export * from "./exports/connection-health.js"
