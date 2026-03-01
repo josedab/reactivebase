@@ -210,10 +210,10 @@ export function loggingMiddleware(options: { prefix?: string; verbose?: boolean 
   return {
     name: "logging",
     onSubscribe(event) {
-      console.log(`${prefix} Subscribe: ${event.queryName}`, verbose ? event.args : "")
+      console.info(`${prefix} Subscribe: ${event.queryName}`, verbose ? event.args : "")
     },
     onUpdate(event) {
-      console.log(`${prefix} Update: ${event.queryName} (v${event.version})`)
+      console.info(`${prefix} Update: ${event.queryName} (v${event.version})`)
       return event.data
     },
     onError(event) {
@@ -223,10 +223,10 @@ export function loggingMiddleware(options: { prefix?: string; verbose?: boolean 
       console.warn(`${prefix} Stale: ${event.queryName} (${event.staleForMs}ms)`)
     },
     onReconnect(event) {
-      console.log(`${prefix} Reconnect: attempt ${event.attempt}/${event.maxAttempts}`)
+      console.info(`${prefix} Reconnect: attempt ${event.attempt}/${event.maxAttempts}`)
     },
     onUnsubscribe(event) {
-      if (verbose) console.log(`${prefix} Unsubscribe: ${event.queryName}`)
+      if (verbose) console.info(`${prefix} Unsubscribe: ${event.queryName}`)
     },
   }
 }

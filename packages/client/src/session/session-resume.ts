@@ -6,7 +6,7 @@
  * server-side snapshots without re-subscribing individually.
  */
 
-import type { ConnectionStatus } from "../connection/index.js"
+import type { ConnectionStatus as _ConnectionStatus } from "../connection/index.js"
 
 export interface SessionResumeOptions {
   /** Enable session resumption (default: true) */
@@ -32,11 +32,7 @@ export interface SessionState {
   isResuming: boolean
 }
 
-export type ResumeHandler = (result: {
-  success: boolean
-  restoredSubscriptions: number
-  missedUpdates: number
-}) => void
+export type ResumeHandler = (result: { success: boolean; restoredSubscriptions: number; missedUpdates: number }) => void
 
 /**
  * Manages client-side session state for stateful reconnection.

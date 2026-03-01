@@ -94,10 +94,5 @@ export function subscribeTransformed<TIn, TOut>(
   transform: (value: TIn) => TOut,
   listener: QueryListener,
 ): DerivedSubscriptionHandle {
-  return subscribeDerived(
-    client,
-    [{ queryName, args }],
-    (value) => transform(value as TIn),
-    listener,
-  )
+  return subscribeDerived(client, [{ queryName, args }], (value) => transform(value as TIn), listener)
 }

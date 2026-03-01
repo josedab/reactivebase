@@ -20,13 +20,7 @@
  */
 
 import type { VectorClock, ConflictStrategy, MergeFunction } from "./sync-engine.js"
-import {
-  createVectorClock,
-  incrementClock,
-  mergeClock,
-  happensBefore,
-  areConcurrent,
-} from "./sync-engine.js"
+import { createVectorClock, incrementClock, mergeClock, happensBefore, areConcurrent } from "./sync-engine.js"
 import type { SQLiteAdapter } from "./sqlite-cache.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -164,7 +158,7 @@ export interface SyncConnection {
 
 // ─── Write-Ahead Log ─────────────────────────────────────────────────────────
 
-const WAL_TABLE = "rb_wal"
+const _WAL_TABLE = "rb_wal"
 
 /**
  * Durable write-ahead log backed by SQLite.
@@ -203,9 +197,7 @@ export class WriteAheadLog {
         synced INTEGER NOT NULL DEFAULT 0
       )
     `)
-    await this.adapter.run(
-      `CREATE INDEX IF NOT EXISTS idx_${this.tableName}_synced ON ${this.tableName} (synced)`,
-    )
+    await this.adapter.run(`CREATE INDEX IF NOT EXISTS idx_${this.tableName}_synced ON ${this.tableName} (synced)`)
     this.initialized = true
   }
 
@@ -268,10 +260,7 @@ export class WriteAheadLog {
     if (ids.length === 0) return
     await this.ensureInitialized()
     const placeholders = ids.map(() => "?").join(", ")
-    await this.adapter.run(
-      `UPDATE ${this.tableName} SET synced = 1 WHERE id IN (${placeholders})`,
-      ids,
-    )
+    await this.adapter.run(`UPDATE ${this.tableName} SET synced = 1 WHERE id IN (${placeholders})`, ids)
   }
 
   /**
@@ -283,9 +272,7 @@ export class WriteAheadLog {
     await this.adapter.run(`DELETE FROM ${this.tableName} WHERE synced = 1`)
 
     // If still over max, trim oldest synced-or-not entries
-    const countRow = await this.adapter.get<{ cnt: number }>(
-      `SELECT COUNT(*) as cnt FROM ${this.tableName}`,
-    )
+    const countRow = await this.adapter.get<{ cnt: number }>(`SELECT COUNT(*) as cnt FROM ${this.tableName}`)
     const count = countRow?.cnt ?? 0
     if (count > this.maxEntries) {
       const excess = count - this.maxEntries
@@ -301,9 +288,7 @@ export class WriteAheadLog {
   /** Return the total number of entries in the WAL. */
   async size(): Promise<number> {
     await this.ensureInitialized()
-    const row = await this.adapter.get<{ cnt: number }>(
-      `SELECT COUNT(*) as cnt FROM ${this.tableName}`,
-    )
+    const row = await this.adapter.get<{ cnt: number }>(`SELECT COUNT(*) as cnt FROM ${this.tableName}`)
     return row?.cnt ?? 0
   }
 
@@ -384,14 +369,9 @@ export class BidirectionalSyncProtocol {
    * @param serverData - All available changes on the server
    * @returns Array of {@link SyncProtocolMessage} batches
    */
-  createSyncResponse(
-    clientStateVector: VectorClock,
-    serverData: SyncChange[],
-  ): SyncProtocolMessage[] {
+  createSyncResponse(clientStateVector: VectorClock, serverData: SyncChange[]): SyncProtocolMessage[] {
     // Filter to changes the client hasn't seen
-    const missing = serverData.filter(
-      (change) => !happensBefore(change.vectorClock, clientStateVector),
-    )
+    const missing = serverData.filter((change) => !happensBefore(change.vectorClock, clientStateVector))
 
     if (missing.length === 0) {
       return [
@@ -449,10 +429,7 @@ export class BidirectionalSyncProtocol {
    * @returns "ahead" if local is ahead, "behind" if local is behind,
    *          "diverged" if concurrent, "equal" if identical
    */
-  compareStateVectors(
-    local: VectorClock,
-    remote: VectorClock,
-  ): "ahead" | "behind" | "diverged" | "equal" {
+  compareStateVectors(local: VectorClock, remote: VectorClock): "ahead" | "behind" | "diverged" | "equal" {
     const localAhead = happensBefore(remote, local)
     const remoteAhead = happensBefore(local, remote)
 
@@ -511,9 +488,7 @@ function generateWalId(): string {
  *   await engine.syncWithServer(wsConnection)
  */
 export class LocalFirstSyncEngine {
-  private options: Required<
-    Omit<LocalFirstSyncOptions, "customMerge" | "onSyncStatus" | "onConflict">
-  > &
+  private options: Required<Omit<LocalFirstSyncOptions, "customMerge" | "onSyncStatus" | "onConflict">> &
     Pick<LocalFirstSyncOptions, "customMerge" | "onSyncStatus" | "onConflict">
   private adapter: SQLiteAdapter
   private clock: VectorClock
@@ -634,10 +609,10 @@ export class LocalFirstSyncEngine {
         const whereValues = pk.map((k) => data[k])
 
         if (setClauses.length > 0) {
-          await this.adapter.run(
-            `UPDATE ${table} SET ${setClauses.join(", ")} WHERE ${whereClauses.join(" AND ")}`,
-            [...setValues, ...whereValues],
-          )
+          await this.adapter.run(`UPDATE ${table} SET ${setClauses.join(", ")} WHERE ${whereClauses.join(" AND ")}`, [
+            ...setValues,
+            ...whereValues,
+          ])
         }
         break
       }
@@ -645,10 +620,7 @@ export class LocalFirstSyncEngine {
         const pk = this.schemas.get(table)?.primaryKey ?? ["id"]
         const whereClauses = pk.map((k) => `${k} = ?`)
         const whereValues = pk.map((k) => data[k])
-        await this.adapter.run(
-          `DELETE FROM ${table} WHERE ${whereClauses.join(" AND ")}`,
-          whereValues,
-        )
+        await this.adapter.run(`DELETE FROM ${table} WHERE ${whereClauses.join(" AND ")}`, whereValues)
         break
       }
     }
@@ -677,10 +649,7 @@ export class LocalFirstSyncEngine {
    * @param query - Optional query filters, ordering, and pagination
    * @returns Array of matching rows
    */
-  async getLocalData<T = Record<string, unknown>>(
-    table: string,
-    query?: LocalQuery,
-  ): Promise<T[]> {
+  async getLocalData<T = Record<string, unknown>>(table: string, query?: LocalQuery): Promise<T[]> {
     let sql = `SELECT * FROM ${table}`
     const params: unknown[] = []
 
@@ -693,9 +662,7 @@ export class LocalFirstSyncEngine {
     }
 
     if (query?.orderBy && query.orderBy.length > 0) {
-      const orderClauses = query.orderBy.map(
-        (o) => `${o.column} ${o.direction ?? "ASC"}`,
-      )
+      const orderClauses = query.orderBy.map((o) => `${o.column} ${o.direction ?? "ASC"}`)
       sql += ` ORDER BY ${orderClauses.join(", ")}`
     }
 
@@ -857,10 +824,7 @@ export class LocalFirstSyncEngine {
         const pk = this.schemas.get(change.table)?.primaryKey ?? ["id"]
         const whereClauses = pk.map((k) => `${k} = ?`)
         const whereValues = pk.map((k) => change.data[k])
-        await this.adapter.run(
-          `DELETE FROM ${change.table} WHERE ${whereClauses.join(" AND ")}`,
-          whereValues,
-        )
+        await this.adapter.run(`DELETE FROM ${change.table} WHERE ${whereClauses.join(" AND ")}`, whereValues)
         break
       }
     }
