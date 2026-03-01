@@ -36,7 +36,7 @@ export type {
 } from "../cloud-platform/index.js"
 export type {
   PreviewEnvironmentConfig,
-  PreviewEnvironment,
+  PreviewEnvironment as CloudPreviewEnvironment,
   DeployManifest,
   ProvisioningStep,
   ProvisioningPipeline,
