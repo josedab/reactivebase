@@ -820,7 +820,7 @@ export function createMigrationAdapter(adapter: DatabaseAdapter): MigrationAdapt
         const insertSQL = `INSERT INTO ${table} (${quote}name${quote}, ${quote}checksum${quote}, ${quote}applied_at${quote}) VALUES ($1, $2, ${translator.now()})`
         await tx.execute(translator.translateParams(insertSQL), [name, checksum])
         await tx.commit()
-      } catch (err) {
+      } catch (err: unknown) {
         await tx.rollback()
         throw err
       }
@@ -836,7 +836,7 @@ export function createMigrationAdapter(adapter: DatabaseAdapter): MigrationAdapt
         const deleteSQL = `DELETE FROM ${table} WHERE ${quote}name${quote} = $1`
         await tx.execute(translator.translateParams(deleteSQL), [name])
         await tx.commit()
-      } catch (err) {
+      } catch (err: unknown) {
         await tx.rollback()
         throw err
       }

@@ -341,7 +341,7 @@ export function multiProvider(providers: AuthProvider[], options: MultiProviderO
       for (const provider of providers) {
         try {
           return await provider.verify(token)
-        } catch (error) {
+        } catch (error: unknown) {
           errors.push(`${provider.name ?? "unknown"}: ${error instanceof Error ? error.message : String(error)}`)
         }
       }

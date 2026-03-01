@@ -286,7 +286,7 @@ export class PreviewEnvironmentManager {
       if (this.provisionTimes.length > 100) this.provisionTimes.shift()
 
       return env
-    } catch (error) {
+    } catch (error: unknown) {
       env.status = "error"
       env.updatedAt = Date.now()
       env.metadata.error = error instanceof Error ? error.message : String(error)

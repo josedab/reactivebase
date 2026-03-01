@@ -179,7 +179,7 @@ export class LazyFunctionRegistry {
       }
 
       return fn
-    } catch (error) {
+    } catch (error: unknown) {
       throw new RpcSplitError(
         `Failed to load function "${name}": ${error instanceof Error ? error.message : String(error)}`,
       )

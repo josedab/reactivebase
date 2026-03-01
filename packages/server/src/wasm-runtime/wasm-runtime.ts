@@ -249,7 +249,7 @@ export class WasmFunctionRuntime {
       }
 
       return module
-    } catch (error) {
+    } catch (error: unknown) {
       module.status = "error"
       module.error = error instanceof Error ? error.message : String(error)
       module.compileTimeMs = Date.now() - startTime
@@ -313,7 +313,7 @@ export class WasmFunctionRuntime {
         memoryUsedBytes: memoryUsed,
         hostCallCount: hostCalls,
       }
-    } catch (error) {
+    } catch (error: unknown) {
       this.failCount++
       const executionTimeMs = Date.now() - startTime
 

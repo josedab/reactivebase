@@ -222,7 +222,7 @@ export async function withCircuitBreaker<T>(
     const result = await fn()
     registry.recordSuccess(endpoint)
     return result
-  } catch (error) {
+  } catch (error: unknown) {
     registry.recordFailure(endpoint)
     throw error
   }

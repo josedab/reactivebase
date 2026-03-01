@@ -756,7 +756,7 @@ export class LocalFirstSyncEngine {
               clearTimeout(timeout)
               resolve()
             }
-          } catch (err) {
+          } catch (err: unknown) {
             clearTimeout(timeout)
             reject(err)
           }
@@ -764,7 +764,7 @@ export class LocalFirstSyncEngine {
       })
 
       this.updateStatus("idle")
-    } catch (error) {
+    } catch (error: unknown) {
       this.updateStatus("error")
       throw error
     }

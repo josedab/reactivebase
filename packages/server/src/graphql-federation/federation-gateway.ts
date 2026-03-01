@@ -377,7 +377,7 @@ export class FederationGateway {
           this.recordSubgraphCall(step.subgraph, Date.now() - stepStart, false)
 
           return { subgraph: step.subgraph, data: result }
-        } catch (error) {
+        } catch (error: unknown) {
           timing[step.subgraph] = Date.now() - stepStart
           this.recordSubgraphCall(step.subgraph, Date.now() - stepStart, true)
 
