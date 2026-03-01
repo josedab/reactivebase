@@ -247,8 +247,11 @@ describe("SQL builders", () => {
     })
     expect(sql).toContain('"tasks"')
     expect(sql).toContain("ILIKE")
-    expect(sql).toContain("OFFSET 20")
-    expect(params).toHaveLength(2)
+    expect(sql).toContain("LIMIT $3")
+    expect(sql).toContain("OFFSET $4")
+    expect(params).toHaveLength(4)
+    expect(params[2]).toBe(20)
+    expect(params[3]).toBe(20)
   })
 
   it("buildDataBrowserQuerySQL handles is_null operator", () => {
@@ -257,6 +260,6 @@ describe("SQL builders", () => {
       filters: [{ column: "assignee", operator: "is_null" }],
     })
     expect(sql).toContain("IS NULL")
-    expect(params).toHaveLength(0)
+    expect(params).toHaveLength(2)
   })
 })

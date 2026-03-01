@@ -230,8 +230,17 @@ ON CONFLICT (query_name) DO UPDATE SET
 }
 
 const SAFE_IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/
-const VALID_OPERATORS = new Set(["=", "!=", ">", "<", ">=", "<=", "like", "in", "is_null", "is_not_null"])
 const VALID_SORT_DIRECTIONS = new Set(["asc", "desc"])
+
+/** Explicit mapping from operator names to SQL operators for defense in depth */
+const OPERATOR_SQL_MAP: Record<string, string> = {
+  "=": "=",
+  "!=": "!=",
+  ">": ">",
+  "<": "<",
+  ">=": ">=",
+  "<=": "<=",
+}
 
 function assertSafeIdentifier(value: string, label: string): void {
   if (!SAFE_IDENTIFIER_RE.test(value)) {
@@ -250,9 +259,6 @@ export function buildDataBrowserQuerySQL(options: DataBrowserOptions): {
   let paramIdx = 1
 
   for (const filter of options.filters ?? []) {
-    if (!VALID_OPERATORS.has(filter.operator)) {
-      throw new Error(`Invalid filter operator: ${filter.operator}`)
-    }
     assertSafeIdentifier(filter.column, "column name")
 
     switch (filter.operator) {
@@ -270,9 +276,14 @@ export function buildDataBrowserQuerySQL(options: DataBrowserOptions): {
         conditions.push(`"${filter.column}" = ANY($${paramIdx++})`)
         params.push(filter.value)
         break
-      default:
-        conditions.push(`"${filter.column}" ${filter.operator} $${paramIdx++}`)
+      default: {
+        const sqlOp = OPERATOR_SQL_MAP[filter.operator]
+        if (!sqlOp) {
+          throw new Error(`Invalid filter operator: ${filter.operator}`)
+        }
+        conditions.push(`"${filter.column}" ${sqlOp} $${paramIdx++}`)
         params.push(filter.value)
+      }
     }
   }
 
@@ -292,8 +303,13 @@ export function buildDataBrowserQuerySQL(options: DataBrowserOptions): {
   const pageSize = options.pageSize ?? 50
   const offset = (page - 1) * pageSize
 
+  params.push(pageSize)
+  const limitParam = `$${paramIdx++}`
+  params.push(offset)
+  const offsetParam = `$${paramIdx++}`
+
   return {
-    sql: `SELECT * FROM "${options.table}" ${where} ${orderBy} LIMIT ${pageSize} OFFSET ${offset}`,
+    sql: `SELECT * FROM "${options.table}" ${where} ${orderBy} LIMIT ${limitParam} OFFSET ${offsetParam}`,
     params,
   }
 }
