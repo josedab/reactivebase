@@ -192,7 +192,11 @@ export function generateRetentionSQL(config: GovernanceConfig, table: string): s
   const timeCol = policy.retention.timeColumn ?? "created_at"
   const sanitizedTable = sanitize(table)
   const sanitizedTimeCol = sanitize(timeCol)
-  const interval = `${policy.retention.days} days`
+  const days = Number(policy.retention.days)
+  if (!Number.isFinite(days) || days <= 0) {
+    throw new GovernanceError(`Invalid retention.days for table "${table}": must be a finite positive number`)
+  }
+  const interval = `${days} days`
 
   const statements: string[] = []
 
@@ -246,8 +250,19 @@ export function generateValidationSQL(config: GovernanceConfig, table: string): 
         break
       case "regex":
         if (rule.params?.pattern) {
+          const pattern = String(rule.params.pattern)
+          // Validate that the pattern is a well-formed regex
+          try {
+            new RegExp(pattern)
+          } catch {
+            throw new GovernanceError(`Invalid regex pattern for constraint "${rule.name}": ${pattern}`)
+          }
+          // Reject patterns containing single quotes that could escape the SQL string context
+          if (/[;]/.test(pattern) || /--/.test(pattern)) {
+            throw new GovernanceError(`Regex pattern for constraint "${rule.name}" contains disallowed SQL characters`)
+          }
           statements.push(
-            `ALTER TABLE "${sanitizedTable}" ADD CONSTRAINT "${constraintName}" CHECK ("${col}" ~ '${String(rule.params.pattern).replace(/'/g, "''")}');`,
+            `ALTER TABLE "${sanitizedTable}" ADD CONSTRAINT "${constraintName}" CHECK ("${col}" ~ '${pattern.replace(/'/g, "''")}');`,
           )
         }
         break
@@ -271,9 +286,19 @@ export function generateValidationSQL(config: GovernanceConfig, table: string): 
         break
       case "custom_sql":
         if (rule.params?.sql) {
-          statements.push(
-            `ALTER TABLE "${sanitizedTable}" ADD CONSTRAINT "${constraintName}" CHECK (${rule.params.sql});`,
-          )
+          const customSql = String(rule.params.sql)
+          // Blocklist: reject semicolons, DDL keywords, and subqueries to prevent SQL injection
+          const sqlBlocklistPattern =
+            /;|--|\/\*|\b(DROP|ALTER|CREATE|INSERT|UPDATE|DELETE|TRUNCATE|GRANT|REVOKE|EXEC|EXECUTE|UNION|INTO)\b/i
+          if (sqlBlocklistPattern.test(customSql)) {
+            throw new GovernanceError(
+              `custom_sql for constraint "${rule.name}" contains disallowed SQL keywords or characters`,
+            )
+          }
+          if (/\([\s]*SELECT\b/i.test(customSql)) {
+            throw new GovernanceError(`custom_sql for constraint "${rule.name}" contains disallowed subquery`)
+          }
+          statements.push(`ALTER TABLE "${sanitizedTable}" ADD CONSTRAINT "${constraintName}" CHECK (${customSql});`)
         }
         break
     }
