@@ -158,10 +158,7 @@ export function useLocalMutation(table: string): UseLocalMutationReturn {
   const [error, setError] = useState<Error | null>(null)
 
   const mutate = useCallback(
-    async (
-      operation: "insert" | "update" | "delete",
-      data: Record<string, unknown>,
-    ): Promise<string | undefined> => {
+    async (operation: "insert" | "update" | "delete", data: Record<string, unknown>): Promise<string | undefined> => {
       setLoading(true)
       setError(null)
 

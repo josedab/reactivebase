@@ -8,7 +8,7 @@
  *   - PresenceAvatars: User presence indicators with cursor tracking
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef, createElement, type FormEvent, type ChangeEvent, type ReactNode } from "react"
+import { useState, useCallback, useMemo, createElement, type FormEvent, type ChangeEvent, type ReactNode } from "react"
 import { useQuery, useMutation } from "./hooks/index.js"
 import type { FunctionReference } from "./hooks/index.js"
 
@@ -53,7 +53,7 @@ export function ReactiveTable<T extends Record<string, unknown>>({
 
   const sorted = useMemo(() => {
     if (!data || !Array.isArray(data)) return []
-    let items = [...data] as T[]
+    const items = [...data] as T[]
     if (sortKey) {
       items.sort((a, b) => {
         const av = a[sortKey]
@@ -137,7 +137,7 @@ export function ReactiveTable<T extends Record<string, unknown>>({
               createElement(
                 "tr",
                 {
-                  key: (row as Record<string, unknown>)[rowKey] as string ?? idx,
+                  key: ((row as Record<string, unknown>)[rowKey] as string) ?? idx,
                   onClick: onRowClick ? () => onRowClick(row) : undefined,
                   style: { cursor: onRowClick ? "pointer" : "default", borderBottom: "1px solid #e2e8f0" },
                 },
@@ -145,7 +145,9 @@ export function ReactiveTable<T extends Record<string, unknown>>({
                   createElement(
                     "td",
                     { key: col.key, style: { padding: "8px" } },
-                    col.render ? col.render((row as Record<string, unknown>)[col.key], row) : String((row as Record<string, unknown>)[col.key] ?? ""),
+                    col.render
+                      ? col.render((row as Record<string, unknown>)[col.key], row)
+                      : String((row as Record<string, unknown>)[col.key] ?? ""),
                   ),
                 ),
               ),
@@ -156,11 +158,7 @@ export function ReactiveTable<T extends Record<string, unknown>>({
       createElement(
         "div",
         { style: { display: "flex", gap: "8px", justifyContent: "center", padding: "12px" } },
-        createElement(
-          "button",
-          { onClick: () => setPage((p) => Math.max(0, p - 1)), disabled: page === 0 },
-          "← Prev",
-        ),
+        createElement("button", { onClick: () => setPage((p) => Math.max(0, p - 1)), disabled: page === 0 }, "← Prev"),
         createElement("span", null, `${page + 1} / ${totalPages}`),
         createElement(
           "button",
@@ -203,7 +201,8 @@ export function ReactiveForm({
   className,
 }: ReactiveFormProps): ReactNode {
   const mutationRef = typeof mutation === "string" ? { _name: mutation, _type: "mutation" as const } : mutation
-  const { mutate, isLoading } = useMutation(mutationRef)
+  const mutate = useMutation(mutationRef)
+  const [isLoading, setIsLoading] = useState(false)
   const [values, setValues] = useState<Record<string, unknown>>({ ...initialValues })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -238,11 +237,14 @@ export function ReactiveForm({
       }
 
       try {
+        setIsLoading(true)
         const result = await mutate(values)
         onSuccess?.(result)
       } catch (err: unknown) {
         const error = err instanceof Error ? err : new Error(String(err))
         onError?.(error)
+      } finally {
+        setIsLoading(false)
       }
     },
     [fields, values, mutate, onSuccess, onError],
@@ -271,9 +273,7 @@ export function ReactiveForm({
                   onChange: (e: ChangeEvent<HTMLSelectElement>) => handleChange(field.name, e.target.value),
                   style: { width: "100%", padding: "6px", border: "1px solid #ccc", borderRadius: "4px" },
                 },
-                field.options?.map((opt) =>
-                  createElement("option", { key: opt.value, value: opt.value }, opt.label),
-                ),
+                field.options?.map((opt) => createElement("option", { key: opt.value, value: opt.value }, opt.label)),
               )
             : field.type === "checkbox"
               ? createElement("input", {
@@ -289,8 +289,7 @@ export function ReactiveForm({
                   placeholder: field.placeholder,
                   style: { width: "100%", padding: "6px", border: "1px solid #ccc", borderRadius: "4px" },
                 }),
-        errors[field.name] &&
-          createElement("span", { style: { color: "red", fontSize: "12px" } }, errors[field.name]),
+        errors[field.name] && createElement("span", { style: { color: "red", fontSize: "12px" } }, errors[field.name]),
       ),
     ),
     createElement(
@@ -298,7 +297,14 @@ export function ReactiveForm({
       {
         type: "submit",
         disabled: isLoading,
-        style: { padding: "8px 16px", background: "#3b82f6", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" },
+        style: {
+          padding: "8px 16px",
+          background: "#3b82f6",
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+          cursor: "pointer",
+        },
       },
       isLoading ? "Saving..." : submitLabel,
     ),

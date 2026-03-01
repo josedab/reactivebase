@@ -39,12 +39,7 @@ export type {
 
 /** Local-first query hooks for offline SQLite-backed data access */
 export { useLocalQuery, useLocalMutation } from "./hooks/index.js"
-export type {
-  LocalQueryOptions,
-  UseLocalQueryReturn,
-  LocalQueryFilter,
-  UseLocalMutationReturn,
-} from "./hooks/index.js"
+export type { LocalQueryOptions, UseLocalQueryReturn, LocalQueryFilter, UseLocalMutationReturn } from "./hooks/index.js"
 
 /** File hooks for reactive file state tracking */
 export { useFile } from "./hooks/index.js"

@@ -80,7 +80,7 @@ export function useFile(options: UseFileOptions = {}): UseFileReturn {
         setFile((f) => ({ ...f, progress: 30 }))
 
         // Upload via client action
-        const result = (await client.action("storage:upload", {
+        const result = (await client.runAction("storage:upload", {
           data: Array.from(new Uint8Array(buffer)),
           contentType: input.type || "application/octet-stream",
           filename: input instanceof File ? input.name : "blob",
