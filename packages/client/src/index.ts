@@ -125,3 +125,7 @@ export type {
 /** Reactive Query Composition: subscribe to derived/combined/transformed queries */
 export { subscribeDerived, subscribeTransformed } from "./composition/index.js"
 export type { DerivedSubscriptionHandle, ComposedQueryOptions } from "./composition/index.js"
+
+/** Session Resumption: stateful reconnect without re-subscribing */
+export { SessionResumeManager } from "./session/index.js"
+export type { SessionResumeOptions, SessionState, ResumeHandler } from "./session/index.js"
