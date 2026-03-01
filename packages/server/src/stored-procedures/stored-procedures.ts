@@ -261,8 +261,10 @@ export function compileProcedure(def: ProcedureDefinition): string {
 
   // Add comment for documentation
   parts.push("")
+  const safeReads = (def.readsTables ?? []).map((t) => validateIdentifier(t, "readsTables entry")).join(", ")
+  const safeWrites = (def.writesTables ?? []).map((t) => validateIdentifier(t, "writesTables entry")).join(", ")
   parts.push(
-    `COMMENT ON FUNCTION "${def.name}" IS 'ReactiveBase managed procedure. Reads: [${(def.readsTables ?? []).join(", ")}]. Writes: [${(def.writesTables ?? []).join(", ")}].';`,
+    `COMMENT ON FUNCTION "${def.name}" IS 'ReactiveBase managed procedure. Reads: [${safeReads}]. Writes: [${safeWrites}].';`,
   )
 
   return parts.join("\n")
