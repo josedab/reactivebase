@@ -4,6 +4,8 @@ Thank you for considering contributing to ReactiveBase! This guide will help you
 
 ## Development Setup
 
+> **Node.js compatibility:** ReactiveBase requires Node.js ≥ 20. CI tests against Node 20 and 22. The `.nvmrc` pins to `20` as the minimum supported version. If you use `nvm`, run `nvm use` to switch automatically.
+
 ```bash
 # Clone the repository
 git clone https://github.com/reactivebase/reactivebase.git
@@ -124,6 +126,29 @@ npm start
 
 This opens the site at `http://localhost:3000`. Changes to docs files are hot-reloaded.
 
+## Running Examples
+
+The `examples/` directory contains 5 example apps demonstrating different features:
+
+| Example                | Complexity   | Features                                          |
+| ---------------------- | ------------ | ------------------------------------------------- |
+| `basic-todo`           | Beginner     | Queries, mutations, actions, middleware           |
+| `collaborative-board`  | Intermediate | Real-time collaboration, presence, rate limiting  |
+| `collaborative-editor` | Advanced     | CRDT integration, shared cursors, offline editing |
+| `project-manager`      | Advanced     | RBAC, Kanban boards, row-level security           |
+| `saas-dashboard`       | Advanced     | Multi-tenant isolation, live metrics              |
+
+To run an example locally:
+
+```bash
+cd examples/basic-todo
+cp .env.example .env    # Set your DATABASE_URL
+npm install
+npm run dev
+```
+
+All examples require PostgreSQL 14+ and a configured `DATABASE_URL`. See each example's `.env.example` for details.
+
 ## Build Pipeline
 
 ReactiveBase uses [Turborepo](https://turbo.build/) to orchestrate builds across packages. Understanding the task dependency graph helps when debugging build issues or running selective builds.
@@ -195,6 +220,9 @@ cd packages/server && npx vitest run src/__tests__/schema.test.ts
 
 # Watch mode
 cd packages/server && npx vitest watch
+
+# Run a specific test file from the repo root
+npm run test:file -- packages/server/src/__tests__/schema.test.ts
 
 # Run tests with coverage
 npm run test:coverage
