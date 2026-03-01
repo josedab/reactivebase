@@ -367,7 +367,7 @@ export class PluginInstaller {
       })
 
       // Resolve installed version from package.json
-      const installedVersion = this._resolveInstalledVersion(name, options.projectDir ?? this.projectDir)
+      const installedVersion = await this._resolveInstalledVersion(name, options.projectDir ?? this.projectDir)
 
       // Configure plugin
       let configPath: string | undefined
@@ -497,9 +497,7 @@ export class PluginInstaller {
   /**
    * List locally installed plugins with status info.
    */
-  async listInstalled(): Promise<
-    { name: string; version: string; hasConfig: boolean; hasTypes: boolean }[]
-  > {
+  async listInstalled(): Promise<{ name: string; version: string; hasConfig: boolean; hasTypes: boolean }[]> {
     const { existsSync, readFileSync, readdirSync } = await import("fs")
     const { join } = await import("path")
 
@@ -551,11 +549,10 @@ export class PluginInstaller {
 
   // ─── Internal ──────────────────────────────────────────────────────────────
 
-  private _resolveInstalledVersion(name: string, projectDir: string): string {
+  private async _resolveInstalledVersion(name: string, projectDir: string): Promise<string> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { readFileSync } = require("fs")
-      const { join } = require("path")
+      const { readFileSync } = await import("fs")
+      const { join } = await import("path")
       const pkgPath = join(projectDir, "node_modules", name, "package.json")
       const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as { version: string }
       return pkg.version
@@ -624,8 +621,12 @@ export class PluginWebUI {
       .map((p) => {
         const verifiedBadge = p.verified ? `<span class="badge verified">✓ Verified</span>` : ""
         const firstPartyBadge = p.firstParty ? `<span class="badge first-party">First Party</span>` : ""
-        const downloads = showInstallCounts ? `<span class="downloads">${this._formatNumber(p.downloads)} installs</span>` : ""
-        const rating = showRatings ? `<span class="rating">${"★".repeat(Math.round(p.rating))}${"☆".repeat(5 - Math.round(p.rating))}</span>` : ""
+        const downloads = showInstallCounts
+          ? `<span class="downloads">${this._formatNumber(p.downloads)} installs</span>`
+          : ""
+        const rating = showRatings
+          ? `<span class="rating">${"★".repeat(Math.round(p.rating))}${"☆".repeat(5 - Math.round(p.rating))}</span>`
+          : ""
 
         return `
         <div class="plugin-card" data-category="${p.category}">

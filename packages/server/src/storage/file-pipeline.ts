@@ -12,7 +12,7 @@
  */
 
 import { randomUUID } from "node:crypto"
-import type { StorageBackend, StorageOptions } from "./storage.js"
+import type { StorageBackend, StorageOptions as _StorageOptions } from "./storage.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -176,10 +176,7 @@ export class FilePipeline {
 
   private validateInput(data: Buffer, options: ProcessorInput): void {
     if (data.length > this.config.maxFileSize) {
-      throw new FilePipelineError(
-        "FILE_TOO_LARGE",
-        `File size ${data.length} exceeds max ${this.config.maxFileSize}`,
-      )
+      throw new FilePipelineError("FILE_TOO_LARGE", `File size ${data.length} exceeds max ${this.config.maxFileSize}`)
     }
     if (this.config.allowedTypes.length > 0 && !this.config.allowedTypes.includes(options.contentType)) {
       throw new FilePipelineError("INVALID_TYPE", `Content type "${options.contentType}" is not allowed`)

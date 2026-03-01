@@ -8,10 +8,7 @@ export { generateMigrationSQL, generateCreateTableSQL, generateIndexSQL } from "
 export type { Migration } from "./migrations.js"
 
 // Schema Version Registry
-export {
-  SchemaVersionRegistry,
-  generateSchemaRegistryTableSQL,
-} from "./schema-registry.js"
+export { SchemaVersionRegistry, generateSchemaRegistryTableSQL } from "./schema-registry.js"
 export type {
   SchemaVersion,
   SchemaTableSnapshot,

@@ -48,10 +48,10 @@ export interface ComputedTableDefinition {
 }
 
 export type RefreshStrategy =
-  | "full"           // Drop and recreate on any source change
-  | "incremental"    // Use triggers for row-level updates
-  | "periodic"       // Refresh on a schedule (cron-like)
-  | "on-demand"      // Manual refresh only
+  | "full" // Drop and recreate on any source change
+  | "incremental" // Use triggers for row-level updates
+  | "periodic" // Refresh on a schedule (cron-like)
+  | "on-demand" // Manual refresh only
 
 export interface ComputedIndexDef {
   columns: string[]
@@ -105,16 +105,12 @@ export function buildCreateComputedTableSQL(def: ComputedTableDefinition): strin
 
   // Create the computed table
   statements.push(`-- Computed table: ${def.name}`)
-  statements.push(
-    `CREATE TABLE IF NOT EXISTS "${def.name}" AS ${def.query};`,
-  )
+  statements.push(`CREATE TABLE IF NOT EXISTS "${def.name}" AS ${def.query};`)
 
   // Add primary key if specified
   if (def.primaryKey?.length) {
     const pkCols = def.primaryKey.map((c) => `"${sanitize(c)}"`).join(", ")
-    statements.push(
-      `ALTER TABLE "${def.name}" ADD PRIMARY KEY (${pkCols});`,
-    )
+    statements.push(`ALTER TABLE "${def.name}" ADD PRIMARY KEY (${pkCols});`)
   }
 
   // Create indexes
@@ -123,30 +119,21 @@ export function buildCreateComputedTableSQL(def: ComputedTableDefinition): strin
       const idxName = idx.name ?? `idx_${def.name}_${idx.columns.join("_")}`
       const cols = idx.columns.map((c) => `"${sanitize(c)}"`).join(", ")
       const unique = idx.unique ? "UNIQUE " : ""
-      statements.push(
-        `CREATE ${unique}INDEX IF NOT EXISTS "${sanitize(idxName)}" ON "${def.name}" (${cols});`,
-      )
+      statements.push(`CREATE ${unique}INDEX IF NOT EXISTS "${sanitize(idxName)}" ON "${def.name}" (${cols});`)
     }
   }
 
   return statements.join("\n")
 }
 
-export function buildRefreshComputedTableSQL(
-  def: ComputedTableDefinition,
-): string {
+export function buildRefreshComputedTableSQL(def: ComputedTableDefinition): string {
   if (def.refreshStrategy === "full") {
-    return [
-      `TRUNCATE TABLE "${def.name}";`,
-      `INSERT INTO "${def.name}" ${def.query};`,
-    ].join("\n")
+    return [`TRUNCATE TABLE "${def.name}";`, `INSERT INTO "${def.name}" ${def.query};`].join("\n")
   }
 
   // For incremental, use a MERGE/upsert pattern
   if (def.primaryKey?.length) {
-    const pkMatch = def.primaryKey
-      .map((col) => `target."${sanitize(col)}" = source."${sanitize(col)}"`)
-      .join(" AND ")
+    const pkMatch = def.primaryKey.map((col) => `target."${sanitize(col)}" = source."${sanitize(col)}"`).join(" AND ")
 
     return [
       `-- Incremental refresh for ${def.name}`,
@@ -168,10 +155,7 @@ export function buildDropComputedTableSQL(name: string): string {
   return `DROP TABLE IF EXISTS "${sanitize(name)}" CASCADE;`
 }
 
-export function buildCreateTriggerSQL(
-  computedTable: string,
-  sourceTable: string,
-): string {
+export function buildCreateTriggerSQL(computedTable: string, sourceTable: string): string {
   const funcName = `_rb_refresh_${sanitize(computedTable)}_on_${sanitize(sourceTable)}`
   return [
     `CREATE OR REPLACE FUNCTION ${funcName}() RETURNS trigger AS $$`,
@@ -208,22 +192,13 @@ CREATE TABLE IF NOT EXISTS _reactivebase_computed_tables (
 );`.trim()
 }
 
-export function buildUpsertMetadataSQL(
-  def: ComputedTableDefinition,
-): { sql: string; params: unknown[] } {
+export function buildUpsertMetadataSQL(def: ComputedTableDefinition): { sql: string; params: unknown[] } {
   return {
     sql: `INSERT INTO _reactivebase_computed_tables (name, query, source_tables, primary_key, refresh_strategy, debounce_ms)
       VALUES ($1, $2, $3, $4, $5, $6)
       ON CONFLICT (name) DO UPDATE SET
         query = $2, source_tables = $3, primary_key = $4, refresh_strategy = $5, debounce_ms = $6, updated_at = NOW()`,
-    params: [
-      def.name,
-      def.query,
-      def.sourceTables,
-      def.primaryKey ?? [],
-      def.refreshStrategy,
-      def.debounceMs ?? 100,
-    ],
+    params: [def.name, def.query, def.sourceTables, def.primaryKey ?? [], def.refreshStrategy, def.debounceMs ?? 100],
   }
 }
 
@@ -384,9 +359,7 @@ export class ComputedTableEngine {
     const graph = this.buildDependencyGraph()
 
     if (graph.cycles.length > 0) {
-      throw new ComputedTableError(
-        `Circular dependency detected: ${graph.cycles.map((c) => c.join(" → ")).join("; ")}`,
-      )
+      throw new ComputedTableError(`Circular dependency detected: ${graph.cycles.map((c) => c.join(" → ")).join("; ")}`)
     }
 
     const parts: string[] = [

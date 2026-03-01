@@ -5,12 +5,7 @@ export { TestServer, createTestServer } from "./test-server.js"
 export type { TestServerOptions, QueryTestResult, MutationTestResult, ReactiveSnapshot } from "./test-server.js"
 
 // Snapshot Testing & Time-Travel Debugging
-export {
-  SnapshotManager,
-  replayMutations,
-  assertSnapshotMatches,
-  assertDiffContains,
-} from "./snapshot-testing.js"
+export { SnapshotManager, replayMutations, assertSnapshotMatches, assertDiffContains } from "./snapshot-testing.js"
 export type {
   NamedSnapshot,
   StateDiff,

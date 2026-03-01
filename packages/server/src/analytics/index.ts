@@ -38,10 +38,7 @@ export type {
 } from "./analytics.js"
 
 // Embedded Analytics Query Engine
-export {
-  EmbeddedAnalyticsQueryEngine,
-  AnalyticsQueryError,
-} from "./embedded-analytics-query.js"
+export { EmbeddedAnalyticsQueryEngine, AnalyticsQueryError } from "./embedded-analytics-query.js"
 
 export type {
   TimeSeriesQuery,

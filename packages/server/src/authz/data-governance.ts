@@ -139,9 +139,7 @@ export function defineDataGovernance(schema: DataGovernanceSchema): GovernanceCo
         throw new GovernanceError(`Retention days for "${table}" must be positive`)
       }
       if (policy.retention.action === "anonymize" && !policy.retention.anonymizeColumns?.length) {
-        throw new GovernanceError(
-          `Retention policy for "${table}" uses "anonymize" but no anonymizeColumns specified`,
-        )
+        throw new GovernanceError(`Retention policy for "${table}" uses "anonymize" but no anonymizeColumns specified`)
       }
     }
   }
@@ -187,10 +185,7 @@ export function applyGovernanceMasking(
 /**
  * Generate retention cleanup SQL for a table.
  */
-export function generateRetentionSQL(
-  config: GovernanceConfig,
-  table: string,
-): string[] {
+export function generateRetentionSQL(config: GovernanceConfig, table: string): string[] {
   const policy = config.schema[table]
   if (!policy?.retention) return []
 
@@ -203,15 +198,11 @@ export function generateRetentionSQL(
 
   switch (policy.retention.action) {
     case "delete":
-      statements.push(
-        `DELETE FROM "${sanitizedTable}" WHERE "${sanitizedTimeCol}" < NOW() - INTERVAL '${interval}';`,
-      )
+      statements.push(`DELETE FROM "${sanitizedTable}" WHERE "${sanitizedTimeCol}" < NOW() - INTERVAL '${interval}';`)
       break
 
     case "anonymize": {
-      const setClauses = (policy.retention.anonymizeColumns ?? [])
-        .map((col) => `"${sanitize(col)}" = NULL`)
-        .join(", ")
+      const setClauses = (policy.retention.anonymizeColumns ?? []).map((col) => `"${sanitize(col)}" = NULL`).join(", ")
       if (setClauses) {
         statements.push(
           `UPDATE "${sanitizedTable}" SET ${setClauses} WHERE "${sanitizedTimeCol}" < NOW() - INTERVAL '${interval}' AND "${sanitize((policy.retention.anonymizeColumns ?? [])[0])}" IS NOT NULL;`,
@@ -225,9 +216,7 @@ export function generateRetentionSQL(
       statements.push(
         `INSERT INTO "${archiveTable}" SELECT * FROM "${sanitizedTable}" WHERE "${sanitizedTimeCol}" < NOW() - INTERVAL '${interval}';`,
       )
-      statements.push(
-        `DELETE FROM "${sanitizedTable}" WHERE "${sanitizedTimeCol}" < NOW() - INTERVAL '${interval}';`,
-      )
+      statements.push(`DELETE FROM "${sanitizedTable}" WHERE "${sanitizedTimeCol}" < NOW() - INTERVAL '${interval}';`)
       break
     }
   }
@@ -238,10 +227,7 @@ export function generateRetentionSQL(
 /**
  * Generate validation constraint SQL from governance policies.
  */
-export function generateValidationSQL(
-  config: GovernanceConfig,
-  table: string,
-): string[] {
+export function generateValidationSQL(config: GovernanceConfig, table: string): string[] {
   const policy = config.schema[table]
   if (!policy?.validations?.length) return []
 
@@ -281,9 +267,7 @@ export function generateValidationSQL(
         }
         break
       case "unique":
-        statements.push(
-          `ALTER TABLE "${sanitizedTable}" ADD CONSTRAINT "${constraintName}" UNIQUE ("${col}");`,
-        )
+        statements.push(`ALTER TABLE "${sanitizedTable}" ADD CONSTRAINT "${constraintName}" UNIQUE ("${col}");`)
         break
       case "custom_sql":
         if (rule.params?.sql) {
@@ -301,10 +285,7 @@ export function generateValidationSQL(
 /**
  * Generate audit trigger SQL for a table.
  */
-export function generateAuditTriggerSQL(
-  config: GovernanceConfig,
-  table: string,
-): string[] {
+export function generateAuditTriggerSQL(config: GovernanceConfig, table: string): string[] {
   const policy = config.schema[table]
   if (!policy?.audit) return []
   if (!policy.audit.read && !policy.audit.write) return []
@@ -313,7 +294,8 @@ export function generateAuditTriggerSQL(
   const statements: string[] = []
 
   // Audit table
-  statements.push(`
+  statements.push(
+    `
 CREATE TABLE IF NOT EXISTS _reactivebase_audit_log (
   id BIGSERIAL PRIMARY KEY,
   table_name TEXT NOT NULL,
@@ -325,13 +307,15 @@ CREATE TABLE IF NOT EXISTS _reactivebase_audit_log (
   timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_audit_table ON _reactivebase_audit_log(table_name, timestamp);
-`.trim())
+`.trim(),
+  )
 
   if (policy.audit.write) {
     const includeData = policy.audit.includeData !== false
     const funcName = `_rb_audit_${sanitizedTable}`
 
-    statements.push(`
+    statements.push(
+      `
 CREATE OR REPLACE FUNCTION ${funcName}() RETURNS trigger AS $$
 BEGIN
   IF TG_OP = 'INSERT' THEN
@@ -352,7 +336,8 @@ DROP TRIGGER IF EXISTS "${funcName}_trg" ON "${sanitizedTable}";
 CREATE TRIGGER "${funcName}_trg"
   AFTER INSERT OR UPDATE OR DELETE ON "${sanitizedTable}"
   FOR EACH ROW EXECUTE FUNCTION ${funcName}();
-`.trim())
+`.trim(),
+    )
   }
 
   return statements
@@ -384,10 +369,7 @@ export function validateGovernance(config: GovernanceConfig): GovernanceViolatio
     }
 
     // Check for confidential tables without audit
-    if (
-      (policy.classification === "confidential" || policy.classification === "restricted") &&
-      !policy.audit
-    ) {
+    if ((policy.classification === "confidential" || policy.classification === "restricted") && !policy.audit) {
       violations.push({
         table,
         rule: "confidential-no-audit",
@@ -448,11 +430,7 @@ export function generateAllGovernanceSQL(config: GovernanceConfig): string {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function maskValue(
-  value: unknown,
-  strategy: MaskingStrategy,
-  customMask?: (value: unknown) => unknown,
-): unknown {
+function maskValue(value: unknown, strategy: MaskingStrategy, customMask?: (value: unknown) => unknown): unknown {
   if (value === null || value === undefined) return value
 
   switch (strategy) {

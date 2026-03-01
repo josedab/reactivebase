@@ -258,14 +258,9 @@ export class LazyFunctionRegistry {
   getStats(): RegistryStats {
     const total = this.loaders.size
     const loadedCount = this.loaded.size
-    const avgLoadMs =
-      this.loadTimes.length > 0
-        ? this.loadTimes.reduce((a, b) => a + b, 0) / this.loadTimes.length
-        : 0
+    const avgLoadMs = this.loadTimes.length > 0 ? this.loadTimes.reduce((a, b) => a + b, 0) / this.loadTimes.length : 0
     const avgExecMs =
-      this.executeTimes.length > 0
-        ? this.executeTimes.reduce((a, b) => a + b, 0) / this.executeTimes.length
-        : 0
+      this.executeTimes.length > 0 ? this.executeTimes.reduce((a, b) => a + b, 0) / this.executeTimes.length : 0
 
     const coldStart = [...this.loaders.keys()].filter((n) => !this.loaded.has(n))
 
@@ -273,10 +268,7 @@ export class LazyFunctionRegistry {
       totalFunctions: total,
       loadedFunctions: loadedCount,
       pendingFunctions: total - loadedCount,
-      cacheHitRate:
-        this.cacheHits + this.cacheMisses > 0
-          ? this.cacheHits / (this.cacheHits + this.cacheMisses)
-          : 0,
+      cacheHitRate: this.cacheHits + this.cacheMisses > 0 ? this.cacheHits / (this.cacheHits + this.cacheMisses) : 0,
       averageLoadTimeMs: avgLoadMs,
       averageExecuteTimeMs: avgExecMs,
       coldStartFunctions: coldStart,
@@ -307,12 +299,9 @@ export function generateFunctionManifest(
 /**
  * Compute optimal chunk assignments for code splitting.
  */
-export function computeChunks(
-  functions: FunctionManifestEntry[],
-  config: SplitConfig = {},
-): ChunkDefinition[] {
+export function computeChunks(functions: FunctionManifestEntry[], config: SplitConfig = {}): ChunkDefinition[] {
   const strategy = config.strategy ?? "by-module"
-  const maxSize = config.maxChunkSize ?? 50_000
+  const _maxSize = config.maxChunkSize ?? 50_000
   const chunks: ChunkDefinition[] = []
 
   if (strategy === "manual" && config.manualChunks) {
@@ -394,7 +383,7 @@ export function computeChunks(
 export function generateClientProxy(manifest: FunctionManifest): string {
   const lines: string[] = [
     "// Auto-generated RPC client proxy - enables tree-shaking of server functions",
-    '// Do not edit manually - regenerate with `reactivebase codegen:rpc`',
+    "// Do not edit manually - regenerate with `reactivebase codegen:rpc`",
     "",
     'import { createRpcClient } from "@reactivebase/client"',
     "",
@@ -418,13 +407,16 @@ export function generateClientProxy(manifest: FunctionManifest): string {
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(
-      () => reject(new RpcSplitError(`Import timed out after ${timeoutMs}ms`)),
-      timeoutMs,
-    )
+    const timer = setTimeout(() => reject(new RpcSplitError(`Import timed out after ${timeoutMs}ms`)), timeoutMs)
     promise.then(
-      (val) => { clearTimeout(timer); resolve(val) },
-      (err) => { clearTimeout(timer); reject(err) },
+      (val) => {
+        clearTimeout(timer)
+        resolve(val)
+      },
+      (err) => {
+        clearTimeout(timer)
+        reject(err)
+      },
     )
   })
 }

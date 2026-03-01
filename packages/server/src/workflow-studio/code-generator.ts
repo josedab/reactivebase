@@ -469,12 +469,7 @@ export class WorkflowCodeGenerator {
     return lines.join("\n")
   }
 
-  private fromTemplate(
-    typeName: string,
-    stepName: string,
-    stepVar: string,
-    config: Record<string, unknown>,
-  ): string {
+  private fromTemplate(typeName: string, stepName: string, stepVar: string, config: Record<string, unknown>): string {
     const stepType = this.registry.getStepType(typeName)
     if (!stepType) return `// Unknown step type: ${typeName}`
 
@@ -625,8 +620,7 @@ export class ExecutionVisualizer {
     return design.nodes.map((node) => {
       const state = execution.nodeStates.get(node.id)
       const status = state?.status ?? "pending"
-      const durationMs =
-        state?.startedAt && state?.completedAt ? state.completedAt - state.startedAt : null
+      const durationMs = state?.startedAt && state?.completedAt ? state.completedAt - state.startedAt : null
 
       return {
         nodeId: node.id,
@@ -670,8 +664,7 @@ export class ExecutionVisualizer {
     for (const [, state] of execution.nodeStates) {
       if (state.status === "pending") continue
 
-      const durationMs =
-        state.startedAt && state.completedAt ? state.completedAt - state.startedAt : null
+      const durationMs = state.startedAt && state.completedAt ? state.completedAt - state.startedAt : null
 
       const event = this.statusToEvent(state.status, state.retryCount)
 
@@ -692,10 +685,7 @@ export class ExecutionVisualizer {
     return entries
   }
 
-  private statusToEvent(
-    status: NodeExecutionState["status"],
-    retryCount: number,
-  ): AuditLogEntry["event"] {
+  private statusToEvent(status: NodeExecutionState["status"], retryCount: number): AuditLogEntry["event"] {
     if (retryCount > 0 && status === "running") return "retried"
     switch (status) {
       case "running":

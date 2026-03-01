@@ -210,7 +210,7 @@ export class FederationGateway {
     const entityTypes = new Map<string, string[]>()
     const typeOwnership = new Map<string, string>()
     const conflicts: SchemaConflict[] = []
-    const allTypes = new Map<string, Map<string, string>>()
+    const _allTypes = new Map<string, Map<string, string>>()
 
     for (const [name, config] of this.subgraphs) {
       const types = extractTypeNames(config.sdl)
@@ -447,10 +447,7 @@ export class FederationGateway {
       totalErrors: this.totalErrors,
       subgraphCalls: this.subgraphCallCount,
       averageLatencyMs: this.totalRequests > 0 ? this.latencySum / this.totalRequests : 0,
-      cacheHitRate:
-        this.cacheHits + this.cacheMisses > 0
-          ? this.cacheHits / (this.cacheHits + this.cacheMisses)
-          : 0,
+      cacheHitRate: this.cacheHits + this.cacheMisses > 0 ? this.cacheHits / (this.cacheHits + this.cacheMisses) : 0,
       subgraphStats,
     }
   }
@@ -488,9 +485,7 @@ export class FederationGateway {
       })
 
       if (!response.ok) {
-        throw new FederationGatewayError(
-          `Subgraph "${config.name}" returned ${response.status}`,
-        )
+        throw new FederationGatewayError(`Subgraph "${config.name}" returned ${response.status}`)
       }
 
       const result = (await response.json()) as { data?: Record<string, unknown>; errors?: unknown[] }

@@ -125,9 +125,7 @@ export class SchemaExplorer {
     for (const node of this.nodes) {
       for (const col of node.columns) {
         if (col.references) {
-          const existing = this.edges.find(
-            (e) => e.from === node.name && e.to === col.references!.table,
-          )
+          const existing = this.edges.find((e) => e.from === node.name && e.to === col.references!.table)
           if (!existing) {
             const rel: RelationInfo = {
               name: `${node.name}_${col.name}_fk`,

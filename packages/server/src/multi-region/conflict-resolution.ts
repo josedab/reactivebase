@@ -254,9 +254,7 @@ export class ConflictResolver {
     const resolved = { ...local.data } as T
     const conflicts: FieldConflict[] = []
 
-    const allKeys = Array.from(
-      new Set([...Object.keys(local.data), ...Object.keys(remote.data)]),
-    )
+    const allKeys = Array.from(new Set([...Object.keys(local.data), ...Object.keys(remote.data)]))
 
     for (const key of allKeys) {
       const localVal = (local.data as Record<string, unknown>)[key]
@@ -325,15 +323,9 @@ export class ConflictResolver {
     }
   }
 
-  private detectFieldConflicts<T extends Record<string, unknown>>(
-    local: T,
-    remote: T,
-    resolved: T,
-  ): FieldConflict[] {
+  private detectFieldConflicts<T extends Record<string, unknown>>(local: T, remote: T, resolved: T): FieldConflict[] {
     const conflicts: FieldConflict[] = []
-    const allKeys = Array.from(
-      new Set([...Object.keys(local), ...Object.keys(remote)]),
-    )
+    const allKeys = Array.from(new Set([...Object.keys(local), ...Object.keys(remote)]))
 
     for (const key of allKeys) {
       const lv = (local as Record<string, unknown>)[key]
@@ -489,10 +481,7 @@ export class PartitionTester {
 export function formatConflictReport(conflicts: ConflictRecord[]): string {
   if (conflicts.length === 0) return "No conflicts recorded."
 
-  const lines: string[] = [
-    `Conflict Report (${conflicts.length} conflicts)`,
-    "=".repeat(50),
-  ]
+  const lines: string[] = [`Conflict Report (${conflicts.length} conflicts)`, "=".repeat(50)]
 
   for (const c of conflicts) {
     lines.push(``)

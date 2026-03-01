@@ -133,9 +133,7 @@ export class EmbeddedAnalyticsQueryEngine {
       }
     }
 
-    const fillGaps = query.fillGaps
-      ? `-- Note: Use generate_series to fill gaps in application layer`
-      : ""
+    const fillGaps = query.fillGaps ? `-- Note: Use generate_series to fill gaps in application layer` : ""
 
     const sql = [
       `SELECT ${selectCols.join(", ")}`,
@@ -166,7 +164,7 @@ export class EmbeddedAnalyticsQueryEngine {
 
     const params: unknown[] = []
     const ctes: string[] = []
-    const windowMs = query.windowMs ?? 7 * 24 * 60 * 60 * 1000 // 7 days default
+    const _windowMs = query.windowMs ?? 7 * 24 * 60 * 60 * 1000 // 7 days default
 
     // Build CTE for each funnel step
     for (let i = 0; i < query.steps.length; i++) {
@@ -190,9 +188,7 @@ export class EmbeddedAnalyticsQueryEngine {
     }
 
     // Final SELECT counts each step
-    const stepCounts = query.steps
-      .map((_, i) => `(SELECT COUNT(*) FROM step_${i}) AS "step_${i}_count"`)
-      .join(",\n  ")
+    const stepCounts = query.steps.map((_, i) => `(SELECT COUNT(*) FROM step_${i}) AS "step_${i}_count"`).join(",\n  ")
 
     const sql = `WITH ${ctes.join(",\n")}\nSELECT\n  ${stepCounts};`
 
@@ -215,9 +211,7 @@ export class EmbeddedAnalyticsQueryEngine {
     const timeRangeConditions = query.timeRange
       ? buildTimeRangeConditions(query.timeColumn, query.timeRange, params)
       : []
-    const whereClause = timeRangeConditions.length > 0
-      ? `WHERE ${timeRangeConditions.join(" AND ")}`
-      : ""
+    const whereClause = timeRangeConditions.length > 0 ? `WHERE ${timeRangeConditions.join(" AND ")}` : ""
 
     const periodSelects = Array.from({ length: query.retentionPeriods }, (_, i) => {
       const interval = `${i + 1} ${query.cohortBucket}${i + 1 > 1 ? "s" : ""}`
@@ -245,7 +239,9 @@ export class EmbeddedAnalyticsQueryEngine {
       `LEFT JOIN activity ON cohorts."${sanitize(query.userColumn)}" = activity."${sanitize(query.userColumn)}"`,
       `GROUP BY cohorts.cohort`,
       `ORDER BY cohorts.cohort;`,
-    ].filter(Boolean).join("\n")
+    ]
+      .filter(Boolean)
+      .join("\n")
 
     return {
       sql,
@@ -262,10 +258,7 @@ export class EmbeddedAnalyticsQueryEngine {
 
     const params: unknown[] = []
     const metricExpr = buildMetricExpression(query.metric)
-    const groupCols = [
-      `"${sanitize(query.rankColumn)}"`,
-      ...(query.groupBy?.map((c) => `"${sanitize(c)}"`) ?? []),
-    ]
+    const groupCols = [`"${sanitize(query.rankColumn)}"`, ...(query.groupBy?.map((c) => `"${sanitize(c)}"`) ?? [])]
 
     const conditions = buildFilterConditions(query.filters ?? [], params)
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
@@ -282,7 +275,9 @@ export class EmbeddedAnalyticsQueryEngine {
       `GROUP BY ${groupCols.join(", ")}`,
       `ORDER BY "value" DESC`,
       `LIMIT ${limitParam};`,
-    ].filter(Boolean).join("\n")
+    ]
+      .filter(Boolean)
+      .join("\n")
 
     return {
       sql,
@@ -427,11 +422,7 @@ function buildFilterConditions(filters: FilterCondition[], params: unknown[]): s
   })
 }
 
-function buildTimeRangeConditions(
-  column: string,
-  range: TimeRange,
-  params: unknown[],
-): string[] {
+function buildTimeRangeConditions(column: string, range: TimeRange, params: unknown[]): string[] {
   const col = `"${sanitize(column)}"`
   const conditions: string[] = []
 

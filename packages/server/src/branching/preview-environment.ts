@@ -290,9 +290,7 @@ export class PreviewEnvironmentManager {
       env.status = "error"
       env.updatedAt = Date.now()
       env.metadata.error = error instanceof Error ? error.message : String(error)
-      throw new PreviewEnvironmentError(
-        `Failed to provision preview environment "${id}": ${env.metadata.error}`,
-      )
+      throw new PreviewEnvironmentError(`Failed to provision preview environment "${id}": ${env.metadata.error}`)
     }
   }
 
@@ -420,9 +418,7 @@ export class PreviewEnvironmentManager {
    * Find preview environment by PR number.
    */
   getByPR(prNumber: number): PreviewEnvironment | undefined {
-    return [...this.environments.values()].find(
-      (e) => e.prNumber === prNumber && e.status !== "destroyed",
-    )
+    return [...this.environments.values()].find((e) => e.prNumber === prNumber && e.status !== "destroyed")
   }
 
   /**
@@ -448,9 +444,7 @@ export class PreviewEnvironmentManager {
     }
 
     const activeEnvs = envs.filter((e) => e.status !== "destroyed" && e.status !== "destroying")
-    const oldestActive = activeEnvs.length > 0
-      ? Math.min(...activeEnvs.map((e) => e.createdAt))
-      : null
+    const oldestActive = activeEnvs.length > 0 ? Math.min(...activeEnvs.map((e) => e.createdAt)) : null
 
     return {
       total: envs.length,
@@ -483,9 +477,7 @@ export class PreviewEnvironmentManager {
     const expired = await this.cleanupExpired()
     if (expired.length > 0) return true
 
-    const envs = [...this.environments.values()].filter(
-      (e) => e.status !== "destroyed" && e.status !== "destroying",
-    )
+    const envs = [...this.environments.values()].filter((e) => e.status !== "destroyed" && e.status !== "destroying")
 
     if (envs.length === 0) return false
 

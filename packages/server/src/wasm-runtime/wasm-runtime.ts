@@ -37,14 +37,7 @@ export interface WasmRuntimeOptions {
   debug?: boolean
 }
 
-export type RuntimeTarget =
-  | "node"
-  | "deno"
-  | "cloudflare-workers"
-  | "vercel-edge"
-  | "browser"
-  | "embedded"
-  | "auto"
+export type RuntimeTarget = "node" | "deno" | "cloudflare-workers" | "vercel-edge" | "browser" | "embedded" | "auto"
 
 export interface WasmModule {
   id: string
@@ -157,8 +150,7 @@ export class WasmFunctionRuntime {
 
   constructor(options: WasmRuntimeOptions = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options }
-    this.detectedRuntime =
-      this.options.targetRuntime === "auto" ? detectRuntime() : this.options.targetRuntime
+    this.detectedRuntime = this.options.targetRuntime === "auto" ? detectRuntime() : this.options.targetRuntime
   }
 
   /**
@@ -238,7 +230,7 @@ export class WasmFunctionRuntime {
       }
 
       // Check memory requirements
-      const requiredMemoryMB = metadata.memoryPages * 64 / 1024 // 64KB per page
+      const requiredMemoryMB = (metadata.memoryPages * 64) / 1024 // 64KB per page
       if (requiredMemoryMB > this.options.memoryLimitMB) {
         throw new WasmRuntimeError(
           `Module "${name}" requires ${requiredMemoryMB}MB but limit is ${this.options.memoryLimitMB}MB`,
@@ -282,9 +274,7 @@ export class WasmFunctionRuntime {
     }
     if (module.status !== "ready") {
       this.failCount++
-      throw new WasmRuntimeError(
-        `Module "${moduleName}" is not ready (status: ${module.status})`,
-      )
+      throw new WasmRuntimeError(`Module "${moduleName}" is not ready (status: ${module.status})`)
     }
 
     const startTime = Date.now()
@@ -423,9 +413,7 @@ export class WasmFunctionRuntime {
           ? this.executionTimes.reduce((a, b) => a + b, 0) / this.executionTimes.length
           : 0,
       averageMemoryBytes:
-        this.memoryUsages.length > 0
-          ? this.memoryUsages.reduce((a, b) => a + b, 0) / this.memoryUsages.length
-          : 0,
+        this.memoryUsages.length > 0 ? this.memoryUsages.reduce((a, b) => a + b, 0) / this.memoryUsages.length : 0,
       hostCallCount: this.hostCallCount,
       byRuntime: { [this.detectedRuntime]: this.totalExecutions },
     }
@@ -463,7 +451,11 @@ function detectRuntime(): RuntimeTarget {
   try {
     if (typeof globalThis !== "undefined") {
       // Check for Cloudflare Workers
-      if ("caches" in globalThis && !("window" in globalThis) && typeof (globalThis as Record<string, unknown>).navigator === "undefined") {
+      if (
+        "caches" in globalThis &&
+        !("window" in globalThis) &&
+        typeof (globalThis as Record<string, unknown>).navigator === "undefined"
+      ) {
         return "cloudflare-workers"
       }
       // Check for Deno
@@ -513,7 +505,7 @@ function estimateMemoryUsage(args: unknown): number {
   return str ? str.length * 2 : 0 // Rough estimate
 }
 
-function getSupportedTargets(current: RuntimeTarget): RuntimeTarget[] {
+function getSupportedTargets(_current: RuntimeTarget): RuntimeTarget[] {
   // Wasm runs everywhere, but with different host API availability
   return ["node", "deno", "cloudflare-workers", "vercel-edge", "browser", "embedded"]
 }

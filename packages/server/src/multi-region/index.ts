@@ -22,11 +22,7 @@ export type {
 } from "./multi-region.js"
 
 // Geo-Distributed Conflict Resolution
-export {
-  ConflictResolver,
-  PartitionTester,
-  formatConflictReport,
-} from "./conflict-resolution.js"
+export { ConflictResolver, PartitionTester, formatConflictReport } from "./conflict-resolution.js"
 export type {
   ConflictStrategyType,
   ConflictRecord,

@@ -117,10 +117,7 @@ export class ReactiveQueryDAG {
   /**
    * Combine multiple queries into a single derived query.
    */
-  combineQueries<T>(
-    sourceIds: string[],
-    combiner: (...values: unknown[]) => T,
-  ): DerivedQueryNode<T> {
+  combineQueries<T>(sourceIds: string[], combiner: (...values: unknown[]) => T): DerivedQueryNode<T> {
     return this.deriveQuery(sourceIds, combiner)
   }
 

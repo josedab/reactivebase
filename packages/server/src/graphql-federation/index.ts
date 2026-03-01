@@ -1,7 +1,4 @@
-export {
-  FederationGateway,
-  FederationGatewayError,
-} from "./federation-gateway.js"
+export { FederationGateway, FederationGatewayError } from "./federation-gateway.js"
 
 export type {
   SubgraphConfig,

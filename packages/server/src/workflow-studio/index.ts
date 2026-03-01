@@ -29,11 +29,7 @@ export type {
   MonitoringSnapshot,
 } from "./workflow-studio.js"
 
-export {
-  WorkflowCodeGenerator,
-  StepTypeRegistry,
-  ExecutionVisualizer,
-} from "./code-generator.js"
+export { WorkflowCodeGenerator, StepTypeRegistry, ExecutionVisualizer } from "./code-generator.js"
 
 export type {
   GeneratedCode,

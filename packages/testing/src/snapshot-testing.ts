@@ -222,10 +222,7 @@ export async function replayMutations(
 /**
  * Assert that a snapshot matches expected table data.
  */
-export function assertSnapshotMatches(
-  snapshot: NamedSnapshot,
-  expected: Record<string, MockRow[]>,
-): void {
+export function assertSnapshotMatches(snapshot: NamedSnapshot, expected: Record<string, MockRow[]>): void {
   for (const [table, expectedRows] of Object.entries(expected)) {
     const actualRows = snapshot.tables[table]
     if (!actualRows) {

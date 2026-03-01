@@ -149,10 +149,7 @@ export class QueryDebugger {
   /**
    * Record an invalidation being triggered for a table change.
    */
-  recordInvalidation(
-    sourceTable: string,
-    affectedSubscriptionIds: string[],
-  ): void {
+  recordInvalidation(sourceTable: string, affectedSubscriptionIds: string[]): void {
     if (!this.shouldSample()) return
 
     for (const sid of affectedSubscriptionIds) {
@@ -288,9 +285,7 @@ export class QueryDebugger {
     topReExecuted: SubscriptionProfile[]
   } {
     const profiles = this.getProfiles()
-    const topReExecuted = [...profiles]
-      .sort((a, b) => b.reExecutionCount - a.reExecutionCount)
-      .slice(0, 10)
+    const topReExecuted = [...profiles].sort((a, b) => b.reExecutionCount - a.reExecutionCount).slice(0, 10)
 
     return {
       totalSubscriptions: this.profiles.size,

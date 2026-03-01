@@ -1,7 +1,4 @@
-export {
-  WasmFunctionRuntime,
-  WasmRuntimeError,
-} from "./wasm-runtime.js"
+export { WasmFunctionRuntime, WasmRuntimeError } from "./wasm-runtime.js"
 
 export type {
   WasmRuntimeOptions,

@@ -223,10 +223,7 @@ export type {
   AnalyticsOptions,
   AnalyticsStats,
 } from "../analytics/index.js"
-export {
-  EmbeddedAnalyticsQueryEngine,
-  AnalyticsQueryError,
-} from "../analytics/index.js"
+export { EmbeddedAnalyticsQueryEngine, AnalyticsQueryError } from "../analytics/index.js"
 
 // Time-Travel Debugging & Audit (extended)
 export {
