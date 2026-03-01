@@ -27,35 +27,35 @@ describe("createTenancyMiddleware", () => {
     const mw = createTenancyMiddleware({ mode: "row", column: "orgId", claimKey: "orgId" })
     expect(mw.name).toBe("tenancy")
 
-    const state = new Map<string, unknown>()
     const ctx = {
       functionName: "test",
       functionType: "query" as const,
       args: {},
       auth: createAuthContext("u1", { orgId: "org-123" }),
-      state,
+      state: Object.freeze({}),
     }
 
-    mw.before!(ctx)
+    const result = mw.before!(ctx)
 
-    expect(state.get("_tenantId")).toBe("org-123")
-    expect(state.get("_tenantColumn")).toBe("orgId")
-    expect(state.get("_tenantMode")).toBe("row")
+    expect(result).toBeDefined()
+    expect(result!.state!._tenantId).toBe("org-123")
+    expect(result!.state!._tenantColumn).toBe("orgId")
+    expect(result!.state!._tenantMode).toBe("row")
   })
 
   it("handles missing tenant ID gracefully", () => {
     const mw = createTenancyMiddleware({ mode: "row" })
-    const state = new Map<string, unknown>()
     const ctx = {
       functionName: "test",
       functionType: "query" as const,
       args: {},
       auth: createAuthContext("u1", {}),
-      state,
+      state: Object.freeze({}),
     }
 
-    mw.before!(ctx)
-    expect(state.get("_tenantId")).toBeNull()
+    const result = mw.before!(ctx)
+    expect(result).toBeDefined()
+    expect(result!.state!._tenantId).toBeNull()
   })
 })
 
@@ -98,11 +98,11 @@ describe("generateDropTenantSQL", () => {
 
 describe("getTenantFromState", () => {
   it("extracts tenant context from middleware state", () => {
-    const state = new Map<string, unknown>([
-      ["_tenantId", "t1"],
-      ["_tenantColumn", "orgId"],
-      ["_tenantMode", "row"],
-    ])
+    const state: Readonly<Record<string, unknown>> = Object.freeze({
+      _tenantId: "t1",
+      _tenantColumn: "orgId",
+      _tenantMode: "row",
+    })
 
     const tenant = getTenantFromState(state)
     expect(tenant).not.toBeNull()
@@ -112,7 +112,7 @@ describe("getTenantFromState", () => {
   })
 
   it("returns null when no tenancy configured", () => {
-    const state = new Map<string, unknown>()
+    const state: Readonly<Record<string, unknown>> = Object.freeze({})
     expect(getTenantFromState(state)).toBeNull()
   })
 })

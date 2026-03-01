@@ -282,7 +282,7 @@ describe("E2E: Middleware Pipeline", () => {
       functionType: "mutation" as const,
       args: {},
       auth: createAuthContext("u1"),
-      state: new Map(),
+      state: Object.freeze({}),
     }
 
     await mw.runBefore(ctx)

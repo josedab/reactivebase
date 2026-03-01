@@ -47,7 +47,7 @@ describe("rateLimit middleware", () => {
       functionType: "mutation" as const,
       args: {},
       auth: createAuthContext("user1"),
-      state: new Map(),
+      state: Object.freeze({}),
     }
 
     expect(() => mw.before!(ctx)).not.toThrow()
@@ -62,7 +62,7 @@ describe("rateLimit middleware", () => {
       functionType: "query" as const,
       args: {},
       auth: createAuthContext("user1"),
-      state: new Map(),
+      state: Object.freeze({}),
     }
 
     // Should not throw even after many calls since queries are excluded

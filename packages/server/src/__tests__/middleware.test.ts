@@ -7,7 +7,7 @@ function createTestContext(overrides: Partial<MiddlewareContext> = {}): Middlewa
     functionType: "mutation",
     args: { foo: "bar" },
     auth: { userId: "u1", claims: {}, requireUser: () => "u1", requireRole: () => {} },
-    state: new Map(),
+    state: Object.freeze({}),
     ...overrides,
   }
 }
