@@ -525,6 +525,7 @@ export function generateSchemaPlaygroundHTML(options: SchemaPlaygroundHTMLOption
   <script>
     const schemaData = ${schemaJson};
     let activeTab = 'schema';
+    function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function switchTab(tab) {
       activeTab = tab;
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -541,7 +542,7 @@ export function generateSchemaPlaygroundHTML(options: SchemaPlaygroundHTMLOption
       schemaData.nodes.forEach(n => {
         const card = document.createElement('div');
         card.className = 'table-card';
-        card.innerHTML = '<h3>' + n.name + '</h3><div class="cols">' + n.columns.length + ' columns, ' + n.indexes.length + ' indexes</div>';
+        card.innerHTML = '<h3>' + escapeHtml(n.name) + '</h3><div class="cols">' + n.columns.length + ' columns, ' + n.indexes.length + ' indexes</div>';
         card.onclick = () => showTableDetail(n);
         list.appendChild(card);
       });
@@ -549,13 +550,13 @@ export function generateSchemaPlaygroundHTML(options: SchemaPlaygroundHTMLOption
     }
     function showTableDetail(node) {
       const detail = document.getElementById('detail-content');
-      let html = '<h3 style="color:var(--accent);margin-bottom:8px">' + node.name + '</h3>';
+      let html = '<h3 style="color:var(--accent);margin-bottom:8px">' + escapeHtml(node.name) + '</h3>';
       html += '<div style="font-size:12px">';
       node.columns.forEach(c => {
         html += '<div style="padding:3px 0;border-bottom:1px solid var(--border)">';
-        html += '<strong>' + c.name + '</strong> <span style="opacity:0.6">' + c.type + '</span>';
+        html += '<strong>' + escapeHtml(c.name) + '</strong> <span style="opacity:0.6">' + escapeHtml(c.type) + '</span>';
         if (c.primaryKey) html += ' <span style="color:#a6e3a1">PK</span>';
-        if (c.references) html += ' <span style="color:#fab387">FK→' + c.references.table + '</span>';
+        if (c.references) html += ' <span style="color:#fab387">FK→' + escapeHtml(c.references.table) + '</span>';
         html += '</div>';
       });
       html += '</div>';

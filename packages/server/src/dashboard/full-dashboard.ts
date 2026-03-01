@@ -166,7 +166,7 @@ async function refreshMetrics() {
 }
 
 function metric(label, value, sub) {
-  return '<div class="metric-card"><div class="metric-value">' + formatNumber(value) + '</div><div class="metric-label">' + label + '</div><div class="metric-sub">' + (sub || '') + '</div></div>';
+  return '<div class="metric-card"><div class="metric-value">' + escapeHtml(formatNumber(value)) + '</div><div class="metric-label">' + escapeHtml(label) + '</div><div class="metric-sub">' + escapeHtml(sub || '') + '</div></div>';
 }
 
 refreshMetrics();
