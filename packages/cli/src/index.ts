@@ -351,7 +351,7 @@ Subcommands:
 `)
 }
 
-function getFlag(flag: string, defaultValue: string): string {
+function getFlag(flag: string, defaultValue: string = ""): string {
   const index = args.indexOf(flag)
   if (index !== -1 && index + 1 < args.length) {
     return args[index + 1]
