@@ -217,9 +217,8 @@ export class SeedEngine {
       }
       depGraph.set(tableName, deps)
 
-      const count = typeof config.count === "function"
-        ? config.count(profile.size)
-        : config.count * SIZE_MULTIPLIERS[profile.size]
+      const count =
+        typeof config.count === "function" ? config.count(profile.size) : config.count * SIZE_MULTIPLIERS[profile.size]
 
       tablePlans.push({
         tableName,
@@ -242,11 +241,7 @@ export class SeedEngine {
   /**
    * Generate seed data for a table.
    */
-  generateRows(
-    tableName: string,
-    config: TableSeedConfig,
-    count: number,
-  ): Record<string, unknown>[] {
+  generateRows(tableName: string, config: TableSeedConfig, count: number): Record<string, unknown>[] {
     const rows: Record<string, unknown>[] = []
 
     for (let i = 0; i < count; i++) {
@@ -277,11 +272,7 @@ export class SeedEngine {
     return this.generator
   }
 
-  private generateColumnValue(
-    gen: ColumnGenerator,
-    index: number,
-    row: Record<string, unknown>,
-  ): unknown {
+  private generateColumnValue(gen: ColumnGenerator, index: number, row: Record<string, unknown>): unknown {
     switch (gen.type) {
       case "faker":
         return this.generator.generate(gen.generator, gen.args)
@@ -332,19 +323,77 @@ function topologicalSort(graph: Map<string, Set<string>>): string[] {
 // ── Built-in Data ────────────────────────────────────────────────────────────
 
 const FIRST_NAMES = [
-  "Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Henry",
-  "Ivy", "Jack", "Kate", "Liam", "Mia", "Noah", "Olivia", "Pete",
-  "Quinn", "Rachel", "Sam", "Tina", "Uma", "Victor", "Wendy", "Xander",
+  "Alice",
+  "Bob",
+  "Charlie",
+  "Diana",
+  "Eve",
+  "Frank",
+  "Grace",
+  "Henry",
+  "Ivy",
+  "Jack",
+  "Kate",
+  "Liam",
+  "Mia",
+  "Noah",
+  "Olivia",
+  "Pete",
+  "Quinn",
+  "Rachel",
+  "Sam",
+  "Tina",
+  "Uma",
+  "Victor",
+  "Wendy",
+  "Xander",
 ]
 
 const LAST_NAMES = [
-  "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller",
-  "Davis", "Rodriguez", "Martinez", "Anderson", "Taylor", "Thomas", "Moore",
-  "Jackson", "Martin", "Lee", "Thompson", "White", "Harris", "Clark",
+  "Smith",
+  "Johnson",
+  "Williams",
+  "Brown",
+  "Jones",
+  "Garcia",
+  "Miller",
+  "Davis",
+  "Rodriguez",
+  "Martinez",
+  "Anderson",
+  "Taylor",
+  "Thomas",
+  "Moore",
+  "Jackson",
+  "Martin",
+  "Lee",
+  "Thompson",
+  "White",
+  "Harris",
+  "Clark",
 ]
 
 const WORDS = [
-  "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog",
-  "data", "reactive", "query", "real", "time", "stream", "async",
-  "build", "deploy", "test", "schema", "table", "index", "column",
+  "the",
+  "quick",
+  "brown",
+  "fox",
+  "jumps",
+  "over",
+  "lazy",
+  "dog",
+  "data",
+  "reactive",
+  "query",
+  "real",
+  "time",
+  "stream",
+  "async",
+  "build",
+  "deploy",
+  "test",
+  "schema",
+  "table",
+  "index",
+  "column",
 ]

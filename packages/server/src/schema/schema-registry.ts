@@ -410,11 +410,11 @@ CREATE TABLE IF NOT EXISTS _reactivebase_schema_compat_log (
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const TYPE_WIDENING: Record<string, string[]> = {
-  "integer": ["bigint", "numeric", "float", "double precision"],
-  "smallint": ["integer", "bigint", "numeric"],
-  "real": ["double precision", "numeric"],
-  "varchar": ["text"],
-  "char": ["varchar", "text"],
+  integer: ["bigint", "numeric", "float", "double precision"],
+  smallint: ["integer", "bigint", "numeric"],
+  real: ["double precision", "numeric"],
+  varchar: ["text"],
+  char: ["varchar", "text"],
 }
 
 function isTypeWidening(from: string, to: string): boolean {

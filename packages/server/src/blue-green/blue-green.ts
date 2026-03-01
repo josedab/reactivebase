@@ -99,7 +99,7 @@ export class VersionRouter {
 
     // Deterministic routing based on percentage
     this.routeCounter++
-    const shouldRouteToNew = (this.routeCounter % 100) < this.currentPercentage
+    const shouldRouteToNew = this.routeCounter % 100 < this.currentPercentage
 
     const version = shouldRouteToNew ? this.newVersion : this.oldVersion
     this.routes.set(connectionId, version)

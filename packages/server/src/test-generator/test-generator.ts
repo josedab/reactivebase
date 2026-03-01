@@ -57,11 +57,26 @@ export interface RelationshipInfo {
 /**
  * Analyze a schema definition for test generation.
  */
-export function analyzeSchema(schemaDef: Record<string, {
-  columns: Record<string, { type?: string; nullable?: boolean; default?: unknown; unique?: boolean; referencedTable?: string; referencedColumn?: string }>
-  indexes: Array<{ name: string; columns: string[]; unique?: boolean }>
-  primaryKey?: string[]
-}>): SchemaAnalysis {
+export function analyzeSchema(
+  schemaDef: Record<
+    string,
+    {
+      columns: Record<
+        string,
+        {
+          type?: string
+          nullable?: boolean
+          default?: unknown
+          unique?: boolean
+          referencedTable?: string
+          referencedColumn?: string
+        }
+      >
+      indexes: Array<{ name: string; columns: string[]; unique?: boolean }>
+      primaryKey?: string[]
+    }
+  >,
+): SchemaAnalysis {
   const tables: AnalyzedTable[] = []
   const relationships: RelationshipInfo[] = []
 
@@ -425,7 +440,7 @@ function getSampleValue(type: string, alternate = false): string {
       return alternate ? "false" : "true"
     case "timestamp":
     case "date":
-      return 'new Date().toISOString()'
+      return "new Date().toISOString()"
     case "uuid":
       return '"00000000-0000-0000-0000-000000000001"'
     case "json":

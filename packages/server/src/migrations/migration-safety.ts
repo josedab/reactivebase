@@ -142,10 +142,7 @@ export class MigrationSafetyNet {
   /**
    * Validate a migration SQL string and produce a safety report.
    */
-  validate(
-    migrationSQL: string,
-    context?: ValidationContext,
-  ): MigrationSafetyReport {
+  validate(migrationSQL: string, context?: ValidationContext): MigrationSafetyReport {
     if (!migrationSQL || migrationSQL.trim() === "") {
       return createEmptyReport()
     }
@@ -201,15 +198,16 @@ export class MigrationSafetyNet {
     const warnings = issues.filter((i) => i.severity === "warning").length
     const infos = issues.filter((i) => i.severity === "info").length
 
-    const risk = errors > 0
-      ? "critical"
-      : breakingChanges.length > 0
-        ? "high"
-        : warnings > 0
-          ? "medium"
-          : dataLossRisk.some((r) => r.risk !== "none")
-            ? "low"
-            : "none"
+    const risk =
+      errors > 0
+        ? "critical"
+        : breakingChanges.length > 0
+          ? "high"
+          : warnings > 0
+            ? "medium"
+            : dataLossRisk.some((r) => r.risk !== "none")
+              ? "low"
+              : "none"
 
     return {
       safe: errors === 0 && breakingChanges.filter((b) => b.severity === "error").length === 0,
@@ -398,9 +396,7 @@ export class MigrationSafetyNet {
       })
     }
 
-    const renameColMatch = stmt.match(
-      /ALTER TABLE\s+"?(\w+)"?\s+RENAME COLUMN\s+"?(\w+)"?\s+TO\s+"?(\w+)"?/i,
-    )
+    const renameColMatch = stmt.match(/ALTER TABLE\s+"?(\w+)"?\s+RENAME COLUMN\s+"?(\w+)"?\s+TO\s+"?(\w+)"?/i)
     if (renameColMatch) {
       changes.push({
         type: "rename_column",
@@ -430,27 +426,69 @@ export class MigrationSafetyNet {
 
     if (upper.startsWith("ALTER TABLE")) {
       if (upper.includes("ADD COLUMN") && !upper.includes("NOT NULL")) {
-        return { statement: stmt.slice(0, 80), lockType: "access_exclusive", estimatedDurationMs: 10, tablesLocked: tables, concurrent: false }
+        return {
+          statement: stmt.slice(0, 80),
+          lockType: "access_exclusive",
+          estimatedDurationMs: 10,
+          tablesLocked: tables,
+          concurrent: false,
+        }
       }
       if (upper.includes("DROP COLUMN") || upper.includes("TYPE")) {
-        return { statement: stmt.slice(0, 80), lockType: "access_exclusive", estimatedDurationMs: 5000, tablesLocked: tables, concurrent: false }
+        return {
+          statement: stmt.slice(0, 80),
+          lockType: "access_exclusive",
+          estimatedDurationMs: 5000,
+          tablesLocked: tables,
+          concurrent: false,
+        }
       }
-      return { statement: stmt.slice(0, 80), lockType: "access_exclusive", estimatedDurationMs: 100, tablesLocked: tables, concurrent: false }
+      return {
+        statement: stmt.slice(0, 80),
+        lockType: "access_exclusive",
+        estimatedDurationMs: 100,
+        tablesLocked: tables,
+        concurrent: false,
+      }
     }
 
     if (upper.startsWith("CREATE INDEX") && !upper.includes("CONCURRENTLY")) {
-      return { statement: stmt.slice(0, 80), lockType: "share", estimatedDurationMs: 10000, tablesLocked: tables, concurrent: false }
+      return {
+        statement: stmt.slice(0, 80),
+        lockType: "share",
+        estimatedDurationMs: 10000,
+        tablesLocked: tables,
+        concurrent: false,
+      }
     }
 
     if (upper.startsWith("DROP TABLE") || upper.startsWith("TRUNCATE")) {
-      return { statement: stmt.slice(0, 80), lockType: "access_exclusive", estimatedDurationMs: 50, tablesLocked: tables, concurrent: false }
+      return {
+        statement: stmt.slice(0, 80),
+        lockType: "access_exclusive",
+        estimatedDurationMs: 50,
+        tablesLocked: tables,
+        concurrent: false,
+      }
     }
 
     if (upper.startsWith("CREATE TABLE")) {
-      return { statement: stmt.slice(0, 80), lockType: "none", estimatedDurationMs: 0, tablesLocked: [], concurrent: false }
+      return {
+        statement: stmt.slice(0, 80),
+        lockType: "none",
+        estimatedDurationMs: 0,
+        tablesLocked: [],
+        concurrent: false,
+      }
     }
 
-    return { statement: stmt.slice(0, 80), lockType: "none", estimatedDurationMs: 0, tablesLocked: [], concurrent: false }
+    return {
+      statement: stmt.slice(0, 80),
+      lockType: "none",
+      estimatedDurationMs: 0,
+      tablesLocked: [],
+      concurrent: false,
+    }
   }
 
   private assessDataLoss(stmt: string): DataLossRisk[] {
@@ -545,7 +583,9 @@ export class MigrationSafetyNet {
     }
 
     // CREATE INDEX -> DROP INDEX
-    const createIdxMatch = stmt.match(/CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:CONCURRENTLY\s+)?(?:IF NOT EXISTS\s+)?"?(\w+)"?/i)
+    const createIdxMatch = stmt.match(
+      /CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:CONCURRENTLY\s+)?(?:IF NOT EXISTS\s+)?"?(\w+)"?/i,
+    )
     if (createIdxMatch) {
       return `DROP INDEX IF EXISTS "${createIdxMatch[1]}";`
     }
@@ -557,9 +597,7 @@ export class MigrationSafetyNet {
     }
 
     // RENAME COLUMN -> RENAME back
-    const renameColMatch = stmt.match(
-      /ALTER TABLE\s+"?(\w+)"?\s+RENAME COLUMN\s+"?(\w+)"?\s+TO\s+"?(\w+)"?/i,
-    )
+    const renameColMatch = stmt.match(/ALTER TABLE\s+"?(\w+)"?\s+RENAME COLUMN\s+"?(\w+)"?\s+TO\s+"?(\w+)"?/i)
     if (renameColMatch) {
       return `ALTER TABLE "${renameColMatch[1]}" RENAME COLUMN "${renameColMatch[3]}" TO "${renameColMatch[2]}";`
     }

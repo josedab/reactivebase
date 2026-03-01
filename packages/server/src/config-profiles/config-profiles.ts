@@ -267,7 +267,7 @@ export class ProfileEngine {
 
 // ── Deep Merge Utility ───────────────────────────────────────────────────────
 
-function deepMerge<T extends Record<string, unknown>>(base: T, override: T): T {
+function deepMerge<T extends object>(base: T, override: T): T {
   const result = { ...base } as Record<string, unknown>
 
   for (const key of Object.keys(override)) {
@@ -282,10 +282,7 @@ function deepMerge<T extends Record<string, unknown>>(base: T, override: T): T {
       !Array.isArray(baseVal) &&
       !Array.isArray(overrideVal)
     ) {
-      result[key] = deepMerge(
-        baseVal as Record<string, unknown>,
-        overrideVal as Record<string, unknown>,
-      )
+      result[key] = deepMerge(baseVal as Record<string, unknown>, overrideVal as Record<string, unknown>)
     } else if (overrideVal !== undefined) {
       result[key] = overrideVal
     }

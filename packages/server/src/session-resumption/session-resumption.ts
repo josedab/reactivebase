@@ -150,7 +150,7 @@ export class SessionStore {
     // Update subscription snapshot
     const sub = session.subscriptions.find((s) => s.subscriptionId === delta.subscriptionId)
     if (sub) {
-      (sub as { lastVersion: number }).lastVersion = delta.version
+      ;(sub as { lastVersion: number }).lastVersion = delta.version
     }
   }
 

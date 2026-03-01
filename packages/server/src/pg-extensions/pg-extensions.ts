@@ -376,7 +376,9 @@ export class ExtensionProvisioner {
           message: `⚠️  ${req.name} not installed (optional, fallback available)`,
         })
         if (req.fallbackStrategy) {
-          recommendations.push(`Optional: Install ${req.name} for better performance. Fallback: ${req.fallbackStrategy}`)
+          recommendations.push(
+            `Optional: Install ${req.name} for better performance. Fallback: ${req.fallbackStrategy}`,
+          )
         }
       } else {
         checks.push({

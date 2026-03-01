@@ -345,7 +345,11 @@ export class ConnectionHealthMonitor {
     this.latencyTrackers.set(endpoint.id, new LatencyTracker(this.options.latencyWindowSize))
     this.circuitBreakers.set(
       endpoint.id,
-      new CircuitBreaker(this.options.errorThreshold, this.options.circuitOpenDurationMs, this.options.halfOpenMaxAttempts),
+      new CircuitBreaker(
+        this.options.errorThreshold,
+        this.options.circuitOpenDurationMs,
+        this.options.halfOpenMaxAttempts,
+      ),
     )
     this.replicaRouter.addEndpoint(endpoint)
   }
