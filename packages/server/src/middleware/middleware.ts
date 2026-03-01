@@ -1,17 +1,24 @@
 /**
  * Middleware system for ReactiveBase.
  * Provides before/after hooks for queries, mutations, and actions.
+ *
+ * State is immutable: each middleware receives a snapshot, and state
+ * changes are propagated via MiddlewareResult.state to prevent
+ * order-dependent mutation bugs.
  */
 
 import type { AuthContext } from "../auth/index.js"
+
+/** Immutable middleware state — use `mergeState()` to produce new state. */
+export type MiddlewareState = Readonly<Record<string, unknown>>
 
 export interface MiddlewareContext {
   functionName: string
   functionType: "query" | "mutation" | "action"
   args: unknown
   auth: AuthContext
-  /** Arbitrary data passed between middleware layers */
-  state: Map<string, unknown>
+  /** Immutable state passed between middleware layers. Use `mergeState()` to update. */
+  readonly state: MiddlewareState
 }
 
 export interface MiddlewareResult {
@@ -19,6 +26,18 @@ export interface MiddlewareResult {
   args?: unknown
   /** Short-circuit and return this result without executing the function */
   result?: unknown
+  /** State entries to merge into the context for downstream middleware */
+  state?: MiddlewareState
+}
+
+/** Create a new state with additional entries merged in. */
+export function mergeState(current: MiddlewareState, updates: MiddlewareState): MiddlewareState {
+  return Object.freeze({ ...current, ...updates })
+}
+
+/** Create an initial empty middleware state. */
+export function createMiddlewareState(initial?: Record<string, unknown>): MiddlewareState {
+  return Object.freeze({ ...initial })
 }
 
 export type BeforeHook = (ctx: MiddlewareContext) => Promise<MiddlewareResult | void> | MiddlewareResult | void
@@ -44,16 +63,21 @@ export class MiddlewareManager {
 
   /**
    * Run before hooks. Returns modified args or a short-circuit result.
+   * State is accumulated immutably — each middleware gets a frozen snapshot.
    */
-  async runBefore(ctx: MiddlewareContext): Promise<{ args: unknown; shortCircuit?: unknown }> {
+  async runBefore(ctx: MiddlewareContext): Promise<{ args: unknown; state: MiddlewareState; shortCircuit?: unknown }> {
     let { args } = ctx
+    let state = ctx.state
 
     for (const mw of this.middlewares) {
       if (!mw.before) continue
-      const result = await mw.before({ ...ctx, args })
+      const result = await mw.before({ ...ctx, args, state })
       if (result) {
+        if (result.state) {
+          state = mergeState(state, result.state)
+        }
         if (result.result !== undefined) {
-          return { args, shortCircuit: result.result }
+          return { args, state, shortCircuit: result.result }
         }
         if (result.args !== undefined) {
           args = result.args
@@ -61,7 +85,7 @@ export class MiddlewareManager {
       }
     }
 
-    return { args }
+    return { args, state }
   }
 
   /**
