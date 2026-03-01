@@ -10,12 +10,31 @@ A multi-tenant analytics dashboard with real-time charts.
 - 🔔 **Alerts** — threshold-based alerts on any metric
 - 💳 **Billing** — usage tracking per tenant with plan enforcement
 
+## Prerequisites
+
+- Node.js ≥ 20 (see `.nvmrc`)
+- PostgreSQL 14+
+
 ## Quick Start
 
 ```bash
+# Set your Postgres connection string
+cp .env.example .env   # Edit DATABASE_URL in .env
+
+# Install dependencies and start
 npm install
-cp .env.example .env
 npm run dev
+```
+
+## Project Structure
+
+```
+saas-dashboard/
+├── convex/
+│   └── ...            # Schema, queries, mutations
+├── .env.example       # Environment variable template
+├── package.json
+└── tsconfig.json
 ```
 
 ## Schema

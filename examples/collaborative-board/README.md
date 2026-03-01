@@ -21,10 +21,18 @@ boards (1) → columns (N) → tasks (N)
                   └── tasks.assignee
 ```
 
+## Prerequisites
+
+- Node.js ≥ 20 (see `.nvmrc`)
+- PostgreSQL 14+
+
 ## Quick Start
 
 ```bash
+# Set your Postgres connection string
 export DATABASE_URL="postgresql://localhost:5432/collab"
+
+# Install dependencies and start
 npm install
 npm run dev
 ```
@@ -32,11 +40,13 @@ npm run dev
 ## API
 
 ### Queries (Reactive)
+
 - `board.getBoard({ boardId })` — Get board details
 - `board.listColumns({ boardId })` — List columns in order
 - `board.listTasks({ columnId })` — List tasks in column order
 
 ### Mutations (Transactional)
+
 - `board.createBoard({ title })` — Create board with default columns
 - `board.createTask({ columnId, title, priority })` — Add task to column
 - `board.moveTask({ taskId, targetColumnId, targetPosition })` — Move task
@@ -44,4 +54,5 @@ npm run dev
 - `board.deleteTask({ taskId })` — Delete a task
 
 ### Actions
+
 - `board.searchTasks({ query, boardId })` — Search tasks by title/content

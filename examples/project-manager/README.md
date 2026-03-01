@@ -10,11 +10,19 @@ A real-time project management app (like Linear) built with ReactiveBase.
 - 🔒 **RBAC** — owner/admin/member roles with row-level security
 - 📊 **Dashboard** — real-time task statistics and burndown
 
+## Prerequisites
+
+- Node.js ≥ 20 (see `.nvmrc`)
+- PostgreSQL 14+
+
 ## Quick Start
 
 ```bash
+# Set your Postgres connection string
+cp .env.example .env   # Edit DATABASE_URL in .env
+
+# Install dependencies and start
 npm install
-cp .env.example .env
 npm run dev
 ```
 
