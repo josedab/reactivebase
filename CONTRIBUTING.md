@@ -230,6 +230,17 @@ npm run test:coverage
 
 ## Troubleshooting
 
+### Benchmarks
+
+ReactiveBase includes a benchmark suite that measures query, mutation, and subscription performance.
+
+```bash
+# Run all benchmarks
+npm run benchmark
+```
+
+The CI benchmark workflow runs on every push to `main` and automatically updates the performance badge in the README. When contributing performance-sensitive changes, run benchmarks locally before and after your change to compare results.
+
 ### `npm run typecheck` fails on `@reactivebase/edge`
 
 The edge package has test files that reference types not compatible with its `tsconfig.json`. This is a known issue.
