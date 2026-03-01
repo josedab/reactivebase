@@ -48,3 +48,5 @@ export * from "./exports/query-composition.js"
 export * from "./exports/connection-health.js"
 /** Session Resumption: stateful reconnection with differential sync */
 export * from "./exports/session-resumption.js"
+/** Query Debugger: live dependency graphs, invalidation traces, profiling */
+export * from "./exports/query-debugger.js"
