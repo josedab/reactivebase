@@ -239,6 +239,17 @@ async function main(): Promise<void> {
       break
     }
 
+    case "doctor": {
+      const { doctor: doctorCmd } = await import("./commands/doctor.js")
+      await doctorCmd({
+        projectDir: process.cwd(),
+        connectionString: process.env.DATABASE_URL,
+        autoFix: args.includes("--fix"),
+        json: args.includes("--json"),
+      })
+      break
+    }
+
     case "--help":
     case "-h":
     case undefined:
@@ -270,6 +281,7 @@ Commands:
   migrate          Database migration commands
   deploy           Deploy to cloud (Fly.io/Railway/ReactiveBase Cloud)
   deploy --cloud   Deploy to ReactiveBase Cloud (managed)
+  doctor           Check PostgreSQL extension health
   add <plugin>     Add a plugin (npm install + configure + types)
   functions list   List all defined functions
   dacl             Access control policy management
