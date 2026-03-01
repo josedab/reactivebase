@@ -73,7 +73,7 @@ export interface ProviderDetectionResult {
 // ─── Google Auth ─────────────────────────────────────────────────────────────
 
 const GOOGLE_OIDC_ISSUER = "https://accounts.google.com"
-const GOOGLE_TOKEN_INFO_URL = "https://oauth2.googleapis.com/tokeninfo"
+const _GOOGLE_TOKEN_INFO_URL = "https://oauth2.googleapis.com/tokeninfo"
 
 export function googleAuth(options: GoogleAuthOptions = {}): AuthProvider {
   const env = options.env ?? getProcessEnv()
@@ -107,7 +107,7 @@ export function googleAuth(options: GoogleAuthOptions = {}): AuthProvider {
       }
 
       // Verify expiry
-      if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+      if (payload.exp && Number(payload.exp) < Math.floor(Date.now() / 1000)) {
         throw new AuthenticationError("Google JWT expired")
       }
 
@@ -115,9 +115,7 @@ export function googleAuth(options: GoogleAuthOptions = {}): AuthProvider {
       if (options.allowedDomains?.length) {
         const domain = payload.hd as string | undefined
         if (!domain || !options.allowedDomains.includes(domain)) {
-          throw new AuthenticationError(
-            `Google account domain "${domain ?? "unknown"}" not in allowed list`,
-          )
+          throw new AuthenticationError(`Google account domain "${domain ?? "unknown"}" not in allowed list`)
         }
       }
 
@@ -218,7 +216,7 @@ export function githubAuth(options: GitHubAuthOptions = {}): AuthProvider {
 export function magicLinkAuth(options: MagicLinkAuthOptions = {}): AuthProvider {
   const env = options.env ?? getProcessEnv()
   const secret = options.secret ?? env.REACTIVEBASE_SECRET
-  const expirySeconds = options.expirySeconds ?? 600
+  const _expirySeconds = options.expirySeconds ?? 600
 
   return {
     name: "magic-link",
@@ -258,10 +256,10 @@ export function magicLinkAuth(options: MagicLinkAuthOptions = {}): AuthProvider 
       }
 
       return {
-        userId: payload.userId ?? payload.email,
+        userId: String(payload.userId ?? payload.email),
         claims: {
           provider: "magic-link",
-          email: payload.email,
+          email: String(payload.email),
           ...payload,
         },
       }
@@ -290,7 +288,7 @@ export function generateMagicLinkToken(
 
 export function anonymousAuth(options: AnonymousAuthOptions = {}): AuthProvider {
   const prefix = options.prefix ?? "anon"
-  const enabled = options.enabled ?? (getProcessEnv().NODE_ENV !== "production")
+  const enabled = options.enabled ?? getProcessEnv().NODE_ENV !== "production"
 
   return {
     name: "anonymous",
@@ -315,10 +313,7 @@ export function anonymousAuth(options: AnonymousAuthOptions = {}): AuthProvider 
 /**
  * Combine multiple auth providers into one. Tries each provider in order.
  */
-export function multiProvider(
-  providers: AuthProvider[],
-  options: MultiProviderOptions = {},
-): AuthProvider {
+export function multiProvider(providers: AuthProvider[], options: MultiProviderOptions = {}): AuthProvider {
   if (providers.length === 0) {
     throw new Error("multiProvider requires at least one provider")
   }
@@ -351,9 +346,7 @@ export function multiProvider(
         }
       }
 
-      throw new AuthenticationError(
-        `No auth provider could verify the token. Tried: ${errors.join("; ")}`,
-      )
+      throw new AuthenticationError(`No auth provider could verify the token. Tried: ${errors.join("; ")}`)
     },
   }
 }
@@ -364,9 +357,7 @@ export function multiProvider(
  * Auto-detect auth providers from environment variables.
  * Returns a multi-provider that includes all detected providers.
  */
-export function autoDetectProviders(
-  options: ZeroConfigProviderOptions = {},
-): ProviderDetectionResult {
+export function autoDetectProviders(options: ZeroConfigProviderOptions = {}): ProviderDetectionResult {
   const env = options.env ?? getProcessEnv()
   const providers: AuthProvider[] = []
   const detected: string[] = []
@@ -398,9 +389,7 @@ export function autoDetectProviders(
   }
 
   if (providers.length === 0) {
-    warnings.push(
-      "No auth providers detected. Set GOOGLE_CLIENT_ID, GITHUB_CLIENT_ID, or REACTIVEBASE_SECRET.",
-    )
+    warnings.push("No auth providers detected. Set GOOGLE_CLIENT_ID, GITHUB_CLIENT_ID, or REACTIVEBASE_SECRET.")
   }
 
   return { providers, detected, warnings }
