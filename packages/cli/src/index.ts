@@ -28,6 +28,14 @@ async function main(): Promise<void> {
       if (subcommand === "--procedures") {
         const { generateProcedures } = await import("./commands/generate-procedures.js")
         await generateProcedures({ projectDir: process.cwd() })
+      } else if (subcommand === "--tests" || subcommand === ":tests") {
+        const { generateTestsCommand } = await import("./commands/generate-tests.js")
+        await generateTestsCommand({
+          projectDir: process.cwd(),
+          coverage: (getFlag("--coverage", "standard") as "basic" | "standard" | "high"),
+          outputDir: args.includes("--output") ? getFlag("--output", "") : undefined,
+          dryRun: args.includes("--dry-run"),
+        })
       } else {
         const { writeGeneratedFiles } = await import("./commands/generate.js")
         writeGeneratedFiles(process.cwd())
@@ -258,6 +266,7 @@ Usage: reactivebase <command> [options]
 Commands:
   dev              Start development server
   generate         Generate types from schema
+  generate --tests Generate E2E test suites from schema
   migrate          Database migration commands
   deploy           Deploy to cloud (Fly.io/Railway/ReactiveBase Cloud)
   deploy --cloud   Deploy to ReactiveBase Cloud (managed)
