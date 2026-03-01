@@ -481,6 +481,7 @@ export class WorkflowCodeGenerator {
 
   private generateConditionCode(node: WorkflowNode): string {
     const expression = (node.config.expression as string) ?? "true"
+    this.validateSafeExpression(expression)
     return `if (${expression}) {\n      // true branch for "${node.label}"\n    } else {\n      // false branch for "${node.label}"\n    }`
   }
 
@@ -493,13 +494,23 @@ export class WorkflowCodeGenerator {
   private generateDelayCode(node: WorkflowNode): string {
     const stepName = this.toStepName(node.label)
     const duration = (node.config.duration as string) ?? (node.config.delay as string) ?? "1m"
-    return `await wf.sleep("${stepName}", "${duration}")`
+    return `await wf.sleep("${stepName}", "${this.escapeString(duration)}")`
   }
 
   private generateLoopCode(node: WorkflowNode): string {
     const expression = (node.config.expression as string) ?? "items"
+    this.validateSafeExpression(expression)
     const stepVar = this.toVarName(node.label)
     return `const ${stepVar} = []\n    for (const item of ${expression}) {\n      // loop body for "${node.label}"\n    }`
+  }
+
+  /** Reject expressions containing dangerous patterns (imports, require, process, eval, Function) */
+  private validateSafeExpression(expression: string): void {
+    const dangerous =
+      /\b(import|require|process|eval|Function|globalThis|__proto__|constructor)\b|[;{}]|\bexec\s*\(|\bchild_process\b/
+    if (dangerous.test(expression)) {
+      throw new Error(`Unsafe expression rejected: ${expression.substring(0, 60)}`)
+    }
   }
 
   private toVarName(label: string): string {
