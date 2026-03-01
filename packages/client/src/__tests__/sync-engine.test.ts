@@ -102,9 +102,9 @@ describe("OfflineSyncEngine", () => {
       const engine = createEngine()
       await engine.queueMutation("tasks.create", { title: "Fail" })
 
-      const _attempts = 0
+      let _attempts = 0
       const result = await engine.sync(async () => {
-        attempts++
+        _attempts++
         throw new Error("Network error")
       })
 
