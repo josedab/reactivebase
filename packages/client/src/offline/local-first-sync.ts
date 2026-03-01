@@ -650,19 +650,25 @@ export class LocalFirstSyncEngine {
    * @returns Array of matching rows
    */
   async getLocalData<T = Record<string, unknown>>(table: string, query?: LocalQuery): Promise<T[]> {
-    let sql = `SELECT * FROM ${table}`
+    const quoteId = (name: string) => `"${name.replace(/"/g, '""')}"`
+    const validDirections = ["ASC", "DESC"] as const
+    let sql = `SELECT * FROM ${quoteId(table)}`
     const params: unknown[] = []
 
     if (query?.where && Object.keys(query.where).length > 0) {
       const conditions = Object.entries(query.where).map(([key]) => {
-        return `${key} = ?`
+        return `${quoteId(key)} = ?`
       })
       params.push(...Object.values(query.where))
       sql += ` WHERE ${conditions.join(" AND ")}`
     }
 
     if (query?.orderBy && query.orderBy.length > 0) {
-      const orderClauses = query.orderBy.map((o) => `${o.column} ${o.direction ?? "ASC"}`)
+      const orderClauses = query.orderBy.map((o) => {
+        const dir = (o.direction ?? "ASC").toUpperCase()
+        const safeDir = validDirections.includes(dir as (typeof validDirections)[number]) ? dir : "ASC"
+        return `${quoteId(o.column)} ${safeDir}`
+      })
       sql += ` ORDER BY ${orderClauses.join(", ")}`
     }
 

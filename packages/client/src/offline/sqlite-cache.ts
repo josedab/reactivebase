@@ -90,6 +90,9 @@ export class SQLiteCacheAdapter implements OfflineStorage {
   constructor(options: SQLiteCacheOptions) {
     this.adapter = options.adapter
     this.tableName = options.tableName ?? DEFAULT_OPTIONS.tableName
+    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(this.tableName)) {
+      throw new Error(`Invalid tableName "${this.tableName}": must match /^[a-zA-Z_][a-zA-Z0-9_]*$/`)
+    }
     this.maxEntries = options.maxEntries ?? DEFAULT_OPTIONS.maxEntries
     this.defaultTTLMs = options.defaultTTLMs ?? DEFAULT_OPTIONS.defaultTTLMs
   }
