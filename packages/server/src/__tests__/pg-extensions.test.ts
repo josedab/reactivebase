@@ -30,8 +30,8 @@ describe("detectExtensions", () => {
     }
 
     const result = detectExtensions(schema)
-    const hasTrgm = result.required.some((r) => r.name === "pg_trgm") ||
-                    result.optional.some((r) => r.name === "pg_trgm")
+    const hasTrgm =
+      result.required.some((r) => r.name === "pg_trgm") || result.optional.some((r) => r.name === "pg_trgm")
     expect(hasTrgm).toBe(true)
   })
 
@@ -73,12 +73,12 @@ describe("detectExtensions", () => {
 describe("ExtensionProvisioner", () => {
   function createMockAdapter(installed: string[] = [], available: string[] = []): ProvisionerAdapter {
     return {
-      queryInstalledExtensions: vi.fn().mockResolvedValue(
-        installed.map((name) => ({ name, version: "1.0.0", installed: true, available: true })),
-      ),
-      queryAvailableExtensions: vi.fn().mockResolvedValue(
-        available.map((name) => ({ name, version: "1.0.0", installed: false, available: true })),
-      ),
+      queryInstalledExtensions: vi
+        .fn()
+        .mockResolvedValue(installed.map((name) => ({ name, version: "1.0.0", installed: true, available: true }))),
+      queryAvailableExtensions: vi
+        .fn()
+        .mockResolvedValue(available.map((name) => ({ name, version: "1.0.0", installed: false, available: true }))),
       createExtension: vi.fn().mockResolvedValue(undefined),
     }
   }
@@ -87,9 +87,7 @@ describe("ExtensionProvisioner", () => {
     const adapter = createMockAdapter(["pgvector"], [])
     const provisioner = new ExtensionProvisioner(adapter)
 
-    const results = await provisioner.provision([
-      { name: "pgvector", reason: "vector columns", optional: false },
-    ])
+    const results = await provisioner.provision([{ name: "pgvector", reason: "vector columns", optional: false }])
 
     expect(results[0].status).toBe("installed")
     expect(results[0].success).toBe(true)
@@ -100,9 +98,7 @@ describe("ExtensionProvisioner", () => {
     const adapter = createMockAdapter([], ["pgvector"])
     const provisioner = new ExtensionProvisioner(adapter)
 
-    const results = await provisioner.provision([
-      { name: "pgvector", reason: "vector columns", optional: false },
-    ])
+    const results = await provisioner.provision([{ name: "pgvector", reason: "vector columns", optional: false }])
 
     expect(results[0].status).toBe("installed")
     expect(adapter.createExtension).toHaveBeenCalledWith("pgvector")
@@ -124,9 +120,7 @@ describe("ExtensionProvisioner", () => {
     const adapter = createMockAdapter([], [])
     const provisioner = new ExtensionProvisioner(adapter)
 
-    const results = await provisioner.provision([
-      { name: "postgis", reason: "spatial columns", optional: false },
-    ])
+    const results = await provisioner.provision([{ name: "postgis", reason: "spatial columns", optional: false }])
 
     expect(results[0].status).toBe("missing")
     expect(results[0].success).toBe(false)

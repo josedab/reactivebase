@@ -4,7 +4,7 @@ import {
   RelationalQueryBuilder,
   DocumentQueryBuilder,
   GraphQueryBuilder,
-  MultiModelError,
+  MultiModelError as _MultiModelError,
 } from "../multi-model/multi-model.js"
 
 describe("MultiModelQueryBuilder", () => {
@@ -38,16 +38,12 @@ describe("RelationalQueryBuilder", () => {
   })
 
   it("builds JOINs", () => {
-    const result = new RelationalQueryBuilder("users")
-      .join("orders", "users.id", "orders.user_id")
-      .build()
+    const result = new RelationalQueryBuilder("users").join("orders", "users.id", "orders.user_id").build()
     expect(result.sql).toContain("INNER JOIN")
   })
 
   it("builds LEFT JOINs", () => {
-    const result = new RelationalQueryBuilder("users")
-      .leftJoin("orders", "users.id", "orders.user_id")
-      .build()
+    const result = new RelationalQueryBuilder("users").leftJoin("orders", "users.id", "orders.user_id").build()
     expect(result.sql).toContain("LEFT JOIN")
   })
 
@@ -81,9 +77,7 @@ describe("RelationalQueryBuilder", () => {
   })
 
   it("builds WINDOW", () => {
-    const result = new RelationalQueryBuilder("orders")
-      .window("w", "user_id", "created_at")
-      .build()
+    const result = new RelationalQueryBuilder("orders").window("w", "user_id", "created_at").build()
     expect(result.sql).toContain("WINDOW")
     expect(result.sql).toContain("PARTITION BY")
   })
@@ -104,55 +98,41 @@ describe("DocumentQueryBuilder", () => {
   })
 
   it("builds match conditions", () => {
-    const result = new DocumentQueryBuilder("profiles")
-      .match({ "settings.theme": "dark" })
-      .build()
+    const result = new DocumentQueryBuilder("profiles").match({ "settings.theme": "dark" }).build()
     expect(result.sql).toContain("WHERE")
     expect(result.sql).toContain("jsonb")
   })
 
   it("supports operator matching", () => {
-    const result = new DocumentQueryBuilder("profiles")
-      .matchOp("age", ">", 18)
-      .build()
+    const result = new DocumentQueryBuilder("profiles").matchOp("age", ">", 18).build()
     expect(result.sql).toContain("::numeric >")
     expect(result.params).toContain(18)
   })
 
   it("supports contains operator", () => {
-    const result = new DocumentQueryBuilder("profiles")
-      .matchOp("tags", "contains", ["admin"])
-      .build()
+    const result = new DocumentQueryBuilder("profiles").matchOp("tags", "contains", ["admin"]).build()
     expect(result.sql).toContain("@>")
   })
 
   it("supports exists operator", () => {
-    const result = new DocumentQueryBuilder("profiles")
-      .matchOp("email", "exists", true)
-      .build()
+    const result = new DocumentQueryBuilder("profiles").matchOp("email", "exists", true).build()
     expect(result.sql).toContain("IS NOT NULL")
   })
 
   it("builds projections", () => {
-    const result = new DocumentQueryBuilder("profiles")
-      .project("name", "email")
-      .build()
+    const result = new DocumentQueryBuilder("profiles").project("name", "email").build()
     expect(result.sql).toContain("name")
     expect(result.sql).toContain("email")
   })
 
   it("builds sort", () => {
-    const result = new DocumentQueryBuilder("profiles")
-      .sort("created_at", "desc")
-      .build()
+    const result = new DocumentQueryBuilder("profiles").sort("created_at", "desc").build()
     expect(result.sql).toContain("ORDER BY")
     expect(result.sql).toContain("DESC")
   })
 
   it("builds unwind", () => {
-    const result = new DocumentQueryBuilder("profiles")
-      .unwind("tags")
-      .build()
+    const result = new DocumentQueryBuilder("profiles").unwind("tags").build()
     expect(result.sql).toContain("jsonb_array_elements")
     expect(result.sql).toContain("LATERAL")
   })
@@ -164,9 +144,7 @@ describe("DocumentQueryBuilder", () => {
   })
 
   it("supports nested paths", () => {
-    const result = new DocumentQueryBuilder("profiles")
-      .match({ "address.city": "NYC" })
-      .build()
+    const result = new DocumentQueryBuilder("profiles").match({ "address.city": "NYC" }).build()
     expect(result.sql).toContain("address")
     expect(result.sql).toContain("city")
   })
@@ -181,9 +159,7 @@ describe("GraphQueryBuilder", () => {
   })
 
   it("builds node query with filter", () => {
-    const result = new GraphQueryBuilder("employees")
-      .startFrom({ department: "engineering" })
-      .build()
+    const result = new GraphQueryBuilder("employees").startFrom({ department: "engineering" }).build()
     expect(result.sql).toContain("WHERE")
     expect(result.params).toContain("engineering")
   })
@@ -210,34 +186,23 @@ describe("GraphQueryBuilder", () => {
   })
 
   it("includes cycle prevention", () => {
-    const result = new GraphQueryBuilder("nodes")
-      .edges("edges")
-      .traverse("outbound", 5)
-      .build()
+    const result = new GraphQueryBuilder("nodes").edges("edges").traverse("outbound", 5).build()
     expect(result.sql).toContain("NOT")
     expect(result.sql).toContain("ANY(g.path)")
   })
 
   it("throws without edge table set", () => {
-    expect(() =>
-      new GraphQueryBuilder("nodes").traverse("outbound"),
-    ).toThrow("Edge table must be set")
+    expect(() => new GraphQueryBuilder("nodes").traverse("outbound")).toThrow("Edge table must be set")
   })
 
   it("builds with limit", () => {
-    const result = new GraphQueryBuilder("nodes")
-      .edges("edges")
-      .traverse("outbound")
-      .limit(100)
-      .build()
+    const result = new GraphQueryBuilder("nodes").edges("edges").traverse("outbound").limit(100).build()
     expect(result.sql).toContain("LIMIT")
     expect(result.params).toContain(100)
   })
 
   it("builds with select columns", () => {
-    const result = new GraphQueryBuilder("employees")
-      .select("id", "name")
-      .build()
+    const result = new GraphQueryBuilder("employees").select("id", "name").build()
     expect(result.sql).toContain("id, name")
   })
 })

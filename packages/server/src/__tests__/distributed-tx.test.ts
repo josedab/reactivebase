@@ -5,7 +5,7 @@ import {
   DeadLetterQueue,
   DistributedTracer,
 } from "../distributed-tx/distributed-tx.js"
-import type { ParticipantAdapter, SagaStep } from "../distributed-tx/distributed-tx.js"
+import type { ParticipantAdapter, SagaStep as _SagaStep } from "../distributed-tx/distributed-tx.js"
 
 describe("TwoPhaseCommitCoordinator", () => {
   function createMockAdapter(): ParticipantAdapter {
@@ -18,9 +18,10 @@ describe("TwoPhaseCommitCoordinator", () => {
 
   it("commits a distributed transaction when all participants prepare successfully", async () => {
     const adapter = createMockAdapter()
-    ;(adapter.prepare as ReturnType<typeof vi.fn>).mockImplementation(
-      async (pid: string) => ({ participantId: pid, success: true }),
-    )
+    ;(adapter.prepare as ReturnType<typeof vi.fn>).mockImplementation(async (pid: string) => ({
+      participantId: pid,
+      success: true,
+    }))
 
     const coordinator = new TwoPhaseCommitCoordinator(adapter)
     coordinator.registerParticipant({ id: "db1", connectionString: "pg://db1", name: "Primary" })
@@ -39,9 +40,10 @@ describe("TwoPhaseCommitCoordinator", () => {
 
   it("aborts when a participant fails to prepare", async () => {
     const adapter = createMockAdapter()
-    ;(adapter.prepare as ReturnType<typeof vi.fn>).mockImplementation(
-      async (pid: string) => ({ participantId: pid, success: pid !== "db2" }),
-    )
+    ;(adapter.prepare as ReturnType<typeof vi.fn>).mockImplementation(async (pid: string) => ({
+      participantId: pid,
+      success: pid !== "db2",
+    }))
 
     const coordinator = new TwoPhaseCommitCoordinator(adapter)
     coordinator.registerParticipant({ id: "db1", connectionString: "pg://db1", name: "Primary" })
@@ -58,9 +60,9 @@ describe("TwoPhaseCommitCoordinator", () => {
     const adapter = createMockAdapter()
     const coordinator = new TwoPhaseCommitCoordinator(adapter)
 
-    await expect(
-      coordinator.executeTransaction(["unknown"], new Map()),
-    ).rejects.toThrow('Unknown participant: "unknown"')
+    await expect(coordinator.executeTransaction(["unknown"], new Map())).rejects.toThrow(
+      'Unknown participant: "unknown"',
+    )
   })
 
   it("adds to dead letter queue on failure", async () => {

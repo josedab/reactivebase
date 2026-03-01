@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect } from "vitest"
 import {
   CircuitBreaker,
   LatencyTracker,
@@ -118,14 +118,28 @@ describe("ReadReplicaRouter", () => {
     router.addEndpoint({ id: "replica2", connectionString: "pg://replica2", role: "replica", region: "eu-west" })
 
     router.updateStats("replica1", {
-      endpointId: "replica1", latencyMs: 50, avgLatencyMs: 50, p95LatencyMs: 80,
-      queryCount: 100, errorCount: 0, circuitState: "closed",
-      lastChecked: new Date(), poolSize: 10, activeConnections: 5,
+      endpointId: "replica1",
+      latencyMs: 50,
+      avgLatencyMs: 50,
+      p95LatencyMs: 80,
+      queryCount: 100,
+      errorCount: 0,
+      circuitState: "closed",
+      lastChecked: new Date(),
+      poolSize: 10,
+      activeConnections: 5,
     })
     router.updateStats("replica2", {
-      endpointId: "replica2", latencyMs: 10, avgLatencyMs: 10, p95LatencyMs: 20,
-      queryCount: 100, errorCount: 0, circuitState: "closed",
-      lastChecked: new Date(), poolSize: 10, activeConnections: 5,
+      endpointId: "replica2",
+      latencyMs: 10,
+      avgLatencyMs: 10,
+      p95LatencyMs: 20,
+      queryCount: 100,
+      errorCount: 0,
+      circuitState: "closed",
+      lastChecked: new Date(),
+      poolSize: 10,
+      activeConnections: 5,
     })
 
     const endpoint = router.routeRead()
@@ -138,9 +152,16 @@ describe("ReadReplicaRouter", () => {
     router.addEndpoint({ id: "replica1", connectionString: "pg://replica1", role: "replica" })
 
     router.updateStats("replica1", {
-      endpointId: "replica1", latencyMs: 0, avgLatencyMs: 0, p95LatencyMs: 0,
-      queryCount: 0, errorCount: 10, circuitState: "open",
-      lastChecked: new Date(), poolSize: 10, activeConnections: 0,
+      endpointId: "replica1",
+      latencyMs: 0,
+      avgLatencyMs: 0,
+      p95LatencyMs: 0,
+      queryCount: 0,
+      errorCount: 10,
+      circuitState: "open",
+      lastChecked: new Date(),
+      poolSize: 10,
+      activeConnections: 0,
     })
 
     const endpoint = router.routeRead()

@@ -7,7 +7,7 @@ import {
   generateAuditTriggerSQL,
   validateGovernance,
   generateAllGovernanceSQL,
-  GovernanceError,
+  GovernanceError as _GovernanceError,
 } from "../authz/data-governance.js"
 
 describe("Data Governance Policies", () => {
@@ -72,12 +72,7 @@ describe("Data Governance Policies", () => {
     })
 
     it("unmasks for authorized roles", () => {
-      const { row, maskedFields } = applyGovernanceMasking(
-        config,
-        "users",
-        { email: "john@example.com" },
-        ["admin"],
-      )
+      const { row, maskedFields } = applyGovernanceMasking(config, "users", { email: "john@example.com" }, ["admin"])
       expect(row.email).toBe("john@example.com")
       expect(maskedFields).not.toContain("email")
     })
@@ -162,7 +157,13 @@ describe("Data Governance Policies", () => {
       const config = defineDataGovernance({
         users: {
           validations: [
-            { name: "email_format", column: "email", type: "regex", params: { pattern: "^.+@.+$" }, message: "Invalid" },
+            {
+              name: "email_format",
+              column: "email",
+              type: "regex",
+              params: { pattern: "^.+@.+$" },
+              message: "Invalid",
+            },
           ],
         },
       })
@@ -174,7 +175,13 @@ describe("Data Governance Policies", () => {
       const config = defineDataGovernance({
         tasks: {
           validations: [
-            { name: "valid_status", column: "status", type: "enum", params: { values: ["open", "closed"] }, message: "Invalid status" },
+            {
+              name: "valid_status",
+              column: "status",
+              type: "enum",
+              params: { values: ["open", "closed"] },
+              message: "Invalid status",
+            },
           ],
         },
       })

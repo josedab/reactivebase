@@ -1,8 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import {
-  WasmFunctionRuntime,
-  WasmRuntimeError,
-} from "../wasm-runtime/wasm-runtime.js"
+import { WasmFunctionRuntime, WasmRuntimeError as _WasmRuntimeError } from "../wasm-runtime/wasm-runtime.js"
 
 // Helper to create a fake Wasm-like module bytes
 function createFakeWasmBytes(size = 100): Uint8Array {
@@ -24,7 +21,7 @@ describe("WasmFunctionRuntime", () => {
 
   describe("host functions", () => {
     it("registers host functions", () => {
-      runtime.registerHostFunction("db.query", async (sql) => ({ rows: [] }))
+      runtime.registerHostFunction("db.query", async (_sql) => ({ rows: [] }))
       expect(runtime.listHostFunctions()).toHaveLength(1)
       expect(runtime.listHostFunctions()[0].name).toBe("db.query")
     })
@@ -98,10 +95,7 @@ describe("WasmFunctionRuntime", () => {
         transformed: true,
       }))
       await runtime.compile("test", createFakeWasmBytes())
-      const result = await runtime.execute<{ value: number; transformed: boolean }>(
-        "test",
-        { value: 42 },
-      )
+      const result = await runtime.execute<{ value: number; transformed: boolean }>("test", { value: 42 })
       expect(result.success).toBe(true)
       expect(result.result?.transformed).toBe(true)
       expect(result.hostCallCount).toBe(1)
@@ -145,7 +139,13 @@ describe("WasmFunctionRuntime", () => {
     it("rejects invalid bundle format", async () => {
       const runtime2 = new WasmFunctionRuntime()
       await expect(
-        runtime2.loadBundle({ format: "invalid" as any, modules: [], requiredHostFunctions: [], targets: [], createdAt: "" }),
+        runtime2.loadBundle({
+          format: "invalid" as unknown as "wasm",
+          modules: [],
+          requiredHostFunctions: [],
+          targets: [],
+          createdAt: "",
+        }),
       ).rejects.toThrow("Unsupported bundle format")
     })
   })

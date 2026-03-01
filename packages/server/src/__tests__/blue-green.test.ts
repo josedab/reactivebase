@@ -1,9 +1,5 @@
-import { describe, it, expect, vi } from "vitest"
-import {
-  VersionRouter,
-  SubscriptionMigrator,
-  DeploymentCoordinator,
-} from "../blue-green/blue-green.js"
+import { describe, it, expect } from "vitest"
+import { VersionRouter, SubscriptionMigrator, DeploymentCoordinator } from "../blue-green/blue-green.js"
 
 describe("VersionRouter", () => {
   it("routes connections based on canary percentage", () => {
@@ -56,10 +52,15 @@ describe("SubscriptionMigrator", () => {
   it("queues and processes migrations", async () => {
     const migrator = new SubscriptionMigrator()
 
-    migrator.queueMigration("conn1", [
-      { subscriptionId: "sub1", queryName: "listTasks", args: {} },
-      { subscriptionId: "sub2", queryName: "listUsers", args: {} },
-    ], "v1", "v2")
+    migrator.queueMigration(
+      "conn1",
+      [
+        { subscriptionId: "sub1", queryName: "listTasks", args: {} },
+        { subscriptionId: "sub2", queryName: "listUsers", args: {} },
+      ],
+      "v1",
+      "v2",
+    )
 
     expect(migrator.getPendingCount()).toBe(2)
 
@@ -73,9 +74,7 @@ describe("SubscriptionMigrator", () => {
   it("handles migration failures", async () => {
     const migrator = new SubscriptionMigrator()
 
-    migrator.queueMigration("conn1", [
-      { subscriptionId: "sub1", queryName: "q1", args: {} },
-    ], "v1", "v2")
+    migrator.queueMigration("conn1", [{ subscriptionId: "sub1", queryName: "q1", args: {} }], "v1", "v2")
 
     const result = await migrator.processBatch(10, async () => false)
 
@@ -86,10 +85,15 @@ describe("SubscriptionMigrator", () => {
   it("reports stats", async () => {
     const migrator = new SubscriptionMigrator()
 
-    migrator.queueMigration("conn1", [
-      { subscriptionId: "sub1", queryName: "q1", args: {} },
-      { subscriptionId: "sub2", queryName: "q2", args: {} },
-    ], "v1", "v2")
+    migrator.queueMigration(
+      "conn1",
+      [
+        { subscriptionId: "sub1", queryName: "q1", args: {} },
+        { subscriptionId: "sub2", queryName: "q2", args: {} },
+      ],
+      "v1",
+      "v2",
+    )
 
     await migrator.processBatch(1, async () => true)
 

@@ -125,10 +125,7 @@ describe("Zero-Config Auth Providers", () => {
 
     it("supports token-prefix strategy", async () => {
       const p = multiProvider(
-        [
-          anonymousAuth({ enabled: true, prefix: "first" }),
-          anonymousAuth({ enabled: true, prefix: "second" }),
-        ],
+        [anonymousAuth({ enabled: true, prefix: "first" }), anonymousAuth({ enabled: true, prefix: "second" })],
         { strategy: "token-prefix" },
       )
       // "anonymous:xyz" should select the anonymous provider by name

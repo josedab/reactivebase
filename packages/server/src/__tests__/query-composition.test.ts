@@ -40,10 +40,7 @@ describe("ReactiveQueryDAG", () => {
     const users = dag.addSource("getUsers", {})
     const posts = dag.addSource("getPosts", {})
 
-    const combined = dag.combineQueries(
-      [users.id, posts.id],
-      (u, p) => ({ users: u, posts: p }),
-    )
+    const combined = dag.combineQueries([users.id, posts.id], (u, p) => ({ users: u, posts: p }))
 
     dag.updateSource(users.id, [{ name: "Alice" }], 1)
     dag.updateSource(posts.id, [{ title: "Hello" }], 1)

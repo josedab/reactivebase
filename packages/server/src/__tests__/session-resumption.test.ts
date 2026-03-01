@@ -44,7 +44,11 @@ describe("SessionStore", () => {
     const session = store.createSession("conn1")
 
     store.addSubscription(session.sessionToken, {
-      subscriptionId: "sub1", queryName: "q", args: {}, lastVersion: 1, lastResultHash: "a",
+      subscriptionId: "sub1",
+      queryName: "q",
+      args: {},
+      lastVersion: 1,
+      lastResultHash: "a",
     })
 
     store.recordDelta(session.sessionToken, { subscriptionId: "sub1", data: "v1", version: 2 })
@@ -85,7 +89,11 @@ describe("SessionStore", () => {
     const session = store.createSession("conn1")
 
     store.addSubscription(session.sessionToken, {
-      subscriptionId: "sub1", queryName: "q", args: {}, lastVersion: 1, lastResultHash: "a",
+      subscriptionId: "sub1",
+      queryName: "q",
+      args: {},
+      lastVersion: 1,
+      lastResultHash: "a",
     })
     store.removeSubscription(session.sessionToken, "sub1")
 

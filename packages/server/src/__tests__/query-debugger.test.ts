@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect } from "vitest"
 import { QueryDebugger } from "../query-debugger/query-debugger.js"
 
 describe("QueryDebugger", () => {
@@ -19,10 +19,7 @@ describe("QueryDebugger", () => {
   it("tracks dependency graph", () => {
     const debugger_ = new QueryDebugger()
 
-    debugger_.recordSubscriptionCreated("sub1", "listTasks", "conn1", [
-      { table: "tasks" },
-      { table: "users" },
-    ])
+    debugger_.recordSubscriptionCreated("sub1", "listTasks", "conn1", [{ table: "tasks" }, { table: "users" }])
 
     const graph = debugger_.getDependencyGraph()
     expect(graph.get("sub1")).toHaveLength(2)

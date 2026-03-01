@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import {
   FederationGateway,
-  FederationGatewayError,
+  FederationGatewayError as _FederationGatewayError,
 } from "../graphql-federation/federation-gateway.js"
 
 const USERS_SDL = `
@@ -44,21 +44,15 @@ describe("FederationGateway", () => {
   })
 
   it("validates subgraph name", () => {
-    expect(() => gateway.addSubgraph({ name: "", url: "http://x", sdl: "type Q{}" })).toThrow(
-      "name is required",
-    )
+    expect(() => gateway.addSubgraph({ name: "", url: "http://x", sdl: "type Q{}" })).toThrow("name is required")
   })
 
   it("validates subgraph URL", () => {
-    expect(() => gateway.addSubgraph({ name: "test", url: "", sdl: "type Q{}" })).toThrow(
-      "requires a URL",
-    )
+    expect(() => gateway.addSubgraph({ name: "test", url: "", sdl: "type Q{}" })).toThrow("requires a URL")
   })
 
   it("validates subgraph SDL", () => {
-    expect(() =>
-      gateway.addSubgraph({ name: "test", url: "http://x", sdl: "" }),
-    ).toThrow("requires an SDL")
+    expect(() => gateway.addSubgraph({ name: "test", url: "http://x", sdl: "" })).toThrow("requires an SDL")
   })
 
   it("removes subgraphs", () => {

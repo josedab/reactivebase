@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import {
   LazyFunctionRegistry,
-  RpcSplitError,
+  RpcSplitError as _RpcSplitError,
   generateFunctionManifest,
   computeChunks,
   generateClientProxy,
@@ -119,9 +119,31 @@ describe("LazyFunctionRegistry", () => {
 
 describe("generateFunctionManifest", () => {
   const functions = [
-    { name: "users.list", type: "query" as const, module: "users", exportName: "listUsers", bundleSize: 1000, dependencies: [], hot: true },
-    { name: "users.create", type: "mutation" as const, module: "users", exportName: "createUser", bundleSize: 800, dependencies: ["users.list"] },
-    { name: "orders.list", type: "query" as const, module: "orders", exportName: "listOrders", bundleSize: 1200, dependencies: [] },
+    {
+      name: "users.list",
+      type: "query" as const,
+      module: "users",
+      exportName: "listUsers",
+      bundleSize: 1000,
+      dependencies: [],
+      hot: true,
+    },
+    {
+      name: "users.create",
+      type: "mutation" as const,
+      module: "users",
+      exportName: "createUser",
+      bundleSize: 800,
+      dependencies: ["users.list"],
+    },
+    {
+      name: "orders.list",
+      type: "query" as const,
+      module: "orders",
+      exportName: "listOrders",
+      bundleSize: 1200,
+      dependencies: [],
+    },
   ]
 
   it("generates manifest", () => {

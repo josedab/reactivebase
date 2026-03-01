@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import {
   EmbeddedAnalyticsQueryEngine,
-  AnalyticsQueryError,
+  AnalyticsQueryError as _AnalyticsQueryError,
 } from "../analytics/embedded-analytics-query.js"
 
 describe("EmbeddedAnalyticsQueryEngine", () => {
@@ -28,8 +28,8 @@ describe("EmbeddedAnalyticsQueryEngine", () => {
         bucket: "month",
         metric: { fn: "sum", column: "amount", alias: "total" },
       })
-      expect(result.sql).toContain("SUM(\"amount\")")
-      expect(result.sql).toContain("\"total\"")
+      expect(result.sql).toContain('SUM("amount")')
+      expect(result.sql).toContain('"total"')
     })
 
     it("supports filters", () => {
@@ -63,7 +63,7 @@ describe("EmbeddedAnalyticsQueryEngine", () => {
         metric: { fn: "count" },
         groupBy: ["category"],
       })
-      expect(result.sql).toContain("\"category\"")
+      expect(result.sql).toContain('"category"')
     })
 
     it("supports all bucket types", () => {
@@ -91,9 +91,9 @@ describe("EmbeddedAnalyticsQueryEngine", () => {
     })
 
     it("validates table name", () => {
-      expect(() =>
-        engine.timeSeries({ table: "", timeColumn: "ts", bucket: "day", metric: { fn: "count" } }),
-      ).toThrow("Table name is required")
+      expect(() => engine.timeSeries({ table: "", timeColumn: "ts", bucket: "day", metric: { fn: "count" } })).toThrow(
+        "Table name is required",
+      )
     })
   })
 

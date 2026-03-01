@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import {
   ComputedTableEngine,
-  ComputedTableError,
+  ComputedTableError as _ComputedTableError,
   buildCreateComputedTableSQL,
   buildRefreshComputedTableSQL,
   buildDropComputedTableSQL,
@@ -31,21 +31,21 @@ describe("ComputedTableEngine", () => {
   })
 
   it("rejects empty name", () => {
-    expect(() =>
-      engine.define({ name: "", sourceTables: ["a"], query: "SELECT 1", refreshStrategy: "full" }),
-    ).toThrow("name is required")
+    expect(() => engine.define({ name: "", sourceTables: ["a"], query: "SELECT 1", refreshStrategy: "full" })).toThrow(
+      "name is required",
+    )
   })
 
   it("rejects empty source tables", () => {
-    expect(() =>
-      engine.define({ name: "test", sourceTables: [], query: "SELECT 1", refreshStrategy: "full" }),
-    ).toThrow("at least one source table")
+    expect(() => engine.define({ name: "test", sourceTables: [], query: "SELECT 1", refreshStrategy: "full" })).toThrow(
+      "at least one source table",
+    )
   })
 
   it("rejects empty query", () => {
-    expect(() =>
-      engine.define({ name: "test", sourceTables: ["a"], query: "", refreshStrategy: "full" }),
-    ).toThrow("requires a query")
+    expect(() => engine.define({ name: "test", sourceTables: ["a"], query: "", refreshStrategy: "full" })).toThrow(
+      "requires a query",
+    )
   })
 
   it("generates SQL for a computed table", () => {
@@ -211,7 +211,7 @@ describe("Helper functions", () => {
       aggregations: { total: "COUNT(*)", total_amount: "SUM(amount)" },
     })
     expect(def.name).toBe("user_order_stats")
-    expect(def.query).toContain("COUNT(*)");
+    expect(def.query).toContain("COUNT(*)")
     expect(def.query).toContain("SUM(amount)")
     expect(def.refreshStrategy).toBe("incremental")
   })
@@ -220,7 +220,7 @@ describe("Helper functions", () => {
     const def = defineComputedJoin({
       name: "order_details",
       sourceTables: ["orders", "users"],
-      joinSQL: 'orders JOIN users ON orders.user_id = users.id',
+      joinSQL: "orders JOIN users ON orders.user_id = users.id",
       selectColumns: ["orders.id", "users.name"],
     })
     expect(def.name).toBe("order_details")
