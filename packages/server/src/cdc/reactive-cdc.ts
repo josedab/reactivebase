@@ -90,6 +90,12 @@ export class ReactiveCdcAdapter {
   }
   private totalBatchLatencyMs = 0
 
+  /**
+   * Create a new reactive CDC adapter.
+   *
+   * @param processChanges - Callback to forward processed change events to the reactivity pipeline
+   * @param options - Adapter configuration options
+   */
   constructor(processChanges: ProcessChangesCallback, options: ReactiveCdcOptions = {}) {
     this.processChanges = processChanges
     this.options = { ...DEFAULT_OPTIONS, ...options }
@@ -104,6 +110,8 @@ export class ReactiveCdcAdapter {
   /**
    * Process a batch of WAL change events from the logical replicator.
    * Converts WAL changes to ReactivityEngine ChangeEvents and triggers invalidation.
+   *
+   * @param changes - Array of WAL change events to process
    */
   async processWalChanges(changes: WalChangeEvent[]): Promise<void> {
     const tracked =
@@ -120,6 +128,8 @@ export class ReactiveCdcAdapter {
 
   /**
    * Process a single WAL change event.
+   *
+   * @param change - The WAL change event to process
    */
   async processWalChange(change: WalChangeEvent): Promise<void> {
     await this.processWalChanges([change])
@@ -159,6 +169,9 @@ export class ReactiveCdcAdapter {
 
   /**
    * Convert a LISTEN/NOTIFY payload to a WAL change event (fallback mode).
+   *
+   * @param payload - The parsed LISTEN/NOTIFY payload containing table, operation, and optional id
+   * @returns A WAL change event constructed from the payload
    */
   processListenNotifyPayload(payload: { table: string; operation: string; id?: string }): WalChangeEvent {
     this.stats.status = "fallback"
@@ -177,6 +190,11 @@ export class ReactiveCdcAdapter {
 
   // ─── Stats ──────────────────────────────────────────────────────────────
 
+  /**
+   * Get CDC adapter performance statistics.
+   *
+   * @returns A snapshot of the current adapter stats
+   */
   getStats(): CdcAdapterStats {
     return { ...this.stats }
   }

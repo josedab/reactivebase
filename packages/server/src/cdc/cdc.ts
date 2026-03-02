@@ -36,12 +36,19 @@ export class CdcListener {
   private listening = false
   private client: PgListenClient | null = null
 
+  /**
+   * Create a new CDC listener.
+   *
+   * @param options - CDC listener configuration options
+   */
   constructor(options: CdcOptions = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options }
   }
 
   /**
    * Set the handler for incoming change events.
+   *
+   * @param handler - Callback invoked with batched change events
    */
   onChanges(handler: CdcHandler): void {
     this.handler = handler
@@ -50,6 +57,8 @@ export class CdcListener {
   /**
    * Start listening for Postgres NOTIFY events.
    * Requires a dedicated pg client (separate from the pool).
+   *
+   * @param client - A dedicated Postgres client for LISTEN/NOTIFY
    */
   async start(client: PgListenClient): Promise<void> {
     if (!SAFE_PG_IDENTIFIER_RE.test(this.options.channel)) {
@@ -87,6 +96,10 @@ export class CdcListener {
 
   /**
    * Generate and execute trigger installation SQL for all schema tables.
+   *
+   * @param client - Postgres client to execute the trigger SQL
+   * @param schema - Schema describing the tables to install triggers for
+   * @returns Array of table names that had triggers installed
    */
   async installTriggers(client: PgListenClient, schema: Schema): Promise<string[]> {
     const installed: string[] = []
@@ -102,6 +115,9 @@ export class CdcListener {
 
   /**
    * Generate trigger SQL for all tables without executing.
+   *
+   * @param schema - Schema describing the tables to generate triggers for
+   * @returns Combined SQL string with trigger statements for all tables
    */
   generateTriggerSQL(schema: Schema): string {
     const statements: string[] = []
@@ -133,6 +149,12 @@ export class ChangeEventBuffer {
   private timer: ReturnType<typeof setTimeout> | null = null
   private handler: CdcHandler
 
+  /**
+   * Create a new change event buffer.
+   *
+   * @param handler - Callback invoked when the buffer is flushed
+   * @param flushInterval - Interval in ms between automatic flushes
+   */
   constructor(
     handler: CdcHandler,
     private flushInterval: number = 50,
@@ -142,6 +164,8 @@ export class ChangeEventBuffer {
 
   /**
    * Add a change event to the buffer.
+   *
+   * @param event - The change event to buffer
    */
   push(event: ChangeEvent): void {
     this.buffer.push(event)
@@ -184,6 +208,9 @@ export class ChangeEventBuffer {
 
 /**
  * Deduplicate change events by table+operation within a batch.
+ *
+ * @param events - Array of change events to deduplicate
+ * @returns Deduplicated array keeping the latest event per table+operation+filter key
  */
 export function deduplicateEvents(events: ChangeEvent[]): ChangeEvent[] {
   const seen = new Map<string, ChangeEvent>()

@@ -77,6 +77,11 @@ export class RowLevelCdcAdapter {
   private columnLevelTotal = 0
   private columnLevelPreciseHits = 0
 
+  /**
+   * Create a new row-level CDC adapter.
+   *
+   * @param processChanges - Callback to forward processed change events to the reactivity pipeline
+   */
   constructor(processChanges: ProcessChangesCallback) {
     this.processChanges = processChanges
     this.stats.status = "streaming"
@@ -90,6 +95,8 @@ export class RowLevelCdcAdapter {
 
   /**
    * Register a subscription filter for row-level matching.
+   *
+   * @param filter - The subscription filter to register
    */
   addSubscription(filter: SubscriptionFilter): void {
     this.subscriptions.push(filter)
@@ -97,6 +104,8 @@ export class RowLevelCdcAdapter {
 
   /**
    * Remove a subscription filter.
+   *
+   * @param id - The ID of the subscription filter to remove
    */
   removeSubscription(id: string): void {
     this.subscriptions = this.subscriptions.filter((s) => s.id !== id)
@@ -106,6 +115,8 @@ export class RowLevelCdcAdapter {
 
   /**
    * Track a row-level change from a WAL event.
+   *
+   * @param event - The row change event containing table, primary key, operation, and values
    */
   trackChange(event: {
     table: string
@@ -142,6 +153,8 @@ export class RowLevelCdcAdapter {
 
   /**
    * Track a WAL change event (compatible with ReactiveCdcAdapter).
+   *
+   * @param event - The WAL change event to track
    */
   trackWalChange(event: WalChangeEvent): void {
     this.trackChange({
@@ -159,6 +172,8 @@ export class RowLevelCdcAdapter {
 
   /**
    * Get current buffered changes grouped by table.
+   *
+   * @returns Array of batches, each containing a table name and its row changes
    */
   getBatches(): RowLevelBatch[] {
     const tableMap = new Map<string, RowChange[]>()
@@ -172,6 +187,8 @@ export class RowLevelCdcAdapter {
 
   /**
    * Flush buffered changes, compute affected subscriptions, and forward to pipeline.
+   *
+   * @returns Array of flushed batches grouped by table
    */
   async flush(): Promise<RowLevelBatch[]> {
     if (this.buffer.length === 0) return []
@@ -214,6 +231,9 @@ export class RowLevelCdcAdapter {
   /**
    * Compute which subscriptions are affected by a row change.
    * Uses column-level precision to avoid false invalidations.
+   *
+   * @param change - The row change to evaluate against subscriptions
+   * @returns Array of subscription IDs affected by the change
    */
   computeAffectedSubscriptions(change: RowChange): string[] {
     const affected: string[] = []
@@ -241,6 +261,11 @@ export class RowLevelCdcAdapter {
 
   // ─── Stats ─────────────────────────────────────────────────────────────
 
+  /**
+   * Get row-level CDC adapter statistics.
+   *
+   * @returns A snapshot of the current adapter stats
+   */
   getStats(): RowLevelCdcStats {
     return { ...this.stats }
   }
