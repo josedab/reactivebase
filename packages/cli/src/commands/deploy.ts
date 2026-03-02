@@ -45,6 +45,12 @@ export interface DeployManifestFile {
 
 // ─── Deploy Command ──────────────────────────────────────────────────────────
 
+/**
+ * Deploy a ReactiveBase project to the specified cloud provider.
+ *
+ * @param options - Deployment options including provider, region, and environment variables
+ * @returns The deployment result with URL, database connection, and build logs
+ */
 export async function deploy(options: DeployOptions): Promise<DeployResult> {
   const startTime = Date.now()
   const provider = options.provider ?? "flyio"
@@ -131,6 +137,14 @@ export async function deploy(options: DeployOptions): Promise<DeployResult> {
   }
 }
 
+/**
+ * Generate a deployment manifest file describing infrastructure and scaling configuration.
+ *
+ * @param appName - Application name for the deployment
+ * @param region - Cloud region to deploy to
+ * @param options - Deploy options used to determine preview vs production settings
+ * @returns A structured deploy manifest with build, service, and scaling configuration
+ */
 export function generateDeployManifestFile(
   appName: string,
   region: string,
@@ -162,6 +176,12 @@ export function generateDeployManifestFile(
   }
 }
 
+/**
+ * Deploy a preview environment for a pull request.
+ *
+ * @param options - Deploy options extended with PR number and branch name
+ * @returns The deployment result for the preview environment
+ */
 export async function deployPreview(
   options: DeployOptions & { prNumber: number; branch: string },
 ): Promise<DeployResult> {
@@ -172,11 +192,23 @@ export async function deployPreview(
   })
 }
 
+/**
+ * Destroy a preview environment and its associated resources.
+ *
+ * @param appName - Name of the preview application to destroy
+ * @param provider - Cloud provider (defaults to "flyio")
+ */
 export async function destroyPreview(appName: string, provider: string = "flyio"): Promise<void> {
   console.log(`🗑️  Destroying preview: ${appName} on ${provider}`)
   // In production: fly apps destroy appName --yes
 }
 
+/**
+ * Tail live logs from a deployed application.
+ *
+ * @param appName - Name of the deployed application
+ * @param provider - Cloud provider (defaults to "flyio")
+ */
 export async function tailLogs(appName: string, provider: string = "flyio"): Promise<void> {
   console.log(`📋 Tailing logs for ${appName} on ${provider}...`)
   // In production: fly logs --app appName

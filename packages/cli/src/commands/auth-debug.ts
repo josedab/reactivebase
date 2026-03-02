@@ -10,6 +10,12 @@ export interface AuthDebugCommandOptions {
   table: string
 }
 
+/**
+ * Run the interactive auth debugger to trace permission decisions.
+ *
+ * @param options - Auth debug options including user, query, and table to inspect
+ * @returns Resolves when debugging output is complete
+ */
 export async function authDebug(options: AuthDebugCommandOptions): Promise<void> {
   if (!options.userId && !options.queryName) {
     showAuthDebugHelp()

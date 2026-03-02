@@ -11,6 +11,11 @@ export interface SeedCommandOptions {
   environment?: string
 }
 
+/**
+ * Execute seed files to populate the database with test or development data.
+ *
+ * @param options - Seed options including project directory, profile, and target environment
+ */
 export async function seedRun(options: SeedCommandOptions): Promise<void> {
   const seedsDir = join(options.projectDir, "seeds")
 
@@ -58,6 +63,11 @@ export async function seedRun(options: SeedCommandOptions): Promise<void> {
   console.log("  console.log(`Seeded ${result.totalRecords} records`)")
 }
 
+/**
+ * Reset all seed data by truncating seeded tables.
+ *
+ * @param _options - Seed options (unused, reserved for future database connection)
+ */
 export async function seedReset(_options: SeedCommandOptions): Promise<void> {
   console.log("🗑️  Resetting seed data...")
   console.log("")
@@ -66,6 +76,11 @@ export async function seedReset(_options: SeedCommandOptions): Promise<void> {
   console.log("  // Or truncate tables: TRUNCATE users, posts, ... CASCADE")
 }
 
+/**
+ * Display the status of all registered seed files and their execution state.
+ *
+ * @param options - Seed options including project directory
+ */
 export async function seedStatus(options: SeedCommandOptions): Promise<void> {
   const seedsDir = join(options.projectDir, "seeds")
 

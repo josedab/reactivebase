@@ -63,6 +63,11 @@ const PROFILES: Record<string, { description: string; config: Record<string, unk
   },
 }
 
+/**
+ * Initialize a new ReactiveBase project with a configuration profile and directory structure.
+ *
+ * @param options - Init options including project directory, profile name, and JSON output flag
+ */
 export async function initProject(options: InitOptions): Promise<void> {
   const { projectDir, profile, json = false } = options
 

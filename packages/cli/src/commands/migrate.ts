@@ -10,6 +10,11 @@ export interface MigrateCommandOptions {
   connectionString?: string
 }
 
+/**
+ * Generate a new migration file by diffing the schema against the current database state.
+ *
+ * @param options - Migration options including project directory and optional connection string
+ */
 export async function migrateGenerate(options: MigrateCommandOptions): Promise<void> {
   const migrationsDir = join(options.projectDir, "migrations")
   mkdirSync(migrationsDir, { recursive: true })
@@ -44,6 +49,11 @@ export async function migrateGenerate(options: MigrateCommandOptions): Promise<v
   console.log(`Created migration: ${migrationFile}`)
 }
 
+/**
+ * Apply all pending migrations to the database in order.
+ *
+ * @param options - Migration options including project directory and connection string
+ */
 export async function migrateApply(options: MigrateCommandOptions): Promise<void> {
   const migrationsDir = join(options.projectDir, "migrations")
   if (!existsSync(migrationsDir)) {
@@ -75,6 +85,11 @@ export async function migrateApply(options: MigrateCommandOptions): Promise<void
   console.log("All migrations applied.")
 }
 
+/**
+ * Display the status of all migrations (applied and pending).
+ *
+ * @param options - Migration options including project directory
+ */
 export async function migrateStatus(options: MigrateCommandOptions): Promise<void> {
   const migrationsDir = join(options.projectDir, "migrations")
   if (!existsSync(migrationsDir)) {

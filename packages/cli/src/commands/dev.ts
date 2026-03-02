@@ -13,6 +13,12 @@ export interface DevCommandOptions {
   logLevel?: "debug" | "info" | "warn" | "error"
 }
 
+/**
+ * Start the ReactiveBase development server with hot reload and type generation.
+ *
+ * @param options - Dev server options including port, project directory, and log level
+ * @returns Resolves when the server is ready for connections
+ */
 export async function devServer(options: DevCommandOptions): Promise<void> {
   const projectDir = resolve(options.projectDir)
 

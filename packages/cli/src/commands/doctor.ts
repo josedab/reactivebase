@@ -14,6 +14,11 @@ export interface DoctorOptions {
   json?: boolean
 }
 
+/**
+ * Check PostgreSQL extension health and provision required extensions based on schema analysis.
+ *
+ * @param options - Doctor options including project directory, connection string, auto-fix, and JSON output flags
+ */
 export async function doctor(options: DoctorOptions): Promise<void> {
   const { projectDir, autoFix = false, json = false } = options
 

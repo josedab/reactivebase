@@ -11,6 +11,11 @@ export interface MigrateSafeOptions {
   connectionString?: string
 }
 
+/**
+ * Analyze migrations for zero-downtime safety and generate expand/contract phase templates.
+ *
+ * @param options - Safe migration options including project directory and optional connection string
+ */
 export async function migrateSafe(options: MigrateSafeOptions): Promise<void> {
   const migrationsDir = join(options.projectDir, "migrations")
 

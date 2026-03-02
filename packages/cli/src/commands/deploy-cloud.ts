@@ -17,6 +17,11 @@ interface DeployCloudOptions {
   plan: string
 }
 
+/**
+ * Deploy a ReactiveBase project to ReactiveBase Cloud with provisioned Postgres, Redis, and auto-scaling.
+ *
+ * @param options - Cloud deployment options including project name, region, and plan tier
+ */
 export async function deployCloud(options: DeployCloudOptions): Promise<void> {
   const { projectDir, region, plan } = options
 

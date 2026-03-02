@@ -53,6 +53,11 @@ export interface InsightsReport {
   }
 }
 
+/**
+ * Analyze project for schema complexity, dead functions, and performance predictions.
+ *
+ * @param options - Insights options including project directory, JSON output, and threshold for CI gates
+ */
 export async function insights(options: InsightsOptions): Promise<void> {
   const { readdirSync, readFileSync, existsSync } = await import("node:fs")
   const { join } = await import("node:path")

@@ -14,6 +14,11 @@ export interface GenerateTestsOptions {
   dryRun?: boolean
 }
 
+/**
+ * Auto-generate E2E test suites from schema definitions with configurable coverage levels.
+ *
+ * @param options - Options including project directory, coverage level, output directory, and dry-run flag
+ */
 export async function generateTestsCommand(options: GenerateTestsOptions): Promise<void> {
   const { projectDir, coverage = "standard", dryRun = false } = options
   const outputDir = options.outputDir ?? join(projectDir, "__generated_tests__")

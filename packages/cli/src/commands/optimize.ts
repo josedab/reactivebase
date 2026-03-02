@@ -15,6 +15,11 @@ export interface OptimizeOptions {
   apply?: boolean
 }
 
+/**
+ * Analyze query patterns and generate optimization recommendations including indexes, N+1 detection, and subscription tuning.
+ *
+ * @param options - Optimize options including project directory, connection string, JSON output, and auto-apply flags
+ */
 export async function optimize(options: OptimizeOptions): Promise<void> {
   const { AdaptiveQueryOptimizer } = await import("@reactivebase/server/metrics")
 

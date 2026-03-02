@@ -248,6 +248,11 @@ export class PluginAddCommand {
 
 // ─── CLI Entry Point ─────────────────────────────────────────────────────────
 
+/**
+ * CLI entry point for adding a plugin to the current project.
+ *
+ * @param args - CLI arguments array where args[0] is the plugin name, followed by optional flags
+ */
 export async function pluginAdd(args: string[]): Promise<void> {
   const pluginName = args[0]
   if (!pluginName) {

@@ -11,6 +11,11 @@ export interface GenerateProceduresOptions {
   outputDir?: string
 }
 
+/**
+ * Compile TypeScript procedure definitions into PL/pgSQL migration files.
+ *
+ * @param options - Options including project directory and optional output directory for migration files
+ */
 export async function generateProcedures(options: GenerateProceduresOptions): Promise<void> {
   const proceduresDir = join(options.projectDir, "procedures")
   const outputDir = options.outputDir ?? join(options.projectDir, "migrations")
