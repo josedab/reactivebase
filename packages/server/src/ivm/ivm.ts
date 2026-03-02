@@ -121,6 +121,9 @@ export interface IvmStats {
 
 /**
  * Extract all table dependencies from a query AST.
+ *
+ * @param node - The root AST node to extract dependencies from
+ * @returns Array of table names the query depends on
  */
 export function extractDependencies(node: QueryAstNode): string[] {
   const tables = new Set<string>()
@@ -153,6 +156,9 @@ export function extractDependencies(node: QueryAstNode): string[] {
 /**
  * Check if a query AST is eligible for incremental maintenance.
  * IVM is NOT supported for: LIMIT+SORT combo, DISTINCT, window functions.
+ *
+ * @param node - The root AST node to check for IVM eligibility
+ * @returns Whether the query can be incrementally maintained
  */
 export function isIvmEligible(node: QueryAstNode): boolean {
   switch (node.type) {
@@ -177,6 +183,10 @@ export function isIvmEligible(node: QueryAstNode): boolean {
 
 /**
  * Evaluate a filter predicate against a row.
+ *
+ * @param predicate - The filter predicate to evaluate
+ * @param row - The data row to test against the predicate
+ * @returns Whether the row satisfies the predicate
  */
 export function evaluatePredicate(predicate: FilterPredicate, row: Row): boolean {
   const value = row[predicate.field]
@@ -367,6 +377,9 @@ export class IncrementalViewMaintainer {
 
   /**
    * Register a view for incremental maintenance.
+   *
+   * @param config - The view configuration including viewId, queryAst, and currentResult
+   * @returns The registered view with computed dependencies and IVM eligibility
    */
   register(config: { viewId: string; queryAst: QueryAstNode; currentResult: Row[] }): RegisteredView {
     const dependencies = extractDependencies(config.queryAst)
@@ -395,6 +408,8 @@ export class IncrementalViewMaintainer {
 
   /**
    * Unregister a view.
+   *
+   * @param viewId - The identifier of the view to unregister
    */
   unregister(viewId: string): void {
     const view = this.views.get(viewId)
@@ -410,6 +425,9 @@ export class IncrementalViewMaintainer {
 
   /**
    * Apply a data change and compute deltas for all affected views.
+   *
+   * @param change - The data change to apply
+   * @returns Array of view deltas for all affected views
    */
   applyChange(change: DataChange): ViewDelta[] {
     const start = Date.now()
@@ -455,6 +473,9 @@ export class IncrementalViewMaintainer {
 
   /**
    * Update a view's cached result (after full re-execution).
+   *
+   * @param viewId - The identifier of the view to update
+   * @param result - The new result set to cache
    */
   updateResult(viewId: string, result: Row[]): void {
     const view = this.views.get(viewId)
@@ -465,6 +486,9 @@ export class IncrementalViewMaintainer {
 
   /**
    * Get a view's current cached result.
+   *
+   * @param viewId - The identifier of the view to retrieve
+   * @returns The cached result rows, or undefined if the view is not registered
    */
   getResult(viewId: string): Row[] | undefined {
     return this.views.get(viewId)?.currentResult
@@ -472,6 +496,9 @@ export class IncrementalViewMaintainer {
 
   /**
    * Get all views depending on a table.
+   *
+   * @param table - The table name to look up
+   * @returns Array of view identifiers that depend on the given table
    */
   getViewsForTable(table: string): string[] {
     return [...(this.tableDeps.get(table) ?? [])]
@@ -479,6 +506,8 @@ export class IncrementalViewMaintainer {
 
   /**
    * Get IVM statistics.
+   *
+   * @returns A snapshot of the current IVM statistics
    */
   getStats(): IvmStats {
     return { ...this.stats }
@@ -486,6 +515,8 @@ export class IncrementalViewMaintainer {
 
   /**
    * Get all registered views.
+   *
+   * @returns Array of all currently registered views
    */
   getViews(): RegisteredView[] {
     return [...this.views.values()]

@@ -37,6 +37,9 @@ export interface DeltaPatchStats {
 
 /**
  * Compute a simple FNV-1a hash checksum for integrity verification.
+ *
+ * @param data - The string data to compute a checksum for
+ * @returns The FNV-1a hash as an unsigned 32-bit integer
  */
 export function computeChecksum(data: string): number {
   let hash = 0x811c9dc5
@@ -67,6 +70,9 @@ export class DeltaPatchEncoder {
 
   /**
    * Encode a DeltaPatch to a Uint8Array.
+   *
+   * @param patch - The delta patch to encode
+   * @returns The encoded patch as a Uint8Array
    */
   encode(patch: DeltaPatch): Uint8Array {
     const payload = JSON.stringify({
@@ -86,6 +92,11 @@ export class DeltaPatchEncoder {
     return bytes
   }
 
+  /**
+   * Get encoding statistics.
+   *
+   * @returns A snapshot of the current encoding statistics
+   */
   getStats(): DeltaPatchStats {
     return { ...this.stats }
   }
@@ -111,6 +122,9 @@ export class DeltaPatchDecoder {
 
   /**
    * Decode a Uint8Array back to a DeltaPatch.
+   *
+   * @param data - The encoded patch data to decode
+   * @returns The decoded DeltaPatch object
    */
   decode(data: Uint8Array): DeltaPatch {
     const payload = new TextDecoder().decode(data)
@@ -135,6 +149,11 @@ export class DeltaPatchDecoder {
     }
   }
 
+  /**
+   * Get decoding statistics.
+   *
+   * @returns A snapshot of the current decoding statistics
+   */
   getStats(): DeltaPatchStats {
     return { ...this.stats }
   }
@@ -147,6 +166,9 @@ const _sharedDecoder = new DeltaPatchDecoder()
 
 /**
  * Encode a DeltaPatch to a Uint8Array (convenience function).
+ *
+ * @param patch - The delta patch to encode
+ * @returns The encoded patch as a Uint8Array
  */
 export function encodeDeltaPatch(patch: DeltaPatch): Uint8Array {
   return _sharedEncoder.encode(patch)
@@ -154,6 +176,9 @@ export function encodeDeltaPatch(patch: DeltaPatch): Uint8Array {
 
 /**
  * Decode a Uint8Array back to a DeltaPatch (convenience function).
+ *
+ * @param data - The encoded patch data to decode
+ * @returns The decoded DeltaPatch object
  */
 export function decodeDeltaPatch(data: Uint8Array): DeltaPatch {
   return _sharedDecoder.decode(data)
@@ -174,6 +199,8 @@ export class PatchAccumulator {
 
   /**
    * Add a patch to the accumulator.
+   *
+   * @param patch - The delta patch to accumulate
    */
   add(patch: DeltaPatch): void {
     const existing = this.patches.get(patch.viewId) ?? []
@@ -184,6 +211,9 @@ export class PatchAccumulator {
   /**
    * Merge all accumulated patches for a given view into a single patch.
    * Inserts that are later deleted cancel out. Updates are collapsed.
+   *
+   * @param viewId - The identifier of the view to merge patches for
+   * @returns The merged patch, or null if no patches exist for the view
    */
   merge(viewId: string): DeltaPatch | null {
     const patches = this.patches.get(viewId)
@@ -246,6 +276,8 @@ export class PatchAccumulator {
 
   /**
    * Merge all accumulated patches across all views.
+   *
+   * @returns Array of merged patches, one per view
    */
   mergeAll(): DeltaPatch[] {
     const results: DeltaPatch[] = []

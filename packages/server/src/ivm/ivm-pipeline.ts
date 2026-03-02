@@ -65,6 +65,8 @@ export class IvmPipeline {
 
   /**
    * Register a view for incremental maintenance in the pipeline.
+   *
+   * @param config - The view configuration including viewId, queryAst, and currentResult
    */
   registerView(config: { viewId: string; queryAst: QueryAstNode; currentResult: Row[] }): void {
     this.ivm.register(config)
@@ -73,6 +75,8 @@ export class IvmPipeline {
 
   /**
    * Unregister a view from the pipeline.
+   *
+   * @param viewId - The identifier of the view to unregister
    */
   unregisterView(viewId: string): void {
     this.ivm.unregister(viewId)
@@ -84,6 +88,9 @@ export class IvmPipeline {
   /**
    * Process a data change through the full pipeline.
    * Returns encoded patches for all affected views.
+   *
+   * @param change - The data change to process
+   * @returns Array of pipeline results with encoded patches for affected views
    */
   processChange(change: DataChange): PipelineResult[] {
     const start = performance.now()
@@ -152,6 +159,9 @@ export class IvmPipeline {
 
   /**
    * Process multiple changes in batch.
+   *
+   * @param changes - Array of data changes to process sequentially
+   * @returns Combined array of pipeline results from all changes
    */
   processBatch(changes: DataChange[]): PipelineResult[] {
     const results: PipelineResult[] = []
@@ -166,6 +176,8 @@ export class IvmPipeline {
   /**
    * Get pipeline efficiency metrics.
    * The efficiencyRatio shows delta-applied vs full-refresh ratio — target is ≥10x.
+   *
+   * @returns A snapshot of the current pipeline statistics
    */
   getEfficiencyMetrics(): PipelineStats {
     return { ...this.stats }
@@ -173,6 +185,8 @@ export class IvmPipeline {
 
   /**
    * Get IVM-level stats from the underlying IncrementalViewMaintainer.
+   *
+   * @returns The IVM statistics from the underlying maintainer
    */
   getIvmStats(): IvmStats {
     return this.ivm.getStats()
@@ -180,6 +194,9 @@ export class IvmPipeline {
 
   /**
    * Get the current cached result for a view.
+   *
+   * @param viewId - The identifier of the view to retrieve
+   * @returns The cached result rows, or undefined if the view is not registered
    */
   getViewResult(viewId: string): Row[] | undefined {
     return this.ivm.getResult(viewId)
