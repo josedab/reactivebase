@@ -94,6 +94,13 @@ export interface JSONSchema {
   required?: string[]
 }
 
+/**
+ * Validate data against a JSON Schema definition.
+ *
+ * @param schema - The JSON Schema to validate against
+ * @param data - The data object to validate
+ * @returns An object with a valid boolean and an array of error messages
+ */
 export function validateWithJSONSchema(
   schema: JSONSchema,
   data: Record<string, unknown>,
@@ -173,6 +180,9 @@ export class PluginSDK {
   /**
    * Create a plugin from a PluginV2Config, converting it to a PluginV2Definition
    * with all hooks, middleware, and extensions wired up.
+   *
+   * @param config - The plugin configuration to build from
+   * @returns A fully wired PluginV2Definition ready for installation
    */
   createPlugin(config: PluginV2Config): PluginV2Definition {
     // Reset internal state for a fresh plugin build
@@ -220,6 +230,8 @@ export class PluginSDK {
 
   /**
    * Register a middleware to be included in the next createPlugin call.
+   *
+   * @param mw - The middleware to register
    */
   useMiddleware(mw: PluginMiddleware): void {
     this.middlewares.push(mw)
@@ -227,6 +239,8 @@ export class PluginSDK {
 
   /**
    * Register a before-query handler.
+   *
+   * @param fn - The hook function to run before each query
    */
   useBeforeQuery(fn: (ctx: HookContext) => Promise<HookContext> | HookContext): void {
     this.beforeQueryHandlers.push(fn)
@@ -235,6 +249,8 @@ export class PluginSDK {
 
   /**
    * Register an after-mutation handler.
+   *
+   * @param fn - The hook function to run after each mutation
    */
   useAfterMutation(fn: (ctx: HookContext) => Promise<HookContext> | HookContext): void {
     this.afterMutationHandlers.push(fn)
@@ -243,6 +259,10 @@ export class PluginSDK {
 
   /**
    * Declare additional types to be merged into the plugin context.
+   *
+   * @param pluginName - The name of the plugin declaring the extension
+   * @param types - A map of type names to their type definitions
+   * @returns The registered context extension
    */
   extendContext(pluginName: string, types: Record<string, string>): ContextExtension {
     const ext: ContextExtension = { pluginName, types }
@@ -252,6 +272,10 @@ export class PluginSDK {
 
   /**
    * Declare additional tables/columns to be added to the schema.
+   *
+   * @param pluginName - The name of the plugin declaring the extension
+   * @param tables - A map of table names to their column definitions
+   * @returns The registered schema extension
    */
   extendSchema(pluginName: string, tables: Record<string, Record<string, string>>): SchemaExtension {
     const ext: SchemaExtension = { pluginName, tables }
@@ -261,6 +285,9 @@ export class PluginSDK {
 
   /**
    * Register a JSON Schema for validating a plugin's configuration.
+   *
+   * @param pluginName - The name of the plugin to register the schema for
+   * @param schema - The JSON Schema describing the plugin's configuration
    */
   registerConfigSchema(pluginName: string, schema: JSONSchema): void {
     this.jsonSchemas.set(pluginName, schema)
@@ -268,6 +295,10 @@ export class PluginSDK {
 
   /**
    * Validate config against a registered JSON Schema.
+   *
+   * @param pluginName - The name of the plugin whose schema to validate against
+   * @param config - The configuration object to validate
+   * @returns An object with a valid boolean and an array of error messages
    */
   validateConfig(pluginName: string, config: Record<string, unknown>): { valid: boolean; errors: string[] } {
     const schema = this.jsonSchemas.get(pluginName)
@@ -279,6 +310,8 @@ export class PluginSDK {
 
   /**
    * Get all registered hooks.
+   *
+   * @returns A copy of all registered plugin hooks
    */
   getHooks(): PluginHook[] {
     return [...this.hooks]
@@ -286,6 +319,8 @@ export class PluginSDK {
 
   /**
    * Get all context extensions.
+   *
+   * @returns A copy of all registered context extensions
    */
   getContextExtensions(): ContextExtension[] {
     return [...this.contextExtensions]
@@ -293,6 +328,8 @@ export class PluginSDK {
 
   /**
    * Get all schema extensions.
+   *
+   * @returns A copy of all registered schema extensions
    */
   getSchemaExtensions(): SchemaExtension[] {
     return [...this.schemaExtensions]
@@ -384,6 +421,10 @@ export class PluginTestHarness {
 
   /**
    * Install a plugin definition into the test harness.
+   *
+   * @param definition - The plugin definition to install
+   * @param config - Optional configuration to pass to the plugin
+   * @returns The installed plugin instance
    */
   async install(definition: PluginV2Definition, config: Record<string, unknown> = {}): Promise<PluginV2Instance> {
     return this.marketplace.install(definition, config)
@@ -391,6 +432,8 @@ export class PluginTestHarness {
 
   /**
    * Start a plugin in the test harness.
+   *
+   * @param pluginName - The name of the plugin to start
    */
   async start(pluginName: string): Promise<void> {
     return this.marketplace.start(pluginName)
@@ -398,6 +441,8 @@ export class PluginTestHarness {
 
   /**
    * Stop a plugin in the test harness.
+   *
+   * @param pluginName - The name of the plugin to stop
    */
   async stop(pluginName: string): Promise<void> {
     return this.marketplace.stop(pluginName)
@@ -405,6 +450,8 @@ export class PluginTestHarness {
 
   /**
    * Uninstall a plugin from the test harness.
+   *
+   * @param pluginName - The name of the plugin to uninstall
    */
   async uninstall(pluginName: string): Promise<void> {
     return this.marketplace.uninstall(pluginName)
@@ -412,6 +459,9 @@ export class PluginTestHarness {
 
   /**
    * Get an installed plugin instance.
+   *
+   * @param name - The unique name of the plugin to retrieve
+   * @returns The plugin instance if found, or undefined
    */
   getPlugin(name: string): PluginV2Instance | undefined {
     return this.marketplace.getPlugin(name)
@@ -419,6 +469,8 @@ export class PluginTestHarness {
 
   /**
    * List all installed plugins.
+   *
+   * @returns An array of all installed plugin instances
    */
   listInstalled(): PluginV2Instance[] {
     return this.marketplace.listInstalled()
@@ -426,6 +478,9 @@ export class PluginTestHarness {
 
   /**
    * Create a mock PluginV2Context for testing lifecycle hooks directly.
+   *
+   * @param config - Optional configuration to include in the mock context
+   * @returns A mock PluginV2Context with logging and function registration capabilities
    */
   createMockContext(config: Record<string, unknown> = {}): PluginV2Context {
     return {
@@ -444,6 +499,8 @@ export class PluginTestHarness {
 
   /**
    * Get all logs captured during the test.
+   *
+   * @returns A copy of all log entries captured during the test
    */
   getLogs(): { plugin: string; level: string; message: string }[] {
     return [...this.logs]
@@ -451,6 +508,8 @@ export class PluginTestHarness {
 
   /**
    * Get registered functions.
+   *
+   * @returns A copy of the map of registered function names to their implementations
    */
   getRegisteredFunctions(): Map<string, unknown> {
     return new Map(this.registeredFunctions)
@@ -458,6 +517,10 @@ export class PluginTestHarness {
 
   /**
    * Simulate a hook execution pipeline.
+   *
+   * @param hooks - The array of plugin hooks to execute in sequence
+   * @param initialCtx - The initial hook context to pass through the pipeline
+   * @returns The final hook context after all hooks have been applied
    */
   async executeHook(hooks: PluginHook[], initialCtx: HookContext): Promise<HookContext> {
     let ctx = { ...initialCtx }
@@ -475,6 +538,10 @@ export class PluginTestHarness {
 
   /**
    * Validate plugin config against its schema.
+   *
+   * @param definition - The plugin definition containing the config schema
+   * @param config - The configuration object to validate
+   * @returns An object with a valid boolean and an array of error messages
    */
   validateConfig(
     definition: PluginV2Definition,

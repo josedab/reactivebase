@@ -52,6 +52,9 @@ export interface PluginContext {
 
 /**
  * Define a ReactiveBase plugin.
+ *
+ * @param definition - The plugin definition describing name, hooks, and extensions
+ * @returns The same plugin definition, for use with the plugin registry
  */
 export function definePlugin(definition: PluginDefinition): PluginDefinition {
   return definition
@@ -67,6 +70,9 @@ export class PluginRegistry {
 
   /**
    * Install a plugin.
+   *
+   * @param plugin - The plugin definition to install
+   * @param context - The plugin context for registering middleware, auth, functions, and webhooks
    */
   async install(plugin: PluginDefinition, context: PluginContext): Promise<void> {
     if (this.plugins.has(plugin.name)) {
@@ -107,6 +113,9 @@ export class PluginRegistry {
 
   /**
    * Get an installed plugin.
+   *
+   * @param name - The unique name of the plugin to retrieve
+   * @returns The plugin definition if found, or undefined
    */
   get(name: string): PluginDefinition | undefined {
     return this.plugins.get(name)
@@ -128,6 +137,8 @@ export class PluginRegistry {
 
   /**
    * List installed plugins.
+   *
+   * @returns An array of objects containing each plugin's name, version, and description
    */
   list(): Array<{ name: string; version?: string; description?: string }> {
     return Array.from(this.plugins.values()).map((p) => ({
@@ -146,6 +157,9 @@ export class PluginRegistry {
 
 /**
  * Create a Clerk auth plugin.
+ *
+ * @param options - Clerk configuration including secretKey and optional publishableKey
+ * @returns A plugin definition configured for Clerk authentication
  */
 export function clerkPlugin(options: { secretKey: string; publishableKey?: string }): PluginDefinition {
   return definePlugin({
@@ -176,6 +190,9 @@ export function clerkPlugin(options: { secretKey: string; publishableKey?: strin
 
 /**
  * Create a Stripe webhook plugin.
+ *
+ * @param options - Stripe configuration including webhookSecret and optional onEvent handler
+ * @returns A plugin definition configured for Stripe webhook integration
  */
 export function stripePlugin(options: {
   webhookSecret: string
