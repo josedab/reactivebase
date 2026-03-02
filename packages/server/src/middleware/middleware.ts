@@ -30,12 +30,23 @@ export interface MiddlewareResult {
   state?: MiddlewareState
 }
 
-/** Create a new state with additional entries merged in. */
+/**
+ * Create a new state with additional entries merged in.
+ *
+ * @param current - The current immutable middleware state
+ * @param updates - Key-value pairs to merge into the state
+ * @returns A new frozen state with updates applied
+ */
 export function mergeState(current: MiddlewareState, updates: MiddlewareState): MiddlewareState {
   return Object.freeze({ ...current, ...updates })
 }
 
-/** Create an initial empty middleware state. */
+/**
+ * Create an initial empty middleware state.
+ *
+ * @param initial - Optional initial key-value pairs for the state
+ * @returns A frozen middleware state
+ */
 export function createMiddlewareState(initial?: Record<string, unknown>): MiddlewareState {
   return Object.freeze({ ...initial })
 }
@@ -56,6 +67,8 @@ export class MiddlewareManager {
 
   /**
    * Register a middleware.
+   *
+   * @param middleware - The middleware to register
    */
   use(middleware: Middleware): void {
     this.middlewares.push(middleware)
@@ -64,6 +77,9 @@ export class MiddlewareManager {
   /**
    * Run before hooks. Returns modified args or a short-circuit result.
    * State is accumulated immutably — each middleware gets a frozen snapshot.
+   *
+   * @param ctx - The middleware context for the current request
+   * @returns The possibly-modified args, accumulated state, and optional short-circuit result
    */
   async runBefore(ctx: MiddlewareContext): Promise<{ args: unknown; state: MiddlewareState; shortCircuit?: unknown }> {
     let { args } = ctx
@@ -90,6 +106,10 @@ export class MiddlewareManager {
 
   /**
    * Run after hooks, allowing result transformation.
+   *
+   * @param ctx - The middleware context for the current request
+   * @param result - The result from function execution
+   * @returns The possibly-transformed result
    */
   async runAfter(ctx: MiddlewareContext, result: unknown): Promise<unknown> {
     let current = result
@@ -107,6 +127,9 @@ export class MiddlewareManager {
 
   /**
    * Run error hooks.
+   *
+   * @param ctx - The middleware context for the current request
+   * @param error - The error that occurred during execution
    */
   async runOnError(ctx: MiddlewareContext, error: Error): Promise<void> {
     for (const mw of this.middlewares) {

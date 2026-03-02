@@ -53,6 +53,12 @@ const _DEFAULT_CONFIG: Partial<ReactiveBaseConfig> = {
   },
 }
 
+/**
+ * Define a ReactiveBase server configuration with sensible defaults.
+ *
+ * @param config - The server configuration options
+ * @returns A fully merged configuration with defaults applied
+ */
 export function defineConfig(config: ReactiveBaseConfig): ReactiveBaseConfig {
   return {
     ...config,

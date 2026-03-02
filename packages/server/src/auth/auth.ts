@@ -192,6 +192,13 @@ export function defineRlsPolicy<TRow = Record<string, unknown>>(
   return { table, filter }
 }
 
+/**
+ * Create an authentication context for use in server functions.
+ *
+ * @param userId - The authenticated user ID, or null for unauthenticated requests
+ * @param claims - Additional JWT claims or user metadata
+ * @returns An auth context with helper methods for access control
+ */
 export function createAuthContext(userId: string | null, claims: Record<string, unknown> = {}): AuthContext {
   return {
     userId,
