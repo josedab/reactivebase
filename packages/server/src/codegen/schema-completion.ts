@@ -165,6 +165,10 @@ export class SchemaCompletionProvider {
   private schema: ParsedSchema
   private schemaFile: string
 
+  /**
+   * @param schema - Parsed schema providing table and column definitions
+   * @param schemaFile - Path to the schema source file for definition lookups
+   */
   constructor(schema: ParsedSchema, schemaFile: string = "convex/schema.ts") {
     this.schema = schema
     this.schemaFile = schemaFile
@@ -172,6 +176,9 @@ export class SchemaCompletionProvider {
 
   /**
    * Get completions based on the cursor context.
+   *
+   * @param prefix - The text before the cursor position
+   * @returns Array of completion items matching the context
    */
   getCompletions(prefix: string): CompletionItem[] {
     // ctx.db. → suggest table names
@@ -211,6 +218,9 @@ export class SchemaCompletionProvider {
 
   /**
    * Get hover information for a symbol.
+   *
+   * @param symbol - The symbol text to get hover info for
+   * @returns Hover information with label, documentation, and type, or null if not found
    */
   getHoverInfo(symbol: string): HoverInfo | null {
     // ctx.db.tableName
@@ -232,6 +242,9 @@ export class SchemaCompletionProvider {
 
   /**
    * Validate database access patterns in source code.
+   *
+   * @param source - TypeScript source code to validate
+   * @returns Array of diagnostic info for invalid database access patterns
    */
   validateSource(source: string): DiagnosticInfo[] {
     const diagnostics: DiagnosticInfo[] = []
@@ -261,6 +274,9 @@ export class SchemaCompletionProvider {
 
   /**
    * Get definition location for a schema reference.
+   *
+   * @param symbol - The symbol text to find the definition for
+   * @returns Definition location with file, line, and column, or null if not found
    */
   getDefinitionLocation(symbol: string): DefinitionLocation | null {
     const tableMatch = symbol.match(/ctx\.db\.(\w+)/)
@@ -273,6 +289,8 @@ export class SchemaCompletionProvider {
 
   /**
    * Get TS plugin configuration for tsconfig.json.
+   *
+   * @returns Configuration object for the ReactiveBase TypeScript plugin
    */
   static getPluginConfig(): Record<string, unknown> {
     return {

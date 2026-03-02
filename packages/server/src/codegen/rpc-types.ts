@@ -68,6 +68,12 @@ export interface FileHashEntry {
 
 // ─── Schema-to-TypeScript Conversion ─────────────────────────────────────────
 
+/**
+ * Convert an RPC schema definition to its TypeScript type representation.
+ *
+ * @param schema - The RPC schema to convert
+ * @returns TypeScript type string corresponding to the schema
+ */
 export function schemaToTypeScript(schema: RpcSchema): string {
   switch (schema.kind) {
     case "string":
@@ -104,6 +110,13 @@ export function schemaToTypeScript(schema: RpcSchema): string {
 
 // ─── Schema-to-Validation Code ───────────────────────────────────────────────
 
+/**
+ * Generate runtime validation code for an RPC schema.
+ *
+ * @param schema - The RPC schema to generate validation for
+ * @param varName - Variable name to validate against
+ * @returns Generated validation code as a string
+ */
 export function schemaToValidationCode(schema: RpcSchema, varName: string = "value"): string {
   const checks: string[] = []
 
@@ -153,24 +166,50 @@ export class RpcTypeGenerator {
   private functions = new Map<string, RpcFunctionDef>()
   private fileHashes = new Map<string, FileHashEntry>()
 
+  /**
+   * Register a function definition with the generator.
+   *
+   * @param def - The RPC function definition to add
+   */
   addFunction(def: RpcFunctionDef): void {
     this.functions.set(def.name, def)
   }
 
+  /**
+   * Remove a function definition by name.
+   *
+   * @param name - The name of the function to remove
+   */
   removeFunction(name: string): void {
     this.functions.delete(name)
   }
 
+  /**
+   * Get all registered function definitions.
+   *
+   * @returns Array of all registered RPC function definitions
+   */
   getFunctions(): RpcFunctionDef[] {
     return Array.from(this.functions.values())
   }
 
+  /**
+   * Get a function definition by name.
+   *
+   * @param name - The name of the function to retrieve
+   * @returns The function definition, or undefined if not found
+   */
   getFunction(name: string): RpcFunctionDef | undefined {
     return this.functions.get(name)
   }
 
   // ─── Code Generation ────────────────────────────────────────────────────
 
+  /**
+   * Run full code generation for all registered functions.
+   *
+   * @returns Generated output containing API module, validation module, client types, and function count
+   */
   generate(): RpcGenerateOutput {
     const apiModule = this.generateApiModule()
     const validationModule = this.generateValidationModule()
@@ -184,6 +223,11 @@ export class RpcTypeGenerator {
     }
   }
 
+  /**
+   * Generate the typed API module with function references.
+   *
+   * @returns Generated TypeScript source for the API module
+   */
   generateApiModule(): string {
     const lines: string[] = [
       "/* eslint-disable */",
@@ -242,6 +286,11 @@ export class RpcTypeGenerator {
     return lines.join("\n")
   }
 
+  /**
+   * Generate validation middleware for all registered functions.
+   *
+   * @returns Generated TypeScript source for the validation module
+   */
   generateValidationModule(): string {
     const lines: string[] = [
       "/* eslint-disable */",
@@ -276,6 +325,11 @@ export class RpcTypeGenerator {
     return lines.join("\n")
   }
 
+  /**
+   * Generate client-side type definitions.
+   *
+   * @returns Generated TypeScript source for client type definitions
+   */
   generateClientTypes(): string {
     const lines: string[] = [
       "/* eslint-disable */",
@@ -301,26 +355,55 @@ export class RpcTypeGenerator {
 
   // ─── Incremental Tracking ───────────────────────────────────────────────
 
+  /**
+   * Check whether a file has changed based on its hash.
+   *
+   * @param path - File path to check
+   * @param hash - Current hash of the file
+   * @returns True if the file is new or its hash differs from the tracked value
+   */
   hasFileChanged(path: string, hash: string): boolean {
     const entry = this.fileHashes.get(path)
     if (!entry) return true
     return entry.hash !== hash
   }
 
+  /**
+   * Update the stored hash for a file.
+   *
+   * @param path - File path to update
+   * @param hash - New hash value to store
+   */
   updateFileHash(path: string, hash: string): void {
     this.fileHashes.set(path, { path, hash, lastModified: Date.now() })
   }
 
+  /**
+   * Remove the stored hash for a file.
+   *
+   * @param path - File path to stop tracking
+   */
   removeFileHash(path: string): void {
     this.fileHashes.delete(path)
   }
 
+  /**
+   * Get all tracked file hash entries.
+   *
+   * @returns Array of file hash entries currently being tracked
+   */
   getTrackedFiles(): FileHashEntry[] {
     return Array.from(this.fileHashes.values())
   }
 
   // ─── Multi-Language SDK Generation ──────────────────────────────────────
 
+  /**
+   * Generate a client SDK stub for the specified language.
+   *
+   * @param config - SDK configuration including target language, package name, and server URL
+   * @returns Generated SDK source code for the target language
+   */
   generateSdkStub(config: RpcClientSdkConfig): string {
     switch (config.language) {
       case "python":

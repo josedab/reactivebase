@@ -85,6 +85,9 @@ export interface WatchEvent {
 /**
  * Extract argument and return types from function source code using regex-based parsing.
  * Handles common patterns: inline types, named interfaces, destructured args.
+ *
+ * @param source - TypeScript source code to extract function types from
+ * @returns Object containing an array of extracted typed function info
  */
 export function extractFunctionTypes(source: string): {
   functions: TypedFunctionInfo[]
@@ -207,6 +210,9 @@ function capitalize(s: string): string {
 
 /**
  * Parse a ReactiveBase schema definition from source code.
+ *
+ * @param source - TypeScript source code containing the schema definition
+ * @returns Parsed schema with table definitions, fields, and indexes
  */
 export function parseSchemaSource(source: string): ParsedSchema {
   const tables: SchemaTable[] = []
@@ -374,6 +380,10 @@ function validatorToTsType(type: string, args: string): string {
 
 /**
  * Generate a fully typed API module from scanned functions and schema.
+ *
+ * @param functions - Array of typed function info to include in the module
+ * @param schema - Optional parsed schema for generating data model types
+ * @returns Generated TypeScript source code for the typed API module
  */
 export function generateTypedApiModule(functions: TypedFunctionInfo[], schema?: ParsedSchema): string {
   const lines: string[] = []
@@ -455,6 +465,9 @@ export function generateTypedApiModule(functions: TypedFunctionInfo[], schema?: 
 
 /**
  * Generate a typed database context file from schema.
+ *
+ * @param schema - Parsed schema to generate database context types from
+ * @returns Generated TypeScript source code for the typed database context
  */
 export function generateTypedDbContext(schema: ParsedSchema): string {
   const lines: string[] = []
@@ -530,6 +543,11 @@ export class TypedCodegen {
 
   /**
    * Scan source code content and extract typed function info.
+   *
+   * @param source - TypeScript source code to scan
+   * @param module - Module name to assign to discovered functions
+   * @param filePath - Source file path for tracking
+   * @returns Array of typed function info extracted from the source
    */
   scanSource(source: string, module: string, filePath: string = ""): TypedFunctionInfo[] {
     const { functions } = extractFunctionTypes(source)
@@ -544,6 +562,9 @@ export class TypedCodegen {
 
   /**
    * Parse schema source code.
+   *
+   * @param source - TypeScript source code containing the schema definition
+   * @returns Parsed schema with table definitions
    */
   parseSchema(source: string): ParsedSchema {
     this.lastSchema = parseSchemaSource(source)
@@ -552,6 +573,8 @@ export class TypedCodegen {
 
   /**
    * Generate full typed API module from accumulated scan results.
+   *
+   * @returns Generated TypeScript source for the API module
    */
   generateApi(): string {
     return generateTypedApiModule(this.lastScanResult, this.lastSchema)
@@ -559,6 +582,8 @@ export class TypedCodegen {
 
   /**
    * Generate typed database context from schema.
+   *
+   * @returns Generated TypeScript source for the database context, or a comment if no schema is available
    */
   generateDbContext(): string {
     if (!this.lastSchema) {
@@ -577,6 +602,8 @@ export class TypedCodegen {
 
   /**
    * Register a watch callback for incremental regeneration.
+   *
+   * @param callback - Function to invoke when a watch event occurs
    */
   onWatch(callback: (event: WatchEvent) => void): void {
     this.watchCallbacks.push(callback)
@@ -584,6 +611,8 @@ export class TypedCodegen {
 
   /**
    * Emit a watch event (for external file watcher integration).
+   *
+   * @param event - The watch event to emit to all registered callbacks
    */
   emitWatchEvent(event: WatchEvent): void {
     for (const cb of this.watchCallbacks) {

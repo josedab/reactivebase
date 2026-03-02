@@ -22,6 +22,9 @@ export interface ScannedFunction {
 /**
  * Scan a directory for exported query/mutation/action functions.
  * Uses regex-based parsing (no TypeScript compiler dependency).
+ *
+ * @param functionsDir - Path to the directory containing function files
+ * @returns Array of scanned function definitions found in the directory
  */
 export async function scanFunctions(functionsDir: string): Promise<ScannedFunction[]> {
   const functions: ScannedFunction[] = []
@@ -56,6 +59,9 @@ export async function scanFunctions(functionsDir: string): Promise<ScannedFuncti
 
 /**
  * Group scanned functions by module.
+ *
+ * @param functions - Array of scanned functions to group
+ * @returns Map of module names to their associated functions
  */
 export function groupByModule(functions: ScannedFunction[]): Map<string, ScannedFunction[]> {
   const groups = new Map<string, ScannedFunction[]>()
@@ -70,6 +76,9 @@ export function groupByModule(functions: ScannedFunction[]): Map<string, Scanned
 
 /**
  * Generate the _generated/api.ts file content.
+ *
+ * @param functions - Array of scanned functions to include in the API module
+ * @returns Generated TypeScript source code for the API module
  */
 export function generateApiModule(functions: ScannedFunction[]): string {
   const lines: string[] = []
@@ -120,6 +129,11 @@ export function generateApiModule(functions: ScannedFunction[]): string {
 
 /**
  * Generate the _generated/server.ts file for server-side function registration.
+ *
+ * @param functions - Array of scanned functions to register
+ * @param functionsDir - Path to the source functions directory
+ * @param outputDir - Path to the output directory for resolving relative imports
+ * @returns Generated TypeScript source code for the server module
  */
 export function generateServerModule(functions: ScannedFunction[], functionsDir: string, outputDir: string): string {
   const lines: string[] = []
@@ -152,6 +166,9 @@ export function generateServerModule(functions: ScannedFunction[], functionsDir:
 
 /**
  * Generate the _generated/dataModel.ts file with table types from schema.
+ *
+ * @param _schemaSource - Raw TypeScript source of the schema file
+ * @returns Generated TypeScript source code for the data model module
  */
 export function generateDataModel(_schemaSource: string): string {
   const lines: string[] = []
@@ -168,6 +185,9 @@ export function generateDataModel(_schemaSource: string): string {
 
 /**
  * Run full code generation: scan functions dir and write generated files.
+ *
+ * @param options - Configuration with functionsDir and outputDir paths
+ * @returns Result containing counts of functions found and files generated
  */
 export async function generate(options: { functionsDir: string; outputDir: string }): Promise<GenerateResult> {
   const { functionsDir, outputDir } = options
