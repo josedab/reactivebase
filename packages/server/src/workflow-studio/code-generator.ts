@@ -432,7 +432,7 @@ export class WorkflowCodeGenerator {
         return `await wf.step("${stepName}", async () => {\n      await notify(${JSON.stringify(node.config)})\n    })`
 
       default:
-        return `// TODO: unsupported node type "${node.type}" for "${node.label}"`
+        return `// FIXME(workflow-studio): unsupported node type "${node.type}" for "${node.label}" — please file an issue`
     }
   }
 

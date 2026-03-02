@@ -234,8 +234,8 @@ function pathToFunctionName(path: string): string {
 function generateFunctionSkeleton(name: string, type: "query" | "mutation" | "action", tables: string[]): string {
   const tableAccess =
     tables.length > 0
-      ? `\n  // TODO: Migrate data access from ORM to ReactiveBase\n  // Tables: ${tables.join(", ")}`
-      : "\n  // TODO: Implement data access"
+      ? `\n  // [Migration] Migrate data access from ORM to ReactiveBase\n  // Tables: ${tables.join(", ")}`
+      : "\n  // [Migration] Implement data access"
 
   return `export const ${name} = ${type}(async (ctx) => {${tableAccess}
   throw new Error("Not implemented — migrated from ${type}")

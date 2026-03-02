@@ -185,9 +185,13 @@ export class RegionRouter {
 
     if (healthy.length === 0) {
       // Fallback to any region
-      const any = this.regions.sort((a, b) => a.latencyMs - b.latencyMs)[0]
-      return any
-        ? { targetRegion: any.id, reason: "fallback (no healthy regions)", latencyMs: any.latencyMs }
+      const fallbackRegion = this.regions.sort((a, b) => a.latencyMs - b.latencyMs)[0]
+      return fallbackRegion
+        ? {
+            targetRegion: fallbackRegion.id,
+            reason: "fallback (no healthy regions)",
+            latencyMs: fallbackRegion.latencyMs,
+          }
         : { targetRegion: "unknown", reason: "no regions available", latencyMs: Infinity }
     }
 
