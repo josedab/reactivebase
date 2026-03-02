@@ -49,6 +49,10 @@ export class JobScheduler {
   private actionExecutor: ((actionRef: string, args: unknown) => Promise<void>) | null = null
   private running = false
 
+  /**
+   * @param pool - Postgres connection pool for job persistence
+   * @param options - Partial scheduler configuration overriding defaults
+   */
   constructor(
     private pool: Pool,
     options: Partial<SchedulerOptions> = {},
@@ -58,6 +62,8 @@ export class JobScheduler {
 
   /**
    * Set the function that executes actions.
+   *
+   * @param executor - Async function that runs a job given its action reference and arguments
    */
   setExecutor(executor: (actionRef: string, args: unknown) => Promise<void>): void {
     this.actionExecutor = executor
@@ -96,6 +102,12 @@ export class JobScheduler {
 
   /**
    * Schedule a job to run after a delay.
+   *
+   * @param delay - Delay as milliseconds (number) or human-readable string (e.g. "5s", "10m")
+   * @param actionRef - Identifier of the action to execute
+   * @param args - Arguments passed to the action executor
+   * @param maxRetries - Maximum retry attempts on failure, overriding the default
+   * @returns The unique ID of the newly created job
    */
   async runAfter(delay: string | number, actionRef: string, args: unknown = {}, maxRetries?: number): Promise<string> {
     const delayMs = typeof delay === "number" ? delay : parseDelay(delay)
@@ -105,6 +117,12 @@ export class JobScheduler {
 
   /**
    * Schedule a job to run at a specific time.
+   *
+   * @param date - The date and time when the job should execute
+   * @param actionRef - Identifier of the action to execute
+   * @param args - Arguments passed to the action executor
+   * @param maxRetries - Maximum retry attempts on failure, overriding the default
+   * @returns The unique ID of the newly created job
    */
   async scheduleAt(date: Date, actionRef: string, args: unknown = {}, maxRetries?: number): Promise<string> {
     const { tableName } = this.options
@@ -119,6 +137,8 @@ export class JobScheduler {
 
   /**
    * Register a cron job definition.
+   *
+   * @param definition - Cron job definition including schedule, action, and arguments
    */
   defineCron(definition: CronDefinition): void {
     this.cronDefinitions.set(definition.name, definition)
@@ -152,6 +172,9 @@ export class JobScheduler {
 
   /**
    * Get job status by ID.
+   *
+   * @param jobId - The unique identifier of the job to retrieve
+   * @returns The scheduled job if found, or null if no job exists with the given ID
    */
   async getJob(jobId: string): Promise<ScheduledJob | null> {
     const { tableName } = this.options
@@ -161,6 +184,9 @@ export class JobScheduler {
 
   /**
    * Cancel a pending job.
+   *
+   * @param jobId - The unique identifier of the job to cancel
+   * @returns True if the job was cancelled, false if it was not found or not pending
    */
   async cancelJob(jobId: string): Promise<boolean> {
     const { tableName } = this.options
@@ -275,6 +301,9 @@ export class JobScheduler {
 
 /**
  * Parse a delay string like "5s", "10m", "1h" into milliseconds.
+ *
+ * @param delay - Human-readable delay string (e.g. "5s", "10m", "1h", "2d") or numeric string
+ * @returns The delay in milliseconds
  */
 export function parseDelay(delay: string): number {
   const match = delay.match(/^(\d+(?:\.\d+)?)\s*(ms|s|m|h|d)$/)
@@ -307,6 +336,9 @@ export function parseDelay(delay: string): number {
 /**
  * Get the next run time for a cron expression.
  * Supports basic cron syntax: minute hour day-of-month month day-of-week
+ *
+ * @param expression - Cron expression with 5 space-separated fields
+ * @returns The next matching date within 24 hours, or null if no match is found
  */
 export function getNextCronRun(expression: string): Date | null {
   const parts = expression.trim().split(/\s+/)
