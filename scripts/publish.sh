@@ -12,7 +12,11 @@ set -e
 #   ./scripts/publish.sh --real   # Actually publish
 
 MODE="${1:---dry-run}"
-VERSION="0.1.0"
+VERSION=$(node -e "console.log(require('./packages/server/package.json').version)")
+if [ -z "$VERSION" ]; then
+  echo "  ❌ Could not read version from packages/server/package.json"
+  exit 1
+fi
 
 echo ""
 echo "  ⚡ ReactiveBase Publish Script"
