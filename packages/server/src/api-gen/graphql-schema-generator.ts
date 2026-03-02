@@ -103,6 +103,9 @@ function returnSchemaToGraphQLType(ret: ReturnSchema, typeName: string): string 
 export class GraphQLSchemaGenerator {
   private options: Required<GraphQLSchemaGeneratorOptions>
 
+  /**
+   * @param options - Generator options including subscription toggle and custom scalars
+   */
   constructor(options: GraphQLSchemaGeneratorOptions = {}) {
     this.options = {
       subscriptions: options.subscriptions !== false,
@@ -115,6 +118,9 @@ export class GraphQLSchemaGenerator {
    * Query functions → Query type fields.
    * Mutation functions → Mutation type fields.
    * Subscription-enabled queries → Subscription type fields.
+   *
+   * @param functions - The array of function descriptors to generate the schema from
+   * @returns The generated GraphQL result including SDL, field lists, and type names
    */
   generateSchema(functions: FunctionDescriptor[]): GeneratedGraphQLResult {
     const lines: string[] = []
@@ -255,7 +261,12 @@ export class GraphQLSchemaGenerator {
     }
   }
 
-  /** Generate an HTML page serving a GraphQL playground (GraphiQL-style). */
+  /**
+   * Generate an HTML page serving a GraphQL playground (GraphiQL-style).
+   *
+   * @param endpoint - The GraphQL endpoint URL to connect the playground to
+   * @returns An HTML string containing a self-contained GraphiQL playground page
+   */
   generateGraphQLPlaygroundHTML(endpoint: string): string {
     return `<!DOCTYPE html>
 <html lang="en">
@@ -284,7 +295,12 @@ export class GraphQLSchemaGenerator {
 </html>`
   }
 
-  /** Generate a basic introspection response for the given functions. */
+  /**
+   * Generate a basic introspection response for the given functions.
+   *
+   * @param functions - The array of function descriptors to build the introspection from
+   * @returns A GraphQL introspection response object
+   */
   generateIntrospectionResponse(functions: FunctionDescriptor[]): IntrospectionResponse {
     const schema = this.generateSchema(functions)
     const types: IntrospectionType[] = []

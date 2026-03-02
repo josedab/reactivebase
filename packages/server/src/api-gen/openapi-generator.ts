@@ -145,6 +145,9 @@ const DEFAULT_OPTIONS: Required<Omit<OpenApiGeneratorOptions, "contact" | "licen
 export class OpenApiGenerator {
   private options: OpenApiGeneratorOptions
 
+  /**
+   * @param options - Generator options including title, version, serverUrl, and basePath
+   */
   constructor(options: OpenApiGeneratorOptions = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options }
   }
@@ -153,6 +156,10 @@ export class OpenApiGenerator {
    * Generate a complete OpenAPI 3.1 spec from function descriptors.
    * Query functions → GET endpoints with query params.
    * Mutation/action functions → POST endpoints with JSON body.
+   *
+   * @param functions - The array of function descriptors to generate endpoints from
+   * @param options - Optional overrides including custom tags
+   * @returns A complete OpenAPI 3.1 specification object
    */
   generateSpec(
     functions: FunctionDescriptor[],
@@ -295,7 +302,12 @@ export class OpenApiGenerator {
     return spec
   }
 
-  /** Generate an HTML page serving Swagger UI for the given spec. */
+  /**
+   * Generate an HTML page serving Swagger UI for the given spec.
+   *
+   * @param spec - The OpenAPI 3.1 specification to render
+   * @returns An HTML string containing a self-contained Swagger UI page
+   */
   generateSwaggerUIHTML(spec: OpenApi31Spec): string {
     const specJson = JSON.stringify(spec)
     return `<!DOCTYPE html>
@@ -320,7 +332,12 @@ export class OpenApiGenerator {
 </html>`
   }
 
-  /** Generate an HTML page serving Redoc documentation for the given spec. */
+  /**
+   * Generate an HTML page serving Redoc documentation for the given spec.
+   *
+   * @param spec - The OpenAPI 3.1 specification to render
+   * @returns An HTML string containing a self-contained Redoc documentation page
+   */
   generateRedocHTML(spec: OpenApi31Spec): string {
     const specJson = JSON.stringify(spec)
     return `<!DOCTYPE html>

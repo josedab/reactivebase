@@ -102,6 +102,9 @@ export class UnifiedGateway {
     total: 0,
   }
 
+  /**
+   * @param options - Gateway configuration including functions, paths, and server settings
+   */
   constructor(options: UnifiedGatewayOptions) {
     this.options = { ...DEFAULT_GATEWAY_OPTIONS, ...options } as Required<UnifiedGatewayOptions>
 
@@ -120,6 +123,9 @@ export class UnifiedGateway {
 
   /**
    * Route a request to the appropriate handler based on path and content-type.
+   *
+   * @param req - The incoming gateway request to route
+   * @returns The gateway response from the matched handler
    */
   handleRequest(req: GatewayRequest): GatewayResponse {
     const path = req.path.split("?")[0]
@@ -176,7 +182,11 @@ export class UnifiedGateway {
     return this.jsonResponse(404, { error: "Not found", path })
   }
 
-  /** Return all registered routes for debugging. */
+  /**
+   * Return all registered routes for debugging.
+   *
+   * @returns An array of route info objects describing all gateway endpoints
+   */
   getRoutes(): GatewayRouteInfo[] {
     const routes: GatewayRouteInfo[] = []
 
@@ -224,7 +234,11 @@ export class UnifiedGateway {
     return routes
   }
 
-  /** Return request counts by transport type. */
+  /**
+   * Return request counts by transport type.
+   *
+   * @returns A snapshot of request counts grouped by transport type
+   */
   getStats(): GatewayTransportStats {
     return { ...this.stats }
   }

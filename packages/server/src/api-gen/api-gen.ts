@@ -30,6 +30,10 @@ export interface RestRoute {
 
 /**
  * Generate REST route definitions from a schema.
+ *
+ * @param schema - The ReactiveBase schema to generate routes from
+ * @param options - Optional REST API configuration including basePath and table filtering
+ * @returns An array of REST route definitions for all CRUD operations
  */
 export function generateRestRoutes(schema: Schema, options: RestApiOptions = {}): RestRoute[] {
   const basePath = options.basePath ?? "/api"
@@ -54,6 +58,11 @@ export function generateRestRoutes(schema: Schema, options: RestApiOptions = {})
 
 /**
  * Match an incoming request to a REST route.
+ *
+ * @param method - The HTTP method of the incoming request
+ * @param url - The URL path of the incoming request
+ * @param routes - The array of REST routes to match against
+ * @returns The matched route and extracted params, or null if no match
  */
 export function matchRoute(
   method: string,
@@ -88,6 +97,9 @@ export function matchRoute(
 
 /**
  * Parse query string parameters into filters.
+ *
+ * @param url - The full URL containing query parameters
+ * @returns A record of decoded key-value pairs from the query string
  */
 export function parseQueryFilters(url: string): Record<string, string> {
   const queryString = url.split("?")[1]
@@ -105,6 +117,9 @@ export function parseQueryFilters(url: string): Record<string, string> {
 
 /**
  * Generate a GraphQL schema definition from a ReactiveBase schema.
+ *
+ * @param schema - The ReactiveBase schema to generate GraphQL SDL from
+ * @returns A GraphQL SDL string containing types, queries, mutations, and inputs
  */
 export function generateGraphQLSchema(schema: Schema): string {
   const lines: string[] = []
