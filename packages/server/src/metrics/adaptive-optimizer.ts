@@ -109,12 +109,17 @@ export class AdaptiveQueryOptimizer {
   private existingIndexes = new Set<string>()
   private options: Required<AdaptiveOptimizerOptions>
 
+  /**
+   * @param options - Configuration options for the optimizer thresholds and analysis window
+   */
   constructor(options: AdaptiveOptimizerOptions = {}) {
     this.options = { ...DEFAULTS, ...options }
   }
 
   /**
    * Record a query execution for pattern analysis.
+   *
+   * @param pattern - Query pattern data excluding the timestamp (auto-generated)
    */
   recordQuery(pattern: Omit<QueryPattern, "timestamp">): void {
     this.queryPatterns.push({ ...pattern, timestamp: Date.now() })
@@ -123,6 +128,11 @@ export class AdaptiveQueryOptimizer {
 
   /**
    * Record a subscription re-execution.
+   *
+   * @param name - Name of the subscription that was re-executed
+   * @param tables - Database tables the subscription depends on
+   * @param reExecutionMs - Time taken to re-execute in milliseconds
+   * @param wasFalseInvalidation - Whether the invalidation turned out to be unnecessary
    */
   recordSubscriptionReExecution(
     name: string,
@@ -156,6 +166,9 @@ export class AdaptiveQueryOptimizer {
 
   /**
    * Register an existing index to avoid duplicate suggestions.
+   *
+   * @param table - Database table name the index belongs to
+   * @param columns - Column names included in the index
    */
   registerExistingIndex(table: string, columns: string[]): void {
     this.existingIndexes.add(`${table}:${columns.sort().join(",")}`)
@@ -163,6 +176,8 @@ export class AdaptiveQueryOptimizer {
 
   /**
    * Generate a full optimization report.
+   *
+   * @returns A comprehensive report with index suggestions, N+1 issues, and subscription optimizations
    */
   generateReport(): OptimizationReport {
     const indexSuggestions = this.analyzeIndexes()
@@ -199,6 +214,8 @@ export class AdaptiveQueryOptimizer {
 
   /**
    * Generate JSON output suitable for CI/CD pipelines.
+   *
+   * @returns The optimization report serialized as a formatted JSON string
    */
   generateCIReport(): string {
     const report = this.generateReport()
@@ -207,6 +224,8 @@ export class AdaptiveQueryOptimizer {
 
   /**
    * Get subscription profiles for debugging.
+   *
+   * @returns Array of all recorded subscription performance profiles
    */
   getSubscriptionProfiles(): SubscriptionProfile[] {
     return Array.from(this.subscriptionProfiles.values())

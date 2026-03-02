@@ -86,6 +86,10 @@ export class MetricsCollector {
 
   /**
    * Record a query execution.
+   *
+   * @param functionName - Name of the query function that was executed
+   * @param latencyMs - Execution time in milliseconds
+   * @param error - Whether the query resulted in an error
    */
   recordQuery(functionName: string, latencyMs: number, error?: boolean): void {
     this.queryCount++
@@ -97,6 +101,11 @@ export class MetricsCollector {
 
   /**
    * Record a mutation execution.
+   *
+   * @param functionName - Name of the mutation function that was executed
+   * @param latencyMs - Execution time in milliseconds
+   * @param error - Whether the mutation resulted in an error
+   * @param retries - Number of retries that were needed
    */
   recordMutation(functionName: string, latencyMs: number, error?: boolean, retries?: number): void {
     this.mutationCount++
@@ -109,6 +118,8 @@ export class MetricsCollector {
 
   /**
    * Record a subscription lifecycle event.
+   *
+   * @param event - The lifecycle event type: "created" or "removed"
    */
   recordSubscription(event: "created" | "removed"): void {
     if (event === "created") {
@@ -122,6 +133,10 @@ export class MetricsCollector {
 
   /**
    * Record an invalidation evaluation.
+   *
+   * @param evaluationTimeMs - Time spent evaluating invalidations in milliseconds
+   * @param invalidatedCount - Number of subscriptions that were invalidated
+   * @param totalChecked - Total number of subscriptions checked
    */
   recordInvalidation(evaluationTimeMs: number, invalidatedCount: number, totalChecked: number): void {
     this.invalidationEvals++
@@ -132,6 +147,8 @@ export class MetricsCollector {
 
   /**
    * Update server connection count.
+   *
+   * @param count - Current number of active connections
    */
   setConnections(count: number): void {
     this.currentConnections = count
@@ -139,6 +156,8 @@ export class MetricsCollector {
 
   /**
    * Update pending job count.
+   *
+   * @param count - Current number of pending scheduled jobs
    */
   setPendingJobs(count: number): void {
     this.pendingJobs = count
@@ -146,6 +165,8 @@ export class MetricsCollector {
 
   /**
    * Get a snapshot of all current metrics.
+   *
+   * @returns A point-in-time snapshot of all collected metrics
    */
   getSnapshot(): MetricsSnapshot {
     const byQueryFunction: Record<string, FunctionMetrics> = {}

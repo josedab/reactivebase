@@ -12,6 +12,9 @@ function escapeLabel(value: string): string {
 
 /**
  * Convert a MetricsSnapshot to Prometheus exposition format.
+ *
+ * @param snapshot - The metrics snapshot to convert
+ * @returns Prometheus text exposition format string
  */
 export function toPrometheusFormat(snapshot: MetricsSnapshot): string {
   const lines: string[] = []

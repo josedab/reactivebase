@@ -18,6 +18,11 @@ export interface Tracer {
  * No-op tracer for when tracing is not configured.
  */
 export class NoopTracer implements Tracer {
+  /**
+   * Start a no-op span that discards all data.
+   *
+   * @returns A no-op span instance
+   */
   startSpan(): Span {
     return {
       setAttribute() {},
@@ -31,6 +36,13 @@ export class NoopTracer implements Tracer {
  * Simple console tracer for development.
  */
 export class ConsoleTracer implements Tracer {
+  /**
+   * Start a span that logs trace data to the console on end.
+   *
+   * @param name - Name identifying the traced operation
+   * @param attributes - Optional key-value attributes to attach to the span
+   * @returns A span that outputs JSON trace data via console.debug when ended
+   */
   startSpan(name: string, attributes?: Record<string, string | number | boolean>): Span {
     const startTime = performance.now()
     const attrs: Record<string, string | number | boolean> = { ...attributes }
@@ -61,6 +73,9 @@ export class ConsoleTracer implements Tracer {
 /**
  * Adapter that wraps an OpenTelemetry Tracer to our interface.
  * Pass the result of `trace.getTracer("reactivebase")` from @opentelemetry/api.
+ *
+ * @param otelTracer - An OpenTelemetry-compatible tracer instance
+ * @returns A Tracer adapter that delegates to the OpenTelemetry tracer
  */
 export function createOtelTracerAdapter(otelTracer: OtelTracerLike): Tracer {
   return {
@@ -105,6 +120,12 @@ export interface OtelSpanLike {
 
 /**
  * Instrument a function with tracing.
+ *
+ * @param tracer - The tracer instance to create spans with
+ * @param name - Name for the trace span
+ * @param attributes - Key-value attributes to attach to the span
+ * @param fn - Async function to execute within the span
+ * @returns The result of the traced function
  */
 export function traced<T>(
   tracer: Tracer,
