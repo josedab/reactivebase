@@ -76,12 +76,22 @@ export class EdgePrefetchCache {
   private invalidationCount = 0
   private invalidationLog: InvalidationEvent[] = []
 
+  /**
+   * Create a new EdgePrefetchCache instance.
+   *
+   * @param options - Cache configuration options
+   */
   constructor(options: EdgePrefetchOptions = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options }
   }
 
   /**
    * Cache a query result with table dependency tracking.
+   *
+   * @param queryName - Name of the query to cache
+   * @param args - Query arguments used to generate the cache key
+   * @param data - Query result data to cache
+   * @param tables - Table names this query depends on for invalidation tracking
    */
   set<T>(queryName: string, args: unknown, data: T, tables: string[] = []): void {
     const key = this.cacheKey(queryName, args)
@@ -115,6 +125,10 @@ export class EdgePrefetchCache {
 
   /**
    * Get a cached query result. Returns with source="fresh", "stale", or null for miss.
+   *
+   * @param queryName - Name of the query to look up
+   * @param args - Query arguments used to generate the cache key
+   * @returns The cached query result with freshness metadata, or null on cache miss
    */
   get<T>(queryName: string, args: unknown): CachedQueryResult<T> | null {
     const key = this.cacheKey(queryName, args)
@@ -150,6 +164,9 @@ export class EdgePrefetchCache {
 
   /**
    * Invalidate all cache entries that depend on a table.
+   *
+   * @param table - Name of the table whose dependent entries should be invalidated
+   * @returns The number of cache entries removed
    */
   invalidateByTable(table: string): number {
     const keys = this.tableIndex.get(table)
@@ -178,6 +195,9 @@ export class EdgePrefetchCache {
 
   /**
    * Invalidate by query name pattern.
+   *
+   * @param queryName - Name of the query whose entries should be invalidated
+   * @returns The number of cache entries removed
    */
   invalidateByQuery(queryName: string): number {
     let removed = 0
@@ -195,6 +215,8 @@ export class EdgePrefetchCache {
 
   /**
    * Invalidate all entries.
+   *
+   * @returns The number of cache entries removed
    */
   invalidateAll(): number {
     const count = this.cache.size
@@ -207,6 +229,9 @@ export class EdgePrefetchCache {
   /**
    * Process a mutation event — invalidate affected caches.
    * Wire this to ReactivityEngine.onUpdate() or pub/sub.
+   *
+   * @param tables - Names of the tables affected by the mutation
+   * @returns The total number of cache entries invalidated
    */
   handleMutation(tables: string[]): number {
     let total = 0
@@ -216,6 +241,11 @@ export class EdgePrefetchCache {
     return total
   }
 
+  /**
+   * Get cache performance statistics.
+   *
+   * @returns Current cache stats including hit rate, entry count, and memory estimate
+   */
   getStats(): EdgeCacheStats {
     const totalRequests = this.hits + this.misses + this.staleHits
     let totalAge = 0
@@ -237,6 +267,11 @@ export class EdgePrefetchCache {
     }
   }
 
+  /**
+   * Get the recent invalidation event log.
+   *
+   * @returns A copy of the invalidation log entries
+   */
   getInvalidationLog(): InvalidationEvent[] {
     return [...this.invalidationLog]
   }

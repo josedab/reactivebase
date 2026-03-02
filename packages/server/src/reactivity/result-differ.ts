@@ -7,6 +7,9 @@ import { createHash } from "node:crypto"
 
 /**
  * Compute a hash of a query result for fast equality checking.
+ *
+ * @param result - The query result to hash
+ * @returns A truncated SHA-256 hex string
  */
 export function hashResult(result: unknown): string {
   const json = JSON.stringify(result, replacer)
@@ -15,6 +18,10 @@ export function hashResult(result: unknown): string {
 
 /**
  * Compare two results and return true if they are different.
+ *
+ * @param oldHash - Hash of the previous result
+ * @param newResult - The new result to compare against
+ * @returns True if the new result differs from the old hash
  */
 export function hasResultChanged(oldHash: string, newResult: unknown): boolean {
   const newHash = hashResult(newResult)
@@ -24,6 +31,10 @@ export function hasResultChanged(oldHash: string, newResult: unknown): boolean {
 /**
  * Compute a minimal diff between old and new array results.
  * Returns the diff or null if results are identical.
+ *
+ * @param oldResult - Previous query result
+ * @param newResult - New query result
+ * @returns A diff object describing changes, or null if identical
  */
 export function computeDiff(oldResult: unknown, newResult: unknown): ResultDiff | null {
   const oldHash = hashResult(oldResult)

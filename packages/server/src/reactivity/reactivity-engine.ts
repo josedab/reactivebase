@@ -42,6 +42,13 @@ export class ReactivityEngine {
   private updateCallback: UpdateCallback | null = null
   private options: ReactivityEngineOptions
 
+  /**
+   * Create a new ReactivityEngine.
+   *
+   * @param pool - PostgreSQL connection pool
+   * @param schema - Database schema definition
+   * @param options - Engine configuration options
+   */
   constructor(
     private pool: Pool,
     private schema: Schema,
@@ -54,6 +61,9 @@ export class ReactivityEngine {
 
   /**
    * Register a server function by name.
+   *
+   * @param name - Function name to register under
+   * @param fn - The registered function definition
    */
   registerFunction(name: string, fn: RegisteredFunction): void {
     fn.name = name
@@ -62,6 +72,8 @@ export class ReactivityEngine {
 
   /**
    * Set the callback for delivering subscription updates to clients.
+   *
+   * @param callback - Function invoked when a subscription result changes
    */
   onUpdate(callback: UpdateCallback): void {
     this.updateCallback = callback
@@ -69,6 +81,13 @@ export class ReactivityEngine {
 
   /**
    * Subscribe a client to a query. Executes the query immediately and returns results.
+   *
+   * @param subscriptionId - Unique identifier for this subscription
+   * @param connectionId - Client connection identifier
+   * @param queryName - Name of the query function to subscribe to
+   * @param args - Arguments to pass to the query function
+   * @param auth - Authentication context for the requesting user
+   * @returns The initial query result and version number
    */
   async subscribe(
     subscriptionId: string,
@@ -105,6 +124,8 @@ export class ReactivityEngine {
 
   /**
    * Unsubscribe from a query.
+   *
+   * @param subscriptionId - Identifier of the subscription to remove
    */
   unsubscribe(subscriptionId: string): void {
     this.registry.remove(subscriptionId)
@@ -112,6 +133,8 @@ export class ReactivityEngine {
 
   /**
    * Remove all subscriptions for a connection.
+   *
+   * @param connectionId - Client connection identifier to clean up
    */
   removeConnection(connectionId: string): void {
     this.registry.removeConnection(connectionId)
@@ -121,6 +144,9 @@ export class ReactivityEngine {
   /**
    * Process changes from a committed mutation.
    * Evaluates which subscriptions are affected and re-executes them.
+   *
+   * @param modifiedTables - Names of tables that were modified
+   * @param changeEvents - Optional detailed change events for filter-level invalidation
    */
   async processChanges(modifiedTables: string[], changeEvents?: ChangeEvent[]): Promise<void> {
     const changes: ChangeEvent[] =

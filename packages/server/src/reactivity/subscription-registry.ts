@@ -23,6 +23,8 @@ export class SubscriptionRegistry {
 
   /**
    * Register a new subscription.
+   *
+   * @param sub - Subscription data (version is auto-assigned)
    */
   register(sub: Omit<Subscription, "version">): void {
     const subscription: Subscription = { ...sub, version: 1 }
@@ -40,6 +42,11 @@ export class SubscriptionRegistry {
 
   /**
    * Update a subscription's dependencies and last result.
+   *
+   * @param id - Subscription identifier
+   * @param deps - New query dependencies
+   * @param result - New query result
+   * @param resultHash - Hash of the new result
    */
   update(id: string, deps: QueryDependency[], result: unknown, resultHash: string): void {
     const sub = this.subscriptions.get(id)
@@ -59,6 +66,8 @@ export class SubscriptionRegistry {
 
   /**
    * Remove a subscription.
+   *
+   * @param id - Subscription identifier to remove
    */
   remove(id: string): void {
     const sub = this.subscriptions.get(id)
@@ -77,6 +86,8 @@ export class SubscriptionRegistry {
 
   /**
    * Remove all subscriptions for a connection.
+   *
+   * @param connectionId - Client connection identifier
    */
   removeConnection(connectionId: string): void {
     const subIds = this.connectionSubscriptions.get(connectionId)
@@ -95,6 +106,9 @@ export class SubscriptionRegistry {
 
   /**
    * Get all subscriptions that depend on a given table.
+   *
+   * @param table - Table name to look up
+   * @returns Array of subscriptions depending on the table
    */
   getSubscriptionsForTable(table: string): Subscription[] {
     const subIds = this.tableSubscriptions.get(table)
@@ -106,6 +120,9 @@ export class SubscriptionRegistry {
 
   /**
    * Get a subscription by ID.
+   *
+   * @param id - Subscription identifier
+   * @returns The subscription, or undefined if not found
    */
   get(id: string): Subscription | undefined {
     return this.subscriptions.get(id)
@@ -113,6 +130,9 @@ export class SubscriptionRegistry {
 
   /**
    * Get all subscription IDs for a connection.
+   *
+   * @param connectionId - Client connection identifier
+   * @returns Array of subscription IDs
    */
   getConnectionSubscriptions(connectionId: string): string[] {
     const subs = this.connectionSubscriptions.get(connectionId)

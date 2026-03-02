@@ -30,6 +30,12 @@ export type InvalidationLevel = "table" | "filter"
 export class InvalidationEvaluator {
   private level: InvalidationLevel
 
+  /**
+   * Create a new InvalidationEvaluator.
+   *
+   * @param registry - Subscription registry to evaluate against
+   * @param level - Invalidation granularity level
+   */
   constructor(
     private registry: SubscriptionRegistry,
     level: InvalidationLevel = "filter",
@@ -39,6 +45,9 @@ export class InvalidationEvaluator {
 
   /**
    * Evaluate which subscriptions need re-execution based on change events.
+   *
+   * @param changes - Array of change events from committed mutations
+   * @returns Array of invalidation results identifying affected subscriptions
    */
   evaluate(changes: ChangeEvent[]): InvalidationResult[] {
     const invalidated = new Map<string, InvalidationResult>()

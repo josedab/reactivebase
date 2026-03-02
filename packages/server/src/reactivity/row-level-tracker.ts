@@ -73,6 +73,12 @@ export class BloomFilter {
   private size: number
   private insertedCount = 0
 
+  /**
+   * Create a new BloomFilter.
+   *
+   * @param expectedItems - Expected number of items to be inserted
+   * @param falsePositiveRate - Desired false positive rate
+   */
   constructor(expectedItems: number, falsePositiveRate: number = 0.01) {
     // Calculate optimal size and hash count
     this.size = Math.max(64, Math.ceil((-expectedItems * Math.log(falsePositiveRate)) / (Math.LN2 * Math.LN2)))
@@ -80,6 +86,11 @@ export class BloomFilter {
     this.bits = new Uint8Array(Math.ceil(this.size / 8))
   }
 
+  /**
+   * Add a value to the bloom filter.
+   *
+   * @param value - String value to insert
+   */
   add(value: string): void {
     for (const pos of this.getPositions(value)) {
       this.bits[Math.floor(pos / 8)] |= 1 << (pos % 8)
@@ -87,6 +98,12 @@ export class BloomFilter {
     this.insertedCount++
   }
 
+  /**
+   * Test whether a value may be in the set.
+   *
+   * @param value - String value to test
+   * @returns True if the value might be in the set (may be a false positive)
+   */
   has(value: string): boolean {
     for (const pos of this.getPositions(value)) {
       if (!(this.bits[Math.floor(pos / 8)] & (1 << (pos % 8)))) {
@@ -135,6 +152,11 @@ export class BloomFilter {
 
 // ─── Persistence SQL ─────────────────────────────────────────────────────────
 
+/**
+ * Generate SQL to create the row tracking table.
+ *
+ * @returns SQL DDL statement for the row tracking table and index
+ */
 export function generateRowTrackingTableSQL(): string {
   return `
 CREATE TABLE IF NOT EXISTS _reactivebase_row_tracking (
@@ -152,6 +174,15 @@ CREATE INDEX IF NOT EXISTS idx_row_tracking_table
 `.trim()
 }
 
+/**
+ * Build an upsert SQL statement for row tracking data.
+ *
+ * @param subscriptionId - Subscription identifier
+ * @param table - Table name being tracked
+ * @param rowIds - Array of tracked row IDs
+ * @param mode - Tracking mode (exact, bloom, or fallback)
+ * @returns Object containing the SQL string and parameter values
+ */
 export function buildUpsertRowTrackingSQL(
   subscriptionId: string,
   table: string,
@@ -170,6 +201,12 @@ ON CONFLICT (subscription_id, table_name) DO UPDATE SET
   }
 }
 
+/**
+ * Build a SQL statement to delete row tracking data for a subscription.
+ *
+ * @param subscriptionId - Subscription identifier to delete tracking for
+ * @returns Object containing the SQL string and parameter values
+ */
 export function buildDeleteRowTrackingSQL(subscriptionId: string): { sql: string; params: unknown[] } {
   return {
     sql: `DELETE FROM _reactivebase_row_tracking WHERE subscription_id = $1`,
@@ -177,6 +214,13 @@ export function buildDeleteRowTrackingSQL(subscriptionId: string): { sql: string
   }
 }
 
+/**
+ * Build a SQL query to find subscriptions affected by changes to specific rows.
+ *
+ * @param table - Table name where changes occurred
+ * @param rowIds - Array of changed row IDs
+ * @returns Object containing the SQL string and parameter values
+ */
 export function buildGetAffectedSubscriptionsSQL(table: string, rowIds: string[]): { sql: string; params: unknown[] } {
   return {
     sql: `SELECT subscription_id FROM _reactivebase_row_tracking
@@ -198,6 +242,11 @@ export class RowLevelTracker {
   private options: Required<RowLevelTrackerOptions>
   private tracking = new Map<string, Map<string, RowTrackingState>>()
 
+  /**
+   * Create a new RowLevelTracker.
+   *
+   * @param options - Configuration options for row-level tracking
+   */
   constructor(options: RowLevelTrackerOptions = {}) {
     this.options = { ...DEFAULT_ROW_LEVEL_OPTIONS, ...options }
   }
@@ -208,6 +257,11 @@ export class RowLevelTracker {
 
   /**
    * Track the row IDs returned by a query for a subscription.
+   *
+   * @param subscriptionId - Subscription identifier
+   * @param table - Table name to track rows for
+   * @param rowIds - Array of primary key values from the query result
+   * @returns The resulting tracking state
    */
   trackResult(subscriptionId: string, table: string, rowIds: string[]): RowTrackingState {
     if (!this.tracking.has(subscriptionId)) {
@@ -250,6 +304,12 @@ export class RowLevelTracker {
 
   /**
    * Check if a subscription should be invalidated based on changed row IDs.
+   *
+   * @param subscriptionId - Subscription identifier to check
+   * @param table - Table where changes occurred
+   * @param changedRowIds - Row IDs that were modified
+   * @param operation - Type of data change operation
+   * @returns Invalidation result with match details
    */
   checkInvalidation(
     subscriptionId: string,
@@ -323,6 +383,11 @@ export class RowLevelTracker {
 
   /**
    * Evaluate all subscriptions for a table against a set of changes.
+   *
+   * @param table - Table where changes occurred
+   * @param changedRowIds - Row IDs that were modified
+   * @param operation - Type of data change operation
+   * @returns Array of invalidation results for all affected subscriptions
    */
   evaluateChanges(
     table: string,
@@ -342,6 +407,8 @@ export class RowLevelTracker {
 
   /**
    * Remove tracking for a subscription.
+   *
+   * @param subscriptionId - Subscription identifier to remove tracking for
    */
   removeSubscription(subscriptionId: string): void {
     this.tracking.delete(subscriptionId)
@@ -349,6 +416,9 @@ export class RowLevelTracker {
 
   /**
    * Get tracking state for a subscription.
+   *
+   * @param subscriptionId - Subscription identifier
+   * @returns Map of table names to tracking states, or undefined if not tracked
    */
   getTrackingState(subscriptionId: string): Map<string, RowTrackingState> | undefined {
     return this.tracking.get(subscriptionId)
@@ -356,6 +426,8 @@ export class RowLevelTracker {
 
   /**
    * Get statistics about current tracking state.
+   *
+   * @returns Summary statistics including counts, memory usage, and averages
    */
   getStats(): RowLevelStats {
     let exactCount = 0
@@ -442,6 +514,11 @@ export class AutoLevelTracker {
   private options: Required<Omit<AutoLevelTrackerOptions, "rowLevelTrackerOptions">>
   private rowTracker: RowLevelTracker
 
+  /**
+   * Create a new AutoLevelTracker.
+   *
+   * @param options - Configuration options including thresholds and row-level tracker options
+   */
   constructor(options: AutoLevelTrackerOptions = {}) {
     const { rowLevelTrackerOptions, ...rest } = options
     this.options = { ...DEFAULT_AUTO_LEVEL_OPTIONS, ...rest }
@@ -455,6 +532,11 @@ export class AutoLevelTracker {
 
   /**
    * Determine the appropriate tracking level for a table.
+   *
+   * @param table - Table name
+   * @param tableRowCount - Approximate number of rows in the table
+   * @param subscriptionCount - Number of active subscriptions for this table
+   * @returns A decision object with the chosen level and reasoning
    */
   determineLevel(table: string, tableRowCount: number, subscriptionCount: number): LevelDecision {
     // Small tables — table-level invalidation is sufficient
@@ -486,6 +568,13 @@ export class AutoLevelTracker {
    * - Level 1: always invalidate all subscriptions for the table.
    * - Level 2: always invalidate (caller is expected to apply filter logic).
    * - Level 3: delegate to RowLevelTracker for precise row matching.
+   *
+   * @param table - Table where changes occurred
+   * @param changedRowIds - Row IDs that were modified
+   * @param operation - Type of data change operation
+   * @param tableRowCount - Approximate number of rows in the table
+   * @param subscriptionCount - Number of active subscriptions for this table
+   * @returns The chosen tracking level and array of invalidation results
    */
   evaluateChangesAutoLevel(
     table: string,
@@ -537,12 +626,22 @@ export class QueryPrimaryKeyCapture {
   private keysByQuery = new Map<string, Set<string>>()
   private rowTracker: RowLevelTracker | null
 
+  /**
+   * Create a new QueryPrimaryKeyCapture.
+   *
+   * @param rowTracker - Optional RowLevelTracker for automatic tracking integration
+   */
   constructor(rowTracker?: RowLevelTracker) {
     this.rowTracker = rowTracker ?? null
   }
 
   /**
    * Extract primary key values from query result rows.
+   *
+   * @param queryName - Name of the query to associate keys with
+   * @param rows - Result rows to extract keys from
+   * @param primaryKeyColumn - Name of the primary key column
+   * @returns Set of extracted primary key values
    */
   capturePrimaryKeys(queryName: string, rows: Record<string, unknown>[], primaryKeyColumn: string): Set<string> {
     const keys = new Set<string>()
@@ -558,6 +657,9 @@ export class QueryPrimaryKeyCapture {
 
   /**
    * Get the tracked primary keys for a query.
+   *
+   * @param queryName - Name of the query
+   * @returns Set of tracked primary key values
    */
   getTrackedKeys(queryName: string): Set<string> {
     return this.keysByQuery.get(queryName) ?? new Set()
@@ -565,6 +667,8 @@ export class QueryPrimaryKeyCapture {
 
   /**
    * Clear tracked keys for a query.
+   *
+   * @param queryName - Name of the query to clear keys for
    */
   clearTrackedKeys(queryName: string): void {
     this.keysByQuery.delete(queryName)
@@ -572,6 +676,12 @@ export class QueryPrimaryKeyCapture {
 
   /**
    * Capture primary keys and automatically track them in the RowLevelTracker.
+   *
+   * @param subscriptionId - Subscription identifier
+   * @param table - Table name
+   * @param rows - Result rows to extract keys from
+   * @param pkColumn - Primary key column name
+   * @returns The tracking state, or null if no RowLevelTracker is configured
    */
   captureAndTrack(
     subscriptionId: string,
@@ -601,6 +711,9 @@ export class QueryPrimaryKeyCapture {
 /**
  * Build a SQL statement that returns the approximate row count for a table.
  * Uses the pg_class catalog for a fast estimate.
+ *
+ * @param table - Table name to get stats for
+ * @returns Object containing the SQL string and parameter values
  */
 export function buildGetTableStatsSQL(table: string): { sql: string; params: unknown[] } {
   return {
