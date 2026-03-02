@@ -11,7 +11,7 @@
 
 📖 **Documentation**: [reactivebase.dev](https://reactivebase.dev)
 
-> **65,698 LOC · 48 server modules · 1,515 tests · 15 packages · MIT license**
+> **124,407 LOC · 86 server modules · 2,474 tests · 15 packages · MIT license**
 
 ---
 

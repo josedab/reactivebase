@@ -6,7 +6,7 @@ Welcome! This guide helps you make your first contribution to ReactiveBase.
 
 ```
 packages/
-├── server/          ← Core server framework (48 modules, ~50K LOC)
+├── server/          ← Core server framework (85+ modules, ~94K LOC)
 │   └── src/
 │       ├── schema/          Schema definition, validators
 │       ├── functions/       query(), mutation(), action()
@@ -54,18 +54,21 @@ packages/
 These issues are designed for first-time contributors:
 
 ### Easy (< 1 hour)
+
 - [ ] Add a new validator type (e.g., `v.url()`, `v.uuid()`)
 - [ ] Improve error messages in schema validation
 - [ ] Add JSDoc comments to public API functions
 - [ ] Fix typos in documentation
 
 ### Medium (1-3 hours)
+
 - [ ] Add a new first-party plugin (e.g., Twilio SMS)
 - [ ] Add pagination support to Admin Studio data browser
 - [ ] Add a new interactive tutorial to TutorialManager
 - [ ] Add a new Grafana dashboard panel
 
 ### Advanced (3-8 hours)
+
 - [ ] Add cursor-based pagination to the query builder
 - [ ] Implement Redis Cluster support in PubSubAdapter
 - [ ] Add WebSocket compression (permessage-deflate)
