@@ -287,16 +287,25 @@ export function generateValidationSQL(config: GovernanceConfig, table: string): 
       case "custom_sql":
         if (rule.params?.sql) {
           const customSql = String(rule.params.sql)
-          // Blocklist: reject semicolons, DDL keywords, and subqueries to prevent SQL injection
+          // Max length to limit attack surface
+          if (customSql.length > 500) {
+            throw new GovernanceError(
+              `custom_sql for constraint "${rule.name}" exceeds maximum length of 500 characters`,
+            )
+          }
+          // Reject parentheses to prevent function calls and subqueries
+          if (customSql.includes("(")) {
+            throw new GovernanceError(
+              `custom_sql for constraint "${rule.name}" contains disallowed parentheses (no function calls or subqueries)`,
+            )
+          }
+          // Blocklist: reject semicolons, DDL keywords, and comment syntax to prevent SQL injection
           const sqlBlocklistPattern =
             /;|--|\/\*|\b(DROP|ALTER|CREATE|INSERT|UPDATE|DELETE|TRUNCATE|GRANT|REVOKE|EXEC|EXECUTE|UNION|INTO)\b/i
           if (sqlBlocklistPattern.test(customSql)) {
             throw new GovernanceError(
               `custom_sql for constraint "${rule.name}" contains disallowed SQL keywords or characters`,
             )
-          }
-          if (/\([\s]*SELECT\b/i.test(customSql)) {
-            throw new GovernanceError(`custom_sql for constraint "${rule.name}" contains disallowed subquery`)
           }
           statements.push(`ALTER TABLE "${sanitizedTable}" ADD CONSTRAINT "${constraintName}" CHECK (${customSql});`)
         }
