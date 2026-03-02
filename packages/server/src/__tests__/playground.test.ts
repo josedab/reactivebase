@@ -82,14 +82,12 @@ describe("PlaygroundEngine", () => {
       const s1 = engine.createSession("First")
       const s2 = engine.createSession("Second")
       const s3 = engine.createSession("Third")
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-      const a1 = s1 as any
-      const a2 = s2 as any
-      const a3 = s3 as any
+      const a1 = s1 as unknown as Record<string, unknown>
+      const a2 = s2 as unknown as Record<string, unknown>
+      const a3 = s3 as unknown as Record<string, unknown>
       a1.updatedAt = 1000
       a2.updatedAt = 2000
       a3.updatedAt = 3000
-      /* eslint-enable @typescript-eslint/no-explicit-any */
       const sessions = engine.listSessions()
       expect(sessions).toHaveLength(3)
       expect(sessions[0].title).toBe("Third")
