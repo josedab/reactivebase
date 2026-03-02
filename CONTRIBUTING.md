@@ -320,6 +320,12 @@ npm run build
 
 ## Questions?
 
+If you have questions about contributing, the architecture, or how a specific feature works:
+
+- Open a [GitHub Discussion](../../discussions) for general questions
+- Check existing [issues](../../issues) to see if your question has been addressed
+- Review the [docs/](docs/) directory for architecture decision records and design documentation
+
 ## Release Process
 
 ### How Releases Work
@@ -333,7 +339,7 @@ ReactiveBase uses **tag-based releases**. When a Git tag matching `v*` (e.g., `v
 | **CI (automated)** | `.github/workflows/release.yml` | Standard releases — triggered by pushing a `v*` tag |
 | **Manual**         | `scripts/publish.sh`            | Emergency hotfixes or when CI is unavailable        |
 
-Both publish the same 14 packages to npm in dependency order.
+Both publish the same 15 packages to npm in dependency order.
 
 ### NPM_TOKEN GitHub Secret
 
