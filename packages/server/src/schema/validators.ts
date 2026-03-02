@@ -77,42 +77,102 @@ function createValidator<T>(
 }
 
 export const v = {
+  /**
+   * Define a text column.
+   *
+   * @param options - Validator options such as default, minLength, maxLength
+   * @returns A string validator mapping to Postgres `text`
+   */
   string(options: ValidatorOptions = {}): Validator<string> {
     return createValidator("string", "text", options)
   },
 
+  /**
+   * Define a floating-point number column.
+   *
+   * @param options - Validator options such as default, min, max
+   * @returns A number validator mapping to Postgres `double precision`
+   */
   number(options: ValidatorOptions = {}): Validator<number> {
     return createValidator("number", "double precision", options)
   },
 
+  /**
+   * Define an integer column.
+   *
+   * @param options - Validator options such as default, min, max
+   * @returns An integer validator mapping to Postgres `integer`
+   */
   integer(options: ValidatorOptions = {}): Validator<number> {
     return createValidator("integer", "integer", options)
   },
 
+  /**
+   * Define a boolean column.
+   *
+   * @param options - Validator options such as default
+   * @returns A boolean validator mapping to Postgres `boolean`
+   */
   boolean(options: ValidatorOptions & { default?: boolean } = {}): Validator<boolean> {
     return createValidator("boolean", "boolean", options)
   },
 
+  /**
+   * Define a timestamp column with timezone.
+   *
+   * @param options - Validator options; use `default: "now"` for auto-timestamps
+   * @returns A Date validator mapping to Postgres `timestamptz`
+   */
   timestamp(options: ValidatorOptions & { default?: "now" | string } = {}): Validator<Date> {
     return createValidator("timestamp", "timestamptz", options)
   },
 
+  /**
+   * Define a JSON column.
+   *
+   * @param options - Validator options such as default
+   * @returns A JSON validator mapping to Postgres `jsonb`
+   */
   json<T = unknown>(options: ValidatorOptions = {}): Validator<T> {
     return createValidator("json", "jsonb", options)
   },
 
+  /**
+   * Define an array column wrapping an inner validator.
+   *
+   * @param inner - The element validator for array items
+   * @returns An array validator mapping to a Postgres array type
+   */
   array<T>(inner: Validator<T>): Validator<T[]> {
     return createValidator("array", `${inner.pgType}[]`, {}, { innerValidator: inner as Validator })
   },
 
+  /**
+   * Define an enum column restricted to specific string values.
+   *
+   * @param values - Allowed enum values
+   * @returns An enum validator stored as Postgres `text`
+   */
   enum<T extends string>(...values: T[]): Validator<T> {
     return createValidator("enum", "text", {}, { enumValues: values })
   },
 
+  /**
+   * Define a foreign key reference to another table.
+   *
+   * @param table - The name of the referenced table
+   * @returns An ID validator stored as Postgres `text`
+   */
   id<TableName extends string>(table: TableName): Validator<string> {
     return createValidator("id", "text", {}, { referencedTable: table })
   },
 
+  /**
+   * Mark a column as optional (nullable).
+   *
+   * @param inner - The inner validator to make optional
+   * @returns A validator that allows `undefined` values
+   */
   optional<T>(inner: Validator<T>): Validator<T | undefined> {
     return {
       ...inner,
@@ -122,14 +182,31 @@ export const v = {
     } as Validator<T | undefined>
   },
 
+  /**
+   * Define a column with a custom Postgres type.
+   *
+   * @param pgType - The raw Postgres type string
+   * @returns A custom validator for the given Postgres type
+   */
   custom<T>(pgType: string): Validator<T> {
     return createValidator("custom", pgType)
   },
 
+  /**
+   * Define a pgvector column for similarity search.
+   *
+   * @param dimensions - The number of dimensions for the vector
+   * @returns A vector validator mapping to Postgres `vector(N)`
+   */
   vector(dimensions: number): Validator<number[]> {
     return createValidator("vector", `vector(${dimensions})`, {}, { dimensions })
   },
 
+  /**
+   * Define a storage file reference column.
+   *
+   * @returns A string validator for referencing files in the storage backend
+   */
   storageId(): Validator<string> {
     return createValidator("id", "text", {})
   },

@@ -41,6 +41,12 @@ class SchemaImpl<T extends SchemaDefinition> implements Schema<T> {
   }
 }
 
+/**
+ * Define the application schema from a set of table definitions.
+ *
+ * @param definition - A record mapping table names to table definitions
+ * @returns A validated schema object used by the server and code generator
+ */
 export function defineSchema<T extends SchemaDefinition>(definition: T): Schema<T> {
   validateSchema(definition)
   return new SchemaImpl(definition)

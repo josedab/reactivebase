@@ -94,6 +94,12 @@ class TableDefinitionImpl<TColumns extends ColumnDefinitions> implements TableDe
   }
 }
 
+/**
+ * Define a database table with typed columns.
+ *
+ * @param columns - Column definitions using `v` validators
+ * @returns A table definition that can be passed to `defineSchema()`
+ */
 export function defineTable<TColumns extends ColumnDefinitions>(columns: TColumns): TableDefinition<TColumns> {
   return new TableDefinitionImpl("", columns)
 }
