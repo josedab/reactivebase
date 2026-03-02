@@ -320,14 +320,17 @@ export default defineConfig({
 
 ## Configuration Reference
 
-| Variable       | Required | Default       | Description                        |
-| -------------- | -------- | ------------- | ---------------------------------- |
-| `DATABASE_URL` | ✅       | —             | PostgreSQL connection string       |
-| `PORT`         |          | `4000`        | HTTP/WebSocket server port         |
-| `NODE_ENV`     |          | `development` | `development` or `production`      |
-| `REDIS_URL`    |          | —             | Redis URL for multi-server pub/sub |
-| `JWT_SECRET`   | In prod  | —             | Secret for HS256 JWT signing       |
-| `LOG_LEVEL`    |          | `info`        | `debug`, `info`, `warn`, `error`   |
+| Variable        | Required | Default       | Description                             |
+| --------------- | -------- | ------------- | --------------------------------------- |
+| `DATABASE_URL`  | ✅       | —             | PostgreSQL connection string            |
+| `PORT`          |          | `4000`        | HTTP/WebSocket server port              |
+| `NODE_ENV`      |          | `development` | `development` or `production`           |
+| `REDIS_URL`     |          | —             | Redis URL for multi-server pub/sub      |
+| `JWT_SECRET`    | In prod  | —             | Secret for HS256 JWT signing            |
+| `JWT_ISSUER`    |          | —             | JWT issuer URL for token validation     |
+| `JWT_AUDIENCE`  |          | —             | JWT audience value for token validation |
+| `LOG_LEVEL`     |          | `info`        | `debug`, `info`, `warn`, `error`        |
+| `FLY_API_TOKEN` |          | —             | Fly.io API token for deployment         |
 
 For deployment guides (Docker, Fly.io, Railway, Render, Kubernetes), see [deploy/README.md](deploy/README.md).
 
