@@ -33,6 +33,12 @@ export interface PreloadedQueryResult<T = unknown> {
 /**
  * Preload a query on the server side (in RSC or getServerSideProps).
  * Returns a serializable result that can be passed to client components.
+ *
+ * @param serverUrl - The ReactiveBase server URL
+ * @param queryName - Name of the query to preload
+ * @param args - Arguments to pass to the query
+ * @param options - Optional configuration including auth token
+ * @returns A serializable {@link PreloadedQueryResult} for client hydration
  */
 export async function preloadQuery<T = unknown>(
   serverUrl: string,
@@ -74,6 +80,9 @@ export async function preloadQuery<T = unknown>(
  * Use a preloaded query result, automatically upgrading to a live subscription.
  * Initially returns the SSR-fetched data, then seamlessly transitions to
  * real-time updates via WebSocket.
+ *
+ * @param preloaded - The preloaded query result from {@link preloadQuery}
+ * @returns The latest query data, updated in real-time
  */
 export function usePreloadedQuery<T = unknown>(preloaded: PreloadedQueryResult<T>): T {
   const client = useNextjsClient()
@@ -107,6 +116,9 @@ export interface ReactiveBaseNextjsProviderProps {
 /**
  * ReactiveBase provider for Next.js apps.
  * Wraps the standard client with Next.js-specific handling.
+ *
+ * @param props - Provider props including server URL, auth token, and children
+ * @returns A React context provider wrapping the children with a ReactiveBase client
  */
 export function ReactiveBaseNextjsProvider({ url, token, children }: ReactiveBaseNextjsProviderProps) {
   const client = useMemo(() => new ReactiveBaseClient({ url, token }), [url, token])
@@ -128,6 +140,9 @@ function useNextjsClient(): ReactiveBaseClient {
 
 /**
  * Check if a value is a preloaded query result.
+ *
+ * @param value - The value to check
+ * @returns True if the value is a {@link PreloadedQueryResult}
  */
 export function isPreloadedQuery(value: unknown): value is PreloadedQueryResult {
   return (
@@ -140,6 +155,12 @@ export function isPreloadedQuery(value: unknown): value is PreloadedQueryResult 
 /**
  * Create a Suspense-compatible resource from a preloaded query.
  * Wraps the promise so React Suspense can handle loading states.
+ *
+ * @param serverUrl - The ReactiveBase server URL
+ * @param queryName - Name of the query to preload
+ * @param args - Arguments to pass to the query
+ * @param options - Optional configuration including auth token
+ * @returns A {@link SuspenseResource} that can be read inside a Suspense boundary
  */
 export function createQueryResource<T>(
   serverUrl: string,
@@ -178,6 +199,11 @@ export interface SuspenseResource<T> {
 /**
  * Preload multiple queries in parallel for streaming SSR.
  * Returns a map of query name → preloaded result.
+ *
+ * @param serverUrl - The ReactiveBase server URL
+ * @param queries - Array of query definitions with name and optional args
+ * @param options - Optional configuration including auth token
+ * @returns A map of query names to their {@link PreloadedQueryResult} values
  */
 export async function preloadQueries(
   serverUrl: string,
@@ -201,6 +227,11 @@ export async function preloadQueries(
  * Hook for streaming hydration.
  * Shows SSR data immediately, then upgrades to live WebSocket subscription.
  * Designed to work with React Suspense boundaries for progressive loading.
+ *
+ * @param preloaded - Optional preloaded query result for initial data
+ * @param queryRef - The query name to subscribe to
+ * @param args - Optional query arguments (falls back to preloaded args)
+ * @returns An object with the latest data and whether the live subscription is active
  */
 export function useStreamingQuery<T = unknown>(
   preloaded: PreloadedQueryResult<T> | undefined,
@@ -285,6 +316,12 @@ export interface ServerQueryClient {
  * Load a query during React Server Component rendering.
  * Returns a serializable result for passing to client components.
  * Supports Next.js cache revalidation via `revalidate` and `tags`.
+ *
+ * @param serverUrl - The ReactiveBase server URL
+ * @param queryName - Name of the query to load
+ * @param args - Arguments to pass to the query
+ * @param options - Server query options including token, revalidate interval, and cache tags
+ * @returns A serializable {@link LoadQueryResult} for client component hydration
  */
 export async function loadQuery<T = unknown>(
   serverUrl: string,
@@ -329,6 +366,9 @@ export async function loadQuery<T = unknown>(
  * Use a server-loaded query result in a client component.
  * Hydrates to a live WebSocket subscription automatically.
  * Supports React 19 use() pattern with graceful fallback.
+ *
+ * @param loaded - A resolved or promised {@link LoadQueryResult} from {@link loadQuery}
+ * @returns The latest query data, updated in real-time after hydration
  */
 export function useServerQuery<T = unknown>(loaded: LoadQueryResult<T> | Promise<LoadQueryResult<T>>): T {
   // Support React 19 use() for promise-based results
@@ -392,6 +432,9 @@ function StaticIslandInner<T = unknown>({
  * When hydrate=false, renders static HTML from server data (zero JS overhead).
  * When hydrate=true, upgrades to a live WebSocket subscription on the client.
  * Uses Suspense boundary internally.
+ *
+ * @param props - Island props including query name, args, hydration flag, and render function
+ * @returns A Suspense-wrapped component that optionally hydrates to a live subscription
  */
 export function ReactiveIsland<T = unknown>({ query, args, fallback, hydrate, children }: ReactiveIslandProps<T>) {
   const resourceRef = useRef<{
@@ -481,6 +524,9 @@ function StreamingQueryEntry({
  * StreamingQueryBoundary: streaming hydration wrapper.
  * Streams SSR data progressively and auto-upgrades each query to a live
  * WebSocket subscription. Designed for <100ms TTFB contribution.
+ *
+ * @param props - Boundary props including queries array, render function, and fallback
+ * @returns A Suspense-wrapped component managing multiple streaming queries
  */
 export function StreamingQueryBoundary({ queries, children, fallback }: StreamingBoundaryProps) {
   const [results, setResults] = useState<Map<string, { data: unknown; isLive: boolean }>>(() => new Map())
@@ -508,6 +554,10 @@ export function StreamingQueryBoundary({ queries, children, fallback }: Streamin
 /**
  * Create a server-side query client for use in React Server Components.
  * HTTP-only (no WebSocket), supports batch queries.
+ *
+ * @param serverUrl - The ReactiveBase server URL
+ * @param options - Optional configuration including auth token
+ * @returns A {@link ServerQueryClient} with query, batchQuery, and close methods
  */
 export function createServerQueryClient(serverUrl: string, options: { token?: string } = {}): ServerQueryClient {
   const url = serverUrl.replace(/\/$/, "")
