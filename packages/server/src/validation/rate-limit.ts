@@ -25,6 +25,9 @@ export class RateLimiter {
   private windows = new Map<string, WindowEntry>()
   private cleanupTimer: ReturnType<typeof setInterval> | null = null
 
+  /**
+   * @param options - Rate limiting configuration
+   */
   constructor(private options: RateLimitOptions) {
     // Periodic cleanup of expired windows
     this.cleanupTimer = setInterval(() => this.cleanup(), (options.window ?? 60_000) * 2)
@@ -33,6 +36,9 @@ export class RateLimiter {
   /**
    * Check if a request should be allowed.
    * Returns remaining count or throws if limit exceeded.
+   *
+   * @param key - The rate limit key identifying the requester
+   * @returns Whether the request is allowed, remaining count, and window reset time
    */
   check(key: string): { allowed: boolean; remaining: number; resetAt: number } {
     const window = this.options.window ?? 60_000
@@ -60,6 +66,8 @@ export class RateLimiter {
 
   /**
    * Reset a specific key's counter.
+   *
+   * @param key - The rate limit key to reset
    */
   reset(key: string): void {
     this.windows.delete(key)
@@ -87,6 +95,9 @@ export class RateLimitError extends Error {
   readonly code = "RATE_LIMITED"
   readonly statusCode = 429
 
+  /**
+   * @param retryAfterMs - Milliseconds until the rate limit resets
+   */
   constructor(public readonly retryAfterMs: number) {
     super(`Rate limit exceeded. Retry after ${Math.ceil(retryAfterMs / 1000)}s`)
     this.name = "RateLimitError"
@@ -95,6 +106,9 @@ export class RateLimitError extends Error {
 
 /**
  * Create a rate limiting middleware.
+ *
+ * @param options - Rate limiting configuration
+ * @returns A middleware that enforces rate limits
  */
 export function rateLimit(options: RateLimitOptions): Middleware {
   const limiter = new RateLimiter(options)

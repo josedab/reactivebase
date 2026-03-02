@@ -18,6 +18,9 @@ export class ValidationError extends Error {
   readonly code = "VALIDATION_ERROR"
   readonly statusCode = 400
 
+  /**
+   * @param errors - Array of field-level validation errors
+   */
   constructor(public readonly errors: Array<{ field: string; message: string }>) {
     super(`Validation failed: ${errors.map((e) => `${e.field}: ${e.message}`).join(", ")}`)
     this.name = "ValidationError"
@@ -26,6 +29,9 @@ export class ValidationError extends Error {
 
 /**
  * Validate args against a schema.
+ *
+ * @param args - The arguments object to validate
+ * @param schema - The validation schema to check against
  */
 export function validateArgs(args: unknown, schema: ValidationSchema): void {
   if (typeof args !== "object" || args === null) {
@@ -89,6 +95,11 @@ function createFieldValidator(type: string, required: boolean): FieldValidator {
 }
 
 export const s = {
+  /**
+   * Create a required string field validator with chainable constraints.
+   *
+   * @returns A string field validator supporting `.optional()`, `.min()`, `.max()`, `.email()`, `.pattern()`
+   */
   string() {
     const v = createFieldValidator("string", true)
     return Object.assign(v, {
@@ -115,6 +126,11 @@ export const s = {
     })
   },
 
+  /**
+   * Create a required number field validator with chainable constraints.
+   *
+   * @returns A number field validator supporting `.optional()`, `.min()`, `.max()`, `.integer()`
+   */
   number() {
     const v = createFieldValidator("number", true)
     return Object.assign(v, {
@@ -137,6 +153,11 @@ export const s = {
     })
   },
 
+  /**
+   * Create a required boolean field validator.
+   *
+   * @returns A boolean field validator supporting `.optional()`
+   */
   boolean() {
     const v = createFieldValidator("boolean", true)
     return Object.assign(v, {
@@ -147,6 +168,11 @@ export const s = {
     })
   },
 
+  /**
+   * Create a required array field validator with chainable constraints.
+   *
+   * @returns An array field validator supporting `.optional()`, `.minLength()`, `.maxLength()`
+   */
   array() {
     const v = createFieldValidator("array", true)
     return Object.assign(v, {
@@ -168,6 +194,9 @@ export const s = {
 
 /**
  * Create a validation middleware for a specific function.
+ *
+ * @param schema - The validation schema to apply
+ * @returns An object with a before hook that validates args
  */
 export function withValidation(schema: ValidationSchema) {
   return {
