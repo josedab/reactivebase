@@ -688,7 +688,7 @@ async function refresh() {
     const p = m.connectionPool;
     const maxP = p.maxSize || p.total || 20;
     document.getElementById('pool-stats').innerHTML =
-      '<div style="font-size:13px">Active: '+p.active+' / Idle: '+p.idle+' / Waiting: '+p.waiting+' / Max: '+maxP+'</div>';
+      '<div style="font-size:13px">Active: '+escapeHtml(p.active)+' / Idle: '+escapeHtml(p.idle)+' / Waiting: '+escapeHtml(p.waiting)+' / Max: '+escapeHtml(maxP)+'</div>';
     document.getElementById('pool-bar').innerHTML =
       seg('pool-active', p.active/maxP*100)+seg('pool-idle', p.idle/maxP*100)+seg('pool-waiting', p.waiting/maxP*100)+seg('pool-free', Math.max(0,100-((p.active+p.idle+p.waiting)/maxP*100)));
 
@@ -698,7 +698,7 @@ async function refresh() {
   }
 }
 
-function mc(label, value) { return '<div class="metric-card"><div class="metric-value">'+value+'</div><div class="metric-label">'+label+'</div></div>'; }
+function mc(label, value) { return '<div class="metric-card"><div class="metric-value">'+escapeHtml(value)+'</div><div class="metric-label">'+escapeHtml(label)+'</div></div>'; }
 function seg(cls, pct) { return '<div class="'+cls+'" style="width:'+Math.max(0,pct)+'%"></div>'; }
 
 refresh();
