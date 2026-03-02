@@ -102,12 +102,19 @@ export class FilePipeline {
   private config: Required<PipelineConfig>
   private activeJobs = 0
 
+  /**
+   * Create a new FilePipeline.
+   *
+   * @param config - Pipeline configuration options
+   */
   constructor(config: PipelineConfig = {}) {
     this.config = { ...DEFAULT_PIPELINE_CONFIG, ...config }
   }
 
   /**
    * Add a processor to the pipeline.
+   *
+   * @param processor - The file processor to add
    */
   addProcessor(processor: FileProcessor): void {
     this.processors.push(processor)
@@ -115,6 +122,9 @@ export class FilePipeline {
 
   /**
    * Remove a processor by name.
+   *
+   * @param name - The name of the processor to remove
+   * @returns Whether a processor was found and removed
    */
   removeProcessor(name: string): boolean {
     const idx = this.processors.findIndex((p) => p.name === name)
@@ -125,6 +135,10 @@ export class FilePipeline {
 
   /**
    * Process a file through the pipeline, producing variants.
+   *
+   * @param data - The file buffer to process
+   * @param options - Processing input options including content type and filename
+   * @returns The original output and an array of named variant outputs
    */
   async process(
     data: Buffer,
@@ -165,6 +179,8 @@ export class FilePipeline {
 
   /**
    * Get pipeline info.
+   *
+   * @returns An object containing processor names, config, and active job count
    */
   getInfo(): { processors: string[]; config: Required<PipelineConfig>; activeJobs: number } {
     return {
@@ -192,6 +208,12 @@ export class ReactiveFileTracker {
 
   /**
    * Create a new tracked file.
+   *
+   * @param originalName - The original filename
+   * @param contentType - The MIME content type of the file
+   * @param size - The file size in bytes
+   * @param metadata - Optional metadata to associate with the file
+   * @returns The newly created reactive file
    */
   create(originalName: string, contentType: string, size: number, metadata?: Record<string, unknown>): ReactiveFile {
     const file: ReactiveFile = {
@@ -215,6 +237,10 @@ export class ReactiveFileTracker {
 
   /**
    * Update file status.
+   *
+   * @param fileId - The ID of the file to update
+   * @param status - The new file status
+   * @param error - Optional error message to record
    */
   setStatus(fileId: string, status: FileStatus, error?: string): void {
     const file = this.files.get(fileId)
@@ -230,6 +256,9 @@ export class ReactiveFileTracker {
 
   /**
    * Set the primary storage ID.
+   *
+   * @param fileId - The ID of the file to update
+   * @param storageId - The storage backend identifier
    */
   setStorageId(fileId: string, storageId: string): void {
     const file = this.files.get(fileId)
@@ -241,6 +270,9 @@ export class ReactiveFileTracker {
 
   /**
    * Add a processed variant.
+   *
+   * @param fileId - The ID of the file to add the variant to
+   * @param variant - The file variant to add
    */
   addVariant(fileId: string, variant: FileVariant): void {
     const file = this.files.get(fileId)
@@ -253,6 +285,8 @@ export class ReactiveFileTracker {
 
   /**
    * Mark a file as deleted.
+   *
+   * @param fileId - The ID of the file to mark as deleted
    */
   markDeleted(fileId: string): void {
     const file = this.files.get(fileId)
@@ -265,6 +299,9 @@ export class ReactiveFileTracker {
 
   /**
    * Get a file by ID.
+   *
+   * @param fileId - The ID of the file to retrieve
+   * @returns The reactive file, or undefined if not found
    */
   get(fileId: string): ReactiveFile | undefined {
     return this.files.get(fileId)
@@ -272,6 +309,9 @@ export class ReactiveFileTracker {
 
   /**
    * List files with optional status filter.
+   *
+   * @param status - Optional status to filter files by
+   * @returns An array of reactive files matching the filter
    */
   list(status?: FileStatus): ReactiveFile[] {
     const all = Array.from(this.files.values())
@@ -280,6 +320,9 @@ export class ReactiveFileTracker {
 
   /**
    * Subscribe to file change events.
+   *
+   * @param listener - Callback invoked on each file change event
+   * @returns An unsubscribe function
    */
   onChange(listener: (event: FileChangeEvent) => void): () => void {
     this.listeners.push(listener)
@@ -304,6 +347,11 @@ export class ReactiveFileTracker {
 export class CdnIntegration {
   private config: CdnConfig
 
+  /**
+   * Create a new CdnIntegration.
+   *
+   * @param config - CDN configuration options
+   */
   constructor(config: CdnConfig) {
     this.config = {
       cacheControl: "public, max-age=31536000, immutable",
@@ -313,6 +361,9 @@ export class CdnIntegration {
 
   /**
    * Generate CDN URL for a storage ID.
+   *
+   * @param storageId - The storage backend identifier
+   * @returns The full CDN URL
    */
   getUrl(storageId: string): string {
     return `${this.config.baseUrl}/${storageId}`
@@ -320,6 +371,9 @@ export class CdnIntegration {
 
   /**
    * Generate CDN URLs for a file and all its variants.
+   *
+   * @param file - The reactive file to generate URLs for
+   * @returns A record mapping variant names (and "original") to CDN URLs
    */
   getFileUrls(file: ReactiveFile): Record<string, string> {
     const urls: Record<string, string> = {}
@@ -334,6 +388,8 @@ export class CdnIntegration {
 
   /**
    * Purge cached files from CDN.
+   *
+   * @param storageIds - The storage IDs to purge from the CDN cache
    */
   async purge(storageIds: string[]): Promise<void> {
     if (this.config.purge) {
@@ -344,6 +400,8 @@ export class CdnIntegration {
 
   /**
    * Get cache headers for serving files.
+   *
+   * @returns A record of HTTP cache headers
    */
   getCacheHeaders(): Record<string, string> {
     return { "Cache-Control": this.config.cacheControl ?? "public, max-age=31536000" }
@@ -355,6 +413,9 @@ export class CdnIntegration {
 /**
  * Create an image resize processor stub.
  * In production, integrate with sharp or similar library.
+ *
+ * @param options - Resize options including width, height, and fit mode
+ * @returns A file processor that resizes images
  */
 export function imageResizeProcessor(options: {
   width: number
@@ -382,6 +443,9 @@ export function imageResizeProcessor(options: {
 
 /**
  * Create a format conversion processor stub.
+ *
+ * @param targetFormat - The target image format to convert to
+ * @returns A file processor that converts image formats
  */
 export function formatConvertProcessor(targetFormat: "webp" | "avif" | "png" | "jpeg"): FileProcessor {
   const contentTypeMap: Record<string, string> = {
@@ -407,6 +471,9 @@ export function formatConvertProcessor(targetFormat: "webp" | "avif" | "png" | "
 
 /**
  * Create a video transcode processor stub.
+ *
+ * @param options - Transcode options including format and quality
+ * @returns A file processor that transcodes video
  */
 export function videoTranscodeProcessor(options: {
   format: "mp4" | "webm"
@@ -434,6 +501,10 @@ export function videoTranscodeProcessor(options: {
 
 /**
  * Full managed upload: track, process, store, and return reactive file.
+ *
+ * @param data - The file buffer to upload
+ * @param options - Upload options including filename, content type, backend, and optional pipeline/tracker/CDN
+ * @returns The resulting reactive file with status and variant information
  */
 export async function managedUpload(
   data: Buffer,
@@ -500,6 +571,11 @@ export async function managedUpload(
 
 // ─── SQL Builders ────────────────────────────────────────────────────────────
 
+/**
+ * Generate SQL statements for creating file tracking tables.
+ *
+ * @returns SQL string to create the file and file variant tables with indexes
+ */
 export function generateFileTrackingTableSQL(): string {
   return `
 CREATE TABLE IF NOT EXISTS _reactivebase_files (
@@ -535,6 +611,12 @@ CREATE INDEX IF NOT EXISTS idx_file_variants_file ON _reactivebase_file_variants
 // ─── Errors ──────────────────────────────────────────────────────────────────
 
 export class FilePipelineError extends Error {
+  /**
+   * Create a new FilePipelineError.
+   *
+   * @param code - Error code identifying the type of failure
+   * @param message - Human-readable error message
+   */
   constructor(
     public readonly code: string,
     message: string,

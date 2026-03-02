@@ -40,6 +40,10 @@ export interface StorageContext {
  * Stores files in a local directory. Suitable for development.
  */
 export class LocalStorageBackend implements StorageBackend {
+  /**
+   * @param baseDir - Directory path where files are stored
+   * @param baseUrl - Base URL for generating file URLs
+   */
   constructor(
     private baseDir: string,
     private baseUrl: string = "http://localhost:4000/storage",
@@ -58,6 +62,11 @@ export class LocalStorageBackend implements StorageBackend {
     return filePath
   }
 
+  /**
+   * @param data - The file data to store
+   * @param options - Storage options including content type and metadata
+   * @returns The generated storage ID
+   */
   async put(data: Buffer, options: StorageOptions): Promise<string> {
     const hash = createHash("sha256").update(data).digest("hex").substring(0, 16)
     const ext = extensionFromContentType(options.contentType)
@@ -70,10 +79,17 @@ export class LocalStorageBackend implements StorageBackend {
     return storageId
   }
 
+  /**
+   * @param storageId - The ID of the stored file
+   * @returns The URL for the stored file
+   */
   async getUrl(storageId: string): Promise<string> {
     return `${this.baseUrl}/${storageId}`
   }
 
+  /**
+   * @param storageId - The ID of the stored file to delete
+   */
   async delete(storageId: string): Promise<void> {
     const filePath = this.safePath(storageId)
     try {
@@ -83,11 +99,20 @@ export class LocalStorageBackend implements StorageBackend {
     }
   }
 
+  /**
+   * @param storageId - The ID of the stored file
+   * @returns Whether the file exists
+   */
   async exists(storageId: string): Promise<boolean> {
     return existsSync(this.safePath(storageId))
   }
 
-  /** Read file contents (for serving) */
+  /**
+   * Read file contents (for serving).
+   *
+   * @param storageId - The ID of the stored file
+   * @returns The file contents as a Buffer
+   */
   async read(storageId: string): Promise<Buffer> {
     return readFile(this.safePath(storageId))
   }
@@ -98,6 +123,12 @@ export class LocalStorageBackend implements StorageBackend {
  * Uses a generic interface to avoid hard dependency on AWS SDK.
  */
 export class S3StorageBackend implements StorageBackend {
+  /**
+   * @param client - S3-compatible client instance
+   * @param bucket - The S3 bucket name
+   * @param prefix - Key prefix for stored objects
+   * @param publicUrl - Optional public base URL for direct access
+   */
   constructor(
     private client: S3ClientLike,
     private bucket: string,
@@ -105,6 +136,11 @@ export class S3StorageBackend implements StorageBackend {
     private publicUrl?: string,
   ) {}
 
+  /**
+   * @param data - The file data to store
+   * @param options - Storage options including content type and metadata
+   * @returns The generated storage ID
+   */
   async put(data: Buffer, options: StorageOptions): Promise<string> {
     const hash = createHash("sha256").update(data).digest("hex").substring(0, 16)
     const ext = extensionFromContentType(options.contentType)
@@ -122,6 +158,10 @@ export class S3StorageBackend implements StorageBackend {
     return storageId
   }
 
+  /**
+   * @param storageId - The ID of the stored file
+   * @returns The URL for the stored file
+   */
   async getUrl(storageId: string): Promise<string> {
     if (this.publicUrl) {
       return `${this.publicUrl}/${this.prefix}${storageId}`
@@ -133,6 +173,9 @@ export class S3StorageBackend implements StorageBackend {
     })
   }
 
+  /**
+   * @param storageId - The ID of the stored file to delete
+   */
   async delete(storageId: string): Promise<void> {
     await this.client.deleteObject({
       bucket: this.bucket,
@@ -140,6 +183,10 @@ export class S3StorageBackend implements StorageBackend {
     })
   }
 
+  /**
+   * @param storageId - The ID of the stored file
+   * @returns Whether the file exists in the bucket
+   */
   async exists(storageId: string): Promise<boolean> {
     return this.client.headObject({
       bucket: this.bucket,
@@ -168,24 +215,44 @@ export interface S3ClientLike {
 export class MemoryStorageBackend implements StorageBackend {
   private files = new Map<string, { data: Buffer; options: StorageOptions }>()
 
+  /**
+   * @param data - The file data to store
+   * @param options - Storage options including content type and metadata
+   * @returns The generated storage ID
+   */
   async put(data: Buffer, options: StorageOptions): Promise<string> {
     const storageId = `mem_${randomUUID().substring(0, 8)}`
     this.files.set(storageId, { data, options })
     return storageId
   }
 
+  /**
+   * @param storageId - The ID of the stored file
+   * @returns A memory:// protocol URL for the stored file
+   */
   async getUrl(storageId: string): Promise<string> {
     return `memory://${storageId}`
   }
 
+  /**
+   * @param storageId - The ID of the stored file to delete
+   */
   async delete(storageId: string): Promise<void> {
     this.files.delete(storageId)
   }
 
+  /**
+   * @param storageId - The ID of the stored file
+   * @returns Whether the file exists in memory
+   */
   async exists(storageId: string): Promise<boolean> {
     return this.files.has(storageId)
   }
 
+  /**
+   * @param storageId - The ID of the stored file
+   * @returns The raw file data, or undefined if not found
+   */
   getData(storageId: string): Buffer | undefined {
     return this.files.get(storageId)?.data
   }
@@ -201,6 +268,9 @@ export class MemoryStorageBackend implements StorageBackend {
 
 /**
  * Create a storage context for use in server functions.
+ *
+ * @param backend - The storage backend to use
+ * @returns A storage context wrapping the backend
  */
 export function createStorageContext(backend: StorageBackend): StorageContext {
   return {
