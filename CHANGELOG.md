@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace `Math.random` with `crypto.randomUUID` / `crypto.randomBytes` across server and client
 - Use structured error types instead of string errors in functions, schema, and transport modules
 - Use `console.info` instead of `console.log` in migrate-from-prisma
+- Replace `execSync` with `execFileSync` to prevent command injection in CLI and server
+- Replace mutable middleware state (`Map<string, unknown>`) with immutable `Readonly<Record<string, unknown>>` pattern
 
 ### Fixed
 
@@ -50,6 +52,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Security:** close WebSocket connection on authentication failure
 - **Security:** guard against ReDoS in playground validation patterns
 - **Security:** use `crypto.randomInt` for partition selection in event streaming
+- **Security:** prevent XSS in dashboard and schema explorer HTML output
+- **Security:** prevent SQL injection in client offline query builder
+- **Security:** prevent code injection in workflow code generator
+- **Security:** validate table names in stored procedure compiler
+- **Security:** add input validation and parameterization to full-text search
+- **Security:** warn on wildcard CORS origin in production; remove from SaaS profile
+- **Security:** validate inputs in data governance SQL generation
+- **Security:** parameterize LIMIT/OFFSET in admin-studio SQL builder
 - Detect tenant ID collisions after sanitization
 - Add payload size limit and input validation for webhooks
 - Catch network errors in outbound webhook delivery
@@ -59,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handle invalid JSON in IVM delta patch decoding and playground share state
 - Quote index names in temporal SQL generation
 - Sanitize default values in generated SQL
+- Add proper `catch (error: unknown)` typing across server and client catch blocks
 
 ## [0.1.0] — 2026-02-22
 
