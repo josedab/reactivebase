@@ -69,6 +69,11 @@ export interface QueryDependency {
 export class QueryBuilder<TRow = Record<string, unknown>> {
   private plan: QueryPlan
 
+  /**
+   * Create a new query builder for a table.
+   *
+   * @param table - The name of the table to query
+   */
   constructor(table: string) {
     this.plan = {
       table,
@@ -81,6 +86,14 @@ export class QueryBuilder<TRow = Record<string, unknown>> {
     }
   }
 
+  /**
+   * Add one or more WHERE conditions to the query.
+   *
+   * @param columnOrObject - Column name or object of column-value pairs for equality filters
+   * @param operatorOrValue - Comparison operator or value (when using 2-arg form)
+   * @param value - The value to compare against (when using 3-arg form)
+   * @returns A new query builder with the WHERE clause applied
+   */
   where(
     columnOrObject: string | Partial<TRow>,
     operatorOrValue?: WhereOperator | unknown,
@@ -116,30 +129,64 @@ export class QueryBuilder<TRow = Record<string, unknown>> {
     return clone
   }
 
+  /**
+   * Add an ORDER BY clause to the query.
+   *
+   * @param column - The column to sort by
+   * @param direction - Sort direction, defaults to `"asc"`
+   * @returns A new query builder with the ORDER BY clause applied
+   */
   orderBy(column: string, direction: OrderDirection = "asc"): QueryBuilder<TRow> {
     const clone = this.clone()
     clone.plan.orderByClauses.push({ column, direction })
     return clone
   }
 
+  /**
+   * Limit the number of rows returned.
+   *
+   * @param value - Maximum number of rows
+   * @returns A new query builder with the LIMIT applied
+   */
   limit(value: number): QueryBuilder<TRow> {
     const clone = this.clone()
     clone.plan.limitValue = value
     return clone
   }
 
+  /**
+   * Skip a number of rows before returning results.
+   *
+   * @param value - Number of rows to skip
+   * @returns A new query builder with the OFFSET applied
+   */
   offset(value: number): QueryBuilder<TRow> {
     const clone = this.clone()
     clone.plan.offsetValue = value
     return clone
   }
 
+  /**
+   * Select specific columns instead of all columns.
+   *
+   * @param columns - Column names to include in the result
+   * @returns A new query builder with the column selection applied
+   */
   select(...columns: string[]): QueryBuilder<TRow> {
     const clone = this.clone()
     clone.plan.selectedColumns = columns
     return clone
   }
 
+  /**
+   * Join another table to the query.
+   *
+   * @param table - The table to join
+   * @param fromColumn - The column on the current table
+   * @param toColumn - The column on the joined table, defaults to `"id"`
+   * @param type - Join type: `"INNER"`, `"LEFT"`, or `"RIGHT"`
+   * @returns A new query builder with the JOIN applied
+   */
   join(
     table: string,
     fromColumn: string,
@@ -156,12 +203,24 @@ export class QueryBuilder<TRow = Record<string, unknown>> {
     return clone
   }
 
+  /**
+   * Group results by one or more columns.
+   *
+   * @param columns - Column names to group by
+   * @returns A new query builder with the GROUP BY applied
+   */
   groupBy(...columns: string[]): QueryBuilder<TRow> {
     const clone = this.clone()
     clone.plan.groupByColumns = columns
     return clone
   }
 
+  /**
+   * Eagerly load related records via relation definitions.
+   *
+   * @param includes - A record mapping relation names to `true` or an include config
+   * @returns A new query builder with the includes applied
+   */
   include(includes: Record<string, boolean | IncludeConfig>): QueryBuilder<TRow> {
     const clone = this.clone()
     for (const [key, value] of Object.entries(includes)) {
@@ -332,6 +391,12 @@ export class CountQueryBuilder {
   }
 }
 
+/**
+ * Create a type-safe query builder for a database table.
+ *
+ * @param table - The name of the table to query
+ * @returns A new query builder instance for the given table
+ */
 export function createQueryBuilder<TRow>(table: string): QueryBuilder<TRow> {
   return new QueryBuilder<TRow>(table)
 }
