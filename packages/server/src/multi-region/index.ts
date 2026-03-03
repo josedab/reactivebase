@@ -37,3 +37,19 @@ export type {
   PartitionTestResult,
   PartitionEvent,
 } from "./conflict-resolution.js"
+
+// Cross-Region Reactivity
+export {
+  CrossRegionReactivity,
+  generateReplicaTrackingTableSQL,
+  buildUpsertReplicaSQL,
+} from "./cross-region-reactivity.js"
+export type {
+  CrossRegionReactivityOptions,
+  ReplicaInfo,
+  InvalidationMessage,
+  ReadRoutingDecision,
+  WriteRoutingDecision,
+  InvalidationBatch,
+  InvalidationHandler,
+} from "./cross-region-reactivity.js"
