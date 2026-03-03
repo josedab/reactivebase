@@ -59,6 +59,19 @@ export type {
 // Built-in Plugins
 export { s3StoragePlugin, posthogPlugin, ALL_BUILTIN_PLUGINS, BUILTIN_PLUGIN_METADATA } from "./builtin-plugins.js"
 
+// Extended First-Party Plugins
+export {
+  postgisPlugin,
+  fullTextSearchPlugin,
+  rateLimitingPlugin,
+  auditLoggingPlugin,
+  dataSeedingPlugin,
+  webhooksPlugin,
+  auth0Plugin,
+  clerkAuthPlugin,
+  EXTENDED_FIRST_PARTY_PLUGINS,
+} from "./extended-plugins.js"
+
 // Plugin CLI
 export { PluginCLI } from "./plugin-cli.js"
 export type { PluginCLIConfig, CLIResult } from "./plugin-cli.js"
