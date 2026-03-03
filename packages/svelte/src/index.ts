@@ -172,3 +172,97 @@ export type {
   PresenceAvatarsStoreOptions,
   PresenceAvatarsState,
 } from "./components.js"
+
+// ─── Local-First Stores ──────────────────────────────────────────────────────
+
+export interface LocalQueryFilter {
+  where?: Record<string, unknown>
+  orderBy?: Array<{ column: string; direction?: "ASC" | "DESC" }>
+  limit?: number
+  offset?: number
+}
+
+export interface LocalQueryStoreValue<T> {
+  data: T[] | undefined
+  loading: boolean
+  error: Error | null
+}
+
+/**
+ * Create a Svelte readable store for local-first SQLite queries.
+ * Data comes from the local store instantly, with background sync to server.
+ *
+ * Usage:
+ *   const tasks = localQueryStore<Task>("tasks", { where: { done: 0 } })
+ *   $tasks.data  // reactive local data
+ */
+export function localQueryStore<T = Record<string, unknown>>(
+  table: string,
+  query?: LocalQueryFilter,
+  options?: { pollIntervalMs?: number },
+): Readable<LocalQueryStoreValue<T>> {
+  return {
+    subscribe(run: (value: LocalQueryStoreValue<T>) => void): () => void {
+      const client = getReactiveBaseClient()
+      let current: LocalQueryStoreValue<T> = { data: undefined, loading: true, error: null }
+      run(current)
+
+      let interval: ReturnType<typeof setInterval> | null = null
+      let active = true
+
+      const executeQuery = async () => {
+        if (!active) return
+        try {
+          const result = await client.mutate("__local_query", { table, query })
+          if (!active) return
+          current = {
+            data: (result as { rows: T[] })?.rows ?? (result as T[]) ?? [],
+            loading: false,
+            error: null,
+          }
+          run(current)
+        } catch (err: unknown) {
+          if (!active) return
+          current = {
+            data: current.data,
+            loading: false,
+            error: err instanceof Error ? err : new Error(String(err)),
+          }
+          run(current)
+        }
+      }
+
+      executeQuery()
+
+      if (options?.pollIntervalMs && options.pollIntervalMs > 0) {
+        interval = setInterval(executeQuery, options.pollIntervalMs)
+      }
+
+      return () => {
+        active = false
+        if (interval) clearInterval(interval)
+      }
+    },
+  }
+}
+
+/**
+ * Create a local mutation handle for offline-first writes.
+ *
+ * Usage:
+ *   const { mutate } = localMutationHandle("tasks")
+ *   await mutate("insert", { id: "t1", title: "Buy milk" })
+ */
+export function localMutationHandle(table: string): {
+  mutate: (operation: "insert" | "update" | "delete", data: Record<string, unknown>) => Promise<string | undefined>
+} {
+  return {
+    async mutate(
+      operation: "insert" | "update" | "delete",
+      data: Record<string, unknown>,
+    ): Promise<string | undefined> {
+      const client = getReactiveBaseClient()
+      return (await client.mutate("__local_mutation", { table, operation, data })) as string | undefined
+    },
+  }
+}
