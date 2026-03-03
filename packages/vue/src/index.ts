@@ -180,3 +180,132 @@ export type {
   UsePresenceAvatarsOptions,
   UsePresenceAvatarsReturn,
 } from "./components.js"
+
+// ─── Local-First Composables ─────────────────────────────────────────────────
+
+export interface LocalQueryFilter {
+  where?: Record<string, unknown>
+  orderBy?: Array<{ column: string; direction?: "ASC" | "DESC" }>
+  limit?: number
+  offset?: number
+}
+
+/**
+ * Read data from the local SQLite-backed store.
+ * Returns reactive refs that update when data changes.
+ *
+ * Usage:
+ *   const { data, loading, error, refetch } = useLocalQuery<Task>("tasks", { where: { done: 0 } })
+ */
+export function useLocalQuery<T = Record<string, unknown>>(
+  table: string,
+  query?: Ref<LocalQueryFilter | undefined> | LocalQueryFilter,
+  options?: { enabled?: Ref<boolean> | boolean; pollIntervalMs?: number },
+): {
+  data: Ref<T[] | undefined>
+  loading: Ref<boolean>
+  error: Ref<Error | null>
+  refetch: () => void
+} {
+  const client = useReactiveBaseClient()
+  const data = shallowRef<T[] | undefined>(undefined)
+  const loading = ref(true)
+  const error = ref<Error | null>(null)
+
+  const resolveQuery = (): LocalQueryFilter | undefined => {
+    if (!query) return undefined
+    if (typeof query === "object" && "value" in query) return (query as Ref).value as LocalQueryFilter | undefined
+    return query
+  }
+
+  const resolveEnabled = (): boolean => {
+    if (options?.enabled === undefined) return true
+    if (typeof options.enabled === "object" && "value" in options.enabled)
+      return (options.enabled as Ref).value as boolean
+    return options.enabled as boolean
+  }
+
+  const executeQuery = async () => {
+    if (!resolveEnabled()) {
+      loading.value = false
+      return
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      const result = await client.mutate("__local_query", { table, query: resolveQuery() })
+      data.value = (result as { rows: T[] })?.rows ?? (result as T[]) ?? []
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err : new Error(String(err))
+      data.value = undefined
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const refetch = () => {
+    executeQuery()
+  }
+
+  onMounted(() => {
+    executeQuery()
+  })
+
+  // Watch query changes
+  if (query && typeof query === "object" && "value" in query) {
+    watch(query as Ref, () => executeQuery())
+  }
+
+  // Polling
+  if (options?.pollIntervalMs && options.pollIntervalMs > 0) {
+    let interval: ReturnType<typeof setInterval> | null = null
+    onMounted(() => {
+      interval = setInterval(executeQuery, options.pollIntervalMs!)
+    })
+    onUnmounted(() => {
+      if (interval) clearInterval(interval)
+    })
+  }
+
+  return { data: data as Ref<T[] | undefined>, loading, error, refetch }
+}
+
+/**
+ * Write to the local SQLite-backed store.
+ * Mutations are applied locally first (instant) and queued for server sync.
+ *
+ * Usage:
+ *   const { mutate, loading, error } = useLocalMutation("tasks")
+ *   await mutate("insert", { id: "t1", title: "Buy milk", done: 0 })
+ */
+export function useLocalMutation(table: string): {
+  mutate: (operation: "insert" | "update" | "delete", data: Record<string, unknown>) => Promise<string | undefined>
+  loading: Ref<boolean>
+  error: Ref<Error | null>
+} {
+  const client = useReactiveBaseClient()
+  const loading = ref(false)
+  const error = ref<Error | null>(null)
+
+  async function mutate(
+    operation: "insert" | "update" | "delete",
+    data: Record<string, unknown>,
+  ): Promise<string | undefined> {
+    loading.value = true
+    error.value = null
+
+    try {
+      const result = await client.mutate("__local_mutation", { table, operation, data })
+      return result as string | undefined
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err : new Error(String(err))
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return { mutate, loading, error }
+}
