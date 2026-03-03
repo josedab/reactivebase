@@ -44,3 +44,20 @@ export type {
   MigrationPhase,
   MigrationCopilotOptions,
 } from "./migration-copilot.js"
+
+// Production-Grade Conversation Engine
+export {
+  ConversationEngine,
+  ConversationSessionHandle,
+  ollamaProvider,
+  checkGuardrails,
+} from "./conversation-engine.js"
+export type {
+  ConversationEngineOptions,
+  ConversationMessage,
+  ConversationSession,
+  StreamChunk,
+  GuardrailResult,
+  CostSummary,
+  OllamaProviderOptions,
+} from "./conversation-engine.js"
