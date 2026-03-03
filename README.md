@@ -9,9 +9,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
 
-📖 **Documentation**: [reactivebase.dev](https://reactivebase.dev)
+📖 **Documentation**: [reactivebase.dev](https://reactivebase.dev) · 💬 **Community**: [Discord](https://discord.gg/reactivebase)
 
-> **124,407 LOC · 86 server modules · 2,474 tests · 15 packages · MIT license**
+> **~126K LOC · 85 server modules · ~2,488 tests · 15 packages · MIT license**
 
 ---
 
@@ -317,6 +317,25 @@ export default defineConfig({
   },
 })
 ```
+
+### Server Options
+
+| Option                     | Type     | Default     | Description                                                                 |
+| -------------------------- | -------- | ----------- | --------------------------------------------------------------------------- |
+| `server.port`              | `number` | `4000`      | HTTP/WebSocket server port                                                  |
+| `server.hostname`          | `string` | `"0.0.0.0"` | Hostname to bind the server to                                              |
+| `server.corsOrigin`        | `string` | —           | Allowed CORS origin(s). `'*'` for any origin, or a specific origin string   |
+| `server.dashboardToken`    | `string` | —           | Token for `/dashboard`, `/metrics` access. If unset, disabled in production |
+| `server.heartbeatInterval` | `number` | `30000`     | WebSocket heartbeat interval in milliseconds                                |
+
+### CDC (Change Data Capture) Options
+
+| Option                | Type                                       | Default           | Description                          |
+| --------------------- | ------------------------------------------ | ----------------- | ------------------------------------ |
+| `cdc.mode`            | `"listen-notify" \| "logical-replication"` | `"listen-notify"` | CDC mode for reactivity invalidation |
+| `cdc.tables`          | `string[]`                                 | all schema tables | Tables to track for change events    |
+| `cdc.batchSize`       | `number`                                   | `100`             | Batch size for WAL event processing  |
+| `cdc.flushIntervalMs` | `number`                                   | `10`              | Batch flush interval in milliseconds |
 
 ## Configuration Reference
 
