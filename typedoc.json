@@ -1,6 +1,18 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["packages/server/src/index.ts", "packages/client/src/index.ts", "packages/react/src/index.ts"],
+  "entryPoints": [
+    "packages/server/src/index.ts",
+    "packages/client/src/index.ts",
+    "packages/react/src/index.ts",
+    "packages/vue/src/index.ts",
+    "packages/svelte/src/index.ts",
+    "packages/nextjs/src/index.tsx",
+    "packages/edge/src/index.ts",
+    "packages/testing/src/index.ts",
+    "packages/cli/src/index.ts",
+    "packages/graphql/src/index.ts",
+    "packages/react-native/src/index.ts"
+  ],
   "out": "website/docs/api",
   "plugin": ["typedoc-plugin-markdown"],
   "outputFileStrategy": "modules",
