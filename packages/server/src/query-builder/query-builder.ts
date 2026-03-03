@@ -358,6 +358,39 @@ export class QueryBuilder<TRow = Record<string, unknown>> {
     return deps
   }
 
+  /**
+   * Build the query ensuring the primary key column is included in the result set
+   * so row-level tracking can extract IDs from query results.
+   *
+   * @param pkColumn - Primary key column name (default: "id")
+   * @returns Built query with pk column guaranteed in selection
+   */
+  buildWithPrimaryKeyCapture(pkColumn: string = "id"): BuiltQuery {
+    const clone = this.clone()
+    if (clone.plan.selectedColumns.length > 0 && !clone.plan.selectedColumns.includes(pkColumn)) {
+      clone.plan.selectedColumns = [pkColumn, ...clone.plan.selectedColumns]
+    }
+    return clone.build()
+  }
+
+  /**
+   * Extract primary key values from query result rows.
+   *
+   * @param rows - Query result rows
+   * @param pkColumn - Primary key column name (default: "id")
+   * @returns Set of primary key string values
+   */
+  static extractPrimaryKeys(rows: Record<string, unknown>[], pkColumn: string = "id"): Set<string> {
+    const keys = new Set<string>()
+    for (const row of rows) {
+      const val = row[pkColumn]
+      if (val !== undefined && val !== null) {
+        keys.add(String(val))
+      }
+    }
+    return keys
+  }
+
   private clone(): QueryBuilder<TRow> {
     const cloned = new QueryBuilder<TRow>(this.plan.table)
     cloned.plan = {
