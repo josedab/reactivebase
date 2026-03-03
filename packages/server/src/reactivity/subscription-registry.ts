@@ -14,6 +14,10 @@ export interface Subscription {
   lastResult: unknown
   lastResultHash: string
   version: number
+  /** Row IDs returned by the last query execution, keyed by table name */
+  trackedRowIds?: Map<string, Set<string>>
+  /** Primary key column name for each table */
+  primaryKeyColumns?: Map<string, string>
 }
 
 export class SubscriptionRegistry {
@@ -144,6 +148,61 @@ export class SubscriptionRegistry {
    */
   get size(): number {
     return this.subscriptions.size
+  }
+
+  /**
+   * Store row IDs captured during query execution for a subscription.
+   *
+   * @param id - Subscription identifier
+   * @param table - Table the rows belong to
+   * @param rowIds - Set of primary key values
+   * @param pkColumn - Primary key column name
+   */
+  setTrackedRowIds(id: string, table: string, rowIds: Set<string>, pkColumn: string = "id"): void {
+    const sub = this.subscriptions.get(id)
+    if (!sub) return
+
+    if (!sub.trackedRowIds) {
+      ;(sub as { trackedRowIds: Map<string, Set<string>> }).trackedRowIds = new Map()
+    }
+    if (!sub.primaryKeyColumns) {
+      ;(sub as { primaryKeyColumns: Map<string, string> }).primaryKeyColumns = new Map()
+    }
+    sub.trackedRowIds!.set(table, rowIds)
+    sub.primaryKeyColumns!.set(table, pkColumn)
+  }
+
+  /**
+   * Get tracked row IDs for a subscription and table.
+   *
+   * @param id - Subscription identifier
+   * @param table - Table name
+   * @returns Set of tracked row IDs, or undefined if not tracked
+   */
+  getTrackedRowIds(id: string, table: string): Set<string> | undefined {
+    return this.subscriptions.get(id)?.trackedRowIds?.get(table)
+  }
+
+  /**
+   * Get subscriptions for a table that track specific row IDs.
+   * Returns only subscriptions whose tracked rows intersect with the given row IDs.
+   *
+   * @param table - Table name
+   * @param rowIds - Row IDs to match against
+   * @returns Subscriptions with matching tracked rows
+   */
+  getSubscriptionsForRows(table: string, rowIds: string[]): Subscription[] {
+    const subs = this.getSubscriptionsForTable(table)
+    if (rowIds.length === 0) return subs
+
+    return subs.filter((sub) => {
+      const tracked = sub.trackedRowIds?.get(table)
+      if (!tracked) return true // No row tracking — must invalidate
+      for (const id of rowIds) {
+        if (tracked.has(id)) return true
+      }
+      return false
+    })
   }
 
   private updateTableIndex(sub: Subscription): void {

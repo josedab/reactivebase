@@ -497,6 +497,88 @@ export interface AutoLevelTrackerOptions {
   rowLevelTrackerOptions?: RowLevelTrackerOptions
 }
 
+/** Metrics collected per table for adaptive level tuning */
+export interface TableInvalidationMetrics {
+  table: string
+  totalInvalidations: number
+  falseInvalidations: number
+  avgSubscriptionsInvalidated: number
+  lastRowCount: number
+  lastSubscriptionCount: number
+  sampledAt: number
+}
+
+// ─── Auto-Tuned Bloom Filter ─────────────────────────────────────────────────
+
+/**
+ * Auto-tuned bloom filter that adjusts false-positive rates based on observed
+ * invalidation patterns. Starts with a default FP rate and adapts based on the
+ * ratio of false invalidations to total checks.
+ */
+export class AutoTunedBloomFilter {
+  private filter: BloomFilter
+  private checkCount = 0
+  private falsePositiveCount = 0
+  private currentFpRate: number
+  private readonly minFpRate: number
+  private readonly maxFpRate: number
+
+  constructor(expectedItems: number, initialFpRate: number = 0.01, minFpRate: number = 0.001, maxFpRate: number = 0.1) {
+    this.currentFpRate = initialFpRate
+    this.minFpRate = minFpRate
+    this.maxFpRate = maxFpRate
+    this.filter = new BloomFilter(expectedItems, initialFpRate)
+  }
+
+  add(value: string): void {
+    this.filter.add(value)
+  }
+
+  has(value: string): boolean {
+    return this.filter.has(value)
+  }
+
+  /** Record a confirmed false positive for tuning */
+  recordFalsePositive(): void {
+    this.falsePositiveCount++
+    this.checkCount++
+  }
+
+  /** Record a true positive or true negative check */
+  recordCheck(): void {
+    this.checkCount++
+  }
+
+  /** Get recommended FP rate for next rebuild based on observed patterns */
+  get recommendedFpRate(): number {
+    if (this.checkCount < 100) return this.currentFpRate
+    const observedFpRate = this.falsePositiveCount / this.checkCount
+    if (observedFpRate > this.currentFpRate * 1.5) {
+      return Math.max(this.minFpRate, this.currentFpRate * 0.5)
+    }
+    if (observedFpRate < this.currentFpRate * 0.1) {
+      return Math.min(this.maxFpRate, this.currentFpRate * 2)
+    }
+    return this.currentFpRate
+  }
+
+  get count(): number {
+    return this.filter.count
+  }
+
+  get memoryBytes(): number {
+    return this.filter.memoryBytes
+  }
+
+  get stats(): { checkCount: number; falsePositiveCount: number; observedFpRate: number } {
+    return {
+      checkCount: this.checkCount,
+      falsePositiveCount: this.falsePositiveCount,
+      observedFpRate: this.checkCount > 0 ? this.falsePositiveCount / this.checkCount : 0,
+    }
+  }
+}
+
 // ─── Auto-Level Tracker ──────────────────────────────────────────────────────
 
 const DEFAULT_AUTO_LEVEL_OPTIONS: Required<Omit<AutoLevelTrackerOptions, "rowLevelTrackerOptions">> = {
@@ -508,11 +590,14 @@ const DEFAULT_AUTO_LEVEL_OPTIONS: Required<Omit<AutoLevelTrackerOptions, "rowLev
 /**
  * Automatically selects the optimal tracking level (1/2/3) based on
  * table size and subscription count. Delegates to an internal
- * RowLevelTracker when Level 3 is chosen.
+ * RowLevelTracker when Level 3 is chosen. Tracks invalidation metrics
+ * to adaptively tune levels over time.
  */
 export class AutoLevelTracker {
   private options: Required<Omit<AutoLevelTrackerOptions, "rowLevelTrackerOptions">>
   private rowTracker: RowLevelTracker
+  private tableMetrics = new Map<string, TableInvalidationMetrics>()
+  private levelOverrides = new Map<string, TrackingLevel>()
 
   /**
    * Create a new AutoLevelTracker.
@@ -532,6 +617,7 @@ export class AutoLevelTracker {
 
   /**
    * Determine the appropriate tracking level for a table.
+   * Uses overrides from adaptive tuning if available.
    *
    * @param table - Table name
    * @param tableRowCount - Approximate number of rows in the table
@@ -539,6 +625,12 @@ export class AutoLevelTracker {
    * @returns A decision object with the chosen level and reasoning
    */
   determineLevel(table: string, tableRowCount: number, subscriptionCount: number): LevelDecision {
+    // Check for adaptive overrides first
+    const override = this.levelOverrides.get(table)
+    if (override !== undefined) {
+      return { level: override, reason: `adaptive override for ${table} based on invalidation metrics` }
+    }
+
     // Small tables — table-level invalidation is sufficient
     if (tableRowCount < this.options.tableSizeThresholdL2) {
       return {
@@ -560,6 +652,74 @@ export class AutoLevelTracker {
 
     // Everything in between — filter-level
     return { level: 2, reason: `table ${table} has ${tableRowCount} rows (>= L2 threshold, below L3 criteria)` }
+  }
+
+  /**
+   * Record an invalidation event for adaptive tuning.
+   *
+   * @param table - Table name
+   * @param subscriptionsInvalidated - Number of subscriptions invalidated
+   * @param wasFalseInvalidation - Whether the invalidation turned out to be unnecessary
+   * @param tableRowCount - Current table row count
+   * @param subscriptionCount - Current subscription count for this table
+   */
+  recordInvalidation(
+    table: string,
+    subscriptionsInvalidated: number,
+    wasFalseInvalidation: boolean,
+    tableRowCount: number,
+    subscriptionCount: number,
+  ): void {
+    let metrics = this.tableMetrics.get(table)
+    if (!metrics) {
+      metrics = {
+        table,
+        totalInvalidations: 0,
+        falseInvalidations: 0,
+        avgSubscriptionsInvalidated: 0,
+        lastRowCount: tableRowCount,
+        lastSubscriptionCount: subscriptionCount,
+        sampledAt: Date.now(),
+      }
+      this.tableMetrics.set(table, metrics)
+    }
+
+    metrics.totalInvalidations++
+    if (wasFalseInvalidation) metrics.falseInvalidations++
+    metrics.avgSubscriptionsInvalidated =
+      (metrics.avgSubscriptionsInvalidated * (metrics.totalInvalidations - 1) + subscriptionsInvalidated) /
+      metrics.totalInvalidations
+    metrics.lastRowCount = tableRowCount
+    metrics.lastSubscriptionCount = subscriptionCount
+    metrics.sampledAt = Date.now()
+
+    // Adaptive level tuning: promote to higher level if false invalidation rate is high
+    if (metrics.totalInvalidations >= 50) {
+      const falseRate = metrics.falseInvalidations / metrics.totalInvalidations
+      const currentLevel = this.determineLevel(table, tableRowCount, subscriptionCount).level
+
+      if (falseRate > 0.3 && currentLevel < 3) {
+        this.levelOverrides.set(table, (currentLevel + 1) as TrackingLevel)
+      } else if (falseRate < 0.05 && currentLevel > 1) {
+        // Demote if false rate is very low — cheaper level is sufficient
+        this.levelOverrides.set(table, (currentLevel - 1) as TrackingLevel)
+      }
+    }
+  }
+
+  /** Get invalidation metrics for a specific table */
+  getTableMetrics(table: string): TableInvalidationMetrics | undefined {
+    return this.tableMetrics.get(table)
+  }
+
+  /** Get all table metrics */
+  getAllMetrics(): TableInvalidationMetrics[] {
+    return [...this.tableMetrics.values()]
+  }
+
+  /** Clear any adaptive overrides, returning to heuristic-based level selection */
+  clearOverrides(): void {
+    this.levelOverrides.clear()
   }
 
   /**
@@ -609,10 +769,12 @@ export class AutoLevelTracker {
   }
 
   /**
-   * Reset the underlying row-level tracker.
+   * Reset the underlying row-level tracker and all metrics.
    */
   reset(): void {
     this.rowTracker.reset()
+    this.tableMetrics.clear()
+    this.levelOverrides.clear()
   }
 }
 

@@ -16,6 +16,8 @@ export interface ChangeEvent {
   affectedFilters?: Record<string, unknown>
   /** For updates: the old values of changed columns */
   oldValues?: Record<string, unknown>
+  /** Primary key values of affected rows for row-level matching */
+  affectedRowIds?: string[]
 }
 
 export interface InvalidationResult {
@@ -25,7 +27,7 @@ export interface InvalidationResult {
   connectionId: string
 }
 
-export type InvalidationLevel = "table" | "filter"
+export type InvalidationLevel = "table" | "filter" | "row"
 
 export class InvalidationEvaluator {
   private level: InvalidationLevel
@@ -53,7 +55,11 @@ export class InvalidationEvaluator {
     const invalidated = new Map<string, InvalidationResult>()
 
     for (const change of changes) {
-      const subs = this.registry.getSubscriptionsForTable(change.table)
+      // For row-level, use row-aware lookup when row IDs are available
+      const subs =
+        this.level === "row" && change.affectedRowIds && change.affectedRowIds.length > 0
+          ? this.registry.getSubscriptionsForRows(change.table, change.affectedRowIds)
+          : this.registry.getSubscriptionsForTable(change.table)
 
       for (const sub of subs) {
         if (invalidated.has(sub.id)) continue
