@@ -41,3 +41,15 @@ export type {
   ExecutionGraphNode,
   AuditLogEntry,
 } from "./code-generator.js"
+
+// Bidirectional Code-Visual Sync
+export { BidirectionalWorkflowSync } from "./bidirectional-sync.js"
+export type {
+  ParsedWorkflow,
+  ParseError,
+  SourceLocation,
+  ExecutionDAGNode,
+  ExecutionDAG,
+  WorkflowDiff,
+  HumanApprovalConfig,
+} from "./bidirectional-sync.js"

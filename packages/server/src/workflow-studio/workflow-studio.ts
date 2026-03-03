@@ -30,6 +30,9 @@ export type WorkflowNodeType =
   | "database"
   | "notification"
   | "custom"
+  | "query"
+  | "mutation"
+  | "human-approval"
 
 export interface PortDefinition {
   id: string
