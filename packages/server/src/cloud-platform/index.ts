@@ -15,6 +15,14 @@ export type {
   CostEstimate,
   CostBreakdownItem,
   BillingProvider,
+  ApiKeyConfig,
+  ApiKeyRecord,
+  AutoScaleConfig,
+  ScaleMetrics,
+  AutoScaleDecision,
+  OneClickDeployConfig,
+  OneClickDeployStep,
+  OneClickDeployResult,
 } from "./cloud-platform.js"
 
 // Cloud Provisioner & Preview Environments

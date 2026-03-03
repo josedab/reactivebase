@@ -504,4 +504,338 @@ export class CloudPlatform {
       breakdown,
     }
   }
+
+  // ─── API Key Management ─────────────────────────────────────────────────
+
+  private apiKeys = new Map<string, ApiKeyRecord>()
+
+  /**
+   * Provision an API key for a project environment.
+   *
+   * @param projectId - Project to create the key for
+   * @param config - API key configuration
+   * @returns The created API key record (key is only returned on creation)
+   */
+  createApiKey(projectId: string, config: ApiKeyConfig): ApiKeyRecord {
+    const project = this.projects.get(projectId)
+    if (!project) throw new Error(`Project ${projectId} not found`)
+
+    const keyValue = `rb_${config.type}_${randomId()}`
+    const record: ApiKeyRecord = {
+      id: this.generateId("key"),
+      projectId,
+      name: config.name,
+      type: config.type,
+      keyPrefix: keyValue.slice(0, 12) + "...",
+      keyHash: hashApiKey(keyValue),
+      permissions: config.permissions ?? ["read", "write"],
+      environmentId: config.environmentId,
+      expiresAt: config.expiresAt ?? null,
+      lastUsedAt: null,
+      createdAt: new Date().toISOString(),
+      revokedAt: null,
+    }
+
+    this.apiKeys.set(record.id, record)
+    return { ...record, _secretKey: keyValue } as ApiKeyRecord
+  }
+
+  /**
+   * Validate an API key and return its associated project/permissions.
+   *
+   * @param key - The raw API key string
+   * @returns The key record if valid, null if invalid/expired/revoked
+   */
+  validateApiKey(key: string): ApiKeyRecord | null {
+    const hash = hashApiKey(key)
+    for (const record of this.apiKeys.values()) {
+      if (record.keyHash === hash) {
+        if (record.revokedAt) return null
+        if (record.expiresAt && new Date(record.expiresAt) < new Date()) return null
+        record.lastUsedAt = new Date().toISOString()
+        return record
+      }
+    }
+    return null
+  }
+
+  /**
+   * Revoke an API key.
+   */
+  revokeApiKey(keyId: string): void {
+    const record = this.apiKeys.get(keyId)
+    if (!record) throw new Error(`API key ${keyId} not found`)
+    record.revokedAt = new Date().toISOString()
+  }
+
+  /**
+   * List all API keys for a project.
+   */
+  listApiKeys(projectId: string): ApiKeyRecord[] {
+    return [...this.apiKeys.values()].filter((k) => k.projectId === projectId)
+  }
+
+  // ─── Stripe Billing Integration ─────────────────────────────────────────
+
+  /**
+   * Set up Stripe billing for a project.
+   * Creates a Stripe customer and subscription via the BillingProvider.
+   *
+   * @param projectId - Project to set up billing for
+   * @param email - Customer email
+   * @param name - Customer name
+   * @returns Billing setup result
+   */
+  async setupBilling(
+    projectId: string,
+    email: string,
+    name: string,
+  ): Promise<{ customerId: string; subscriptionId: string }> {
+    const project = this.projects.get(projectId)
+    if (!project) throw new Error(`Project ${projectId} not found`)
+    if (!this.options.billingProvider) throw new Error("No billing provider configured")
+
+    const customerId = await this.options.billingProvider.createCustomer(email, name)
+    const subscriptionId = await this.options.billingProvider.createSubscription(customerId, project.plan)
+
+    return { customerId, subscriptionId }
+  }
+
+  /**
+   * Report current usage to billing provider for usage-based billing.
+   */
+  async reportUsageToBilling(projectId: string, subscriptionId: string): Promise<void> {
+    if (!this.options.billingProvider) throw new Error("No billing provider configured")
+
+    const usage = this.getUsage(projectId)
+    if (!usage) return
+
+    await this.options.billingProvider.recordUsage(subscriptionId, usage)
+  }
+
+  // ─── Auto-Scaling ───────────────────────────────────────────────────────
+
+  private autoScaleConfigs = new Map<string, AutoScaleConfig>()
+
+  /**
+   * Configure auto-scaling for a project.
+   */
+  configureAutoScale(projectId: string, config: AutoScaleConfig): void {
+    const project = this.projects.get(projectId)
+    if (!project) throw new Error(`Project ${projectId} not found`)
+
+    if (config.minInstances < 0) throw new Error("minInstances must be non-negative")
+    if (config.maxInstances < config.minInstances) throw new Error("maxInstances must be >= minInstances")
+
+    this.autoScaleConfigs.set(projectId, config)
+  }
+
+  /**
+   * Get auto-scale configuration for a project.
+   */
+  getAutoScaleConfig(projectId: string): AutoScaleConfig | undefined {
+    return this.autoScaleConfigs.get(projectId)
+  }
+
+  /**
+   * Evaluate auto-scaling based on current metrics.
+   * Returns a scaling recommendation.
+   */
+  evaluateAutoScale(projectId: string, metrics: ScaleMetrics): AutoScaleDecision {
+    const config = this.autoScaleConfigs.get(projectId)
+    if (!config) {
+      return { action: "none", reason: "auto-scaling not configured", currentInstances: 1, targetInstances: 1 }
+    }
+
+    const currentInstances = metrics.currentInstances
+
+    // Scale up if above threshold
+    if (
+      metrics.cpuPercent > config.scaleUpThreshold ||
+      metrics.memoryPercent > config.scaleUpThreshold ||
+      metrics.activeConnections > config.maxConnectionsPerInstance * currentInstances * 0.8
+    ) {
+      const target = Math.min(currentInstances + 1, config.maxInstances)
+      if (target > currentInstances) {
+        return { action: "scale-up", reason: "resource threshold exceeded", currentInstances, targetInstances: target }
+      }
+    }
+
+    // Scale down if below threshold
+    if (
+      metrics.cpuPercent < config.scaleDownThreshold &&
+      metrics.memoryPercent < config.scaleDownThreshold &&
+      currentInstances > config.minInstances
+    ) {
+      const target = Math.max(currentInstances - 1, config.minInstances)
+      return { action: "scale-down", reason: "resources underutilized", currentInstances, targetInstances: target }
+    }
+
+    return { action: "none", reason: "within thresholds", currentInstances, targetInstances: currentInstances }
+  }
+
+  // ─── One-Click Deploy ───────────────────────────────────────────────────
+
+  /**
+   * One-click deploy: creates project, environment, and deploys in a single call.
+   */
+  async oneClickDeploy(config: OneClickDeployConfig): Promise<OneClickDeployResult> {
+    const steps: OneClickDeployStep[] = []
+
+    // Step 1: Create project
+    steps.push({ step: "create-project", status: "running", startedAt: new Date().toISOString() })
+    const project = await this.createProject({
+      name: config.projectName,
+      plan: config.plan ?? "starter",
+      orgId: config.orgId,
+      region: config.region,
+    })
+    steps[0].status = "completed"
+    steps[0].completedAt = new Date().toISOString()
+
+    // Step 2: Create production environment
+    steps.push({ step: "create-environment", status: "running", startedAt: new Date().toISOString() })
+    const env = await this.createEnvironment(project.id, {
+      name: "production",
+      isProduction: true,
+      variables: config.envVariables,
+    })
+    steps[1].status = "completed"
+    steps[1].completedAt = new Date().toISOString()
+
+    // Step 3: Provision API key
+    steps.push({ step: "provision-api-key", status: "running", startedAt: new Date().toISOString() })
+    const apiKey = this.createApiKey(project.id, {
+      name: "Production API Key",
+      type: "live",
+      environmentId: env.id,
+    })
+    steps[2].status = "completed"
+    steps[2].completedAt = new Date().toISOString()
+
+    // Step 4: Deploy
+    steps.push({ step: "deploy", status: "running", startedAt: new Date().toISOString() })
+    const deployment = await this.deploy(project.id, env.id, {
+      source: config.source ?? "cli",
+      ref: config.ref,
+    })
+    steps[3].status = "completed"
+    steps[3].completedAt = new Date().toISOString()
+
+    // Step 5: Auto-scale config
+    if (config.autoScale) {
+      steps.push({ step: "configure-auto-scale", status: "running", startedAt: new Date().toISOString() })
+      this.configureAutoScale(project.id, config.autoScale)
+      steps[4].status = "completed"
+      steps[4].completedAt = new Date().toISOString()
+    }
+
+    return {
+      project,
+      environment: env,
+      deployment,
+      apiKey,
+      steps,
+      url: deployment.url ?? env.url ?? `https://${config.projectName}.reactivebase.cloud`,
+    }
+  }
+}
+
+// ─── Additional Types ────────────────────────────────────────────────────────
+
+export interface ApiKeyConfig {
+  name: string
+  type: "live" | "test"
+  permissions?: string[]
+  environmentId?: string
+  expiresAt?: string | null
+}
+
+export interface ApiKeyRecord {
+  id: string
+  projectId: string
+  name: string
+  type: "live" | "test"
+  keyPrefix: string
+  keyHash: string
+  permissions: string[]
+  environmentId?: string
+  expiresAt: string | null
+  lastUsedAt: string | null
+  createdAt: string
+  revokedAt: string | null
+  /** Only present on creation response */
+  _secretKey?: string
+}
+
+export interface AutoScaleConfig {
+  minInstances: number
+  maxInstances: number
+  scaleUpThreshold: number
+  scaleDownThreshold: number
+  maxConnectionsPerInstance: number
+  cooldownSeconds?: number
+}
+
+export interface ScaleMetrics {
+  currentInstances: number
+  cpuPercent: number
+  memoryPercent: number
+  activeConnections: number
+  requestsPerSecond: number
+}
+
+export interface AutoScaleDecision {
+  action: "scale-up" | "scale-down" | "none"
+  reason: string
+  currentInstances: number
+  targetInstances: number
+}
+
+export interface OneClickDeployConfig {
+  projectName: string
+  plan?: ProjectPlan
+  orgId?: string
+  region?: string
+  source?: "git" | "upload" | "cli"
+  ref?: string
+  envVariables?: Record<string, string>
+  autoScale?: AutoScaleConfig
+}
+
+export interface OneClickDeployStep {
+  step: string
+  status: "running" | "completed" | "failed"
+  startedAt: string
+  completedAt?: string
+  error?: string
+}
+
+export interface OneClickDeployResult {
+  project: CloudProjectRecord
+  environment: EnvironmentRecord
+  deployment: DeploymentRecord
+  apiKey: ApiKeyRecord
+  steps: OneClickDeployStep[]
+  url: string
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function randomId(): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+  let result = ""
+  for (let i = 0; i < 24; i++) {
+    result += chars[Math.floor(Math.random() * chars.length)]
+  }
+  return result
+}
+
+function hashApiKey(key: string): string {
+  let hash = 0
+  for (let i = 0; i < key.length; i++) {
+    const char = key.charCodeAt(i)
+    hash = ((hash << 5) - hash + char) | 0
+  }
+  return `hash_${Math.abs(hash).toString(36)}`
 }
