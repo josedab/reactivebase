@@ -1,0 +1,77 @@
+{
+  "name": "@reactivebase/state",
+  "version": "0.1.0",
+  "description": "Framework-agnostic reactive state layer for ReactiveBase — syncs server state with any client-side state manager",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./adapters/zustand": {
+      "import": "./dist/adapters/zustand.js",
+      "require": "./dist/adapters/zustand.cjs",
+      "types": "./dist/adapters/zustand.d.ts"
+    },
+    "./adapters/jotai": {
+      "import": "./dist/adapters/jotai.js",
+      "require": "./dist/adapters/jotai.cjs",
+      "types": "./dist/adapters/jotai.d.ts"
+    },
+    "./adapters/pinia": {
+      "import": "./dist/adapters/pinia.js",
+      "require": "./dist/adapters/pinia.cjs",
+      "types": "./dist/adapters/pinia.d.ts"
+    },
+    "./adapters/nanostores": {
+      "import": "./dist/adapters/nanostores.js",
+      "require": "./dist/adapters/nanostores.cjs",
+      "types": "./dist/adapters/nanostores.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@reactivebase/client": "workspace:*"
+  },
+  "peerDependencies": {
+    "zustand": ">=4.0.0",
+    "jotai": ">=2.0.0",
+    "pinia": ">=2.0.0",
+    "nanostores": ">=0.9.0"
+  },
+  "peerDependenciesMeta": {
+    "zustand": {
+      "optional": true
+    },
+    "jotai": {
+      "optional": true
+    },
+    "pinia": {
+      "optional": true
+    },
+    "nanostores": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "license": "MIT"
+}
