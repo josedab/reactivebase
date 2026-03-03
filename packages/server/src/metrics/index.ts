@@ -87,3 +87,15 @@ export type {
   OptimizationReport,
   AdaptiveOptimizerOptions,
 } from "./adaptive-optimizer.js"
+
+// Unified Observability Dashboard
+export { ObservabilityDashboard } from "./observability-dashboard.js"
+export type {
+  ObservabilityDashboardOptions,
+  DashboardSnapshot,
+  SlowQueryEntry as ObservabilitySlowQuery,
+  DashboardAlert,
+  NPlusOneDetection as ObservabilityNPlusOne,
+  IndexRecommendation,
+  OptimizeResult,
+} from "./observability-dashboard.js"
