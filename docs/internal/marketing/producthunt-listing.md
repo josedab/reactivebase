@@ -6,7 +6,7 @@ Convex DX on Postgres — reactive backend framework (MIT)
 
 ## Description (260 chars)
 
-ReactiveBase gives you Convex-style developer experience on PostgreSQL you control. Live queries, automatic transactions, AI/vector search, scheduling — 30 modules in one TypeScript framework. MIT licensed, self-hosted.
+ReactiveBase gives you Convex-style developer experience on PostgreSQL you control. Live queries, automatic transactions, AI/vector search, scheduling — 85 modules in one TypeScript framework. MIT licensed, self-hosted.
 
 ## Detailed Description
 

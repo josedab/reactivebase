@@ -4,7 +4,7 @@ Utility scripts for publishing, verification, and content creation.
 
 | Script               | Purpose                                                                                                                              | When to Run                                             |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
-| `publish.sh`         | Publishes all 14 packages to npm in dependency order. Runs build and tests first. Defaults to dry-run mode.                          | Release time. Use `--real` flag for actual publish.     |
+| `publish.sh`         | Publishes all 15 packages to npm in dependency order. Runs build and tests first. Defaults to dry-run mode.                          | Release time. Use `--real` flag for actual publish.     |
 | `verify-publish.sh`  | Post-publish smoke test: checks npm registry, scaffolds a test project, installs deps, and builds.                                   | After `publish.sh --real` to confirm packages are live. |
 | `verify-demo.sh`     | Checks that the `examples/collaborative-board` demo has all required files and Docker builds.                                        | Before deploying the demo to Fly.io.                    |
 | `update-stats.sh`    | Counts packages and test totals across the monorepo. Prints values to update in docs.                                                | Before releases to keep README/docs stats current.      |

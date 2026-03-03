@@ -6,7 +6,7 @@ Welcome! This guide helps you make your first contribution to ReactiveBase.
 
 ```
 packages/
-├── server/          ← Core server framework (85+ modules, ~94K LOC)
+├── server/          ← Core server framework (85+ modules, ~106K LOC)
 │   └── src/
 │       ├── schema/          Schema definition, validators
 │       ├── functions/       query(), mutation(), action()
