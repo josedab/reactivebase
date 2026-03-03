@@ -20,3 +20,17 @@ export type {
   MutationExecutionResult,
   ScheduledAction,
 } from "./server-functions.js"
+
+// End-to-End Type Safety
+export { defineServerFunctions } from "./type-safe-api.js"
+export type {
+  TypedFunctionRef,
+  InferAPI,
+  InferFunctionRefs,
+  TypedDatabase,
+  TypedClientAPI,
+  TypedQueryBuilderFactory,
+  NamespacedAPI,
+  QueryResult,
+  MutationArgs,
+} from "./type-safe-api.js"
