@@ -323,6 +323,7 @@ npm run build
 If you have questions about contributing, the architecture, or how a specific feature works:
 
 - Open a [GitHub Discussion](../../discussions) for general questions
+- Join our [Discord](https://discord.gg/reactivebase) for real-time chat
 - Check existing [issues](../../issues) to see if your question has been addressed
 - Review the [docs/](docs/) directory for architecture decision records and design documentation
 
@@ -352,10 +353,11 @@ To rotate the token:
 
 ### Version Bumping
 
-1. Update the `version` field in all `packages/*/package.json` files to the new version
-2. Update cross-package dependency versions if needed
-3. Commit the version bump
-4. Create and push the tag: `git tag v0.2.0 && git push origin v0.2.0`
+1. Run `scripts/update-stats.sh` to refresh LOC, module, and test counts in docs
+2. Update the `version` field in all `packages/*/package.json` files to the new version
+3. Update cross-package dependency versions if needed
+4. Commit the version bump
+5. Create and push the tag: `git tag v0.2.0 && git push origin v0.2.0`
 
 ### Publish Order
 
@@ -371,9 +373,5 @@ Packages are published in dependency order to ensure downstream packages can res
 8. `@reactivebase/graphql`, `react-native` (framework extensions)
 
 > **Note:** The VS Code extension (`packages/vscode-extension`) is published separately to the VS Code Marketplace, not npm.
-
-- Open a GitHub Discussion for questions
-- Join our Discord server for real-time chat
-- Check the [documentation site](https://reactivebase.dev) for guides
 
 Thank you for contributing! 🚀
