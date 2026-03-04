@@ -1,8 +1,8 @@
 /**
- * Migration CLI commands - generate, apply, status, rollback.
+ * Migration CLI commands - generate, apply, status, rollback, preview.
  */
 
-import { writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs"
+import { writeFileSync, mkdirSync, existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 
 export interface MigrateCommandOptions {
@@ -114,4 +114,57 @@ function findSchemaPath(projectDir: string): string | null {
     if (existsSync(filePath)) return filePath
   }
   return null
+}
+
+/**
+ * Preview migration impact with destructive operation detection.
+ * Runs analysis without applying to the database.
+ *
+ * @param options - Migration options including project directory
+ */
+export async function migratePreview(options: MigrateCommandOptions & { usePglite?: boolean }): Promise<void> {
+  const migrationsDir = join(options.projectDir, "migrations")
+  if (!existsSync(migrationsDir)) {
+    console.log("No migrations directory found. Run `reactivebase migrate --generate` first.")
+    return
+  }
+
+  const files = readdirSync(migrationsDir)
+    .filter((f) => f.endsWith(".sql"))
+    .sort()
+
+  if (files.length === 0) {
+    console.log("No migration files found.")
+    return
+  }
+
+  const { MigrationAnalyzer, runPGliteShadowPreview } = (await import(
+    "@reactivebase/server/migrations/migration-analyzer" as string
+  )) as {
+    MigrationAnalyzer: new () => { analyze: (sql: string) => unknown; formatCLIDiff: (analysis: unknown) => string }
+    runPGliteShadowPreview: (sql: string) => Promise<{ success: boolean; error?: string; durationMs: number }>
+  }
+
+  const analyzer = new MigrationAnalyzer()
+
+  for (const file of files) {
+    const filePath = join(migrationsDir, file)
+    const sql = readFileSync(filePath, "utf-8")
+
+    console.log(`\n📋 Previewing: ${file}`)
+    console.log("─".repeat(60))
+
+    const analysis = analyzer.analyze(sql)
+    console.log(analyzer.formatCLIDiff(analysis))
+
+    if (options.usePglite) {
+      console.log("\n🔬 Running PGlite shadow execution...")
+      const result = await runPGliteShadowPreview(sql)
+      if (result.success) {
+        console.log(`   ✅ Migration applies cleanly (${result.durationMs}ms)`)
+      } else {
+        console.log(`   ❌ Migration failed: ${result.error}`)
+      }
+    }
+  }
 }

@@ -43,8 +43,15 @@ async function main(): Promise<void> {
       break
     }
 
+    case "generate:fixtures": {
+      console.log("Generating test fixtures from schema...")
+      console.log("Run: npx reactivebase generate --tests --coverage high")
+      console.log("Fixture factories will be generated in __fixtures__/factories/")
+      break
+    }
+
     case "migrate": {
-      const { migrateGenerate, migrateApply, migrateStatus } = await import("./commands/migrate.js")
+      const { migrateGenerate, migrateApply, migrateStatus, migratePreview } = await import("./commands/migrate.js")
       const subcommand = args[1] || "--status"
       const options = {
         projectDir: process.cwd(),
@@ -63,6 +70,9 @@ async function main(): Promise<void> {
           break
         case "--rollback":
           console.log("Rollback not yet implemented.")
+          break
+        case "--preview":
+          await migratePreview({ ...options, usePglite: args.includes("--pglite") })
           break
         case "--safe": {
           const { migrateSafe } = await import("./commands/migrate-safe.js")
@@ -249,12 +259,77 @@ async function main(): Promise<void> {
       break
     }
 
+    case "branch": {
+      const {
+        branchCreate,
+        branchList,
+        branchDelete,
+        branchDiff,
+        branchSwitch,
+        branchMerge,
+        branchGenerateAction,
+        showBranchHelp,
+      } = await import("./commands/branch.js")
+      const branchSubcmd = args[1]
+      const branchOpts = {
+        projectDir: process.cwd(),
+        connectionString: process.env.DATABASE_URL,
+        neonApiKey: process.env.NEON_API_KEY,
+        neonProjectId: process.env.NEON_PROJECT_ID,
+      }
+
+      switch (branchSubcmd) {
+        case "create":
+          await branchCreate(args[2] ?? "", {
+            ...branchOpts,
+            from: getFlag("--from", "main"),
+            pr: args.includes("--pr") ? parseInt(getFlag("--pr", "0"), 10) : undefined,
+            commit: getFlag("--commit"),
+            seed: args.includes("--seed"),
+            author: getFlag("--author"),
+          })
+          break
+        case "list":
+          await branchList(branchOpts)
+          break
+        case "delete":
+          await branchDelete(args[2] ?? "", branchOpts)
+          break
+        case "diff":
+          await branchDiff(args[2] ?? "", args[3] ?? "main", branchOpts)
+          break
+        case "switch":
+          await branchSwitch(args[2] ?? "", branchOpts)
+          break
+        case "merge":
+          await branchMerge(args[2] ?? "", { ...branchOpts, into: getFlag("--into", "main") })
+          break
+        case "generate-action":
+          await branchGenerateAction(branchOpts)
+          break
+        default:
+          showBranchHelp()
+      }
+      break
+    }
+
     case "init": {
       const { initProject } = await import("./commands/init-profile.js")
       await initProject({
         projectDir: process.cwd(),
         profile: getFlag("--profile", "minimal"),
         json: args.includes("--json"),
+      })
+      break
+    }
+
+    case "analyze": {
+      const { analyzeCommand } = await import("./commands/analyze.js")
+      await analyzeCommand({
+        projectDir: process.cwd(),
+        connectionString: process.env.DATABASE_URL,
+        json: args.includes("--json"),
+        threshold: getFlag("--threshold"),
       })
       break
     }
@@ -288,6 +363,7 @@ Commands:
   generate         Generate types from schema
   generate --tests Generate E2E test suites from schema
   migrate          Database migration commands
+  branch           Database branching & PR previews
   deploy           Deploy to cloud (Fly.io/Railway/ReactiveBase Cloud)
   deploy --cloud   Deploy to ReactiveBase Cloud (managed)
   doctor           Check PostgreSQL extension health
@@ -296,6 +372,7 @@ Commands:
   functions list   List all defined functions
   dacl             Access control policy management
   ivm              Incremental view maintenance
+  analyze          Smart query cost estimator
 
 Options:
   --help, -h       Show this help message
@@ -325,6 +402,11 @@ Subcommands:
   --apply       Apply pending migrations to the database
   --status      Show current migration status
   --rollback    Rollback the last applied migration
+  --preview     Preview migration impact with destructive operation detection
+  --safe        Analyze migration safety for zero-downtime deployment
+
+Options for --preview:
+  --pglite      Run shadow execution using in-process PGlite
 `)
 }
 
