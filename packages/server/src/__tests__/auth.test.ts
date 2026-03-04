@@ -117,7 +117,7 @@ describe("jwtProvider", () => {
     const body = Buffer.from(JSON.stringify({ sub: "u1" })).toString("base64url")
     const token = `${header}.${body}.fakesig`
 
-    await expect(provider.verify(token)).rejects.toThrow("Unsupported")
+    await expect(provider.verify(token)).rejects.toThrow("not allowed")
   })
 
   it("supports audience as array", async () => {
