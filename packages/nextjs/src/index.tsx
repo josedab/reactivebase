@@ -620,3 +620,203 @@ export function createServerQueryClient(serverUrl: string, options: { token?: st
     },
   }
 }
+
+// --- RSC-native preloadQuery for use() pattern ---
+
+/**
+ * Preload a query for React Server Components with use() support.
+ * Returns a promise that can be passed directly to React 19's use() hook:
+ *
+ *   // In a Server Component:
+ *   const tasksPromise = preloadQueryForRSC<Task[]>(url, "tasks.list")
+ *
+ *   // In a Client Component:
+ *   const tasks = use(tasksPromise)
+ *
+ * @param serverUrl - The ReactiveBase server URL
+ * @param queryName - Name of the query to preload
+ * @param args - Arguments to pass to the query
+ * @param options - Server query options including token, revalidation, and cache tags
+ * @returns A promise that resolves to a LoadQueryResult, compatible with use()
+ */
+export function preloadQueryForRSC<T = unknown>(
+  serverUrl: string,
+  queryName: string,
+  args: unknown = {},
+  options: ServerQueryOptions = {},
+): Promise<LoadQueryResult<T>> {
+  return loadQuery<T>(serverUrl, queryName, args, options)
+}
+
+// --- Subscription Seeding for Hydration-Free Transitions ---
+
+export interface SubscriptionSeedEntry {
+  queryName: string
+  args: unknown
+  data: unknown
+  timestamp: number
+}
+
+export interface SubscriptionSeedMap {
+  _tag: "subscription-seed"
+  seeds: SubscriptionSeedEntry[]
+  serverTimestamp: number
+}
+
+/**
+ * Preload multiple queries on the server and create a subscription seed map.
+ * Pass this to the client provider so subscriptions can initialize with
+ * server-fetched data — avoiding a loading flash on hydration.
+ *
+ * @param serverUrl - The ReactiveBase server URL
+ * @param queries - Array of query definitions to seed
+ * @param options - Server query options
+ * @returns A serializable seed map for client-side subscription initialization
+ */
+export async function createSubscriptionSeed(
+  serverUrl: string,
+  queries: Array<{ queryName: string; args?: unknown }>,
+  options: ServerQueryOptions = {},
+): Promise<SubscriptionSeedMap> {
+  const results = await Promise.allSettled(queries.map((q) => loadQuery(serverUrl, q.queryName, q.args ?? {}, options)))
+
+  const seeds: SubscriptionSeedEntry[] = []
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      seeds.push({
+        queryName: result.value.queryName,
+        args: result.value.args,
+        data: result.value.data,
+        timestamp: result.value.serverTimestamp,
+      })
+    }
+  }
+
+  return {
+    _tag: "subscription-seed",
+    seeds,
+    serverTimestamp: Date.now(),
+  }
+}
+
+// --- Seeded Provider ---
+
+const SubscriptionSeedContext = createContext<SubscriptionSeedMap | null>(null)
+
+export interface SeededProviderProps {
+  url: string
+  token?: string
+  seed?: SubscriptionSeedMap
+  children: ReactNode
+}
+
+/**
+ * Enhanced NextJS provider that accepts a subscription seed map.
+ * Subscriptions matching a seed entry will initialize with server data
+ * instead of showing a loading state.
+ *
+ * @param props - Provider props including server URL, token, seed map, and children
+ * @returns A context provider wrapping children with seeded subscription support
+ */
+export function ReactiveBaseSeededProvider({ url, token, seed, children }: SeededProviderProps) {
+  const client = useMemo(() => new ReactiveBaseClient({ url, token }), [url, token])
+
+  useEffect(() => {
+    return () => client.disconnect()
+  }, [client])
+
+  return (
+    <NextjsClientContext.Provider value={client}>
+      <SubscriptionSeedContext.Provider value={seed ?? null}>{children}</SubscriptionSeedContext.Provider>
+    </NextjsClientContext.Provider>
+  )
+}
+
+/**
+ * Hook that returns seeded data for a query if available.
+ * Falls back to undefined if no seed exists for this query.
+ *
+ * @param queryName - The query name to look up in the seed map
+ * @param args - The query arguments (used for matching)
+ * @returns The seeded data or undefined
+ */
+export function useSubscriptionSeed<T = unknown>(queryName: string, args?: unknown): T | undefined {
+  const seed = useContext(SubscriptionSeedContext)
+  if (!seed) return undefined
+
+  const argsJson = JSON.stringify(args ?? {})
+  const entry = seed.seeds.find((s) => s.queryName === queryName && JSON.stringify(s.args) === argsJson)
+  return entry ? (entry.data as T) : undefined
+}
+
+/**
+ * Use a seeded query — starts with server data, upgrades to live subscription.
+ * Unlike usePreloadedQuery, this reads from the seed context automatically.
+ *
+ * @param queryName - The query name to subscribe to
+ * @param args - Query arguments
+ * @returns Object with data and live status
+ */
+export function useSeededQuery<T = unknown>(
+  queryName: string,
+  args: unknown = {},
+): { data: T | undefined; isLive: boolean } {
+  const seeded = useSubscriptionSeed<T>(queryName, args)
+  const client = useNextjsClient()
+  const [data, setData] = useState<T | undefined>(seeded)
+  const [isLive, setIsLive] = useState(false)
+  const argsJson = JSON.stringify(args)
+
+  useEffect(() => {
+    const unsubscribe = client.subscribe(queryName, args, (result, error) => {
+      if (!error && result !== undefined) {
+        setData(result as T)
+        setIsLive(true)
+      }
+    })
+    return unsubscribe
+  }, [client, queryName, argsJson])
+
+  return { data, isLive }
+}
+
+// --- Streaming Partial Results ---
+
+export interface StreamingPartialProps<T = unknown> {
+  query: string
+  args?: unknown
+  fallback?: ReactNode
+  children: (data: T | undefined, meta: { isLive: boolean; isPartial: boolean }) => ReactNode
+}
+
+/**
+ * StreamingPartialQuery: progressively renders query results.
+ * Starts with server-seeded data if available, shows fallback during loading,
+ * then switches to live subscription data.
+ *
+ * @param props - Streaming partial query props
+ * @returns A component that progressively renders query results
+ */
+export function StreamingPartialQuery<T = unknown>({ query, args, fallback, children }: StreamingPartialProps<T>) {
+  const seeded = useSubscriptionSeed<T>(query, args)
+  const client = useNextjsClient()
+  const [data, setData] = useState<T | undefined>(seeded)
+  const [isLive, setIsLive] = useState(false)
+  const argsJson = JSON.stringify(args ?? {})
+
+  useEffect(() => {
+    const unsubscribe = client.subscribe(query, args, (result, error) => {
+      if (!error && result !== undefined) {
+        setData(result as T)
+        setIsLive(true)
+      }
+    })
+    return unsubscribe
+  }, [client, query, argsJson])
+
+  if (data === undefined && !isLive) {
+    return <Suspense fallback={fallback ?? null}>{children(undefined, { isLive: false, isPartial: true })}</Suspense>
+  }
+
+  return <>{children(data, { isLive, isPartial: !isLive && data !== undefined })}</>
+}
