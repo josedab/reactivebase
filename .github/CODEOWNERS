@@ -5,9 +5,11 @@
 * @josedab
 
 # Core packages
-packages/server/   @josedab
-packages/client/   @josedab
-packages/react/    @josedab
+packages/server/        @josedab
+packages/client/        @josedab
+packages/state/         @josedab
+packages/react/         @josedab
+packages/reactivebase/  @josedab
 
 # Framework integrations
 packages/nextjs/        @josedab
@@ -19,6 +21,7 @@ packages/react-native/  @josedab
 packages/cli/                  @josedab
 packages/testing/              @josedab
 packages/create-reactivebase/  @josedab
+packages/migrate-from-prisma/  @josedab
 packages/vscode-extension/     @josedab
 
 # Infrastructure
