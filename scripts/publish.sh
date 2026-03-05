@@ -37,6 +37,7 @@ echo "  ✅ Tests passed"
 PACKAGES=(
   "packages/server"
   "packages/client"
+  "packages/state"
   "packages/react"
   "packages/vue"
   "packages/svelte"
