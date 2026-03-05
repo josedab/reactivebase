@@ -73,6 +73,17 @@ export const fullTextSearchPlugin: PluginV2Definition = {
   },
   onInstall: async (ctx) => {
     ctx.logger.info("Full-text search plugin installed")
+    const SAFE_IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+    const VALID_LANGUAGES = new Set([
+      "simple",
+      "english",
+      "spanish",
+      "french",
+      "german",
+      "italian",
+      "portuguese",
+      "russian",
+    ])
     ctx.registerFunction("search", async (params: unknown) => {
       const { table, columns, query, limit } = params as {
         table: string
@@ -80,7 +91,18 @@ export const fullTextSearchPlugin: PluginV2Definition = {
         query: string
         limit?: number
       }
+      if (!SAFE_IDENTIFIER_RE.test(table)) {
+        throw new Error(`Invalid table name: "${table}"`)
+      }
+      for (const col of columns) {
+        if (!SAFE_IDENTIFIER_RE.test(col)) {
+          throw new Error(`Invalid column name: "${col}"`)
+        }
+      }
       const lang = (ctx.config.language as string) ?? "english"
+      if (!VALID_LANGUAGES.has(lang)) {
+        throw new Error(`Invalid search language: "${lang}"`)
+      }
       const tsvector = columns.map((c) => `"${c}"`).join(" || ' ' || ")
       return {
         query: `SELECT *, ts_rank(to_tsvector('${lang}', ${tsvector}), plainto_tsquery('${lang}', $1)) AS rank FROM "${table}" WHERE to_tsvector('${lang}', ${tsvector}) @@ plainto_tsquery('${lang}', $1) ORDER BY rank DESC LIMIT $2`,
