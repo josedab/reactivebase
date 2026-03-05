@@ -43,6 +43,12 @@
       "type": "shell",
       "command": "npm run fix",
       "problemMatcher": ["$eslint-stylish"]
+    },
+    {
+      "label": "Quick Check",
+      "type": "shell",
+      "command": "npm run check:quick",
+      "problemMatcher": ["$tsc", "$eslint-stylish"]
     }
   ]
 }
