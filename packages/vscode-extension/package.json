@@ -90,6 +90,7 @@
     "dev": "tsup src/extension.ts --format cjs --external vscode --watch",
     "watch": "tsup src/extension.ts --format cjs --external vscode --watch",
     "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest watch --passWithNoTests",
     "test:coverage": "vitest run --passWithNoTests --coverage",
     "typecheck": "tsc --noEmit",
     "package": "vsce package",

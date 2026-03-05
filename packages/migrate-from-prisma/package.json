@@ -10,6 +10,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest watch --passWithNoTests",
     "test:coverage": "vitest run --passWithNoTests --coverage",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
