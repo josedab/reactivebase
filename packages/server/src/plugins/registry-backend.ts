@@ -816,22 +816,43 @@ export function buildCreatePluginRegistrySQL(): string {
   `
 }
 
-export function buildInsertPluginSQL(entry: MarketplaceEntry): string {
-  return `INSERT OR REPLACE INTO plugin_registry (name, version, description, author, category, keywords, npm_package, downloads, rating, verified, first_party, updated_at)
-    VALUES ('${entry.name}', '${entry.version}', '${entry.description.replace(/'/g, "''")}', '${entry.author}', '${entry.category}', '${entry.keywords.join(",")}', '${entry.npmPackage}', ${entry.downloads}, ${entry.rating}, ${entry.verified ? 1 : 0}, ${entry.firstParty ? 1 : 0}, datetime('now'));`
+export function buildInsertPluginSQL(entry: MarketplaceEntry): { sql: string; params: unknown[] } {
+  return {
+    sql: `INSERT OR REPLACE INTO plugin_registry (name, version, description, author, category, keywords, npm_package, downloads, rating, verified, first_party, updated_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, datetime('now'));`,
+    params: [
+      entry.name,
+      entry.version,
+      entry.description,
+      entry.author,
+      entry.category,
+      entry.keywords.join(","),
+      entry.npmPackage,
+      entry.downloads,
+      entry.rating,
+      entry.verified ? 1 : 0,
+      entry.firstParty ? 1 : 0,
+    ],
+  }
 }
 
-export function buildSearchPluginsSQL(query?: string, category?: string): string {
+export function buildSearchPluginsSQL(query?: string, category?: string): { sql: string; params: unknown[] } {
   const conditions: string[] = []
+  const params: unknown[] = []
   if (query) {
-    const escaped = query.replace(/'/g, "''")
-    conditions.push(`(name LIKE '%${escaped}%' OR description LIKE '%${escaped}%' OR keywords LIKE '%${escaped}%')`)
+    params.push(`%${query}%`)
+    const idx = params.length
+    conditions.push(`(name LIKE $${idx} OR description LIKE $${idx} OR keywords LIKE $${idx})`)
   }
   if (category) {
-    conditions.push(`category = '${category}'`)
+    params.push(category)
+    conditions.push(`category = $${params.length}`)
   }
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
-  return `SELECT * FROM plugin_registry ${where} ORDER BY downloads DESC, rating DESC;`
+  return {
+    sql: `SELECT * FROM plugin_registry ${where} ORDER BY downloads DESC, rating DESC;`,
+    params,
+  }
 }
 
 // ─── Error ───────────────────────────────────────────────────────────────────
