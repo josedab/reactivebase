@@ -93,7 +93,7 @@ const BUILT_IN_PROFILES: Record<ProfileName, ConfigProfile> = {
     config: {
       database: { poolSize: 20, statementTimeout: 10_000, idleTimeout: 30_000 },
       server: {
-        corsOrigin: "*",
+        corsOrigin: undefined, // Must be explicitly configured (e.g., 'https://your-app.example.com')
         heartbeatInterval: 30_000,
         maxConnectionsPerIp: 50,
         maxSubscriptionsPerConnection: 200,

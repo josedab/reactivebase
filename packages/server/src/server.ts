@@ -229,9 +229,9 @@ export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseCon
         const corsOrigin = config.server?.corsOrigin
         if (corsOrigin) {
           if (corsOrigin === "*" && process.env.NODE_ENV === "production") {
-            console.warn(
-              "⚠️  CORS origin is set to '*' in production. This allows any origin to make requests. " +
-                "Set a specific origin (e.g., 'https://app.example.com') for security.",
+            throw new Error(
+              "CORS origin '*' is not allowed in production. " +
+                "Set a specific origin (e.g., 'https://app.example.com') in server.corsOrigin.",
             )
           }
           res.setHeader("Access-Control-Allow-Origin", corsOrigin)
