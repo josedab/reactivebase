@@ -20,7 +20,7 @@
  *   const decrypted = bridge.decryptOperation("doc-1", encrypted)
  */
 
-import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from "node:crypto"
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -323,7 +323,7 @@ export class MlsKeyManager {
    * In this simplified implementation, the challenge is validated via HMAC
    * using the device's public key material.
    */
-  verifyDevice(groupId: string, deviceId: string, challenge: Buffer): boolean {
+  verifyDevice(groupId: string, deviceId: string, challenge: Buffer, response: Buffer): boolean {
     const group = this.getGroupOrThrow(groupId)
     const member = group.members.get(deviceId)
 
@@ -331,9 +331,12 @@ export class MlsKeyManager {
       throw new MlsError(`Device ${deviceId} is not a member of group ${groupId}`)
     }
 
-    // Simplified verification: HMAC the challenge with the member's key
+    // Verify by comparing HMAC of the challenge against the provided signed response
     const expected = createHmac("sha256", member.publicKey).update(challenge).digest()
-    const valid = expected.length > 0 // In production, compare against a signed response
+    if (expected.length !== response.length) {
+      return false
+    }
+    const valid = timingSafeEqual(expected, response)
 
     if (valid) {
       member.verified = true

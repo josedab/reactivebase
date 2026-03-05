@@ -167,9 +167,11 @@ describe("MlsKeyManager", () => {
   describe("device verification", () => {
     it("verifies a device with valid challenge", () => {
       manager.createGroup("doc-1", "device-alice")
-      manager.addMember("doc-1", "device-bob", randomBytes(32))
+      const bobKey = randomBytes(32)
+      manager.addMember("doc-1", "device-bob", bobKey)
       const challenge = randomBytes(32)
-      const result = manager.verifyDevice("doc-1", "device-bob", challenge)
+      const response = createHmac("sha256", bobKey).update(challenge).digest()
+      const result = manager.verifyDevice("doc-1", "device-bob", challenge, response)
       expect(result).toBe(true)
 
       const member = manager.getGroup("doc-1")!.members.get("device-bob")!
@@ -178,7 +180,7 @@ describe("MlsKeyManager", () => {
 
     it("throws for nonexistent device", () => {
       manager.createGroup("doc-1", "device-alice")
-      expect(() => manager.verifyDevice("doc-1", "unknown", randomBytes(32))).toThrow("not a member")
+      expect(() => manager.verifyDevice("doc-1", "unknown", randomBytes(32), randomBytes(32))).toThrow("not a member")
     })
   })
 
