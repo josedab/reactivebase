@@ -465,8 +465,11 @@ export class DaclStudio {
       var roles = document.getElementById('sim-roles').value.split(',').map(s => s.trim());
       var table = document.getElementById('sim-table').value;
       var action = document.getElementById('sim-action').value;
+      function escapeForHtml(str) {
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
       document.getElementById('sim-result').innerHTML =
-        '<p>Simulating: Can <strong>' + user + '</strong> (' + roles.join(', ') + ') perform <strong>' + action + '</strong> on <strong>' + table + '</strong>?</p>' +
+        '<p>Simulating: Can <strong>' + escapeForHtml(user) + '</strong> (' + escapeForHtml(roles.join(', ')) + ') perform <strong>' + escapeForHtml(action) + '</strong> on <strong>' + escapeForHtml(table) + '</strong>?</p>' +
         '<p style="margin-top:8px">⚡ Simulation requires server-side evaluation. Use <code>reactivebase dacl test</code> CLI or the studio API for full trace.</p>';
     }
   </script>
