@@ -65,6 +65,10 @@ export type {
 } from "./cloud-observability.js"
 
 // One-Click Provisioner
+// NOTE: AutoScaleConfig is exported as ProvisionerAutoScaleConfig to avoid conflict
+// with the cloud-platform AutoScaleConfig. The two interfaces have different shapes:
+//   - AutoScaleConfig (cloud-platform): minInstances/maxInstances based (high-level scaling)
+//   - ProvisionerAutoScaleConfig (one-click-provisioner): minReplicas/maxReplicas based (container orchestration)
 export {
   OneClickProvisioner,
   AutoScaler,
@@ -82,7 +86,7 @@ export type {
   MonitoringConfig,
   HealthCheckRule,
   AlertRuleConfig,
-  AutoScaleConfig,
+  AutoScaleConfig as ProvisionerAutoScaleConfig,
   ProvisioningResult,
   ProvisionStep,
   AutoScaleState,

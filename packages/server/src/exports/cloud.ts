@@ -82,7 +82,7 @@ export type {
   PostgresConfig,
   RedisConfig,
   MonitoringConfig,
-  AutoScaleConfig,
+  ProvisionerAutoScaleConfig,
   ProvisioningResult,
   AutoScaleState,
   DatabaseInfo as CloudDatabaseInfo,
