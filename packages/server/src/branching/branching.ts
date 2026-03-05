@@ -146,8 +146,9 @@ export function buildDropBranchSchemaSQL(schemaName: string): { sql: string; par
 }
 
 export function buildSetSearchPathSQL(schemaName: string): { sql: string; params: unknown[] } {
+  const s = schemaName.replace(/"/g, '""')
   return {
-    sql: `SET search_path TO "${schemaName}", public`,
+    sql: `SET search_path TO "${s}", public`,
     params: [],
   }
 }
@@ -157,8 +158,11 @@ export function buildCopyTableSchemaSQL(
   targetSchema: string,
   tableName: string,
 ): { sql: string; params: unknown[] } {
+  const ss = sourceSchema.replace(/"/g, '""')
+  const ts = targetSchema.replace(/"/g, '""')
+  const tn = tableName.replace(/"/g, '""')
   return {
-    sql: `CREATE TABLE "${targetSchema}"."${tableName}" (LIKE "${sourceSchema}"."${tableName}" INCLUDING ALL)`,
+    sql: `CREATE TABLE "${ts}"."${tn}" (LIKE "${ss}"."${tn}" INCLUDING ALL)`,
     params: [],
   }
 }
@@ -169,8 +173,11 @@ export function buildCopyTableDataSQL(
   tableName: string,
   maxRows: number,
 ): { sql: string; params: unknown[] } {
+  const ss = sourceSchema.replace(/"/g, '""')
+  const ts = targetSchema.replace(/"/g, '""')
+  const tn = tableName.replace(/"/g, '""')
   return {
-    sql: `INSERT INTO "${targetSchema}"."${tableName}" SELECT * FROM "${sourceSchema}"."${tableName}" LIMIT $1`,
+    sql: `INSERT INTO "${ts}"."${tn}" SELECT * FROM "${ss}"."${tn}" LIMIT $1`,
     params: [maxRows],
   }
 }
