@@ -14,6 +14,5 @@
 
 - [ ] My code follows the project's coding conventions
 - [ ] I have added tests for my changes
-- [ ] `npm run build` passes
-- [ ] `npm run test` passes
+- [ ] `npm run check` passes (build, typecheck, test, lint, format)
 - [ ] I have updated documentation if needed
