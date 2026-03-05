@@ -125,6 +125,9 @@ export function buildRetentionPruneSQL(policy: RetentionPolicy): string {
   if (!IDENTIFIER_RE.test(policy.timestampColumn)) {
     throw new Error(`Invalid timestamp column: "${policy.timestampColumn}" — must be a valid SQL identifier`)
   }
+  if (!Number.isFinite(policy.retentionDays) || policy.retentionDays <= 0) {
+    throw new Error(`Invalid retentionDays: ${policy.retentionDays} — must be a finite positive number`)
+  }
   if (policy.action === "delete") {
     return `DELETE FROM "${policy.table}" WHERE "${policy.timestampColumn}" < NOW() - INTERVAL '${policy.retentionDays} days';`
   }
