@@ -29,14 +29,14 @@ export function generateCreateTableSQL(tableName: string, columns: Record<string
     lines.push(`  ${pgCol}`)
   }
 
-  return `CREATE TABLE IF NOT EXISTS "${tableName}" (\n${lines.join(",\n")}\n);`
+  return `CREATE TABLE IF NOT EXISTS "${tableName.replace(/"/g, '""')}" (\n${lines.join(",\n")}\n);`
 }
 
 function columnToSQL(name: string, validator: Validator): string {
   // Computed columns use Postgres GENERATED ALWAYS AS
   if (validator.type === "computed" && validator.computeSql) {
     const inner = validator.innerValidator ?? validator
-    return `"${name}" ${inner.pgType} GENERATED ALWAYS AS (${validator.computeSql}) STORED`
+    return `"${name.replace(/"/g, '""')}" ${inner.pgType} GENERATED ALWAYS AS (${validator.computeSql}) STORED`
   }
 
   const actualValidator =
@@ -57,15 +57,15 @@ function columnToSQL(name: string, validator: Validator): string {
   let check = ""
   const enumValues = validator.enumValues ?? actualValidator.enumValues
   if (enumValues && enumValues.length > 0) {
-    const vals = enumValues.map((v) => `'${v}'`).join(", ")
-    check = ` CHECK ("${name}" IN (${vals}))`
+    const vals = enumValues.map((v) => `'${v.replace(/'/g, "''")}'`).join(", ")
+    check = ` CHECK ("${name.replace(/"/g, '""')}" IN (${vals}))`
   }
 
-  return `"${name}" ${pgType}${nullable}${defaultVal}${check}`
+  return `"${name.replace(/"/g, '""')}" ${pgType}${nullable}${defaultVal}${check}`
 }
 
 function formatDefault(value: unknown): string {
-  if (typeof value === "string") return `'${value}'`
+  if (typeof value === "string") return `'${value.replace(/'/g, "''")}'`
   if (typeof value === "boolean") return value ? "true" : "false"
   if (typeof value === "number") return String(value)
   return String(value)
@@ -82,14 +82,18 @@ export function generateIndexSQL(
   indexType?: string,
   opclass?: string,
 ): string {
+  const VALID_OPCLASSES = new Set(["vector_cosine_ops", "vector_l2_ops", "vector_ip_ops"])
   if (indexType === "hnsw" || indexType === "ivfflat") {
     const col = columns[0]
     const ops = opclass ?? "vector_cosine_ops"
-    return `CREATE INDEX IF NOT EXISTS "${indexName}" ON "${tableName}" USING ${indexType} ("${col}" ${ops});`
+    if (!VALID_OPCLASSES.has(ops)) {
+      throw new Error(`Invalid opclass: ${ops}`)
+    }
+    return `CREATE INDEX IF NOT EXISTS "${indexName.replace(/"/g, '""')}" ON "${tableName.replace(/"/g, '""')}" USING ${indexType} ("${col.replace(/"/g, '""')}" ${ops});`
   }
   const uniqueStr = unique ? "UNIQUE " : ""
-  const cols = columns.map((c) => `"${c}"`).join(", ")
-  return `CREATE ${uniqueStr}INDEX IF NOT EXISTS "${indexName}" ON "${tableName}" (${cols});`
+  const cols = columns.map((c) => `"${c.replace(/"/g, '""')}"`).join(", ")
+  return `CREATE ${uniqueStr}INDEX IF NOT EXISTS "${indexName.replace(/"/g, '""')}" ON "${tableName.replace(/"/g, '""')}" (${cols});`
 }
 
 /**
@@ -117,7 +121,7 @@ export function generateMigrationSQL(schema: Schema): Migration {
       )
     }
 
-    downStatements.unshift(`DROP TABLE IF EXISTS "${tableName}" CASCADE;`)
+    downStatements.unshift(`DROP TABLE IF EXISTS "${tableName.replace(/"/g, '""')}" CASCADE;`)
   }
 
   // Check if any table uses vector columns, and add pgvector extension
