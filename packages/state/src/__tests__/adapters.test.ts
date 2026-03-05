@@ -3,7 +3,7 @@
  * Uses a mock ReactiveStore to test lifecycle, subscriptions, and mutations.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest"
 import { ReactiveStore } from "../index.js"
 import type { StateClientAdapter, QueryState } from "../index.js"
 import { queryAtom, selectorAtom, mutationAtom } from "../adapters/jotai.js"
@@ -17,6 +17,7 @@ function createMockClient(): StateClientAdapter & {
   _callbacks: Map<string, (data: unknown, error?: Error) => void>
   _pushData(queryName: string, data: unknown): void
   _pushError(queryName: string, error: Error): void
+  mutate: Mock<(name: string, args: unknown) => Promise<unknown>>
 } {
   const callbacks = new Map<string, (data: unknown, error?: Error) => void>()
   return {
