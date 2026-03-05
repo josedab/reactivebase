@@ -18,6 +18,7 @@
 import { randomUUID, createHmac } from "node:crypto"
 import type { CircuitBreakerRegistry } from "./circuit-breaker.js"
 import type { WebhookDeliveryQueue } from "./delivery-queue.js"
+import { validateWebhookUrl } from "./url-validation.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -289,6 +290,7 @@ export class WebhookSubscriptionManager {
 
     // Direct delivery
     try {
+      validateWebhookUrl(sub.url)
       const body = JSON.stringify(payload)
       const headers: Record<string, string> = {
         "Content-Type": "application/json",

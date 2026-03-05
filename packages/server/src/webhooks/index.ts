@@ -69,3 +69,6 @@ export type {
 // SSE Stream Adapter
 export { SseStreamAdapter } from "./sse-adapter.js"
 export type { SseClient, SseWriter, SseAdapterOptions } from "./sse-adapter.js"
+
+// URL Validation
+export { validateWebhookUrl, WebhookUrlError } from "./url-validation.js"

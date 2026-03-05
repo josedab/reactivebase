@@ -8,6 +8,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto"
 import type { IncomingMessage } from "node:http"
 import type { ChangeEvent } from "../reactivity/index.js"
+import { validateWebhookUrl } from "./url-validation.js"
 
 // --- Inbound Webhooks ---
 
@@ -180,6 +181,7 @@ export class OutboundWebhookManager {
     }
 
     try {
+      validateWebhookUrl(hook.url)
       const response = await fetch(hook.url, {
         method: "POST",
         headers,

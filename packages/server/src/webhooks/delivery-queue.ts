@@ -4,6 +4,7 @@
  */
 
 import { randomUUID } from "node:crypto"
+import { validateWebhookUrl } from "./url-validation.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -196,6 +197,7 @@ export class WebhookDeliveryQueue {
     try {
       const startTime = performance.now()
 
+      validateWebhookUrl(record.webhookUrl)
       const response = await fetch(record.webhookUrl, {
         method: "POST",
         headers: {
