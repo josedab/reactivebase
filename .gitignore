@@ -10,3 +10,4 @@ coverage/
 website/build/
 website/.docusaurus/
 *.tsbuildinfo
+tsup.config.bundled_*.mjs
