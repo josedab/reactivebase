@@ -201,8 +201,10 @@ export function buildIncrementSQL(
   column: string,
   delta: number,
 ): { sql: string; params: unknown[] } {
+  const t = tableName.replace(/"/g, '""')
+  const c = column.replace(/"/g, '""')
   return {
-    sql: `UPDATE "${tableName}" SET "${column}" = "${column}" + $1 WHERE "id" = $2 RETURNING *`,
+    sql: `UPDATE "${t}" SET "${c}" = "${c}" + $1 WHERE "id" = $2 RETURNING *`,
     params: [delta, id],
   }
 }
@@ -216,8 +218,10 @@ export function buildArrayAppendSQL(
   column: string,
   value: unknown,
 ): { sql: string; params: unknown[] } {
+  const t = tableName.replace(/"/g, '""')
+  const c = column.replace(/"/g, '""')
   return {
-    sql: `UPDATE "${tableName}" SET "${column}" = array_append("${column}", $1) WHERE "id" = $2 RETURNING *`,
+    sql: `UPDATE "${t}" SET "${c}" = array_append("${c}", $1) WHERE "id" = $2 RETURNING *`,
     params: [value, id],
   }
 }
@@ -231,8 +235,10 @@ export function buildArrayRemoveSQL(
   column: string,
   value: unknown,
 ): { sql: string; params: unknown[] } {
+  const t = tableName.replace(/"/g, '""')
+  const c = column.replace(/"/g, '""')
   return {
-    sql: `UPDATE "${tableName}" SET "${column}" = array_remove("${column}", $1) WHERE "id" = $2 RETURNING *`,
+    sql: `UPDATE "${t}" SET "${c}" = array_remove("${c}", $1) WHERE "id" = $2 RETURNING *`,
     params: [value, id],
   }
 }
@@ -246,8 +252,10 @@ export function buildJsonMergeSQL(
   column: string,
   patch: Record<string, unknown>,
 ): { sql: string; params: unknown[] } {
+  const t = tableName.replace(/"/g, '""')
+  const c = column.replace(/"/g, '""')
   return {
-    sql: `UPDATE "${tableName}" SET "${column}" = "${column}" || $1::jsonb WHERE "id" = $2 RETURNING *`,
+    sql: `UPDATE "${t}" SET "${c}" = "${c}" || $1::jsonb WHERE "id" = $2 RETURNING *`,
     params: [JSON.stringify(patch), id],
   }
 }
