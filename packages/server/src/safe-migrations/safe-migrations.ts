@@ -98,9 +98,22 @@ const DEFAULT_OPTIONS: Required<ExpandContractOptions> = {
 const SAFE_DEFAULT_VALUE_RE =
   /^(?:'[^']*'|\d+(?:\.\d+)?|true|false|NULL|gen_random_uuid\(\)|NOW\(\)|CURRENT_TIMESTAMP)$/i
 
+const SAFE_TIMEOUT_RE = /^\d+[smh]?$/
+
 function sanitizeDefaultValue(value: string): string {
   if (!SAFE_DEFAULT_VALUE_RE.test(value)) {
     throw new SafeMigrationError(`Unsafe default value: ${value}`)
+  }
+  return value
+}
+
+function escapeIdent(identifier: string | undefined): string {
+  return (identifier ?? "").replace(/"/g, '""')
+}
+
+function validateTimeout(value: string, label: string): string {
+  if (!SAFE_TIMEOUT_RE.test(value)) {
+    throw new SafeMigrationError(`Invalid ${label}: ${value}`)
   }
   return value
 }
@@ -238,8 +251,8 @@ export class MigrationAnalyzer {
     const rollbackContractSQL: string[] = []
 
     // Set lock/statement timeouts for safety
-    expandSQL.push(`SET LOCAL lock_timeout = '${opts.lockTimeout}';`)
-    expandSQL.push(`SET LOCAL statement_timeout = '${opts.statementTimeout}';`)
+    expandSQL.push(`SET LOCAL lock_timeout = '${validateTimeout(opts.lockTimeout, "lockTimeout")}';`)
+    expandSQL.push(`SET LOCAL statement_timeout = '${validateTimeout(opts.statementTimeout, "statementTimeout")}';`)
 
     let requiresTableRewrite = false
     let requiresSubscriptionUpdate = false
@@ -249,9 +262,9 @@ export class MigrationAnalyzer {
         case "add_column": {
           const defaultClause = op.defaultValue !== undefined ? ` DEFAULT ${sanitizeDefaultValue(op.defaultValue)}` : ""
           expandSQL.push(
-            `ALTER TABLE "${op.table}" ADD COLUMN IF NOT EXISTS "${op.column}" ${op.newType ?? "text"}${defaultClause};`,
+            `ALTER TABLE "${escapeIdent(op.table)}" ADD COLUMN IF NOT EXISTS "${escapeIdent(op.column)}" ${op.newType ?? "text"}${defaultClause};`,
           )
-          rollbackExpandSQL.push(`ALTER TABLE "${op.table}" DROP COLUMN IF EXISTS "${op.column}";`)
+          rollbackExpandSQL.push(`ALTER TABLE "${escapeIdent(op.table)}" DROP COLUMN IF EXISTS "${escapeIdent(op.column)}";`)
           break
         }
 
@@ -259,8 +272,8 @@ export class MigrationAnalyzer {
           // Expand: create a trigger to stop writing to the column
           dualWriteTriggerSQL.push(this.generateDualWriteStopTrigger(op.table, op.column!, opts.triggerPrefix))
           // Contract: actually drop the column
-          contractSQL.push(`ALTER TABLE "${op.table}" DROP COLUMN IF EXISTS "${op.column}";`)
-          rollbackContractSQL.push(`-- Cannot rollback column drop for "${op.table}"."${op.column}"`)
+          contractSQL.push(`ALTER TABLE "${escapeIdent(op.table)}" DROP COLUMN IF EXISTS "${escapeIdent(op.column)}";`)
+          rollbackContractSQL.push(`-- Cannot rollback column drop for "${escapeIdent(op.table)}"."${escapeIdent(op.column)}"`)
           warnings.push(
             `Column "${op.table}"."${op.column}" will be dropped in contract phase. Ensure no code references it.`,
           )
@@ -270,7 +283,7 @@ export class MigrationAnalyzer {
 
         case "rename_column": {
           // Expand: add new column
-          expandSQL.push(`ALTER TABLE "${op.table}" ADD COLUMN IF NOT EXISTS "${op.newName}" ${op.newType ?? "text"};`)
+          expandSQL.push(`ALTER TABLE "${escapeIdent(op.table)}" ADD COLUMN IF NOT EXISTS "${escapeIdent(op.newName)}" ${op.newType ?? "text"};`)
           // Backfill: copy data
           backfillSQL.push(this.generateBackfillSQL(op.table, op.column!, op.newName!, opts.backfillBatchSize))
           // Dual-write: trigger to sync old -> new
@@ -278,61 +291,61 @@ export class MigrationAnalyzer {
             this.generateDualWriteSyncTrigger(op.table, op.column!, op.newName!, opts.triggerPrefix),
           )
           // Contract: drop old column and trigger
-          contractSQL.push(`DROP TRIGGER IF EXISTS "${opts.triggerPrefix}${op.table}_${op.column}" ON "${op.table}";`)
-          contractSQL.push(`DROP FUNCTION IF EXISTS "${opts.triggerPrefix}${op.table}_${op.column}_fn"();`)
-          contractSQL.push(`ALTER TABLE "${op.table}" DROP COLUMN IF EXISTS "${op.column}";`)
-          rollbackExpandSQL.push(`ALTER TABLE "${op.table}" DROP COLUMN IF EXISTS "${op.newName}";`)
+          contractSQL.push(`DROP TRIGGER IF EXISTS "${escapeIdent(opts.triggerPrefix + op.table + "_" + op.column)}" ON "${escapeIdent(op.table)}";`)
+          contractSQL.push(`DROP FUNCTION IF EXISTS "${escapeIdent(opts.triggerPrefix + op.table + "_" + op.column + "_fn")}"();`)
+          contractSQL.push(`ALTER TABLE "${escapeIdent(op.table)}" DROP COLUMN IF EXISTS "${escapeIdent(op.column)}";`)
+          rollbackExpandSQL.push(`ALTER TABLE "${escapeIdent(op.table)}" DROP COLUMN IF EXISTS "${escapeIdent(op.newName)}";`)
           requiresSubscriptionUpdate = true
           break
         }
 
         case "alter_column_type": {
           const tempCol = `${op.column}_new`
-          expandSQL.push(`ALTER TABLE "${op.table}" ADD COLUMN IF NOT EXISTS "${tempCol}" ${op.newType};`)
+          expandSQL.push(`ALTER TABLE "${escapeIdent(op.table)}" ADD COLUMN IF NOT EXISTS "${escapeIdent(tempCol)}" ${op.newType};`)
           backfillSQL.push(this.generateBackfillSQL(op.table, op.column!, tempCol, opts.backfillBatchSize))
           dualWriteTriggerSQL.push(this.generateDualWriteSyncTrigger(op.table, op.column!, tempCol, opts.triggerPrefix))
-          contractSQL.push(`ALTER TABLE "${op.table}" DROP COLUMN IF EXISTS "${op.column}";`)
-          contractSQL.push(`ALTER TABLE "${op.table}" RENAME COLUMN "${tempCol}" TO "${op.column}";`)
-          rollbackExpandSQL.push(`ALTER TABLE "${op.table}" DROP COLUMN IF EXISTS "${tempCol}";`)
+          contractSQL.push(`ALTER TABLE "${escapeIdent(op.table)}" DROP COLUMN IF EXISTS "${escapeIdent(op.column)}";`)
+          contractSQL.push(`ALTER TABLE "${escapeIdent(op.table)}" RENAME COLUMN "${escapeIdent(tempCol)}" TO "${escapeIdent(op.column)}";`)
+          rollbackExpandSQL.push(`ALTER TABLE "${escapeIdent(op.table)}" DROP COLUMN IF EXISTS "${escapeIdent(tempCol)}";`)
           requiresTableRewrite = true
           requiresSubscriptionUpdate = true
           break
         }
 
         case "add_table": {
-          expandSQL.push(`CREATE TABLE IF NOT EXISTS "${op.table}" (id TEXT PRIMARY KEY);`)
-          rollbackExpandSQL.push(`DROP TABLE IF EXISTS "${op.table}";`)
+          expandSQL.push(`CREATE TABLE IF NOT EXISTS "${escapeIdent(op.table)}" (id TEXT PRIMARY KEY);`)
+          rollbackExpandSQL.push(`DROP TABLE IF EXISTS "${escapeIdent(op.table)}";`)
           break
         }
 
         case "drop_table": {
-          contractSQL.push(`DROP TABLE IF EXISTS "${op.table}";`)
+          contractSQL.push(`DROP TABLE IF EXISTS "${escapeIdent(op.table)}";`)
           warnings.push(`Table "${op.table}" will be dropped in contract phase. This is irreversible.`)
           requiresSubscriptionUpdate = true
           break
         }
 
         case "add_index": {
-          expandSQL.push(`CREATE INDEX CONCURRENTLY IF NOT EXISTS "${op.indexName}" ON "${op.table}" ("${op.column}");`)
-          rollbackExpandSQL.push(`DROP INDEX CONCURRENTLY IF EXISTS "${op.indexName}";`)
+          expandSQL.push(`CREATE INDEX CONCURRENTLY IF NOT EXISTS "${escapeIdent(op.indexName)}" ON "${escapeIdent(op.table)}" ("${escapeIdent(op.column)}");`)
+          rollbackExpandSQL.push(`DROP INDEX CONCURRENTLY IF EXISTS "${escapeIdent(op.indexName)}";`)
           break
         }
 
         case "drop_index": {
-          expandSQL.push(`DROP INDEX CONCURRENTLY IF EXISTS "${op.indexName}";`)
+          expandSQL.push(`DROP INDEX CONCURRENTLY IF EXISTS "${escapeIdent(op.indexName)}";`)
           break
         }
 
         case "add_not_null": {
           backfillSQL.push(
-            `UPDATE "${op.table}" SET "${op.column}" = ${sanitizeDefaultValue(op.defaultValue ?? "''")} WHERE "${op.column}" IS NULL;`,
+            `UPDATE "${escapeIdent(op.table)}" SET "${escapeIdent(op.column)}" = ${sanitizeDefaultValue(op.defaultValue ?? "''")} WHERE "${escapeIdent(op.column)}" IS NULL;`,
           )
-          contractSQL.push(`ALTER TABLE "${op.table}" ALTER COLUMN "${op.column}" SET NOT NULL;`)
+          contractSQL.push(`ALTER TABLE "${escapeIdent(op.table)}" ALTER COLUMN "${escapeIdent(op.column)}" SET NOT NULL;`)
           break
         }
 
         case "drop_not_null": {
-          expandSQL.push(`ALTER TABLE "${op.table}" ALTER COLUMN "${op.column}" DROP NOT NULL;`)
+          expandSQL.push(`ALTER TABLE "${escapeIdent(op.table)}" ALTER COLUMN "${escapeIdent(op.column)}" DROP NOT NULL;`)
           break
         }
 
@@ -443,17 +456,17 @@ export class MigrationAnalyzer {
   }
 
   private generateBackfillSQL(table: string, fromCol: string, toCol: string, batchSize: number): string {
-    return `-- Backfill "${table}"."${toCol}" from "${fromCol}" in batches of ${batchSize}
+    return `-- Backfill "${escapeIdent(table)}"."${escapeIdent(toCol)}" from "${escapeIdent(fromCol)}" in batches of ${batchSize}
 DO $$
 DECLARE
   batch_count INTEGER := 0;
 BEGIN
   LOOP
-    UPDATE "${table}"
-    SET "${toCol}" = "${fromCol}"
+    UPDATE "${escapeIdent(table)}"
+    SET "${escapeIdent(toCol)}" = "${escapeIdent(fromCol)}"
     WHERE id IN (
-      SELECT id FROM "${table}"
-      WHERE "${toCol}" IS NULL
+      SELECT id FROM "${escapeIdent(table)}"
+      WHERE "${escapeIdent(toCol)}" IS NULL
       LIMIT ${batchSize}
     );
     EXIT WHEN NOT FOUND;
@@ -467,21 +480,21 @@ END $$;`
   private generateDualWriteSyncTrigger(table: string, oldCol: string, newCol: string, prefix: string): string {
     const triggerName = `${prefix}${table}_${oldCol}`
     const fnName = `${triggerName}_fn`
-    return `CREATE OR REPLACE FUNCTION "${fnName}"()
+    return `CREATE OR REPLACE FUNCTION "${escapeIdent(fnName)}"()
 RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 BEGIN
-  NEW."${newCol}" := NEW."${oldCol}";
+  NEW."${escapeIdent(newCol)}" := NEW."${escapeIdent(oldCol)}";
   RETURN NEW;
 END $$;
 
-CREATE TRIGGER "${triggerName}"
-BEFORE INSERT OR UPDATE ON "${table}"
-FOR EACH ROW EXECUTE FUNCTION "${fnName}"();`
+CREATE TRIGGER "${escapeIdent(triggerName)}"
+BEFORE INSERT OR UPDATE ON "${escapeIdent(table)}"
+FOR EACH ROW EXECUTE FUNCTION "${escapeIdent(fnName)}"();`
   }
 
   private generateDualWriteStopTrigger(table: string, column: string, _prefix: string): string {
-    return `-- Dual-write stop for "${table}"."${column}": application should stop writing to this column`
+    return `-- Dual-write stop for "${escapeIdent(table)}"."${escapeIdent(column)}": application should stop writing to this column`
   }
 
   private safetyIcon(safety: MigrationSafety): string {
