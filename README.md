@@ -11,7 +11,7 @@
 
 📖 **Documentation**: [reactivebase.dev](https://reactivebase.dev) · 💬 **Community**: [Discord](https://discord.gg/reactivebase)
 
-> **~126K LOC · 85 server modules · ~2,488 tests · 15 packages · MIT license**
+> **~126K LOC · 85 server modules · ~2,488 tests · 16 packages · MIT license**
 
 ---
 
@@ -155,6 +155,7 @@ ReactiveBase Server
 | ----------------------------------- | ---------------------------------------------------------------------------- |
 | `@reactivebase/server`              | Server framework: queries, mutations, actions, reactivity engine, scheduler  |
 | `@reactivebase/client`              | Framework-agnostic client: subscriptions, cache, WebSocket transport         |
+| `@reactivebase/state`               | Framework-agnostic reactive state layer: Zustand, Jotai, Pinia, Nanostores   |
 | `@reactivebase/react`               | React hooks: `useQuery`, `useMutation`, `useAction`                          |
 | `@reactivebase/nextjs`              | Next.js integration: `preloadQuery`, `usePreloadedQuery`, App Router support |
 | `@reactivebase/vue`                 | Vue 3 composables: `useQuery`, `useMutation`, `useAction`                    |

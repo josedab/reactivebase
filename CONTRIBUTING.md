@@ -26,7 +26,7 @@ npm run check
 
 ## Project Architecture
 
-ReactiveBase is a Turborepo monorepo with 15 packages:
+ReactiveBase is a Turborepo monorepo with 16 packages:
 
 ```
 packages/
@@ -69,6 +69,7 @@ packages/
 ├── nextjs/          ← Next.js SSR + streaming
 ├── edge/            ← Edge runtime adapter
 ├── testing/         ← TestServer + MockDatabase
+├── state/           ← Framework-agnostic reactive state layer (Zustand, Jotai, Pinia, Nanostores)
 ├── cli/             ← Dev server, generate, migrate
 ├── create-reactivebase/ ← Project scaffolding wizard
 └── reactivebase/    ← Umbrella re-export
@@ -275,6 +276,16 @@ Then verify with `npm run format:check`.
 
 If you see TS2339 errors in `create-reactivebase`, ensure the destructuring in `src/index.ts` matches the return type of `generateDependencies()` (should use `dependencies`/`devDependencies`, not prefixed with underscores).
 
+### `npm run build` or `npm run typecheck` fails on `@reactivebase/state`
+
+If you see "No input files" during build, ensure `packages/state/tsup.config.ts` exists with the correct entry points. If you see TS2339 errors about mock methods (`mockResolvedValueOnce`, etc.), ensure the `mutate` mock in test helpers is typed with `Mock`:
+
+```ts
+import { type Mock } from "vitest"
+// In createMockClient return type:
+mutate: Mock<(name: string, args: unknown) => Promise<unknown>>
+```
+
 ### Turbo cache issues
 
 If you see stale build artifacts or unexplained failures after switching branches:
@@ -340,7 +351,7 @@ ReactiveBase uses **tag-based releases**. When a Git tag matching `v*` (e.g., `v
 | **CI (automated)** | `.github/workflows/release.yml` | Standard releases — triggered by pushing a `v*` tag |
 | **Manual**         | `scripts/publish.sh`            | Emergency hotfixes or when CI is unavailable        |
 
-Both publish the same 15 packages to npm in dependency order.
+Both publish the same 16 packages to npm in dependency order.
 
 ### NPM_TOKEN GitHub Secret
 
