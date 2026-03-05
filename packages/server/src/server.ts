@@ -186,10 +186,14 @@ export function createReactiveBaseServer(schema: Schema, config: ReactiveBaseCon
       })
       res.end(JSON.stringify({ data: result.result }))
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Internal server error"
+      const internalMessage = error instanceof Error ? error.message : "Internal server error"
+      const clientMessage = process.env.NODE_ENV === "production" ? "Internal server error" : internalMessage
+      if (process.env.NODE_ENV === "production") {
+        console.error(`Query error: ${internalMessage}`)
+      }
       metrics.recordQuery("query:unknown", 0, true)
       res.writeHead(500, { "Content-Type": "application/json" })
-      res.end(JSON.stringify({ error: message }))
+      res.end(JSON.stringify({ error: clientMessage }))
     }
   }
 

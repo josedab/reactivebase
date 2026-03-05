@@ -279,12 +279,17 @@ export class TransportServer {
       })
     } catch (error: unknown) {
       this.metrics?.recordQuery(`query:${queryName}`, 0, true)
+      const internalMessage = error instanceof Error ? error.message : "Unknown error"
+      const clientMessage = process.env.NODE_ENV === "production" ? "Internal server error" : internalMessage
+      if (process.env.NODE_ENV === "production") {
+        console.error(`Subscription error [${subscriptionId}]: ${internalMessage}`)
+      }
       this.send(conn, {
         type: "subscription_error",
         subscriptionId,
         error: {
           code: "QUERY_ERROR",
-          message: error instanceof Error ? error.message : "Unknown error",
+          message: clientMessage,
         },
       })
     }
@@ -354,12 +359,17 @@ export class TransportServer {
       }
       await this.middleware.runOnError(mwCtx, error instanceof Error ? error : new Error(String(error)))
       this.metrics?.recordMutation(`mutation:${mutationName}`, 0, true)
+      const internalMessage = error instanceof Error ? error.message : "Unknown error"
+      const clientMessage = process.env.NODE_ENV === "production" ? "Internal server error" : internalMessage
+      if (process.env.NODE_ENV === "production") {
+        console.error(`Mutation error [${mutationName}]: ${internalMessage}`)
+      }
       this.send(conn, {
         type: "mutation_error",
         requestId,
         error: {
           code: "MUTATION_ERROR",
-          message: error instanceof Error ? error.message : "Unknown error",
+          message: clientMessage,
         },
       })
     }
