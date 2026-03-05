@@ -248,6 +248,16 @@ export function createAiContext(
     async search(query, options) {
       if (!queryFn) throw new Error("Search requires a database query function")
 
+      const SAFE_IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+      const escapeIdent = (name: string): string => name.replace(/"/g, '""')
+
+      if (!SAFE_IDENTIFIER_RE.test(options.table)) {
+        throw new Error(`Invalid table name: ${options.table}`)
+      }
+      if (!SAFE_IDENTIFIER_RE.test(options.vectorColumn)) {
+        throw new Error(`Invalid vector column name: ${options.vectorColumn}`)
+      }
+
       const [embedding] = await provider.embed([query])
       const topK = options.topK ?? 10
 
@@ -258,18 +268,21 @@ export function createAiContext(
       }
       const op = distanceOp[options.metric ?? "cosine"]
 
-      let sql = `SELECT *, "${options.vectorColumn}" ${op} $1 as _distance FROM "${options.table}"`
+      let sql = `SELECT *, "${escapeIdent(options.vectorColumn)}" ${op} $1 as _distance FROM "${escapeIdent(options.table)}"`
       const params: unknown[] = [`[${embedding.join(",")}]`]
 
       if (options.filter) {
         const conditions = Object.entries(options.filter).map(([k], i) => {
+          if (!SAFE_IDENTIFIER_RE.test(k)) {
+            throw new Error(`Invalid filter column name: ${k}`)
+          }
           params.push(options.filter![k])
-          return `"${k}" = $${i + 2}`
+          return `"${escapeIdent(k)}" = $${i + 2}`
         })
         sql += ` WHERE ${conditions.join(" AND ")}`
       }
 
-      sql += ` ORDER BY "${options.vectorColumn}" ${op} $1 LIMIT ${topK}`
+      sql += ` ORDER BY "${escapeIdent(options.vectorColumn)}" ${op} $1 LIMIT ${topK}`
 
       const rows = (await queryFn(sql, params)) as Array<Record<string, unknown>>
 
