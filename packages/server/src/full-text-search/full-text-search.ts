@@ -155,6 +155,24 @@ function validateLanguage(language: string): string {
   return language
 }
 
+const VALID_OPERATORS = new Set(["=", "!=", "<", ">", "<=", ">=", "LIKE", "ILIKE", "IN", "IS"])
+
+function validateOperator(operator: string): string {
+  if (!VALID_OPERATORS.has(operator)) {
+    throw new SearchError(`Invalid filter operator: ${operator}`)
+  }
+  return operator
+}
+
+const VALID_WEIGHTS = new Set(["A", "B", "C", "D"])
+
+function validateWeight(weight: string): string {
+  if (!VALID_WEIGHTS.has(weight)) {
+    throw new SearchError(`Invalid column weight: ${weight} — must be one of A, B, C, D`)
+  }
+  return weight
+}
+
 // ─── Search Query Builder ────────────────────────────────────────────────────
 
 export interface SearchQueryPlan {
@@ -318,7 +336,7 @@ export class SearchQueryBuilder<T = Record<string, unknown>> {
       const lang = validateLanguage(col.language ?? language)
       const safeCol = validateColumnName(col.column)
       const weight = col.weight
-        ? `setweight(to_tsvector('${lang}', COALESCE("${safeCol}", '')), '${col.weight}')`
+        ? `setweight(to_tsvector('${lang}', COALESCE("${safeCol}", '')), '${validateWeight(col.weight)}')`
         : `to_tsvector('${lang}', COALESCE("${safeCol}", ''))`
       return weight
     })
@@ -359,7 +377,7 @@ export class SearchQueryBuilder<T = Record<string, unknown>> {
     for (const filter of this.plan.filters) {
       const safeFilterCol = validateColumnName(filter.column)
       params.push(filter.value)
-      parts.push(`AND "${safeFilterCol}" ${filter.operator} $${params.length}`)
+      parts.push(`AND "${safeFilterCol}" ${validateOperator(filter.operator)} $${params.length}`)
     }
 
     // Min rank filter
@@ -418,7 +436,7 @@ export class SearchQueryBuilder<T = Record<string, unknown>> {
       for (const filter of this.plan.filters) {
         const safeFilterCol = validateColumnName(filter.column)
         params.push(filter.value)
-        parts.push(`AND "${safeFilterCol}" ${filter.operator} $${params.length}`)
+        parts.push(`AND "${safeFilterCol}" ${validateOperator(filter.operator)} $${params.length}`)
       }
 
       parts.push(`ORDER BY "_rank" DESC`)
@@ -479,17 +497,21 @@ export interface SearchableValidatorOptions {
  * Generate SQL for creating full-text search indexes on a table.
  */
 export function generateSearchIndexSQL(table: string, options: SearchableValidatorOptions): string {
-  const language = options.language ?? "english"
+  if (!SAFE_IDENTIFIER_RE.test(table)) {
+    throw new SearchError(`Invalid table name: ${table}`)
+  }
+  const language = validateLanguage(options.language ?? "english")
   const parts: string[] = []
 
   // Generated tsvector column (materialized for performance)
   const tsvectorExpr = options.columns
     .map((col) => {
+      const safeCol = validateColumnName(col)
       const weight = options.weights?.[col]
       if (weight) {
-        return `setweight(to_tsvector('${language}', COALESCE("${col}", '')), '${weight}')`
+        return `setweight(to_tsvector('${language}', COALESCE("${safeCol}", '')), '${validateWeight(weight)}')`
       }
-      return `to_tsvector('${language}', COALESCE("${col}", ''))`
+      return `to_tsvector('${language}', COALESCE("${safeCol}", ''))`
     })
     .join(" || ")
 
@@ -504,8 +526,9 @@ export function generateSearchIndexSQL(table: string, options: SearchableValidat
   // Optional pg_trgm index for fuzzy search
   if (options.enableFuzzy) {
     for (const col of options.columns) {
+      const safeCol = validateColumnName(col)
       parts.push(
-        `CREATE INDEX IF NOT EXISTS "idx_${table}_${col}_trgm" ON "${table}" USING GIN ("${col}" gin_trgm_ops);`,
+        `CREATE INDEX IF NOT EXISTS "idx_${table}_${safeCol}_trgm" ON "${table}" USING GIN ("${safeCol}" gin_trgm_ops);`,
       )
     }
   }
