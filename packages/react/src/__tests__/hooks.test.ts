@@ -14,8 +14,8 @@ function createMockClient() {
   let subCounter = 0
 
   const cache = {
-    applyOptimisticUpdate: vi.fn(() => vi.fn()),
-    applyOptimisticUpdateByQuery: vi.fn(() => vi.fn()),
+    applyOptimisticUpdate: vi.fn((_id: string, _updater: unknown) => vi.fn()),
+    applyOptimisticUpdateByQuery: vi.fn((_queryName: string, _updater: unknown) => vi.fn()),
   }
 
   return {
@@ -26,8 +26,8 @@ function createMockClient() {
         subscriptions.delete(id)
       }
     }),
-    mutate: vi.fn(async (_name: string, _args: unknown) => ({ success: true })),
-    runAction: vi.fn(async (_name: string, _args: unknown) => ({ result: "done" })),
+    mutate: vi.fn(async (_name: string, _args: unknown): Promise<Record<string, unknown>> => ({ success: true })),
+    runAction: vi.fn(async (_name: string, _args: unknown): Promise<Record<string, unknown>> => ({ result: "done" })),
     getCache: vi.fn(() => cache),
     disconnect: vi.fn(),
     _subscriptions: subscriptions,

@@ -31,8 +31,8 @@ function createMockClient() {
         subscriptions.delete(id)
       }
     }),
-    mutate: vi.fn(async (_name: string, _args: unknown) => ({ success: true })),
-    runAction: vi.fn(async (_name: string, _args: unknown) => ({ result: "ok" })),
+    mutate: vi.fn(async (_name: string, _args: unknown): Promise<Record<string, unknown>> => ({ success: true })),
+    runAction: vi.fn(async (_name: string, _args: unknown): Promise<Record<string, unknown>> => ({ result: "ok" })),
     getCache: vi.fn(() => cache),
     disconnect: vi.fn(),
     _subscriptions: subscriptions,
@@ -60,7 +60,7 @@ function useMockClient() {
   return client
 }
 
-function MockProvider({ client, children }: { client: ReturnType<typeof createMockClient>; children: ReactNode }) {
+function MockProvider({ client, children }: { client: ReturnType<typeof createMockClient>; children?: ReactNode }) {
   return React.createElement(MockClientContext.Provider, { value: client }, children)
 }
 
@@ -109,7 +109,7 @@ function useMutation<TArgs = unknown, TResult = unknown>(mutationName: string): 
 // ─── Error Boundary ──────────────────────────────────────────────────────────
 
 class ErrorBoundary extends React.Component<
-  { children: ReactNode; fallback: (error: Error) => ReactNode },
+  { children?: ReactNode; fallback: (error: Error) => ReactNode },
   { error: Error | null }
 > {
   state = { error: null as Error | null }
