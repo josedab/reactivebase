@@ -10,6 +10,8 @@
  *   await platform.deploy(project.id, env.id, { source: "git", ref: "main" })
  */
 
+import { randomBytes, createHash, timingSafeEqual } from "node:crypto"
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface CloudPlatformOptions {
@@ -548,8 +550,10 @@ export class CloudPlatform {
    */
   validateApiKey(key: string): ApiKeyRecord | null {
     const hash = hashApiKey(key)
+    const hashBuffer = Buffer.from(hash)
     for (const record of this.apiKeys.values()) {
-      if (record.keyHash === hash) {
+      const recordHashBuffer = Buffer.from(record.keyHash)
+      if (hashBuffer.length === recordHashBuffer.length && timingSafeEqual(hashBuffer, recordHashBuffer)) {
         if (record.revokedAt) return null
         if (record.expiresAt && new Date(record.expiresAt) < new Date()) return null
         record.lastUsedAt = new Date().toISOString()
@@ -823,19 +827,9 @@ export interface OneClickDeployResult {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function randomId(): string {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
-  let result = ""
-  for (let i = 0; i < 24; i++) {
-    result += chars[Math.floor(Math.random() * chars.length)]
-  }
-  return result
+  return randomBytes(18).toString("base64url")
 }
 
 function hashApiKey(key: string): string {
-  let hash = 0
-  for (let i = 0; i < key.length; i++) {
-    const char = key.charCodeAt(i)
-    hash = ((hash << 5) - hash + char) | 0
-  }
-  return `hash_${Math.abs(hash).toString(36)}`
+  return createHash("sha256").update(key).digest("hex")
 }
