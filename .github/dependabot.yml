@@ -127,6 +127,13 @@ updates:
     open-pull-requests-limit: 5
 
   - package-ecosystem: "npm"
+    directory: "/packages/state"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "npm"
     directory: "/packages/vscode-extension"
     schedule:
       interval: "weekly"
