@@ -203,8 +203,8 @@ export function buildQueryMutationLogSQL(options: MutationReplayOptions): {
   const limit = options.limit ?? 50
 
   return {
-    sql: `SELECT * FROM _reactivebase_mutation_log ${where} ORDER BY executed_at DESC LIMIT ${limit}`,
-    params,
+    sql: `SELECT * FROM _reactivebase_mutation_log ${where} ORDER BY executed_at DESC LIMIT $${paramIdx}`,
+    params: [...params, limit],
   }
 }
 
