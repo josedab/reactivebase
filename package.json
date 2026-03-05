@@ -17,6 +17,7 @@
     "test:nextjs": "turbo run test --filter=@reactivebase/nextjs",
     "test:edge": "turbo run test --filter=@reactivebase/edge",
     "test:cli": "turbo run test --filter=@reactivebase/cli",
+    "test:state": "turbo run test --filter=@reactivebase/state",
     "test:coverage": "turbo run test:coverage",
     "test:file": "vitest run",
     "test:watch": "turbo run test:watch",
