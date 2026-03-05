@@ -74,16 +74,19 @@ export function generateAdminPanelHTML(model: SchemaVisualModel, options: AdminP
   }
   const modelJson = JSON.stringify(model, null, 2)
   const primary = opts.branding.primaryColor
+  // Server-side escaping for HTML context
+  const escTitle = String(opts.branding.title).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+  const safePrimary = /^#[0-9a-fA-F]{3,8}$|^[a-zA-Z]+$|^rgb\(\d+,\s*\d+,\s*\d+\)$/.test(primary ?? "") ? primary : "#58a6ff"
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${opts.branding.title}</title>
+<title>${escTitle}</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  :root { --primary: ${primary}; --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #c9d1d9; --muted: #8b949e; }
+  :root { --primary: ${safePrimary}; --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #c9d1d9; --muted: #8b949e; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; }
 
   /* Sidebar */
@@ -158,10 +161,10 @@ export function generateAdminPanelHTML(model: SchemaVisualModel, options: AdminP
 </head>
 <body>
 <div class="sidebar">
-  <div class="sidebar-header">${opts.branding.title ?? "ReactiveBase Admin"}</div>
+  <div class="sidebar-header">${escTitle}</div>
   <div class="sidebar-nav">
     <div class="nav-section">Data Browser</div>
-    ${model.tables.map((t: VisualTable) => `<div class="nav-item" data-panel="table-${t.name}" onclick="showPanel('table-${t.name}')"><span class="nav-icon">📋</span>${t.name}</div>`).join("\n    ")}
+    ${model.tables.map((t: VisualTable) => { const sn = String(t.name).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); return `<div class="nav-item" data-panel="table-${sn}" onclick="showPanel('table-${sn}')"><span class="nav-icon">📋</span>${sn}</div>` }).join("\n    ")}
     <div class="nav-section">Tools</div>
     <div class="nav-item" data-panel="query-playground" onclick="showPanel('query-playground')"><span class="nav-icon">▶️</span>Query Playground</div>
     <div class="nav-item" data-panel="schema-designer" onclick="showPanel('schema-designer')"><span class="nav-icon">🏗️</span>Schema Designer</div>
