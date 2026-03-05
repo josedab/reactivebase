@@ -501,9 +501,15 @@ export function defineComputedAggregation(config: {
   primaryKey?: string[]
 }): ComputedTableDefinition {
   const groupByClause = config.groupBy.map((c) => `"${sanitize(c)}"`).join(", ")
+  const safeAggExprRe = /^(COUNT|SUM|AVG|MIN|MAX|COALESCE|ARRAY_AGG)\s*\([\s\w"*.,()]+\)$/i
   const selectCols = [
     ...config.groupBy.map((c) => `"${sanitize(c)}"`),
-    ...Object.entries(config.aggregations).map(([alias, expr]) => `${expr} AS "${sanitize(alias)}"`),
+    ...Object.entries(config.aggregations).map(([alias, expr]) => {
+      if (!safeAggExprRe.test(expr.trim())) {
+        throw new ComputedTableError(`Unsafe aggregation expression: ${expr}`)
+      }
+      return `${expr} AS "${sanitize(alias)}"`
+    }),
   ]
 
   return {
@@ -525,10 +531,23 @@ export function defineComputedJoin(config: {
   selectColumns: string[]
   primaryKey?: string[]
 }): ComputedTableDefinition {
+  const sanitizedColumns = config.selectColumns.map((c) => {
+    // Handle "table.column" format
+    if (c.includes(".")) {
+      const parts = c.split(".")
+      return parts.map((p) => sanitize(p)).join(".")
+    }
+    return sanitize(c)
+  })
+
+  if (!/^[a-zA-Z0-9_\s."=(),]+$/.test(config.joinSQL)) {
+    throw new ComputedTableError(`Invalid joinSQL: contains disallowed characters`)
+  }
+
   return {
     name: config.name,
     sourceTables: config.sourceTables,
-    query: `SELECT ${config.selectColumns.join(", ")} FROM ${config.joinSQL}`,
+    query: `SELECT ${sanitizedColumns.join(", ")} FROM ${config.joinSQL}`,
     primaryKey: config.primaryKey,
     refreshStrategy: "incremental",
   }
