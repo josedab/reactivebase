@@ -11,6 +11,7 @@
 
 import { ref, computed, type Ref } from "vue"
 import { useQuery, useMutation } from "./index.js"
+import { sortData, toggleSort, paginate, validateFields, computePresenceVisibility } from "@reactivebase/client"
 
 // ─── ReactiveTable Composable ────────────────────────────────────────────────
 
@@ -50,30 +51,19 @@ export function useReactiveTable(options: UseReactiveTableOptions): UseReactiveT
 
   const sorted = computed(() => {
     const items = Array.isArray(data.value) ? [...data.value] : []
-    if (sortKey.value) {
-      const key = sortKey.value
-      const dir = sortDir.value
-      items.sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
-        const cmp = String(a[key] ?? "").localeCompare(String(b[key] ?? ""))
-        return dir === "asc" ? cmp : -cmp
-      })
-    }
-    return items
+    return sortData(items, sortKey.value, sortDir.value) as Record<string, unknown>[]
   })
 
   const totalPages = computed(() => Math.ceil(sorted.value.length / pageSize))
 
   const rows = computed(() => {
-    return sorted.value.slice(page.value * pageSize, (page.value + 1) * pageSize)
+    return paginate(sorted.value, page.value, pageSize).rows
   })
 
   function sort(key: string): void {
-    if (sortKey.value === key) {
-      sortDir.value = sortDir.value === "asc" ? "desc" : "asc"
-    } else {
-      sortKey.value = key
-      sortDir.value = "asc"
-    }
+    const result = toggleSort(sortKey.value, sortDir.value, key)
+    sortKey.value = result.sortKey
+    sortDir.value = result.sortDir
   }
 
   function nextPage(): void {
@@ -130,16 +120,7 @@ export function useReactiveForm(options: UseReactiveFormOptions): UseReactiveFor
   }
 
   async function submit(): Promise<void> {
-    const newErrors: Record<string, string> = {}
-    for (const field of options.fields) {
-      if (field.required && !values.value[field.name]) {
-        newErrors[field.name] = `${field.label} is required`
-      }
-      if (field.validate) {
-        const err = field.validate(values.value[field.name])
-        if (err) newErrors[field.name] = err
-      }
-    }
+    const newErrors = validateFields(options.fields, values.value)
 
     if (Object.keys(newErrors).length > 0) {
       errors.value = newErrors
@@ -194,8 +175,9 @@ export function usePresenceAvatars(options: UsePresenceAvatarsOptions): UsePrese
   const maxVisible = options.maxVisible ?? 5
 
   const users = computed(() => (Array.isArray(data.value) ? data.value : []) as VuePresenceUser[])
-  const visible = computed(() => users.value.slice(0, maxVisible))
-  const overflow = computed(() => Math.max(0, users.value.length - maxVisible))
+  const presence = computed(() => computePresenceVisibility(users.value, maxVisible))
+  const visible = computed(() => presence.value.visible)
+  const overflow = computed(() => presence.value.overflow)
 
   return { users, visible, overflow, isLoading }
 }
