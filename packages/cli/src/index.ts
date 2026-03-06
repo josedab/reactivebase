@@ -5,8 +5,12 @@
 
 const args = process.argv.slice(2)
 const verbose = args.includes("--verbose") || args.includes("-V")
+const quiet = args.includes("--quiet") || args.includes("-q")
 if (verbose) {
   process.env.LOG_LEVEL = "debug"
+}
+if (quiet) {
+  process.env.LOG_LEVEL = "silent"
 }
 const command = args[0]
 
@@ -378,6 +382,7 @@ Options:
   --help, -h       Show this help message
   --version, -v    Show version number
   --verbose, -V    Enable verbose/debug output
+  --quiet, -q      Suppress all output (CI-friendly)
 
 Migrate subcommands:
   --generate       Generate a new migration
