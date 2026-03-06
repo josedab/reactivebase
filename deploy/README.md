@@ -182,10 +182,49 @@ both liveness and readiness probes:
 }
 ```
 
+## Monitoring & Observability
+
+ReactiveBase exposes metrics and tracing out of the box.
+
+### Prometheus Metrics
+
+The `/metrics` endpoint serves Prometheus-compatible metrics. Add a scrape target to your `prometheus.yml`:
+
+```yaml
+scrape_configs:
+  - job_name: "reactivebase"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["reactivebase:4000"]
+```
+
+Key metrics include `reactivebase_queries_total`, `reactivebase_query_duration_seconds`, `reactivebase_subscriptions_active`, `reactivebase_connections_active`, and `reactivebase_pg_pool_active`. See [Grafana dashboards](./grafana/README.md) for the full metrics reference.
+
+### Grafana Dashboards
+
+Import the pre-built dashboards for server observability and client connection monitoring:
+
+```bash
+# Copy dashboards to Grafana
+cp deploy/grafana/*.json /var/lib/grafana/dashboards/reactivebase/
+cp deploy/grafana/provisioning.yaml /etc/grafana/provisioning/dashboards/reactivebase.yaml
+```
+
+Or use the Docker Compose volume mount — see [deploy/grafana/README.md](./grafana/README.md) for detailed setup.
+
+### OpenTelemetry Tracing
+
+ReactiveBase's metrics module (`packages/server/src/metrics/`) supports OTEL tracing. Set the standard OTEL environment variables to export traces:
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+OTEL_SERVICE_NAME=reactivebase
+```
+
 ## Platform-Specific Guides
 
 | Guide                                | Description                                      |
 | ------------------------------------ | ------------------------------------------------ |
 | [Kubernetes](./kubernetes/README.md) | Helm chart configuration and Kubernetes operator |
 | [Grafana](./grafana/README.md)       | Monitoring dashboards and alerting               |
-| [Terraform](./terraform/README.md)   | Infrastructure as code modules                   |
+| [Terraform](./terraform/README.md)   | Infrastructure as code modules (🚧 coming soon)  |

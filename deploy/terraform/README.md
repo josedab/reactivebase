@@ -6,15 +6,18 @@ Manage ReactiveBase Cloud resources with Terraform.
 
 🚧 **Coming soon** — The Terraform provider is in development. This directory contains the resource schema specification and example configurations.
 
+> **Tracking:** This work is tracked in the project roadmap. Until the provider is implemented, use the platform-specific deployment guides (Fly.io, Railway, Render, Docker) documented in [deploy/README.md](../README.md).
+> Infrastructure can also be managed via the CLI: `reactivebase init --profile saas`.
+
 ## Planned Resources
 
-| Resource | Description |
-|----------|-------------|
-| `reactivebase_project` | Manage projects with plan, region |
-| `reactivebase_environment` | Manage environments (staging, production) |
-| `reactivebase_api_key` | Create and manage API keys |
-| `reactivebase_custom_domain` | Configure custom domains with SSL |
-| `reactivebase_database` | Provision Postgres databases |
+| Resource                     | Description                               |
+| ---------------------------- | ----------------------------------------- |
+| `reactivebase_project`       | Manage projects with plan, region         |
+| `reactivebase_environment`   | Manage environments (staging, production) |
+| `reactivebase_api_key`       | Create and manage API keys                |
+| `reactivebase_custom_domain` | Configure custom domains with SSL         |
+| `reactivebase_database`      | Provision Postgres databases              |
 
 ## Example Configuration
 
