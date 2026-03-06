@@ -75,8 +75,8 @@ export interface ClientSubscriptionMiddleware {
 
 export class ClientMiddlewarePipeline {
   private middlewares: ClientSubscriptionMiddleware[] = []
-  private errorCounts = new Map<string, number>()
-  private lastUpdateTimes = new Map<string, number>()
+  private _errorCounts: ReadonlyMap<string, number> = new Map()
+  private _lastUpdateTimes: ReadonlyMap<string, number> = new Map()
 
   /** Add a middleware to the pipeline. */
   use(middleware: ClientSubscriptionMiddleware): void {
@@ -95,7 +95,7 @@ export class ClientMiddlewarePipeline {
 
   /** Run onSubscribe hooks. */
   async runOnSubscribe(event: SubscriptionEvent): Promise<void> {
-    this.errorCounts.set(event.subscriptionId, 0)
+    this._errorCounts = new Map([...this._errorCounts, [event.subscriptionId, 0]])
     for (const mw of this.middlewares) {
       if (mw.onSubscribe) {
         try {
@@ -109,8 +109,8 @@ export class ClientMiddlewarePipeline {
 
   /** Run onUpdate hooks. Data can be transformed by each middleware. */
   async runOnUpdate(event: SubscriptionUpdateEvent): Promise<unknown> {
-    this.errorCounts.set(event.subscriptionId, 0)
-    this.lastUpdateTimes.set(event.subscriptionId, Date.now())
+    this._errorCounts = new Map([...this._errorCounts, [event.subscriptionId, 0]])
+    this._lastUpdateTimes = new Map([...this._lastUpdateTimes, [event.subscriptionId, Date.now()]])
 
     let data = event.data
     for (const mw of this.middlewares) {
@@ -130,8 +130,8 @@ export class ClientMiddlewarePipeline {
 
   /** Run onError hooks. */
   async runOnError(event: SubscriptionErrorEvent): Promise<void> {
-    const count = (this.errorCounts.get(event.subscriptionId) ?? 0) + 1
-    this.errorCounts.set(event.subscriptionId, count)
+    const count = (this._errorCounts.get(event.subscriptionId) ?? 0) + 1
+    this._errorCounts = new Map([...this._errorCounts, [event.subscriptionId, count]])
 
     for (const mw of this.middlewares) {
       if (mw.onError) {
@@ -172,8 +172,13 @@ export class ClientMiddlewarePipeline {
 
   /** Run onUnsubscribe hooks. */
   async runOnUnsubscribe(event: SubscriptionEvent): Promise<void> {
-    this.errorCounts.delete(event.subscriptionId)
-    this.lastUpdateTimes.delete(event.subscriptionId)
+    const newErrorCounts = new Map(this._errorCounts)
+    newErrorCounts.delete(event.subscriptionId)
+    this._errorCounts = newErrorCounts
+
+    const newUpdateTimes = new Map(this._lastUpdateTimes)
+    newUpdateTimes.delete(event.subscriptionId)
+    this._lastUpdateTimes = newUpdateTimes
 
     for (const mw of this.middlewares) {
       if (mw.onUnsubscribe) {
@@ -188,7 +193,7 @@ export class ClientMiddlewarePipeline {
 
   /** Get the staleness of a subscription in ms. */
   getStaleness(subscriptionId: string): number | null {
-    const lastUpdate = this.lastUpdateTimes.get(subscriptionId)
+    const lastUpdate = this._lastUpdateTimes.get(subscriptionId)
     if (!lastUpdate) return null
     return Date.now() - lastUpdate
   }
