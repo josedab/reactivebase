@@ -95,3 +95,29 @@ export type {
   PluginInstallResult,
   WebUIOptions,
 } from "./registry-backend.js"
+
+// Plugin Marketplace v3
+export {
+  PluginContract,
+  definePluginV3,
+  PluginSecurityScanner,
+  PluginStarterTemplates,
+  MarketplaceSearchEngine,
+} from "./marketplace-v3.js"
+export type {
+  PluginV3Config,
+  PluginV3Context,
+  PluginV3Instance,
+  PluginV3TestContext,
+  PluginLifecycleHooks,
+  PluginHealthStatus,
+  SecuritySeverity,
+  SecurityIssue,
+  SecurityScanResult,
+  TemplateType,
+  PluginTemplate as PluginTemplateV3,
+  SearchFilters,
+  SearchResult,
+  ScoredEntry,
+  PluginRecommendation,
+} from "./marketplace-v3.js"
