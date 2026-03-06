@@ -126,6 +126,19 @@ export type {
   RegistryStats,
 } from "../schema-registry/index.js"
 
+// Live Migration Validator
+export { LiveMigrationValidator, MigrationCIReporter, MigrationValidationError } from "../migrations/index.js"
+export type {
+  MigrationAnalysisResult,
+  LiveBreakingChange,
+  LockEstimate,
+  RollbackPlan,
+  ShadowExecutionResult,
+  CIReportOptions,
+  TableStats,
+  ShadowDatabase,
+} from "../migrations/index.js"
+
 // Zero-Downtime Safe Migrations
 export {
   MigrationAnalyzer,

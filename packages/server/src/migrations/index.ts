@@ -50,3 +50,16 @@ export type {
   DataLossRisk,
   ImpactedObject,
 } from "./migration-safety.js"
+
+// Live Migration Validator
+export { LiveMigrationValidator, MigrationCIReporter, MigrationValidationError } from "./live-migration-validator.js"
+export type {
+  MigrationAnalysisResult,
+  BreakingChange as LiveBreakingChange,
+  LockEstimate,
+  RollbackPlan,
+  ShadowExecutionResult,
+  CIReportOptions,
+  TableStats,
+  ShadowDatabase,
+} from "./live-migration-validator.js"
