@@ -8,6 +8,10 @@
  *   reactivebase analyze --threshold 500
  */
 
+/**
+ * Options for the `reactivebase analyze` command.
+ * Controls query cost analysis behavior, output format, and CI thresholds.
+ */
 export interface AnalyzeCommandOptions {
   projectDir: string
   connectionString?: string

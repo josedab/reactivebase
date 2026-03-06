@@ -9,6 +9,7 @@
  *   reactivebase insights --threshold complexity=50
  */
 
+/** Options for the `reactivebase insights` CLI command. */
 export interface InsightsOptions {
   projectDir: string
   json?: boolean
@@ -16,6 +17,7 @@ export interface InsightsOptions {
   logLevel?: import("../logger.js").LogLevel
 }
 
+/** Schema complexity analysis results including table, column, and relation metrics. */
 export interface SchemaComplexity {
   totalTables: number
   totalColumns: number
@@ -27,6 +29,7 @@ export interface SchemaComplexity {
   complexityScore: number
 }
 
+/** A function detected as potentially unused in the project. */
 export interface DeadFunction {
   name: string
   file: string
@@ -34,6 +37,7 @@ export interface DeadFunction {
   reason: string
 }
 
+/** A predicted performance concern based on schema analysis. */
 export interface PerformancePrediction {
   area: string
   risk: "low" | "medium" | "high"

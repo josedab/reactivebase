@@ -12,12 +12,14 @@
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+/** Options for initializing the Fly.io API client. */
 export interface FlyioClientOptions {
   token: string
   apiBase?: string
   orgSlug?: string
 }
 
+/** Represents a Fly.io application with its deployment metadata. */
 export interface FlyioApp {
   name: string
   organization: string
@@ -26,6 +28,7 @@ export interface FlyioApp {
   createdAt: string
 }
 
+/** Represents a Fly.io machine (VM) instance and its lifecycle state. */
 export interface FlyioMachine {
   id: string
   name: string
@@ -35,6 +38,7 @@ export interface FlyioMachine {
   createdAt: string
 }
 
+/** Represents a persistent volume attached to a Fly.io machine. */
 export interface FlyioVolume {
   id: string
   name: string
@@ -43,12 +47,14 @@ export interface FlyioVolume {
   state: string
 }
 
+/** Represents a secret stored in a Fly.io application. */
 export interface FlyioSecret {
   name: string
   digest: string
   createdAt: string
 }
 
+/** Represents a Fly.io-managed PostgreSQL cluster. */
 export interface FlyioPostgresCluster {
   appName: string
   connectionString: string
@@ -57,6 +63,7 @@ export interface FlyioPostgresCluster {
   volumeSizeGb: number
 }
 
+/** Configuration options for deploying a container image to Fly.io. */
 export interface DeployImageOptions {
   image: string
   region?: string
@@ -69,6 +76,7 @@ export interface DeployImageOptions {
   maxMachines?: number
 }
 
+/** Result of a Fly.io deployment operation including provisioned machines and URL. */
 export interface FlyioDeployResult {
   appName: string
   machines: FlyioMachine[]
@@ -81,6 +89,11 @@ export interface FlyioDeployResult {
 
 const DEFAULT_API_BASE = "https://api.machines.dev/v1"
 
+/**
+ * Fly.io Machines API client for managing ReactiveBase deployments.
+ * Handles app creation, machine provisioning, secrets management,
+ * Postgres setup, and full deploy orchestration.
+ */
 export class FlyioClient {
   private token: string
   private apiBase: string

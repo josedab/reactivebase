@@ -47,6 +47,12 @@ interface DatabaseBranchingLike {
 
 // ─── Branch Commands ─────────────────────────────────────────────────────────
 
+/**
+ * Create a new database branch for isolated development or PR previews.
+ *
+ * @param name - Name of the branch to create
+ * @param options - Branch creation options including parent branch, PR linkage, and seed data
+ */
 export async function branchCreate(
   name: string,
   options: BranchCommandOptions & {
@@ -103,6 +109,11 @@ export async function branchCreate(
   }
 }
 
+/**
+ * List all database branches with their status, parent, and linked PR info.
+ *
+ * @param options - Branch command options including project directory and connection details
+ */
 export async function branchList(options: BranchCommandOptions): Promise<void> {
   const branching = await createBranchingInstance(options)
   const branches = branching.listBranches()
@@ -123,6 +134,12 @@ export async function branchList(options: BranchCommandOptions): Promise<void> {
   console.log()
 }
 
+/**
+ * Delete a database branch and clean up its resources.
+ *
+ * @param name - Name of the branch to delete
+ * @param options - Branch command options including project directory and connection details
+ */
 export async function branchDelete(name: string, options: BranchCommandOptions): Promise<void> {
   if (!name) {
     console.error("Error: Branch name is required")
@@ -140,6 +157,13 @@ export async function branchDelete(name: string, options: BranchCommandOptions):
   }
 }
 
+/**
+ * Show schema and data differences between two database branches.
+ *
+ * @param source - Source branch name for comparison
+ * @param target - Target branch name for comparison
+ * @param options - Branch command options including project directory and connection details
+ */
 export async function branchDiff(source: string, target: string, options: BranchCommandOptions): Promise<void> {
   if (!source || !target) {
     console.error("Error: Both source and target branch names are required")
@@ -188,6 +212,12 @@ export async function branchDiff(source: string, target: string, options: Branch
   }
 }
 
+/**
+ * Switch the active database connection to a different branch.
+ *
+ * @param name - Name of the branch to switch to
+ * @param options - Branch command options including project directory and connection details
+ */
 export async function branchSwitch(name: string, options: BranchCommandOptions): Promise<void> {
   if (!name) {
     console.error("Error: Branch name is required")
@@ -208,6 +238,12 @@ export async function branchSwitch(name: string, options: BranchCommandOptions):
   }
 }
 
+/**
+ * Merge a database branch into a target branch (defaults to main).
+ *
+ * @param name - Name of the branch to merge
+ * @param options - Merge options including the target branch (defaults to "main")
+ */
 export async function branchMerge(name: string, options: BranchCommandOptions & { into?: string }): Promise<void> {
   if (!name) {
     console.error("Error: Branch name is required")
@@ -228,6 +264,11 @@ export async function branchMerge(name: string, options: BranchCommandOptions & 
   }
 }
 
+/**
+ * Generate a GitHub Actions workflow YAML for automated branch preview environments.
+ *
+ * @param options - Branch command options including project directory and connection details
+ */
 export async function branchGenerateAction(options: BranchCommandOptions): Promise<void> {
   const branching = await createBranchingInstance(options)
   const yaml = branching.generateGitHubActionYAML()
@@ -237,6 +278,7 @@ export async function branchGenerateAction(options: BranchCommandOptions): Promi
   console.log("\nSave this to .github/workflows/preview-env.yml")
 }
 
+/** Display usage help for all branch subcommands with examples. */
 export function showBranchHelp(): void {
   console.log(
     `
