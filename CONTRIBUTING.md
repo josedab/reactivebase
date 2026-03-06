@@ -102,6 +102,80 @@ packages/
 5. Open a PR with a clear description of what and why
 6. Wait for review — maintainers will respond within 48 hours
 
+## Commit Message Conventions
+
+We follow [Conventional Commits](https://www.conventionalcommits.org/) for clear, machine-readable commit history. Each commit message should have the format:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Types:**
+
+| Type       | When to use                                             |
+| ---------- | ------------------------------------------------------- |
+| `feat`     | New feature or capability                               |
+| `fix`      | Bug fix                                                 |
+| `docs`     | Documentation-only changes                              |
+| `refactor` | Code change that neither fixes a bug nor adds a feature |
+| `test`     | Adding or updating tests                                |
+| `chore`    | Build process, tooling, or dependency updates           |
+| `perf`     | Performance improvement                                 |
+| `ci`       | CI/CD configuration changes                             |
+
+**Scope** is optional but encouraged — use the package name (e.g., `server`, `react`, `cli`):
+
+```bash
+feat(server): add vector similarity search to query builder
+fix(react): prevent stale closure in useQuery callback
+docs(cli): add JSDoc to command interfaces
+chore: update TypeScript to 5.8
+```
+
+> **Note:** There is no `commitlint` enforcement configured. Conventional commits are a convention, not a gate — but following the format helps with changelog generation and release notes.
+
+## Development Workflow
+
+### Branch Naming
+
+Use descriptive branch names with a type prefix:
+
+```
+feat/vector-search
+fix/react-stale-closure
+docs/contributing-guide
+refactor/query-builder-internals
+```
+
+### Merge Strategy
+
+- **Squash merge** is preferred for feature branches — keeps `main` history clean
+- **Rebase** your branch onto `main` before opening a PR to avoid merge commits
+- Keep PRs focused — one logical change per PR
+
+### Workflow
+
+```bash
+# 1. Create a feature branch from main
+git checkout main && git pull
+git checkout -b feat/my-feature
+
+# 2. Make changes, commit with conventional messages
+git add .
+git commit -m "feat(server): add new validation rule"
+
+# 3. Rebase onto latest main before pushing
+git fetch origin
+git rebase origin/main
+
+# 4. Push and open a PR
+git push origin feat/my-feature
+```
+
 ## Good First Issues
 
 Look for issues labeled `good first issue` on GitHub. These are typically:
