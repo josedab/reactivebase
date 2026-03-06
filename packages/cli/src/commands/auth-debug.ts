@@ -3,10 +3,15 @@
  * Interactive debugging tool for tracing permission decisions.
  */
 
+/** Options for the `reactivebase auth:debug` command. */
 export interface AuthDebugCommandOptions {
+  /** Path to the project root directory */
   projectDir: string
+  /** User ID to debug permissions for */
   userId: string
+  /** Query function name to trace (e.g. "getDocuments") */
   queryName: string
+  /** Table name to inspect RLS policies for (e.g. "posts") */
   table: string
 }
 

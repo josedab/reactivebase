@@ -7,9 +7,13 @@ import { existsSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { writeGeneratedFiles } from "./generate.js"
 
+/** Options for the `reactivebase dev` command. */
 export interface DevCommandOptions {
+  /** Port for the HTTP/WebSocket dev server */
   port: number
+  /** Path to the project root directory */
   projectDir: string
+  /** Minimum log level for console output (default: "info") */
   logLevel?: "debug" | "info" | "warn" | "error"
 }
 

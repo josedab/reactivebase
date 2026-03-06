@@ -7,10 +7,15 @@
 import { readFileSync, existsSync, readdirSync } from "fs"
 import { join } from "path"
 
+/** Options for the `reactivebase doctor` command. */
 export interface DoctorOptions {
+  /** Path to the project root containing a `schema/` directory */
   projectDir: string
+  /** PostgreSQL connection string for live extension checks */
   connectionString?: string
+  /** Automatically execute `CREATE EXTENSION` for missing extensions (default: false) */
   autoFix?: boolean
+  /** Output results as JSON (default: false) */
   json?: boolean
 }
 

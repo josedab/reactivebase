@@ -7,9 +7,13 @@
 import { writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
 
+/** Options for the `reactivebase init` command. */
 export interface InitOptions {
+  /** Path to the project root directory where config and directories will be created */
   projectDir: string
+  /** Configuration profile name (e.g. "minimal", "saas", "edge", "collaborative", "analytics") */
   profile: string
+  /** Output generated configuration as JSON (default: false) */
   json?: boolean
 }
 

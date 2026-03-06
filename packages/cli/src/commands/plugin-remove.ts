@@ -14,15 +14,23 @@ import { join } from "path"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+/** Options for the `plugin remove` command. */
 export interface PluginRemoveOptions {
+  /** Preview changes without modifying the project (default: false) */
   dryRun?: boolean
+  /** Path to the project root directory (default: cwd) */
   projectDir?: string
 }
 
+/** Result returned after a plugin removal operation. */
 export interface PluginRemoveResult {
+  /** Whether the removal completed successfully */
   success: boolean
+  /** Name of the plugin that was removed */
   pluginName: string
+  /** Ordered list of steps performed during removal */
   steps: { name: string; status: "done" | "skipped" | "failed"; message: string }[]
+  /** Total duration of the removal in milliseconds */
   durationMs: number
 }
 

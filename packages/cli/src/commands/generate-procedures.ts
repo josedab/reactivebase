@@ -6,8 +6,11 @@
 import { writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs"
 import { join, basename } from "node:path"
 
+/** Options for generating PL/pgSQL stored procedure migration files. */
 export interface GenerateProceduresOptions {
+  /** Path to the project root containing a `procedures/` directory */
   projectDir: string
+  /** Output directory for generated migration SQL files (default: `<projectDir>/migrations`) */
   outputDir?: string
 }
 

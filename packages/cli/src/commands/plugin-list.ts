@@ -18,18 +18,29 @@ export interface PluginListOptions {
   projectDir?: string
 }
 
+/** Metadata for a single ReactiveBase plugin. */
 export interface PluginInfo {
+  /** Short plugin name (e.g. "clerk", "stripe") */
   name: string
+  /** Full npm package name (e.g. "@reactivebase/plugin-clerk") */
   npmPackage: string
+  /** Installed or latest available version */
   version: string
+  /** Plugin category (e.g. "auth", "payments", "storage") */
   category: string
+  /** Whether the plugin is installed in the current project */
   installed: boolean
+  /** Human-readable plugin description */
   description: string
 }
 
+/** Result returned by the `plugin list` command. */
 export interface PluginListResult {
+  /** Array of discovered plugins */
   plugins: PluginInfo[]
+  /** Number of currently installed plugins */
   installedCount: number
+  /** Number of plugins available but not installed */
   availableCount: number
 }
 
