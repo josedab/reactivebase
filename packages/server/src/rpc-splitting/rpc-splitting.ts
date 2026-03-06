@@ -132,7 +132,9 @@ export class LazyFunctionRegistry {
     })
 
     if (this.options.eagerLoad) {
-      this.load(name).catch(() => {})
+      this.load(name).catch((err: unknown) => {
+        console.debug(`[rpc-splitting] eager load failed for "${name}":`, err)
+      })
     }
   }
 
