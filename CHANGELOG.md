@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CRDT collaboration** — conflict-free replicated data types (LWW registers, G/PN counters, OR-Sets, RGA) for offline-first collaboration
+- **Event sourcing** — event store with projections, snapshots, and event-driven architecture primitives
+- **GraphQL federation gateway** — Apollo Federation-compatible gateway with subgraph composition and query planning
+- **Multi-region replication** — geo-distributed conflict resolution with vector clocks and tunable replication strategies
+- **Multiplayer kit** — real-time collaborative editing with presence tracking and cursor management
+- **Blue-green deployments** — zero-downtime deployments with version routing and subscription migration
+- **Smart connection pool** — query deduplication, subscription coalescing, and adaptive connection pooling
+- **Time travel queries** — point-in-time queries, audit trails, and temporal data versioning
+- **Workflow engine** — stateful workflow execution with multi-step orchestration and waiting states
+- **Schema registry** — schema versioning, breaking change detection, and consumer contracts
+- **Materialized views** — pre-aggregated views with refresh strategies and time-bucket analytics
+- **Distributed transactions** — two-phase commit coordination and saga orchestration with dead-letter queues
+- **Multi-model queries** — unified query builder for relational, document, and graph data
+- **Connection health** — circuit breakers, latency tracking, and adaptive read-replica routing
+- **Universal SDK generator** — SDK code generation for multiple target languages from protocol specs
+- **Database branching** — schema-per-branch with Neon adapter for preview environments
+- **Encryption at rest** — field-level encryption with key rotation and compliance toolkit
+- **Media pipeline** — image/video transformation, upload validation, and CDN integration
+- **WASM runtime** — sandboxed WebAssembly function execution with host function bindings
+- **Interactive playground** — in-browser playground with session management, tutorials, and shareable sessions
+- **Seeding DSL** — declarative data generation with profiles and seed planning
+- **Test generator** — automatic test suite generation from schema analysis
+- **Workflow studio** — visual workflow designer with debugging and execution monitoring
+- **Schema designer** — entity-relationship modeling with migration impact analysis
+- **SQL playground** — SQL query executor with AI assistance and index suggestions
+- **Subscription analytics** — cost attribution and optimization suggestions per query/user/tenant
 - **Structured error hierarchy** — domain-specific error types (`SchemaValidationError`, `InvalidMessageError`, etc.) replacing string errors
 - **Graceful shutdown** — proper pool cleanup and SIGTERM handling
 - **Structured logging module** — leveled logger with JSON output
