@@ -31,3 +31,18 @@ export type {
   HttpHandler,
   WsUpgradeHandler,
 } from "./embeddable.js"
+
+// SSE Transport
+export { SseTransportServer, ProtocolNegotiator, EdgeSseStream, SseTransportError } from "./sse-transport.js"
+export type {
+  SseTransportOptions,
+  SseConnection,
+  SseWritable,
+  SseSubscriptionRequest,
+  SseEvent,
+  SseTransportStats,
+  TransportProtocol,
+  ProtocolNegotiatorOptions,
+  NegotiationResult,
+  EdgeSseOptions,
+} from "./sse-transport.js"
