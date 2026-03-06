@@ -86,6 +86,49 @@ jobs:
           LEVELS: ${{ inputs.subscription_levels || '1000,5000,10000' }}
           CHAOS: ${{ inputs.enable_chaos || 'true' }}
 
+      - name: Check performance regression thresholds
+        if: github.event_name == 'pull_request'
+        run: |
+          node -e "
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('/tmp/benchmark-report.json', 'utf8'));
+          const s = report.summary;
+          const failures = [];
+
+          // Absolute thresholds — fail if any metric exceeds these limits
+          const thresholds = {
+            p99LatencyMs: { max: 50, label: 'p99 latency' },
+            peakMemoryMb: { max: 512, label: 'Peak memory' },
+            minSubscriptions: { min: 1000, label: 'Minimum subscriptions supported' },
+            minInvalidationsPerSec: { min: 500, label: 'Minimum invalidations/sec' },
+          };
+
+          if (s.overallP99LatencyMs > thresholds.p99LatencyMs.max) {
+            failures.push('p99 latency ' + s.overallP99LatencyMs + 'ms exceeds threshold of ' + thresholds.p99LatencyMs.max + 'ms');
+          }
+          if (s.peakMemoryMb > thresholds.peakMemoryMb.max) {
+            failures.push('Peak memory ' + s.peakMemoryMb + 'MB exceeds threshold of ' + thresholds.peakMemoryMb.max + 'MB');
+          }
+          if (s.maxSubscriptions < thresholds.minSubscriptions.min) {
+            failures.push('Max subscriptions ' + s.maxSubscriptions + ' below minimum of ' + thresholds.minSubscriptions.min);
+          }
+          if (s.maxInvalidationsPerSecond < thresholds.minInvalidationsPerSec.min) {
+            failures.push('Max invalidations/sec ' + s.maxInvalidationsPerSecond + ' below minimum of ' + thresholds.minInvalidationsPerSec.min);
+          }
+
+          if (failures.length > 0) {
+            console.error('::error::Performance regression detected:');
+            failures.forEach(f => console.error('  ❌ ' + f));
+            process.exit(1);
+          } else {
+            console.log('✅ All performance thresholds passed');
+            console.log('  p99 latency: ' + s.overallP99LatencyMs + 'ms (max: ' + thresholds.p99LatencyMs.max + 'ms)');
+            console.log('  Peak memory: ' + s.peakMemoryMb + 'MB (max: ' + thresholds.peakMemoryMb.max + 'MB)');
+            console.log('  Subscriptions: ' + s.maxSubscriptions + ' (min: ' + thresholds.minSubscriptions.min + ')');
+            console.log('  Invalidations/sec: ' + s.maxInvalidationsPerSecond + ' (min: ' + thresholds.minInvalidationsPerSec.min + ')');
+          }
+          "
+
       - name: Comment on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
@@ -157,7 +200,7 @@ jobs:
           auto-push: true
           alert-threshold: "150%"
           comment-on-alert: true
-          fail-on-alert: false
+          fail-on-alert: true
 
       - name: Update README benchmarks (main only)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
