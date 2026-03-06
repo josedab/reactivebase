@@ -12,6 +12,7 @@
 
 import { queryStore, createMutation } from "./index.js"
 import type { Readable } from "./index.js"
+import { sortData, toggleSort, paginate, validateFields, computePresenceVisibility } from "@reactivebase/client"
 
 // ─── ReactiveTable Store ─────────────────────────────────────────────────────
 
@@ -61,9 +62,8 @@ export function reactiveTableStore(options: ReactiveTableStoreOptions): Reactive
   let error: Error | null = null
 
   function notify(): void {
-    const sorted = sortData(latestData, sortKey, sortDir)
-    const totalPages = Math.ceil(sorted.length / pageSize)
-    const rows = sorted.slice(page * pageSize, (page + 1) * pageSize)
+    const sorted = sortData(latestData, sortKey, sortDir) as Record<string, unknown>[]
+    const { rows, totalPages } = paginate(sorted, page, pageSize)
 
     const state: ReactiveTableState = {
       rows,
@@ -81,12 +81,9 @@ export function reactiveTableStore(options: ReactiveTableStoreOptions): Reactive
 
   const actions: ReactiveTableActions = {
     sort(key: string): void {
-      if (sortKey === key) {
-        sortDir = sortDir === "asc" ? "desc" : "asc"
-      } else {
-        sortKey = key
-        sortDir = "asc"
-      }
+      const result = toggleSort(sortKey, sortDir, key)
+      sortKey = result.sortKey
+      sortDir = result.sortDir
       notify()
     },
     nextPage(): void {
@@ -185,16 +182,7 @@ export function reactiveFormStore(options: ReactiveFormStoreOptions): ReactiveFo
     },
 
     async submit(): Promise<void> {
-      const newErrors: Record<string, string> = {}
-      for (const field of options.fields) {
-        if (field.required && !values[field.name]) {
-          newErrors[field.name] = `${field.label} is required`
-        }
-        if (field.validate) {
-          const err = field.validate(values[field.name])
-          if (err) newErrors[field.name] = err
-        }
-      }
+      const newErrors = validateFields(options.fields, values)
 
       if (Object.keys(newErrors).length > 0) {
         errors = newErrors
@@ -266,23 +254,14 @@ export function presenceAvatarsStore(options: PresenceAvatarsStoreOptions): Read
     subscribe(run: (value: PresenceAvatarsState) => void): () => void {
       return store.subscribe((storeValue) => {
         const users = storeValue.data ?? []
+        const { visible, overflow } = computePresenceVisibility(users, maxVisible)
         run({
           users,
-          visible: users.slice(0, maxVisible),
-          overflow: Math.max(0, users.length - maxVisible),
+          visible,
+          overflow,
           isLoading: storeValue.isLoading,
         })
       })
     },
   }
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function sortData(data: Record<string, unknown>[], key: string | null, dir: "asc" | "desc"): Record<string, unknown>[] {
-  if (!key) return data
-  return [...data].sort((a, b) => {
-    const cmp = String(a[key] ?? "").localeCompare(String(b[key] ?? ""))
-    return dir === "asc" ? cmp : -cmp
-  })
 }
