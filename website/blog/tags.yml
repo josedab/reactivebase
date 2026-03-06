@@ -17,3 +17,48 @@ hola:
   label: Hola
   permalink: /hola
   description: Hola tag description
+
+announcement:
+  label: Announcement
+  permalink: /announcement
+  description: Project announcements and releases
+
+reactivebase:
+  label: ReactiveBase
+  permalink: /reactivebase
+  description: ReactiveBase framework
+
+open-source:
+  label: Open Source
+  permalink: /open-source
+  description: Open source development
+
+migration:
+  label: Migration
+  permalink: /migration
+  description: Migration guides and tutorials
+
+prisma:
+  label: Prisma
+  permalink: /prisma
+  description: Prisma ORM
+
+trpc:
+  label: tRPC
+  permalink: /trpc
+  description: tRPC API framework
+
+tutorial:
+  label: Tutorial
+  permalink: /tutorial
+  description: Step-by-step tutorials
+
+video:
+  label: Video
+  permalink: /video
+  description: Video content
+
+getting-started:
+  label: Getting Started
+  permalink: /getting-started
+  description: Getting started guides
