@@ -21,3 +21,22 @@ export type {
   RefreshResult as ComputedRefreshResult,
   ComputedTableStats,
 } from "./computed-tables.js"
+
+// Reactive Computed Tables
+export {
+  defineComputedTable,
+  ReactiveComputedTableEngine,
+  buildComputedTableQuery,
+  buildComputedTableQuerySQL,
+  buildReactiveRefreshTriggerSQL,
+  createComputedTableSubscription,
+} from "./reactive-computed-tables.js"
+
+export type {
+  ReactiveComputedTableDefinition,
+  ComputedTableChangeEvent,
+  ComputedTableSubscription,
+  ComputedTableQueryContext,
+  SubscriptionFilter,
+  IncrementalUpdateResult,
+} from "./reactive-computed-tables.js"

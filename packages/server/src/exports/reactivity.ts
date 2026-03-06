@@ -107,6 +107,12 @@ export {
   buildUpsertMetadataSQL,
   defineComputedAggregation,
   defineComputedJoin,
+  defineComputedTable,
+  ReactiveComputedTableEngine,
+  buildComputedTableQuery,
+  buildComputedTableQuerySQL,
+  buildReactiveRefreshTriggerSQL,
+  createComputedTableSubscription,
 } from "../computed-tables/index.js"
 export type {
   ComputedTableDefinition,
@@ -117,4 +123,10 @@ export type {
   DependencyGraph,
   ComputedRefreshResult,
   ComputedTableStats,
+  ReactiveComputedTableDefinition,
+  ComputedTableChangeEvent,
+  ComputedTableSubscription,
+  ComputedTableQueryContext,
+  SubscriptionFilter as ComputedSubscriptionFilter,
+  IncrementalUpdateResult,
 } from "../computed-tables/index.js"
