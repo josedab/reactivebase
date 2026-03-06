@@ -64,7 +64,8 @@ interface TenantPool {
  */
 export function buildSetTenantContextSQL(tenantId: string, column: string = "tenant_id"): string {
   const sanitized = tenantId.replace(/'/g, "''")
-  return `SET app.current_tenant = '${sanitized}'; -- context for column "${column}"`
+  const safeColumn = column.replace(/"/g, '""')
+  return `SET app.current_tenant = '${sanitized}'; -- context for column "${safeColumn}"`
 }
 
 /**
