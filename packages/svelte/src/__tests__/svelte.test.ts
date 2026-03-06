@@ -5,9 +5,11 @@
 
 import { describe, it, expect, vi, afterEach } from "vitest"
 
-// Mock @reactivebase/client to avoid WebSocket connections
-vi.mock("@reactivebase/client", () => {
+// Mock @reactivebase/client
+vi.mock("@reactivebase/client", async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
+    ...actual,
     ReactiveBaseClient: vi.fn().mockImplementation(() => ({
       subscribe: vi.fn((_queryName: string, _args: unknown, cb: (result: unknown, err?: Error) => void) => {
         cb([{ id: 1, name: "Task 1" }])
