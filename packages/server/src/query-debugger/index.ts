@@ -9,3 +9,18 @@ export type {
   DebuggerOptions,
   DebugEventHandler,
 } from "./query-debugger.js"
+
+export { TraceInstrumentation, VisualDebugger, SmartSuggestionEngine } from "./visual-debugger.js"
+export type {
+  TraceSpan,
+  TraceEvent,
+  DependencyNode,
+  DependencyLink,
+  FlamegraphNode,
+  SuggestionSeverity,
+  OptimizationSuggestion,
+  NPlusOnePattern,
+  OverBroadSubscription,
+  SlowChain,
+  VisualDebuggerOptions,
+} from "./visual-debugger.js"
