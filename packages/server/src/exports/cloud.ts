@@ -162,3 +162,22 @@ export type {
   EdgeCacheStats as EdgeQueryCacheStats,
   ConsistencyProof,
 } from "../edge-query/index.js"
+
+// Edge-Native Runtime Adapters
+export {
+  BloomFilterInvalidation,
+  CloudflareWorkerAdapter,
+  VercelEdgeAdapter,
+  DenoDeployAdapter,
+  SmartRouter,
+} from "../edge-query/index.js"
+export type {
+  BloomFilterOptions,
+  EdgeRuntimeType,
+  CloudflareConfig,
+  VercelEdgeConfig,
+  DenoDeployConfig,
+  SmartRouterOptions,
+  LatencyRecord,
+  RoutingDecision,
+} from "../edge-query/index.js"

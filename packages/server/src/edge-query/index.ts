@@ -23,3 +23,22 @@ export type {
   EdgeCacheStats,
   ConsistencyProof,
 } from "./edge-query.js"
+
+export {
+  BloomFilterInvalidation,
+  CloudflareWorkerAdapter,
+  VercelEdgeAdapter,
+  DenoDeployAdapter,
+  SmartRouter,
+} from "./edge-runtime-adapters.js"
+
+export type {
+  BloomFilterOptions,
+  EdgeRuntimeType,
+  CloudflareConfig,
+  VercelEdgeConfig,
+  DenoDeployConfig,
+  SmartRouterOptions,
+  LatencyRecord,
+  RoutingDecision,
+} from "./edge-runtime-adapters.js"
