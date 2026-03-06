@@ -60,3 +60,7 @@ export * from "./exports/pg-extensions.js"
 export * from "./exports/seeding-dsl.js"
 /** Portable Configuration Profiles: composable config bundles for deployment scenarios */
 export * from "./exports/config-profiles.js"
+/** Permissions Playground: interactive policy design, testing, and debugging */
+export * from "./exports/permissions-playground.js"
+/** Observability & OpenTelemetry: auto-instrumentation, Prometheus, SLI/SLO */
+export * from "./exports/observability.js"
