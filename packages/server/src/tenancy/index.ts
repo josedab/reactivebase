@@ -40,6 +40,32 @@ export type { StripeConfig, StripeWebhookEvent, CheckoutSession, Invoice } from 
 export { TenantAdminDashboard } from "./tenant-admin.js"
 export type { TenantOverview, TenantDetail, RevenueSummary, TenantActivity } from "./tenant-admin.js"
 
+// SaaS Template & Analytics
+export {
+  SaasTemplateScaffold,
+  StripeSubscriptionManager,
+  TenantAnalytics,
+  buildTenantsTableSQL,
+  buildUsersTableSQL,
+  buildTeamsTableSQL,
+  buildRolesTableSQL,
+  buildInvitationsTableSQL,
+  buildFeatureFlagsTableSQL,
+  buildUsageMetricsTableSQL,
+} from "./saas-template.js"
+export type {
+  SaasTemplateOptions,
+  OnboardingStep,
+  TeamRole,
+  FeatureFlag,
+  FeatureFlagOverride,
+  SubscriptionStatus,
+  UsageMetric,
+  RevenueMetrics,
+  TenantHealthScore,
+  SaasTemplateConfig,
+} from "./saas-template.js"
+
 // Isolation Profiles
 export { createIsolationProfile } from "./isolation-profiles.js"
 export type {

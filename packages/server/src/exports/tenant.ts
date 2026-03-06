@@ -31,3 +31,29 @@ export type {
 export type { TenantConnectionConfig, TenantConnection, TenantPoolStats } from "../tenancy/index.js"
 export type { StripeConfig, StripeWebhookEvent, CheckoutSession, Invoice } from "../tenancy/index.js"
 export type { TenantOverview, TenantDetail, RevenueSummary, TenantActivity } from "../tenancy/index.js"
+
+// SaaS Template & Analytics
+export {
+  SaasTemplateScaffold,
+  StripeSubscriptionManager,
+  TenantAnalytics,
+  buildTenantsTableSQL,
+  buildUsersTableSQL,
+  buildTeamsTableSQL,
+  buildRolesTableSQL,
+  buildInvitationsTableSQL,
+  buildFeatureFlagsTableSQL,
+  buildUsageMetricsTableSQL,
+} from "../tenancy/index.js"
+export type {
+  SaasTemplateOptions,
+  OnboardingStep,
+  TeamRole,
+  FeatureFlag,
+  FeatureFlagOverride,
+  SubscriptionStatus,
+  UsageMetric,
+  RevenueMetrics,
+  TenantHealthScore,
+  SaasTemplateConfig,
+} from "../tenancy/index.js"
