@@ -173,6 +173,32 @@ JWT_ISSUER=https://auth.example.com
 JWT_AUDIENCE=my-saas-api
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_STARTER_PRICE_ID=price_...
+STRIPE_PRO_PRICE_ID=price_...
+STRIPE_ENTERPRISE_PRICE_ID=price_...
+`
+
+export const saasAdminTs = `import { action } from "@reactivebase/server"
+import { SaasTemplateScaffold, TenantAnalytics } from "@reactivebase/server/tenant"
+
+const scaffold = new SaasTemplateScaffold()
+const analytics = new TenantAnalytics()
+
+export const adminDashboard = action(async () => {
+  return scaffold.generateAdminDashboard()
+})
+
+export const revenueMetrics = action(async (ctx, { period }: { period?: string }) => {
+  return analytics.getRevenueMetrics(period ?? "30d")
+})
+
+export const tenantHealth = action(async (ctx, { tenantId }: { tenantId: string }) => {
+  return analytics.getTenantHealth(tenantId)
+})
+
+export const analyticsReport = action(async (ctx, { period, format }: { period?: string; format?: "text" | "json" }) => {
+  return analytics.generateReport({ period, format })
+})
 `
 
 export function saasReadme(name: string): string {
@@ -188,9 +214,18 @@ cp .env.example .env
 npm run dev
 \`\`\`
 
+## Features
+
+- Multi-tenant architecture with tenant-aware schema
+- Team management with role-based access control (owner, admin, member, viewer)
+- Stripe billing integration with subscription lifecycle management
+- Feature flags with per-tenant overrides
+- Admin dashboard with revenue metrics, tenant health, and analytics
+- Audit logging for compliance
+
 ## Schema: tenants, users, projects, audit_logs
 
-## API: tenants.onboardTenant, tenants.changePlan, projects.listProjects, etc.
+## API: tenants.onboardTenant, tenants.changePlan, projects.listProjects, admin.revenueMetrics, etc.
 `
 }
 
@@ -202,6 +237,7 @@ export function generateSaasTemplate(projectName: string): Record<string, string
     "convex/schema.ts": saasSchemaTs,
     "convex/tenants.ts": saasTenantsTs,
     "convex/projects.ts": saasProjectsTs,
+    "convex/admin.ts": saasAdminTs,
     "reactivebase.config.ts": saasConfigTs,
     ".env.example": saasEnvExample,
     "README.md": saasReadme(projectName),
