@@ -55,3 +55,33 @@ export type {
   PresenceUser,
   PresenceAvatarsProps,
 } from "./components.js"
+
+/** Embeddable reactive components with headless variants */
+export {
+  ReactiveComponentProvider,
+  useReactiveQuery,
+  ReactiveTable as EmbeddableReactiveTable,
+  useReactiveTable,
+  ReactiveForm as EmbeddableReactiveForm,
+  useReactiveForm,
+  ReactiveChart,
+  useReactiveChart,
+} from "./reactive-components.js"
+export type {
+  ReactiveComponentTheme,
+  ReactiveComponentProviderProps,
+  ReactiveQueryOptions,
+  ReactiveQueryResult,
+  ReactiveTableColumn as EmbeddableReactiveTableColumn,
+  ReactiveTablePagination,
+  ReactiveTableProps as EmbeddableReactiveTableProps,
+  HeadlessTableState,
+  ReactiveFormField as EmbeddableReactiveFormField,
+  ReactiveFormSchema,
+  ReactiveFormProps as EmbeddableReactiveFormProps,
+  HeadlessFormState,
+  ReactiveChartProps,
+  ChartType,
+  ChartDataPoint,
+  HeadlessChartState,
+} from "./reactive-components.js"
