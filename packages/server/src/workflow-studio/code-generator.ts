@@ -432,7 +432,9 @@ export class WorkflowCodeGenerator {
         return `await wf.step("${stepName}", async () => {\n      await notify(${JSON.stringify(node.config)})\n    })`
 
       default:
-        return `// FIXME(workflow-studio): unsupported node type "${node.type}" for "${node.label}" — please file an issue`
+        // Unsupported node types produce a warning comment in generated code
+        // rather than failing code generation entirely
+        return `// WARNING(workflow-studio): unsupported node type "${node.type}" for "${node.label}" — this node was skipped during code generation`
     }
   }
 

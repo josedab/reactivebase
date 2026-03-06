@@ -415,18 +415,19 @@ export class WorkflowValidator {
   validate(design: WorkflowDesign): ValidationError[] {
     const errors: ValidationError[] = []
 
+    // Empty workflows are invalid — bail early before structural checks
     if (design.nodes.length === 0) {
       errors.push({ severity: "error", message: "Workflow has no nodes", code: "EMPTY_WORKFLOW" })
       return errors
     }
 
-    // Check for trigger node
+    // Every workflow must begin with at least one trigger node
     const triggers = design.nodes.filter((n) => n.type === "trigger")
     if (triggers.length === 0) {
       errors.push({ severity: "error", message: "Workflow has no trigger node", code: "NO_TRIGGER" })
     }
 
-    // Check for orphan nodes
+    // Detect orphan nodes: nodes not connected by any edge (only relevant with multiple nodes)
     const connectedNodes = new Set<string>()
     for (const edge of design.edges) {
       connectedNodes.add(edge.sourceNodeId)
@@ -443,7 +444,7 @@ export class WorkflowValidator {
       }
     }
 
-    // Check for invalid edge references
+    // Validate that all edge endpoints reference existing nodes
     const nodeIds = new Set(design.nodes.map((n) => n.id))
     for (const edge of design.edges) {
       if (!nodeIds.has(edge.sourceNodeId)) {
@@ -464,7 +465,7 @@ export class WorkflowValidator {
       }
     }
 
-    // Detect cycles
+    // Cycles are valid in some workflows (e.g., retry loops) but flagged as a warning
     if (this.hasCycle(design)) {
       errors.push({
         severity: "warning",
@@ -476,6 +477,10 @@ export class WorkflowValidator {
     return errors
   }
 
+  /**
+   * Detect cycles using iterative DFS with a recursion stack.
+   * A node in `inStack` that is revisited indicates a back-edge (cycle).
+   */
   private hasCycle(design: WorkflowDesign): boolean {
     const adjacency = new Map<string, string[]>()
     for (const edge of design.edges) {
@@ -529,18 +534,22 @@ export class WorkflowDebugger {
   shouldBreak(nodeId: string, variables: Record<string, unknown>): boolean {
     const bp = this.breakpoints.get(nodeId)
     if (!bp || !bp.enabled) return false
-    if (!bp.condition) return true
+    if (!bp.condition) return true // Unconditional breakpoint
 
     try {
-      // Safe expression evaluation using whitelist-based comparison
+      // Safe expression evaluation using whitelist-based comparison (no eval)
       return this.evaluateCondition(bp.condition, variables)
     } catch {
       return true // Break on invalid condition for safety
     }
   }
 
+  /**
+   * Parse simple comparison expressions (e.g., "count > 5", "status === 'done'").
+   * Avoids eval() by matching a strict pattern: <variable> <operator> <literal>.
+   */
   private evaluateCondition(condition: string, variables: Record<string, unknown>): boolean {
-    // Parse simple conditions like "count > 5", "status === 'done'", "x != 0"
+    // Only supports: varName <op> literal — rejects complex expressions
     const match = condition.match(/^\s*([a-zA-Z_]\w*)\s*(===?|!==?|>=?|<=?)\s*(.+?)\s*$/)
     if (!match) return true // Break on unparseable condition for safety
 
@@ -581,6 +590,7 @@ export class WorkflowDebugger {
   }
 
   captureSnapshot(snapshot: DebugSnapshot): void {
+    // Ring-buffer behavior: evict oldest snapshot when capacity is reached
     if (this.snapshots.length >= this.maxSnapshots) {
       this.snapshots.shift()
     }
@@ -628,10 +638,12 @@ export class WorkflowStudio {
   }
 
   saveDesign(design: WorkflowDesign): ValidationError[] {
+    // Enforce node limit to prevent overly complex workflows
     if (design.nodes.length > this.maxNodes) {
       throw new WorkflowStudioError(`Too many nodes (${design.nodes.length} > ${this.maxNodes})`, "MAX_NODES_EXCEEDED")
     }
 
+    // Only persist if no critical errors; warnings are returned but allowed
     const errors = this.validator.validate(design)
     const criticalErrors = errors.filter((e) => e.severity === "error")
     if (criticalErrors.length > 0) return errors
@@ -692,11 +704,12 @@ export class WorkflowStudio {
       throw new WorkflowStudioError(`Node ${nodeId} not in execution`, "NODE_NOT_FOUND")
     }
 
+    // Mark current node as completed and record its output
     nodeState.status = "completed"
     nodeState.completedAt = Date.now()
     nodeState.output = output
 
-    // Capture debug snapshot
+    // Capture debug snapshot for time-travel debugging
     this.debugger.captureSnapshot({
       executionId,
       nodeId,
@@ -706,7 +719,8 @@ export class WorkflowStudio {
       nodeOutput: output,
     })
 
-    // Find next nodes
+    // Propagate output to downstream nodes via outgoing edges.
+    // Only advance nodes still in "pending" state to prevent re-execution.
     const design = this.designs.get(execution.workflowId)!
     const outEdges = design.edges.filter((e) => e.sourceNodeId === nodeId)
 
@@ -720,7 +734,7 @@ export class WorkflowStudio {
       }
     }
 
-    // Check completion
+    // Workflow is complete when every node has reached a terminal state
     const allDone = Array.from(execution.nodeStates.values()).every(
       (s) => s.status === "completed" || s.status === "skipped" || s.status === "failed",
     )
@@ -743,6 +757,7 @@ export class WorkflowStudio {
     nodeState.completedAt = Date.now()
     nodeState.error = error
 
+    // A single node failure fails the entire execution (fail-fast strategy)
     execution.status = "failed"
     execution.error = `Node ${nodeId}: ${error}`
     execution.completedAt = Date.now()
