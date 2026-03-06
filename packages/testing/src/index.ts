@@ -15,3 +15,32 @@ export type {
   MutationStep,
   MutationRunner,
 } from "./snapshot-testing.js"
+
+// Declarative Testing DSL
+export {
+  scenario,
+  seed,
+  mutation as testMutation,
+  query as testQuery,
+  action as testAction,
+  delay,
+  subscription as testSubscription,
+  queryResult,
+  tableState,
+  ScenarioBuilder,
+  ScenarioRunner,
+} from "./testing-dsl.js"
+export type {
+  ScenarioDefinition,
+  ScenarioOptions,
+  GivenStep,
+  WhenStep,
+  ThenStep,
+  ScenarioResult,
+  StepResult,
+  SnapshotRecord,
+  CIReport,
+  ScenarioRunnerOptions,
+  MockDatabaseLike,
+  MockTableLike,
+} from "./testing-dsl.js"
