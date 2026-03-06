@@ -13,6 +13,7 @@ export interface OptimizeOptions {
   connectionString?: string
   json?: boolean
   apply?: boolean
+  logLevel?: import("../logger.js").LogLevel
 }
 
 /**
@@ -21,9 +22,11 @@ export interface OptimizeOptions {
  * @param options - Optimize options including project directory, connection string, JSON output, and auto-apply flags
  */
 export async function optimize(options: OptimizeOptions): Promise<void> {
+  const { createCliLogger } = await import("../logger.js")
+  const logger = createCliLogger({ level: options.logLevel })
   const { AdaptiveQueryOptimizer } = await import("@reactivebase/server/metrics")
 
-  console.log("🔍 Analyzing query patterns...\n")
+  logger.info("🔍 Analyzing query patterns...\n")
 
   const optimizer = new AdaptiveQueryOptimizer({
     analysisWindowMs: 600_000,
@@ -53,8 +56,8 @@ export async function optimize(options: OptimizeOptions): Promise<void> {
     }
   } catch {
     // No metrics file — generate analysis from schema structure
-    console.log("  ℹ No metrics data found. Run with `reactivebase dev` first to collect query patterns.\n")
-    console.log("  Generating structural analysis from schema...\n")
+    logger.info("  ℹ No metrics data found. Run with `reactivebase dev` first to collect query patterns.\n")
+    logger.info("  Generating structural analysis from schema...\n")
 
     // Analyze schema files for potential optimization opportunities
     try {
@@ -85,77 +88,77 @@ export async function optimize(options: OptimizeOptions): Promise<void> {
   const report = optimizer.generateReport()
 
   if (options.json) {
-    console.log(optimizer.generateCIReport())
+    logger.info(optimizer.generateCIReport())
     return
   }
 
   // Pretty-print report
-  console.log("━".repeat(60))
-  console.log("  ReactiveBase Query Optimization Report")
-  console.log("━".repeat(60))
-  console.log()
+  logger.info("━".repeat(60))
+  logger.info("  ReactiveBase Query Optimization Report")
+  logger.info("━".repeat(60))
+  logger.info("")
 
   // Index suggestions
   if (report.indexSuggestions.length > 0) {
-    console.log(`📊 Index Suggestions (${report.indexSuggestions.length})`)
-    console.log("─".repeat(40))
+    logger.info(`📊 Index Suggestions (${report.indexSuggestions.length})`)
+    logger.info("─".repeat(40))
     for (const suggestion of report.indexSuggestions) {
       const icon = suggestion.estimatedImpact === "high" ? "🔴" : suggestion.estimatedImpact === "medium" ? "🟡" : "🟢"
-      console.log(`  ${icon} ${suggestion.table}.${suggestion.columns.join(", ")}`)
-      console.log(`     Impact: ${suggestion.estimatedImpact} | ${suggestion.reason}`)
-      console.log(`     SQL: ${suggestion.createSQL}`)
-      console.log()
+      logger.info(`  ${icon} ${suggestion.table}.${suggestion.columns.join(", ")}`)
+      logger.info(`     Impact: ${suggestion.estimatedImpact} | ${suggestion.reason}`)
+      logger.info(`     SQL: ${suggestion.createSQL}`)
+      logger.info("")
     }
   } else {
-    console.log("✅ No index suggestions — queries look well-indexed\n")
+    logger.info("✅ No index suggestions — queries look well-indexed\n")
   }
 
   // N+1 issues
   if (report.nPlusOneIssues.length > 0) {
-    console.log(`⚠️  N+1 Query Issues (${report.nPlusOneIssues.length})`)
-    console.log("─".repeat(40))
+    logger.warn(`⚠️  N+1 Query Issues (${report.nPlusOneIssues.length})`)
+    logger.info("─".repeat(40))
     for (const issue of report.nPlusOneIssues) {
       const icon = issue.severity === "critical" ? "🔴" : "🟡"
-      console.log(`  ${icon} ${issue.childQuery} (${issue.occurrences}x in ${issue.windowMs}ms)`)
-      console.log(`     Parent: ${issue.parentQuery}`)
-      console.log(`     Fix: ${issue.resolution}`)
-      console.log()
+      logger.info(`  ${icon} ${issue.childQuery} (${issue.occurrences}x in ${issue.windowMs}ms)`)
+      logger.info(`     Parent: ${issue.parentQuery}`)
+      logger.info(`     Fix: ${issue.resolution}`)
+      logger.info("")
     }
   } else {
-    console.log("✅ No N+1 query patterns detected\n")
+    logger.info("✅ No N+1 query patterns detected\n")
   }
 
   // Subscription optimizations
   if (report.subscriptionOptimizations.length > 0) {
-    console.log(`📡 Subscription Optimizations (${report.subscriptionOptimizations.length})`)
-    console.log("─".repeat(40))
+    logger.info(`📡 Subscription Optimizations (${report.subscriptionOptimizations.length})`)
+    logger.info("─".repeat(40))
     for (const opt of report.subscriptionOptimizations) {
       const icon = opt.severity === "critical" ? "🔴" : opt.severity === "warning" ? "🟡" : "🔵"
-      console.log(`  ${icon} ${opt.subscriptionName} — ${opt.issue}`)
-      console.log(`     ${opt.detail}`)
-      console.log(`     Recommendation: ${opt.recommendation}`)
-      console.log()
+      logger.info(`  ${icon} ${opt.subscriptionName} — ${opt.issue}`)
+      logger.info(`     ${opt.detail}`)
+      logger.info(`     Recommendation: ${opt.recommendation}`)
+      logger.info("")
     }
   } else {
-    console.log("✅ Subscriptions look healthy\n")
+    logger.info("✅ Subscriptions look healthy\n")
   }
 
   // Summary
-  console.log("━".repeat(60))
-  console.log(
+  logger.info("━".repeat(60))
+  logger.info(
     `  Summary: ${report.summary.totalIssues} issues ` +
       `(${report.summary.critical} critical, ${report.summary.warnings} warnings)`,
   )
   if (report.summary.estimatedImprovementPercent > 0) {
-    console.log(`  Estimated improvement: ~${report.summary.estimatedImprovementPercent}%`)
+    logger.info(`  Estimated improvement: ~${report.summary.estimatedImprovementPercent}%`)
   }
-  console.log("━".repeat(60))
+  logger.info("━".repeat(60))
 
   if (options.apply && report.indexSuggestions.length > 0) {
-    console.log("\n🚀 Applying index suggestions...")
+    logger.info("\n🚀 Applying index suggestions...")
     for (const suggestion of report.indexSuggestions) {
-      console.log(`  → ${suggestion.createSQL}`)
+      logger.info(`  → ${suggestion.createSQL}`)
     }
-    console.log("\n  ⚠️  Auto-apply requires a database connection. Use --connection-string to connect.")
+    logger.warn("\n  ⚠️  Auto-apply requires a database connection. Use --connection-string to connect.")
   }
 }

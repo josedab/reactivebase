@@ -13,6 +13,7 @@ export interface InsightsOptions {
   projectDir: string
   json?: boolean
   threshold?: string
+  logLevel?: import("../logger.js").LogLevel
 }
 
 export interface SchemaComplexity {
@@ -61,8 +62,10 @@ export interface InsightsReport {
 export async function insights(options: InsightsOptions): Promise<void> {
   const { readdirSync, readFileSync, existsSync } = await import("node:fs")
   const { join } = await import("node:path")
+  const { createCliLogger } = await import("../logger.js")
+  const logger = createCliLogger({ level: options.logLevel })
 
-  console.log("🔍 Analyzing project...\n")
+  logger.info("🔍 Analyzing project...\n")
 
   const schemaComplexity = analyzeSchemaComplexity(options.projectDir, { readdirSync, readFileSync, existsSync, join })
   const deadFunctions = detectDeadFunctions(options.projectDir, { readdirSync, readFileSync, existsSync, join })
@@ -86,78 +89,78 @@ export async function insights(options: InsightsOptions): Promise<void> {
   }
 
   if (options.json) {
-    console.log(JSON.stringify(report, null, 2))
+    logger.info(JSON.stringify(report, null, 2))
     return
   }
 
   // Pretty-print
-  console.log("━".repeat(60))
-  console.log("  ReactiveBase Developer Insights")
-  console.log("━".repeat(60))
-  console.log()
+  logger.info("━".repeat(60))
+  logger.info("  ReactiveBase Developer Insights")
+  logger.info("━".repeat(60))
+  logger.info("")
 
   // Schema Complexity
-  console.log("📊 Schema Complexity")
-  console.log("─".repeat(40))
-  console.log(`  Tables: ${schemaComplexity.totalTables}`)
-  console.log(`  Columns: ${schemaComplexity.totalColumns}`)
-  console.log(`  Relations: ${schemaComplexity.totalRelations}`)
-  console.log(`  Indexes: ${schemaComplexity.totalIndexes}`)
-  console.log(`  Avg columns/table: ${schemaComplexity.avgColumnsPerTable.toFixed(1)}`)
+  logger.info("📊 Schema Complexity")
+  logger.info("─".repeat(40))
+  logger.info(`  Tables: ${schemaComplexity.totalTables}`)
+  logger.info(`  Columns: ${schemaComplexity.totalColumns}`)
+  logger.info(`  Relations: ${schemaComplexity.totalRelations}`)
+  logger.info(`  Indexes: ${schemaComplexity.totalIndexes}`)
+  logger.info(`  Avg columns/table: ${schemaComplexity.avgColumnsPerTable.toFixed(1)}`)
   if (schemaComplexity.maxColumnsTable) {
-    console.log(
+    logger.info(
       `  Largest table: ${schemaComplexity.maxColumnsTable.name} (${schemaComplexity.maxColumnsTable.count} columns)`,
     )
   }
   if (schemaComplexity.circularRelations.length > 0) {
-    console.log(`  ⚠️  Circular relations: ${schemaComplexity.circularRelations.map((c) => c.join(" → ")).join("; ")}`)
+    logger.warn(`  ⚠️  Circular relations: ${schemaComplexity.circularRelations.map((c) => c.join(" → ")).join("; ")}`)
   }
-  console.log(`  Complexity score: ${schemaComplexity.complexityScore}/100`)
-  console.log()
+  logger.info(`  Complexity score: ${schemaComplexity.complexityScore}/100`)
+  logger.info("")
 
   // Dead Functions
   if (deadFunctions.length > 0) {
-    console.log(`🗑️  Potentially Dead Functions (${deadFunctions.length})`)
-    console.log("─".repeat(40))
+    logger.info(`🗑️  Potentially Dead Functions (${deadFunctions.length})`)
+    logger.info("─".repeat(40))
     for (const fn of deadFunctions) {
-      console.log(`  ${fn.type}: ${fn.name}`)
-      console.log(`     File: ${fn.file}`)
-      console.log(`     Reason: ${fn.reason}`)
+      logger.info(`  ${fn.type}: ${fn.name}`)
+      logger.info(`     File: ${fn.file}`)
+      logger.info(`     Reason: ${fn.reason}`)
     }
-    console.log()
+    logger.info("")
   } else {
-    console.log("✅ No dead functions detected\n")
+    logger.info("✅ No dead functions detected\n")
   }
 
   // Performance Predictions
   if (performancePredictions.length > 0) {
-    console.log(`⚡ Performance Predictions (${performancePredictions.length})`)
-    console.log("─".repeat(40))
+    logger.info(`⚡ Performance Predictions (${performancePredictions.length})`)
+    logger.info("─".repeat(40))
     for (const pred of performancePredictions) {
       const icon = pred.risk === "high" ? "🔴" : pred.risk === "medium" ? "🟡" : "🟢"
-      console.log(`  ${icon} ${pred.area} [${pred.risk}]`)
-      console.log(`     ${pred.detail}`)
-      console.log(`     → ${pred.recommendation}`)
-      console.log()
+      logger.info(`  ${icon} ${pred.area} [${pred.risk}]`)
+      logger.info(`     ${pred.detail}`)
+      logger.info(`     → ${pred.recommendation}`)
+      logger.info("")
     }
   }
 
   // Summary
-  console.log("━".repeat(60))
-  console.log(
+  logger.info("━".repeat(60))
+  logger.info(
     `  Grade: ${grade}  |  Complexity: ${complexityScore}/100  |  Dead fns: ${deadFunctions.length}  |  High risk: ${highRiskCount}`,
   )
-  console.log("━".repeat(60))
+  logger.info("━".repeat(60))
 
   // Check thresholds for CI
   if (options.threshold) {
     const parts = options.threshold.split("=")
     if (parts[0] === "complexity" && complexityScore > parseInt(parts[1], 10)) {
-      console.log(`\n❌ THRESHOLD EXCEEDED: complexity ${complexityScore} > ${parts[1]}`)
+      logger.error(`\n❌ THRESHOLD EXCEEDED: complexity ${complexityScore} > ${parts[1]}`)
       process.exitCode = 1
     }
     if (parts[0] === "grade" && grade > parts[1]) {
-      console.log(`\n❌ THRESHOLD EXCEEDED: grade ${grade} worse than ${parts[1]}`)
+      logger.error(`\n❌ THRESHOLD EXCEEDED: grade ${grade} worse than ${parts[1]}`)
       process.exitCode = 1
     }
   }
