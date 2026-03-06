@@ -172,7 +172,7 @@ export class ReactiveStore {
     try {
       const result = await this.client.mutate(mutationName, args)
       return result as T
-    } catch (error) {
+    } catch (error: unknown) {
       // Rollback optimistic updates on error
       if (config?.rollbackOnError !== false) {
         for (const rollback of rollbacks) {
@@ -405,7 +405,7 @@ class MutationHandleImpl<TArgs, TResult> implements MutationHandle<TArgs, TResul
       this.state = { data: result, error: null, isPending: false, isSuccess: true, isError: false }
       this.notify()
       return result
-    } catch (error) {
+    } catch (error: unknown) {
       this.state = {
         data: undefined,
         error: error instanceof Error ? error : new Error(String(error)),
