@@ -70,3 +70,25 @@ export type {
   ChangeNotification,
   ChangeNotificationHandler,
 } from "./federation.js"
+
+// NoSQL Adapters and Federated Query Planner
+export {
+  MongoDBAdapter,
+  MongoDBCdcAdapter,
+  createMongoDBAdapter,
+  DynamoDBAdapter,
+  DynamoDBStreamsAdapter,
+  createDynamoDBAdapter,
+  FederatedQueryPlanner,
+  ReactivityBridge,
+} from "./nosql-adapters.js"
+export type {
+  MongoDBAdapterConfig,
+  DynamoDBAdapterConfig,
+  FederatedQuery,
+  QueryPlan,
+  QueryPlanStep,
+  FederatedJoinCondition,
+  CrossSourceChange,
+  ReactivityBridgeOptions,
+} from "./nosql-adapters.js"

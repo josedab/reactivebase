@@ -119,6 +119,28 @@ export type {
   MySQLAdapterOptions,
 } from "../multi-db/index.js"
 
+// NoSQL Adapters, Federated Query Planner, Reactivity Bridge
+export {
+  MongoDBAdapter,
+  MongoDBCdcAdapter,
+  createMongoDBAdapter,
+  DynamoDBAdapter,
+  DynamoDBStreamsAdapter,
+  createDynamoDBAdapter,
+  FederatedQueryPlanner,
+  ReactivityBridge,
+} from "../multi-db/index.js"
+export type {
+  MongoDBAdapterConfig,
+  DynamoDBAdapterConfig,
+  FederatedQuery,
+  QueryPlan as FederatedQueryPlan,
+  QueryPlanStep,
+  FederatedJoinCondition,
+  CrossSourceChange,
+  ReactivityBridgeOptions,
+} from "../multi-db/index.js"
+
 // SQL Playground
 export { SqlPlayground } from "../sql-playground/index.js"
 export type {
