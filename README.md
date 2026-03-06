@@ -11,7 +11,7 @@
 
 📖 **Documentation**: [reactivebase.dev](https://reactivebase.dev) · 💬 **Community**: [Discord](https://discord.gg/reactivebase)
 
-> **~126K LOC · 85 server modules · ~2,488 tests · 16 packages · MIT license**
+> **~151K LOC · 85 server modules · ~3,167 tests · 16 packages · MIT license**
 
 ---
 
@@ -133,6 +133,39 @@ function TaskList({ userId }: { userId: string }) {
 ```
 
 The React component renders a live-updating task list. Clicking "Done" triggers the mutation, and all subscribed clients see the update automatically — no manual refetch needed.
+
+### Architecture
+
+```mermaid
+flowchart LR
+    subgraph Clients
+        A[React / Vue / Svelte]
+    end
+
+    subgraph ReactiveBase Server
+        B[Query Router]
+        C[Mutation Router]
+        D[Action Router]
+        E[Reactivity Engine]
+    end
+
+    subgraph Infrastructure
+        F[(PostgreSQL)]
+        G[(Redis)]
+    end
+
+    A -- "WebSocket\n(subscriptions)" --> B
+    A -- "WebSocket\n(writes)" --> C
+    A -- "HTTP / WebSocket" --> D
+    B --> E
+    C --> E
+    E -- "Change detection\n(CDC)" --> F
+    B -- "Read queries" --> F
+    C -- "Transactions" --> F
+    D -- "Jobs / Scheduling" --> F
+    E -- "Pub/Sub\n(multi-server)" --> G
+    E -- "Invalidation\npush" --> A
+```
 
 ```
 Client (React/Vue/Svelte)
@@ -328,6 +361,32 @@ export default defineConfig({
 | `server.corsOrigin`        | `string` | —           | Allowed CORS origin(s). `'*'` for any origin, or a specific origin string   |
 | `server.dashboardToken`    | `string` | —           | Token for `/dashboard`, `/metrics` access. If unset, disabled in production |
 | `server.heartbeatInterval` | `number` | `30000`     | WebSocket heartbeat interval in milliseconds                                |
+
+### Database Options
+
+| Option                       | Type     | Default | Description                                               |
+| ---------------------------- | -------- | ------- | --------------------------------------------------------- |
+| `database.connectionString`  | `string` | —       | PostgreSQL connection string (**required**)                |
+| `database.poolSize`          | `number` | `20`    | Maximum number of connections in the database pool         |
+
+### Redis Options
+
+| Option      | Type     | Default | Description                                  |
+| ----------- | -------- | ------- | -------------------------------------------- |
+| `redis.url` | `string` | —       | Redis URL for multi-server pub/sub and caching |
+
+### Auth Options
+
+| Option           | Type       | Default | Description                                      |
+| ---------------- | ---------- | ------- | ------------------------------------------------ |
+| `auth.providers` | `array`    | `[]`    | Authentication providers (e.g., JWT, OAuth)       |
+
+### Dev Options
+
+| Option             | Type     | Default  | Description                              |
+| ------------------ | -------- | -------- | ---------------------------------------- |
+| `dev.dashboardPort`| `number` | `4001`   | Port for the development dashboard       |
+| `dev.logLevel`     | `string` | `"info"` | Log level: `debug`, `info`, `warn`, `error` |
 
 ### CDC (Change Data Capture) Options
 
