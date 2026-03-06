@@ -83,6 +83,37 @@ export type {
   PolicyCoverageReport,
 } from "../dacl/index.js"
 
+// DACL Parser, Compiler & Simulator
+export {
+  DaclParseError,
+  parseDacl,
+  compileToPolicies,
+  compileToRlsPolicies,
+  compileToRlsSQL,
+  compileDacl,
+  simulateDacl,
+  daclParse,
+  daclCompile,
+  daclSimulate,
+} from "../dacl/index.js"
+export type {
+  DaclPolicyAST,
+  DaclStatement,
+  DaclCondition,
+  DaclRoleCondition,
+  DaclFieldCondition,
+  DaclAndCondition,
+  DaclOrCondition,
+  DaclFieldPath,
+  DaclLiteral,
+  DaclCompileResult,
+  DaclSimulationStep,
+  DaclSimulationResult,
+  DaclParseCliResult,
+  DaclCompileCliResult,
+  DaclSimulateCliResult,
+} from "../dacl/index.js"
+
 // Declarative Authorization (Zanzibar)
 export {
   ZanzibarEngine,
