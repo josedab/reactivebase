@@ -123,7 +123,9 @@ export class WebhookSubscriptionManager {
       clearTimeout(batch.timer)
       // Flush remaining events
       if (batch.events.length > 0) {
-        this.flushBatch(id).catch(() => {})
+        this.flushBatch(id).catch((err: unknown) => {
+          console.debug(`[declarative-subscriptions] flush failed during unsubscribe for "${id}":`, err)
+        })
       }
     }
     this.batches.delete(id)
@@ -198,7 +200,9 @@ export class WebhookSubscriptionManager {
     for (const [id, batch] of Array.from(this.batches)) {
       if (batch.timer) clearTimeout(batch.timer)
       if (batch.events.length > 0) {
-        await this.flushBatch(id).catch(() => {})
+        await this.flushBatch(id).catch((err: unknown) => {
+          console.debug(`[declarative-subscriptions] flush failed during destroy for "${id}":`, err)
+        })
       }
     }
     this.batches.clear()
@@ -243,14 +247,18 @@ export class WebhookSubscriptionManager {
     if (batch.events.length >= (sub.maxBatchSize ?? 50)) {
       if (batch.timer) clearTimeout(batch.timer)
       batch.timer = null
-      this.flushBatch(subscriptionId).catch(() => {})
+      this.flushBatch(subscriptionId).catch((err: unknown) => {
+        console.debug(`[declarative-subscriptions] flush failed for batch "${subscriptionId}":`, err)
+      })
       return
     }
 
     if (!batch.timer) {
       const windowMs = Math.min(sub.batchWindowMs ?? 1000, this.maxBatchWindowMs)
       batch.timer = setTimeout(() => {
-        this.flushBatch(subscriptionId).catch(() => {})
+        this.flushBatch(subscriptionId).catch((err: unknown) => {
+          console.debug(`[declarative-subscriptions] flush failed for timer batch "${subscriptionId}":`, err)
+        })
       }, windowMs)
     }
   }
