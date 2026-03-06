@@ -1,6 +1,13 @@
 // AI / RAG Pipeline
 export { openaiProvider, ollamaProvider, mockAiProvider, createAiContext } from "../ai/index.js"
-export type { AiProvider, AiContext, EmbedOptions, GenerateOptions, SearchOptions, SearchResult } from "../ai/index.js"
+export type {
+  AiProvider,
+  AiContext,
+  EmbedOptions,
+  GenerateOptions,
+  SearchOptions,
+  SearchResult as AiSearchResult,
+} from "../ai/index.js"
 
 // AI Query Assistant
 export { QueryAssistant } from "../ai-assistant/index.js"
@@ -23,7 +30,7 @@ export type {
   MigrationSafetyCheck,
   IndexOptimization,
   MigrationImpact as AiMigrationImpact,
-  RollbackPlan,
+  RollbackPlan as AiRollbackPlan,
 } from "../ai-assistant/index.js"
 
 // AI Schema & Query Copilot
@@ -39,3 +46,16 @@ export type {
   CopilotQueryExplanation,
   OptimizationSuggestion as CopilotOptimizationSuggestion,
 } from "../ai/index.js"
+
+// Schema-Aware AI Copilot
+export { SchemaContextEngine, LocalAIProvider } from "../ai-assistant/index.js"
+export type {
+  SchemaContext,
+  SchemaEmbedding,
+  CompletionContext,
+  CompletionSuggestion,
+  MutationGenerationResult,
+  MigrationImpactPrediction,
+  LocalAIOptions,
+  AIProviderType,
+} from "../ai-assistant/index.js"

@@ -61,3 +61,16 @@ export type {
   CostSummary,
   OllamaProviderOptions,
 } from "./conversation-engine.js"
+
+// Schema-Aware Context Engine & Local AI Provider
+export { SchemaContextEngine, LocalAIProvider } from "./schema-context-engine.js"
+export type {
+  SchemaContext,
+  SchemaEmbedding,
+  CompletionContext,
+  CompletionSuggestion,
+  MutationGenerationResult,
+  MigrationImpactPrediction,
+  LocalAIOptions,
+  AIProviderType,
+} from "./schema-context-engine.js"
