@@ -252,13 +252,13 @@ export class CrossRegionReactivity {
     }
 
     // Last resort: any available
-    const any = candidates[0]
-    return any
+    const fallbackCandidate = candidates[0]
+    return fallbackCandidate
       ? {
-          targetRegion: any.regionId,
-          host: `${any.host}:${any.port}`,
+          targetRegion: fallbackCandidate.regionId,
+          host: `${fallbackCandidate.host}:${fallbackCandidate.port}`,
           mayBeStale: true,
-          estimatedStalenessMs: any.lagMs,
+          estimatedStalenessMs: fallbackCandidate.lagMs,
           reason: "fallback (no primary available)",
         }
       : {
