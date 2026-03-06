@@ -14,6 +14,7 @@
  */
 
 import type { EventStreamAdapter, StreamEvent, PublishResult, EventFilter } from "./event-streaming.js"
+import { serverLogger } from "../logging/index.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -115,8 +116,11 @@ export class SseStreamAdapter implements EventStreamAdapter {
     if (client) {
       try {
         client.writer.end()
-      } catch {
-        // Client may already be disconnected
+      } catch (error: unknown) {
+        serverLogger.debug("Failed to close SSE client writer", {
+          clientId: id,
+          error: error instanceof Error ? error.message : String(error),
+        })
       }
       this.clients.delete(id)
     }
@@ -147,7 +151,11 @@ export class SseStreamAdapter implements EventStreamAdapter {
         client.lastEventId = event.id
         client.eventCount++
         deliveredCount++
-      } catch {
+      } catch (error: unknown) {
+        serverLogger.debug("Failed to write SSE event to client", {
+          clientId: client.id,
+          error: error instanceof Error ? error.message : String(error),
+        })
         this.removeClient(client.id)
       }
     }
@@ -171,8 +179,10 @@ export class SseStreamAdapter implements EventStreamAdapter {
     for (const client of Array.from(this.clients.values())) {
       try {
         client.writer.end()
-      } catch {
-        // Ignore
+      } catch (error: unknown) {
+        serverLogger.debug("Failed to close SSE client on shutdown", {
+          error: error instanceof Error ? error.message : String(error),
+        })
       }
     }
     this.clients.clear()
@@ -230,7 +240,11 @@ export class SseStreamAdapter implements EventStreamAdapter {
     for (const entry of missed) {
       try {
         client.writer.write(entry.data)
-      } catch {
+      } catch (error: unknown) {
+        serverLogger.debug("Failed to replay SSE event to client", {
+          clientId: client.id,
+          error: error instanceof Error ? error.message : String(error),
+        })
         this.removeClient(client.id)
         return
       }
@@ -244,7 +258,11 @@ export class SseStreamAdapter implements EventStreamAdapter {
       for (const client of Array.from(this.clients.values())) {
         try {
           client.writer.write(comment)
-        } catch {
+        } catch (error: unknown) {
+          serverLogger.debug("Failed to write SSE heartbeat to client", {
+            clientId: client.id,
+            error: error instanceof Error ? error.message : String(error),
+          })
           this.removeClient(client.id)
         }
       }

@@ -17,6 +17,7 @@
  */
 
 import type { PluginCategory, MarketplaceEntry } from "./marketplace.js"
+import { serverLogger } from "../logging/index.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -280,7 +281,11 @@ export class PluginRegistryBackend {
         monthly: data.downloads,
         total: data.downloads * 6,
       }
-    } catch {
+    } catch (error: unknown) {
+      serverLogger.debug("Failed to fetch download stats from npm", {
+        name,
+        error: error instanceof Error ? error.message : String(error),
+      })
       return { weekly: 0, monthly: 0, total: 0 }
     }
   }
@@ -438,8 +443,11 @@ export class PluginInstaller {
       if (info.reactivebasePlugin?.configSchema) {
         schemaTypes = this._generateSchemaTypes(name, info.reactivebasePlugin.configSchema)
       }
-    } catch {
-      // Fall back to basic type declaration
+    } catch (error: unknown) {
+      serverLogger.debug("Failed to load plugin config schema for type generation", {
+        name,
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
 
     const content = [
@@ -523,16 +531,22 @@ export class PluginInstaller {
         let hasConfig = false
         try {
           hasConfig = existsSync(join(configDir, `${safeName}.json`))
-        } catch {
-          // ignore
+        } catch (error: unknown) {
+          serverLogger.debug("Failed to check plugin config file", {
+            depName,
+            error: error instanceof Error ? error.message : String(error),
+          })
         }
 
         let hasTypes = false
         try {
           const files = existsSync(typesDir) ? readdirSync(typesDir) : []
           hasTypes = files.some((f) => f.startsWith(safeName) && f.endsWith(".d.ts"))
-        } catch {
-          // ignore
+        } catch (error: unknown) {
+          serverLogger.debug("Failed to check plugin type files", {
+            depName,
+            error: error instanceof Error ? error.message : String(error),
+          })
         }
 
         plugins.push({
@@ -556,7 +570,11 @@ export class PluginInstaller {
       const pkgPath = join(projectDir, "node_modules", name, "package.json")
       const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as { version: string }
       return pkg.version
-    } catch {
+    } catch (error: unknown) {
+      serverLogger.debug("Failed to resolve installed plugin version", {
+        name,
+        error: error instanceof Error ? error.message : String(error),
+      })
       return "unknown"
     }
   }

@@ -14,6 +14,7 @@
  */
 
 import type { RuntimeTarget, WasmModule, ExecutionResult, HostFunction } from "./wasm-runtime.js"
+import { serverLogger } from "../logging/index.js"
 
 // ─── Sandbox Types ───────────────────────────────────────────────────────────
 
@@ -331,7 +332,10 @@ class NodeAdapter implements RuntimeAdapter {
   isWasmAvailable(): boolean {
     try {
       return typeof (globalThis as Record<string, unknown>).WebAssembly !== "undefined"
-    } catch {
+    } catch (error: unknown) {
+      serverLogger.debug("Wasm availability check failed in Node adapter", {
+        error: error instanceof Error ? error.message : String(error),
+      })
       return false
     }
   }
@@ -435,7 +439,10 @@ class BrowserAdapter implements RuntimeAdapter {
   isWasmAvailable(): boolean {
     try {
       return typeof (globalThis as Record<string, unknown>).WebAssembly !== "undefined"
-    } catch {
+    } catch (error: unknown) {
+      serverLogger.debug("Wasm availability check failed in Browser adapter", {
+        error: error instanceof Error ? error.message : String(error),
+      })
       return false
     }
   }
@@ -539,7 +546,8 @@ function estimateMemory(args: unknown): number {
   try {
     const str = JSON.stringify(args)
     return str ? str.length * 2 : 0
-  } catch {
+  } catch (error: unknown) {
+    serverLogger.debug("Memory estimation failed", { error: error instanceof Error ? error.message : String(error) })
     return 0
   }
 }

@@ -20,6 +20,7 @@
  */
 
 import type { AiProvider, GenerateOptions } from "./ai.js"
+import { serverLogger } from "../logging/index.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -173,8 +174,11 @@ export class SchemaCopilot {
         tables: parsed.tables ?? [],
         warnings: parsed.warnings ?? [],
       }
-    } catch {
+    } catch (error: unknown) {
       // If the AI returned raw code instead of JSON, wrap it
+      serverLogger.debug("Schema generation returned non-JSON response", {
+        error: error instanceof Error ? error.message : String(error),
+      })
       return {
         code: result.text,
         explanation: "Generated schema from description",
@@ -209,7 +213,10 @@ export class SchemaCopilot {
     try {
       const parsed = JSON.parse(result.text)
       return Array.isArray(parsed) ? parsed : []
-    } catch {
+    } catch (error: unknown) {
+      serverLogger.debug("Index suggestion parsing failed", {
+        error: error instanceof Error ? error.message : String(error),
+      })
       return []
     }
   }
@@ -244,7 +251,10 @@ export class SchemaCopilot {
         destructive: parsed.destructive ?? false,
         warnings: parsed.warnings ?? [],
       }
-    } catch {
+    } catch (error: unknown) {
+      serverLogger.debug("Migration generation returned non-JSON response", {
+        error: error instanceof Error ? error.message : String(error),
+      })
       return {
         upSql: result.text,
         downSql: "",
@@ -285,7 +295,10 @@ export class SchemaCopilot {
         bottlenecks: parsed.bottlenecks ?? [],
         suggestions: parsed.suggestions ?? [],
       }
-    } catch {
+    } catch (error: unknown) {
+      serverLogger.debug("Query plan explanation parsing failed", {
+        error: error instanceof Error ? error.message : String(error),
+      })
       return {
         summary: result.text,
         steps: [],
@@ -398,7 +411,10 @@ export class QueryBuilderAssistant {
         bottlenecks: parsed.bottlenecks ?? [],
         suggestions: parsed.suggestions ?? [],
       }
-    } catch {
+    } catch (error: unknown) {
+      serverLogger.debug("Query analysis parsing failed", {
+        error: error instanceof Error ? error.message : String(error),
+      })
       return {
         summary: result.text,
         steps: [],
@@ -425,7 +441,10 @@ export class QueryBuilderAssistant {
     try {
       const parsed = JSON.parse(result.text)
       return Array.isArray(parsed) ? parsed : []
-    } catch {
+    } catch (error: unknown) {
+      serverLogger.debug("Optimization suggestion parsing failed", {
+        error: error instanceof Error ? error.message : String(error),
+      })
       return []
     }
   }

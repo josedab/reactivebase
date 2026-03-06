@@ -9,6 +9,7 @@ import { createHmac, timingSafeEqual } from "node:crypto"
 import type { IncomingMessage } from "node:http"
 import type { ChangeEvent } from "../reactivity/index.js"
 import { validateWebhookUrl } from "./url-validation.js"
+import { serverLogger } from "../logging/index.js"
 
 // --- Inbound Webhooks ---
 
@@ -95,7 +96,11 @@ export class WebhookRegistry {
       let payload: unknown
       try {
         payload = JSON.parse(body.toString("utf-8"))
-      } catch {
+      } catch (error: unknown) {
+        serverLogger.debug("Invalid JSON webhook payload", {
+          webhookName: name,
+          error: error instanceof Error ? error.message : String(error),
+        })
         return { status: 400, error: "Invalid JSON payload" }
       }
 
@@ -230,7 +235,10 @@ export function parseNotifyPayload(payload: string): ChangeEvent | null {
       operation: data.operation as ChangeEvent["operation"],
       affectedFilters: data.row,
     }
-  } catch {
+  } catch (error: unknown) {
+    serverLogger.debug("Failed to parse NOTIFY payload", {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return null
   }
 }
@@ -287,7 +295,10 @@ function verifyWebhookSignature(body: Buffer, signature: string, secret: string,
 
   try {
     return timingSafeEqual(Buffer.from(sigHex, "hex"), Buffer.from(expected, "hex"))
-  } catch {
+  } catch (error: unknown) {
+    serverLogger.debug("Webhook signature comparison failed", {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return false
   }
 }
