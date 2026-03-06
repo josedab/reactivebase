@@ -12,3 +12,20 @@ export type {
   SchemaInput,
   ProvisionerAdapter,
 } from "../pg-extensions/index.js"
+
+// Extension-Aware Schema Types & Query Builder
+export {
+  v,
+  generateExtensionColumnDDL,
+  ExtensionQueryBuilder,
+  extQuery,
+  ExtensionTypeError,
+} from "../pg-extensions/index.js"
+export type {
+  ExtensionValidator,
+  GeometryConfig,
+  VectorConfig,
+  TimeseriesConfig,
+  ExtensionDDL,
+  ExtensionQueryResult,
+} from "../pg-extensions/index.js"
