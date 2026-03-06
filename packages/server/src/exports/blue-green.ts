@@ -12,3 +12,19 @@ export type {
   SubscriptionMigration,
   DeploymentEventHandler,
 } from "../blue-green/index.js"
+
+// Schema Versioning & Traffic Splitting
+export { SchemaVersionRegistry, SchemaVersionError } from "../blue-green/index.js"
+export type {
+  SchemaVersion,
+  SchemaVersionStatus,
+  SchemaVersionSchema,
+  TrafficSplitConfig,
+  TrafficOverride,
+  VersionNegotiationResult,
+  CanaryConfig,
+  CanaryState,
+  MigrationPlan,
+  MigrationStep,
+  RegistryStats,
+} from "../blue-green/index.js"
