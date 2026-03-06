@@ -61,3 +61,20 @@ export type {
   CreatePreviewRequest,
   PreviewEnvironmentStats,
 } from "./preview-environment.js"
+
+// Git-like Branch Engine
+export { BranchEngine, BranchEngineError } from "./branch-engine.js"
+export type {
+  BranchEngineOptions,
+  BranchInfo,
+  BranchStatus,
+  MergeStrategy,
+  BranchCreateOptions,
+  BranchSeedConfig,
+  BranchMergeOptions,
+  BranchMergeResult,
+  BranchConflictInfo,
+  BranchLogEntry,
+  BranchProtectionRule,
+  BranchEngineStats,
+} from "./branch-engine.js"
