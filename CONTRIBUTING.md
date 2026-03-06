@@ -242,25 +242,13 @@ npm run benchmark
 
 The CI benchmark workflow runs on every push to `main` and automatically updates the performance badge in the README. When contributing performance-sensitive changes, run benchmarks locally before and after your change to compare results.
 
-### `npm run typecheck` fails on `@reactivebase/edge`
+### `npm run typecheck` — all packages pass
 
-The edge package has test files that reference types not compatible with its `tsconfig.json`. This is a known issue.
+Typecheck currently passes for all packages, including `@reactivebase/edge`. If you encounter issues after modifying edge package test files, ensure types are compatible with the edge `tsconfig.json`.
 
-**Workaround:** Run typecheck excluding the edge package:
+### `npm run lint` — all packages pass
 
-```bash
-npx turbo run typecheck --filter='!@reactivebase/edge'
-```
-
-### `npm run lint` fails on `@reactivebase/testing`
-
-The testing package has 8 known ESLint errors (unused variables and missing return types in test helpers).
-
-**Workaround:** Run lint excluding the testing package:
-
-```bash
-npx turbo run lint --filter='!@reactivebase/testing'
-```
+Lint currently passes for all packages, including `@reactivebase/testing`. If you add test helpers, ensure variables are used and return types are declared.
 
 ### `npm run format:check` shows warnings
 
