@@ -126,6 +126,17 @@ export type {
 export { subscribeDerived, subscribeTransformed } from "./composition/index.js"
 export type { DerivedSubscriptionHandle, ComposedQueryOptions } from "./composition/index.js"
 
+/** Shared component utilities for framework UI packages */
+export {
+  sortData,
+  toggleSort,
+  paginate,
+  clampPage,
+  validateFields,
+  computePresenceVisibility,
+} from "./composition/index.js"
+export type { FormField, PresenceUser } from "./composition/index.js"
+
 /** Session Resumption: stateful reconnect without re-subscribing */
 export { SessionResumeManager } from "./session/index.js"
 export type { SessionResumeOptions, SessionState, ResumeHandler } from "./session/index.js"
