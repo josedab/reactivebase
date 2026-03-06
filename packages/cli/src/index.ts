@@ -338,6 +338,18 @@ async function main(): Promise<void> {
       break
     }
 
+    case "tutorial": {
+      const { runTutorial } = await import("./commands/tutorial.js")
+      const stepFlag = getFlag("--step")
+      await runTutorial({
+        projectDir: process.cwd(),
+        startStep: stepFlag ? parseInt(stepFlag, 10) : undefined,
+        reset: args.includes("--reset"),
+        nonInteractive: args.includes("--non-interactive"),
+      })
+      break
+    }
+
     case "--help":
     case "-h":
     case undefined:
@@ -377,6 +389,7 @@ Commands:
   dacl             Access control policy management
   ivm              Incremental view maintenance
   analyze          Smart query cost estimator
+  tutorial         Interactive onboarding tutorial (7 steps)
 
 Options:
   --help, -h       Show this help message
