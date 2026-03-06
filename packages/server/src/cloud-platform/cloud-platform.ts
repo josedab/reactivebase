@@ -219,6 +219,8 @@ export class CloudPlatform {
 
   async createProject(config: CloudProjectConfig): Promise<CloudProjectRecord> {
     const orgId = config.orgId ?? "default_org"
+
+    // Enforce per-org project limit to prevent unbounded resource consumption
     const orgProjects = [...this.projects.values()].filter((p) => p.orgId === orgId)
     if (orgProjects.length >= this.options.maxProjectsPerOrg) {
       throw new Error(`Organization has reached the maximum of ${this.options.maxProjectsPerOrg} projects`)
@@ -240,7 +242,8 @@ export class CloudPlatform {
     this.projects.set(project.id, project)
     this.teamMembers.set(project.id, [])
 
-    // Simulate provisioning completion
+    // Transition to active and provision database URL after creation succeeds.
+    // In production, this would be an async provisioning step with status polling.
     project.status = "active"
     project.databaseUrl = `postgresql://rb_${project.id}:****@db.${project.region}.reactivebase.cloud:5432/rb_${project.id}`
     project.updatedAt = new Date().toISOString()
@@ -272,7 +275,7 @@ export class CloudPlatform {
 
     project.status = "deleting"
 
-    // Clean up environments and deployments
+    // Cascade delete: remove all child environments and deployments before the project
     for (const [id, env] of this.environments) {
       if (env.projectId === projectId) this.environments.delete(id)
     }
@@ -291,6 +294,7 @@ export class CloudPlatform {
     const project = this.projects.get(projectId)
     if (!project) throw new Error(`Project ${projectId} not found`)
 
+    // Environment count is plan-gated (e.g., free plan allows only 2)
     const projectEnvs = [...this.environments.values()].filter((e) => e.projectId === projectId)
     const limits = this.getPlanLimits(project.plan)
     if (projectEnvs.length >= limits.maxEnvironments) {
@@ -313,7 +317,8 @@ export class CloudPlatform {
 
     this.environments.set(env.id, env)
 
-    // Simulate provisioning
+    // Simulate async provisioning: assign URL and database connection.
+    // In production, this would involve infrastructure API calls.
     env.status = "active"
     env.url = `https://${project.name}-${env.name}.reactivebase.cloud`
     env.databaseUrl = `postgresql://rb_${env.id}:****@db.${project.region}.reactivebase.cloud:5432/rb_${env.id}`
@@ -361,7 +366,8 @@ export class CloudPlatform {
 
     this.deployments.set(deployment.id, deployment)
 
-    // Simulate build/deploy lifecycle
+    // Simulate the build/deploy pipeline (build → deploy → activate).
+    // In production, each step would be an async operation with real build output.
     deployment.status = "building"
     deployment.buildLogs.push("[1/4] Installing dependencies...")
     deployment.buildLogs.push("[2/4] Building TypeScript...")
@@ -456,7 +462,7 @@ export class CloudPlatform {
     const breakdown: CostBreakdownItem[] = []
     let totalOverage = 0
 
-    // Function invocations: $0.50 per 100K over limit
+    // Function invocations: $0.50 per 100K over plan limit
     const invocations = usage.functionInvocations ?? 0
     const invOverage = Math.max(0, invocations - limits.functionInvocationsPerMonth)
     const invCost = Math.ceil(invOverage / 100_000) * 50
@@ -470,7 +476,7 @@ export class CloudPlatform {
     })
     totalOverage += invCost
 
-    // Storage: $0.25 per GB over limit
+    // Storage: $0.25 per GB over plan limit (converted from MB)
     const storageMb = usage.databaseStorageMb ?? 0
     const storageOverage = Math.max(0, storageMb - limits.databaseStorageMb)
     const storageCost = Math.ceil(storageOverage / 1024) * 25
@@ -484,7 +490,7 @@ export class CloudPlatform {
     })
     totalOverage += storageCost
 
-    // Bandwidth: $0.10 per GB over limit
+    // Bandwidth: $0.10 per GB over plan limit (converted from MB)
     const bandwidthMb = usage.bandwidthMb ?? 0
     const bwOverage = Math.max(0, bandwidthMb - limits.bandwidthMb)
     const bwCost = Math.ceil(bwOverage / 1024) * 10
@@ -551,6 +557,7 @@ export class CloudPlatform {
   validateApiKey(key: string): ApiKeyRecord | null {
     const hash = hashApiKey(key)
     const hashBuffer = Buffer.from(hash)
+    // Iterate all keys and use timing-safe comparison to prevent timing attacks
     for (const record of this.apiKeys.values()) {
       const recordHashBuffer = Buffer.from(record.keyHash)
       if (hashBuffer.length === recordHashBuffer.length && timingSafeEqual(hashBuffer, recordHashBuffer)) {
@@ -653,7 +660,7 @@ export class CloudPlatform {
 
     const currentInstances = metrics.currentInstances
 
-    // Scale up if above threshold
+    // Scale up when any resource exceeds threshold, or connections approach capacity (80%)
     if (
       metrics.cpuPercent > config.scaleUpThreshold ||
       metrics.memoryPercent > config.scaleUpThreshold ||
@@ -665,7 +672,7 @@ export class CloudPlatform {
       }
     }
 
-    // Scale down if below threshold
+    // Scale down only when ALL resources are below threshold (conservative)
     if (
       metrics.cpuPercent < config.scaleDownThreshold &&
       metrics.memoryPercent < config.scaleDownThreshold &&
