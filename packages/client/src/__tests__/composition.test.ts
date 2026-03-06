@@ -8,9 +8,10 @@ describe("composition", () => {
   })
 
   it("should create derived subscriptions", () => {
-    // TODO: test subscribeDerived with multiple source subscriptions
-    // TODO: test subscribeTransformed with mapping functions
     expect(typeof subscribeDerived).toBe("function")
     expect(typeof subscribeTransformed).toBe("function")
   })
+
+  it.todo("should test subscribeDerived with multiple source subscriptions")
+  it.todo("should test subscribeTransformed with mapping functions")
 })

@@ -21,14 +21,16 @@ describe("rate-limiting", () => {
   })
 
   it("should create a SlidingWindowLimiter instance", () => {
-    // TODO: test sliding window rate limiting over time
     const limiter = new SlidingWindowLimiter(10, 1000)
     expect(limiter).toBeInstanceOf(SlidingWindowLimiter)
   })
 
+  it.todo("should test sliding window rate limiting over time")
+
   it("should create a TokenBucketLimiter instance", () => {
-    // TODO: test token bucket refill behavior
     const limiter = new TokenBucketLimiter(100, 10, 1000)
     expect(limiter).toBeInstanceOf(TokenBucketLimiter)
   })
+
+  it.todo("should test token bucket refill behavior")
 })

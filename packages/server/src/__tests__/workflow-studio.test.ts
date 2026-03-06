@@ -23,15 +23,17 @@ describe("workflow-studio", () => {
   })
 
   it("should provide built-in templates", () => {
-    // TODO: test that templates contain valid workflow definitions
     expect(Array.isArray(builtInTemplates)).toBe(true)
     expect(builtInTemplates.length).toBeGreaterThan(0)
   })
 
+  it.todo("should test that templates contain valid workflow definitions")
+
   it("should generate valid workflow studio tables SQL", () => {
-    // TODO: test SQL includes workflow design and execution tables
     const sql = buildCreateWorkflowStudioTablesSQL()
     expect(typeof sql).toBe("string")
     expect(sql.toUpperCase()).toContain("CREATE")
   })
+
+  it.todo("should test SQL includes workflow design and execution tables")
 })

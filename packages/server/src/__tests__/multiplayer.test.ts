@@ -22,16 +22,18 @@ describe("multiplayer", () => {
   })
 
   it("should increment vector clock for a node", () => {
-    // TODO: test vector clock merge conflict resolution
     const clock = { node1: 1 }
     const updated = incrementVectorClock(clock, "node1")
     expect(updated.node1).toBe(2)
   })
 
+  it.todo("should test vector clock merge conflict resolution")
+
   it("should generate valid multiplayer tables SQL", () => {
-    // TODO: test SQL contains room and operation tables
     const sql = buildCreateMultiplayerTablesSQL()
     expect(typeof sql).toBe("string")
     expect(sql.toUpperCase()).toContain("CREATE")
   })
+
+  it.todo("should test SQL contains room and operation tables")
 })

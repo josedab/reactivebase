@@ -25,10 +25,11 @@ describe("event-sourcing", () => {
   })
 
   it("should throw EventSourcingError with correct message", () => {
-    // TODO: test error propagation with event metadata
     const error = new EventSourcingError("test error", "TEST_CODE")
     expect(error).toBeInstanceOf(Error)
     expect(error.message).toBe("test error")
     expect(error.code).toBe("TEST_CODE")
   })
+
+  it.todo("should test error propagation with event metadata")
 })

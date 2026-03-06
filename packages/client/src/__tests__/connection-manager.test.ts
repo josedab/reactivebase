@@ -8,8 +8,6 @@ describe("connection-manager", () => {
   })
 
   it("should construct a ConnectionManager instance", () => {
-    // TODO: test connection lifecycle (connect, disconnect, reconnect)
-    // TODO: test message handling and status transitions
     const options: ConnectionOptions = {
       url: "ws://localhost:3000",
       maxReconnectAttempts: 3,
@@ -20,4 +18,7 @@ describe("connection-manager", () => {
     const manager = new ConnectionManager(options)
     expect(manager).toBeInstanceOf(ConnectionManager)
   })
+
+  it.todo("should test connection lifecycle (connect, disconnect, reconnect)")
+  it.todo("should test message handling and status transitions")
 })

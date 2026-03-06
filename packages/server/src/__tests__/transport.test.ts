@@ -17,15 +17,17 @@ describe("transport", () => {
   })
 
   it("should parse valid client messages", () => {
-    // TODO: test parsing subscribe, unsubscribe, mutate, action, ping, auth messages
     const msg = parseClientMessage(JSON.stringify({ type: "ping", id: "1" }))
     expect(msg).toBeDefined()
     expect(msg.type).toBe("ping")
   })
 
+  it.todo("should test parsing subscribe, unsubscribe, mutate, action, ping, auth messages")
+
   it("should serialize server messages", () => {
-    // TODO: test serialization of all server message types
     const serialized = serializeServerMessage({ type: "pong" } as any)
     expect(typeof serialized).toBe("string")
   })
+
+  it.todo("should test serialization of all server message types")
 })

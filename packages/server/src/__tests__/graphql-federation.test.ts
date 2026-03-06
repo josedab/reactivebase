@@ -17,9 +17,10 @@ describe("graphql-federation", () => {
   })
 
   it("should construct a FederationGateway instance", () => {
-    // TODO: test gateway construction with subgraph configs
-    // TODO: test schema composition and conflict detection
     const gateway = new FederationGateway({})
     expect(gateway).toBeInstanceOf(FederationGateway)
   })
+
+  it.todo("should test gateway construction with subgraph configs")
+  it.todo("should test schema composition and conflict detection")
 })

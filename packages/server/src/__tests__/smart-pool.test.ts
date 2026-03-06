@@ -27,15 +27,17 @@ describe("smart-pool", () => {
   })
 
   it("should create a QueryDeduplicator via factory", () => {
-    // TODO: test deduplication of identical concurrent queries
     const deduplicator = createQueryDeduplicator()
     expect(deduplicator).toBeInstanceOf(QueryDeduplicator)
   })
 
+  it.todo("should test deduplication of identical concurrent queries")
+
   it("should throw PoolExhaustedError with correct message", () => {
-    // TODO: test pool exhaustion under high concurrency
     const error = new PoolExhaustedError(10, 10)
     expect(error).toBeInstanceOf(Error)
     expect(error.message).toContain("pool exhausted")
   })
+
+  it.todo("should test pool exhaustion under high concurrency")
 })

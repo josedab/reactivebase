@@ -11,15 +11,17 @@ describe("subscription-analytics", () => {
   })
 
   it("should create a SubscriptionAnalytics via factory", () => {
-    // TODO: test analytics collection over time
     const analytics = createSubscriptionAnalytics()
     expect(analytics).toBeInstanceOf(SubscriptionAnalytics)
   })
 
+  it.todo("should test analytics collection over time")
+
   it("should track subscription cost records", () => {
-    // TODO: test cost attribution and optimization suggestions
-    // TODO: test tenant and user cost summaries
     const analytics = createSubscriptionAnalytics()
     expect(typeof analytics).toBe("object")
   })
+
+  it.todo("should test cost attribution and optimization suggestions")
+  it.todo("should test tenant and user cost summaries")
 })

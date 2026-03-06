@@ -8,9 +8,10 @@ describe("state/mutations", () => {
   })
 
   it("should handle mutation state lifecycle", () => {
-    // TODO: test mutation.execute() state transitions (pending → success/error)
-    // TODO: test optimistic updates with rollback on error
-    // TODO: test mutation result caching
     expect(typeof ReactiveStore).toBe("function")
   })
+
+  it.todo("should test mutation.execute() state transitions (pending → success/error)")
+  it.todo("should test optimistic updates with rollback on error")
+  it.todo("should test mutation result caching")
 })

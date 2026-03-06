@@ -19,16 +19,18 @@ describe("edge-query", () => {
   })
 
   it("should generate valid create edge cache table SQL", () => {
-    // TODO: verify the SQL string contains CREATE TABLE and expected columns
     const sql = buildCreateEdgeCacheTableSQL()
     expect(typeof sql).toBe("string")
     expect(sql.toUpperCase()).toContain("CREATE")
   })
 
+  it.todo("should verify the SQL string contains CREATE TABLE and expected columns")
+
   it("should generate valid create invalidation log table SQL", () => {
-    // TODO: verify the SQL contains invalidation-related columns
     const sql = buildCreateInvalidationLogTableSQL()
     expect(typeof sql).toBe("string")
     expect(sql.toUpperCase()).toContain("CREATE")
   })
+
+  it.todo("should verify the SQL contains invalidation-related columns")
 })

@@ -24,9 +24,10 @@ describe("auth-debugger", () => {
   })
 
   it("should throw AuthDebugError with correct message", () => {
-    // TODO: test that AuthDebugError captures error details properly
     const error = new AuthDebugError("test error")
     expect(error).toBeInstanceOf(Error)
     expect(error.message).toBe("test error")
   })
+
+  it.todo("should test that AuthDebugError captures error details properly")
 })

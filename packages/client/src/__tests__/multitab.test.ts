@@ -7,10 +7,11 @@ describe("multi-tab", () => {
   })
 
   it("should construct a MultiTabCoordinator instance", () => {
-    // TODO: test leader election across tabs
-    // TODO: test message broadcasting between tabs
-    // TODO: test tab role transitions (leader/follower/electing)
     const coordinator = new MultiTabCoordinator()
     expect(coordinator).toBeInstanceOf(MultiTabCoordinator)
   })
+
+  it.todo("should test leader election across tabs")
+  it.todo("should test message broadcasting between tabs")
+  it.todo("should test tab role transitions (leader/follower/electing)")
 })
