@@ -22,6 +22,8 @@ export type ValidatorType =
   | "uuid"
   | "email"
   | "regex"
+  | "date"
+  | "bigint"
 
 export interface ValidatorOptions {
   default?: unknown
@@ -133,6 +135,27 @@ export const v = {
    */
   timestamp(options: ValidatorOptions & { default?: "now" | string } = {}): Validator<Date> {
     return createValidator("timestamp", "timestamptz", options)
+  },
+
+  /**
+   * Define a date-only column (no time component).
+   *
+   * @param options - Validator options such as default
+   * @returns A string validator mapping to Postgres `date`
+   */
+  date(options: ValidatorOptions & { default?: "now" | string } = {}): Validator<string> {
+    return createValidator("date", "date", options)
+  },
+
+  /**
+   * Define a 64-bit integer column for large numbers.
+   *
+   * @param options - Validator options such as default, min, max
+   * @returns A bigint validator mapping to Postgres `bigint`
+   */
+  bigint(options: ValidatorOptions = {}): Validator<string> {
+    // Returns string to avoid JS number precision loss for values > 2^53
+    return createValidator("bigint", "bigint", options)
   },
 
   /**

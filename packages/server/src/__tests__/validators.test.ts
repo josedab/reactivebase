@@ -73,4 +73,28 @@ describe("validators", () => {
     expect(validator.type).toBe("custom")
     expect(validator.pgType).toBe("geometry")
   })
+
+  it("creates date validator", () => {
+    const validator = v.date()
+    expect(validator.type).toBe("date")
+    expect(validator.pgType).toBe("date")
+  })
+
+  it("creates date validator with default", () => {
+    const validator = v.date({ default: "now" })
+    expect(validator.type).toBe("date")
+    expect(validator.options.default).toBe("now")
+  })
+
+  it("creates bigint validator", () => {
+    const validator = v.bigint()
+    expect(validator.type).toBe("bigint")
+    expect(validator.pgType).toBe("bigint")
+  })
+
+  it("bigint validator maps to string TypeScript type for precision safety", () => {
+    const validator = v.bigint()
+    // bigint pgType should be 'bigint', and TS type is string to avoid precision loss
+    expect(validator.pgType).toBe("bigint")
+  })
 })

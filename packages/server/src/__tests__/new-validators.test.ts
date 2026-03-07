@@ -141,4 +141,93 @@ describe("new args validation builders", () => {
       expect(() => validateArgs({ link: "bad" }, schema)).toThrow(ValidationError)
     })
   })
+
+  describe("s.nullable()", () => {
+    it("accepts null values", () => {
+      const schema = { name: s.nullable(s.string()) }
+      expect(() => validateArgs({ name: null }, schema)).not.toThrow()
+    })
+
+    it("accepts the inner type", () => {
+      const schema = { name: s.nullable(s.string()) }
+      expect(() => validateArgs({ name: "Alice" }, schema)).not.toThrow()
+    })
+
+    it("rejects wrong types", () => {
+      const schema = { name: s.nullable(s.string()) }
+      expect(() => validateArgs({ name: 42 }, schema)).toThrow(ValidationError)
+    })
+
+    it("still validates inner constraints", () => {
+      const schema = { email: s.nullable(s.string().email()) }
+      expect(() => validateArgs({ email: "not-email" }, schema)).toThrow(ValidationError)
+      expect(() => validateArgs({ email: "a@b.com" }, schema)).not.toThrow()
+      expect(() => validateArgs({ email: null }, schema)).not.toThrow()
+    })
+
+    it("supports optional", () => {
+      const schema = { tag: s.nullable(s.string()).optional() }
+      expect(() => validateArgs({}, schema)).not.toThrow()
+    })
+  })
+
+  describe("s.union()", () => {
+    it("accepts any matching variant", () => {
+      const schema = { value: s.union([s.string(), s.number()]) }
+      expect(() => validateArgs({ value: "hello" }, schema)).not.toThrow()
+      expect(() => validateArgs({ value: 42 }, schema)).not.toThrow()
+    })
+
+    it("rejects non-matching values", () => {
+      const schema = { value: s.union([s.string(), s.number()]) }
+      expect(() => validateArgs({ value: true }, schema)).toThrow(ValidationError)
+    })
+
+    it("validates inner constraints of matched variant", () => {
+      const schema = { value: s.union([s.string().email(), s.number().min(0)]) }
+      expect(() => validateArgs({ value: "a@b.com" }, schema)).not.toThrow()
+      expect(() => validateArgs({ value: 5 }, schema)).not.toThrow()
+      expect(() => validateArgs({ value: -1 }, schema)).toThrow(ValidationError)
+    })
+
+    it("supports optional", () => {
+      const schema = { data: s.union([s.string(), s.boolean()]).optional() }
+      expect(() => validateArgs({}, schema)).not.toThrow()
+    })
+  })
+
+  describe("s.arrayOf()", () => {
+    it("validates each array item", () => {
+      const schema = { tags: s.arrayOf(s.string()) }
+      expect(() => validateArgs({ tags: ["a", "b", "c"] }, schema)).not.toThrow()
+    })
+
+    it("rejects arrays with wrong item types", () => {
+      const schema = { tags: s.arrayOf(s.string()) }
+      expect(() => validateArgs({ tags: ["a", 42, "c"] }, schema)).toThrow(ValidationError)
+    })
+
+    it("validates item constraints", () => {
+      const schema = { emails: s.arrayOf(s.string().email()) }
+      expect(() => validateArgs({ emails: ["a@b.com"] }, schema)).not.toThrow()
+      expect(() => validateArgs({ emails: ["not-email"] }, schema)).toThrow(ValidationError)
+    })
+
+    it("supports minLength and maxLength", () => {
+      const schema = { ids: s.arrayOf(s.string()).minLength(1).maxLength(3) }
+      expect(() => validateArgs({ ids: [] }, schema)).toThrow(ValidationError)
+      expect(() => validateArgs({ ids: ["a", "b"] }, schema)).not.toThrow()
+      expect(() => validateArgs({ ids: ["a", "b", "c", "d"] }, schema)).toThrow(ValidationError)
+    })
+
+    it("supports optional", () => {
+      const schema = { items: s.arrayOf(s.number()).optional() }
+      expect(() => validateArgs({}, schema)).not.toThrow()
+    })
+
+    it("rejects non-array values", () => {
+      const schema = { items: s.arrayOf(s.string()) }
+      expect(() => validateArgs({ items: "not-array" }, schema)).toThrow(ValidationError)
+    })
+  })
 })
