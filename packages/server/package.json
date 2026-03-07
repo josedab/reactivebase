@@ -137,6 +137,11 @@
       "import": "./dist/migrations.js",
       "require": "./dist/migrations.cjs"
     },
+    "./migrations/migration-analyzer": {
+      "types": "./dist/migration-analyzer.d.ts",
+      "import": "./dist/migration-analyzer.js",
+      "require": "./dist/migration-analyzer.cjs"
+    },
     "./types": {
       "types": "./dist/types.d.ts",
       "import": "./dist/types.js",
@@ -314,7 +319,7 @@
     }
   },
   "scripts": {
-    "build": "tsup",
+    "build": "NODE_OPTIONS=--max-old-space-size=8192 tsup",
     "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest watch",

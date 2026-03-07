@@ -26,6 +26,7 @@ export default defineConfig({
     "api-gen": "src/api-gen/index.ts",
     validation: "src/validation/index.ts",
     migrations: "src/migrations/index.ts",
+    "migration-analyzer": "src/migrations/migration-analyzer.ts",
     types: "src/types/index.ts",
     benchmark: "src/benchmark/index.ts",
     plugins: "src/plugins/index.ts",
