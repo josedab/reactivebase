@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach, vi } from "vitest"
 import {
   TimeTravelEngine,
   generateTimeTravelTableSQL,
@@ -6,6 +6,7 @@ import {
   buildGetEventsInRangeSQL,
   buildGetRowHistorySQL,
   buildPruneEventsSQL,
+  type QueryExecutor,
 } from "../time-travel/time-travel.js"
 
 describe("TimeTravelEngine", () => {
@@ -275,5 +276,167 @@ describe("Time-travel SQL builders", () => {
     const { sql, params } = buildPruneEventsSQL(1000)
     expect(sql).toContain("DELETE FROM")
     expect(params).toEqual([1000])
+  })
+})
+
+// ─── DB Persistence Tests ────────────────────────────────────────────────────
+
+function createMockDb(rows: Record<string, unknown>[] = []) {
+  const calls: Array<{ sql: string; params: unknown[] }> = []
+  const db: QueryExecutor = async (sql: string, params: unknown[]) => {
+    calls.push({ sql, params })
+    return { rows }
+  }
+  return { db, calls }
+}
+
+describe("TimeTravelEngine – DB persistence", () => {
+  it("initTables() executes CREATE TABLE statements", async () => {
+    const { db, calls } = createMockDb()
+    const engine = new TimeTravelEngine({ db })
+
+    await engine.initTables()
+
+    expect(calls.length).toBeGreaterThan(0)
+    const allSql = calls.map((c) => c.sql).join(" ")
+    expect(allSql).toContain("CREATE TABLE")
+    expect(allSql).toContain("_reactivebase_mutation_events")
+    expect(allSql).toContain("CREATE INDEX")
+  })
+
+  it("initTables() is a no-op without db", async () => {
+    const engine = new TimeTravelEngine()
+    // Should resolve without error
+    await engine.initTables()
+  })
+
+  it("recordMutation persists event via INSERT SQL", async () => {
+    const { db, calls } = createMockDb()
+    const engine = new TimeTravelEngine({ db })
+
+    engine.recordMutation({
+      mutationName: "tasks.create",
+      table: "tasks",
+      operation: "insert",
+      rowId: "t1",
+      after: { title: "Hello" },
+      userId: "u1",
+    })
+
+    // fire-and-forget — wait for the microtask to flush
+    await vi.waitFor(() => expect(calls.length).toBe(1))
+
+    expect(calls[0].sql).toContain("INSERT INTO _reactivebase_mutation_events")
+    expect(calls[0].params[3]).toBe("tasks")
+    expect(calls[0].params[4]).toBe("insert")
+    expect(calls[0].params[5]).toBe("t1")
+  })
+
+  it("recordMutation still stores in-memory when db is present", () => {
+    const { db } = createMockDb()
+    const engine = new TimeTravelEngine({ db })
+
+    engine.recordMutation({
+      mutationName: "tasks.create",
+      table: "tasks",
+      operation: "insert",
+      rowId: "t1",
+    })
+
+    expect(engine.eventCount).toBe(1)
+  })
+
+  it("queryAt() uses DB temporal query when db is configured", async () => {
+    const mockRows = [{ id: "t1", title: "Snapshot" }]
+    const { db, calls } = createMockDb(mockRows)
+    const engine = new TimeTravelEngine({ db })
+
+    const ts = Date.now()
+    const result = await engine.queryAt("tasks", ts)
+
+    expect(calls.length).toBe(1)
+    expect(calls[0].sql).toContain("AS OF SYSTEM TIME")
+    expect(calls[0].sql).toContain('"tasks"')
+    expect(result).toEqual(mockRows)
+  })
+
+  it("queryAt() falls back to in-memory without db", async () => {
+    const engine = new TimeTravelEngine()
+
+    const ts = Date.now()
+    engine.recordMutation({
+      mutationName: "tasks.create",
+      table: "tasks",
+      operation: "insert",
+      rowId: "t1",
+      after: { title: "In-memory" },
+    })
+
+    const result = await engine.queryAt("tasks", ts)
+    expect(result).toEqual(
+      engine
+        .getEventsInRange(ts, ts)
+        .filter((e) => e.table === "tasks")
+        .map((e) => e.after ?? {}),
+    )
+  })
+
+  it("prune() executes DELETE SQL when db is configured", async () => {
+    const { db, calls } = createMockDb()
+    const engine = new TimeTravelEngine({ db, retentionDays: 1 })
+
+    engine.prune()
+
+    await vi.waitFor(() => expect(calls.length).toBe(1))
+
+    expect(calls[0].sql).toContain("DELETE FROM _reactivebase_mutation_events")
+    expect(calls[0].params).toHaveLength(1)
+    expect(typeof calls[0].params[0]).toBe("number")
+  })
+
+  it("recordMutation succeeds even when db throws", async () => {
+    const failingDb: QueryExecutor = async () => {
+      throw new Error("DB connection lost")
+    }
+    const engine = new TimeTravelEngine({ db: failingDb })
+
+    const event = engine.recordMutation({
+      mutationName: "tasks.create",
+      table: "tasks",
+      operation: "insert",
+      rowId: "t1",
+    })
+
+    expect(event.id).toBeTruthy()
+    expect(engine.eventCount).toBe(1)
+  })
+
+  it("prune() succeeds even when db throws", () => {
+    const failingDb: QueryExecutor = async () => {
+      throw new Error("DB connection lost")
+    }
+    const engine = new TimeTravelEngine({ db: failingDb, retentionDays: 1 })
+
+    // Should not throw
+    expect(() => engine.prune()).not.toThrow()
+  })
+
+  it("constructor stores db option and uses it", async () => {
+    const { db, calls } = createMockDb()
+    const engine = new TimeTravelEngine({ db, retentionDays: 7 })
+
+    // db is used when initTables is called
+    await engine.initTables()
+    expect(calls.length).toBeGreaterThan(0)
+
+    // db is used when recording mutations
+    engine.recordMutation({
+      mutationName: "test",
+      table: "t",
+      operation: "insert",
+      rowId: "r1",
+    })
+
+    await vi.waitFor(() => expect(calls.some((c) => c.sql.includes("INSERT INTO"))).toBe(true))
   })
 })

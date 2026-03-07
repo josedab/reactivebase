@@ -64,6 +64,9 @@ export interface DiffEntry {
   changedFields?: string[]
 }
 
+/** Executes a SQL query and returns rows. Used for optional DB persistence. */
+export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+
 export interface TimeTravelOptions {
   /** Retention period in days (default: 7) */
   retentionDays?: number
@@ -73,6 +76,8 @@ export interface TimeTravelOptions {
   captureSnapshots?: boolean
   /** Prune interval in ms (default: 1 hour) */
   pruneInterval?: number
+  /** Optional: persist events to a database (e.g. Postgres) */
+  db?: QueryExecutor
 }
 
 // ─── Persistence SQL ─────────────────────────────────────────────────────────
@@ -168,7 +173,9 @@ export function buildPruneEventsSQL(beforeMs: number): { sql: string; params: un
 
 // ─── TimeTravelEngine ────────────────────────────────────────────────────────
 
-const DEFAULT_OPTIONS: Required<TimeTravelOptions> = {
+type ResolvedTimeTravelOptions = Required<Omit<TimeTravelOptions, "db">> & Pick<TimeTravelOptions, "db">
+
+const DEFAULT_OPTIONS: ResolvedTimeTravelOptions = {
   retentionDays: 7,
   maxInMemoryEvents: 10_000,
   captureSnapshots: true,
@@ -176,7 +183,7 @@ const DEFAULT_OPTIONS: Required<TimeTravelOptions> = {
 }
 
 export class TimeTravelEngine {
-  private options: Required<TimeTravelOptions>
+  private options: ResolvedTimeTravelOptions
   private events: MutationEvent[] = []
   private pruneTimer: ReturnType<typeof setInterval> | null = null
   private eventCounter = 0
@@ -222,6 +229,16 @@ export class TimeTravelEngine {
     // Enforce in-memory limit
     if (this.events.length > this.options.maxInMemoryEvents) {
       this.events = this.events.slice(-Math.floor(this.options.maxInMemoryEvents * 0.8))
+    }
+
+    // Best-effort DB persistence (fire-and-forget)
+    if (this.options.db) {
+      const { sql, params: sqlParams } = buildInsertEventSQL(event)
+      this.options.db(sql, sqlParams).catch((err: unknown) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+        }
+      })
     }
 
     return event
@@ -349,7 +366,45 @@ export class TimeTravelEngine {
     const cutoff = Date.now() - this.options.retentionDays * 24 * 60 * 60 * 1000
     const before = this.events.length
     this.events = this.events.filter((e) => e.timestampMs >= cutoff)
+
+    // Best-effort DB prune (fire-and-forget)
+    if (this.options.db) {
+      const { sql, params } = buildPruneEventsSQL(cutoff)
+      this.options.db(sql, params).catch((err: unknown) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+        }
+      })
+    }
+
     return before - this.events.length
+  }
+
+  /**
+   * Initialize time-travel tables in the database.
+   * No-op when no db executor is configured.
+   */
+  async initTables(): Promise<void> {
+    if (!this.options.db) return
+    const sql = generateTimeTravelTableSQL()
+    for (const stmt of sql.split(";").filter((s) => s.trim())) {
+      await this.options.db(stmt + ";", [])
+    }
+  }
+
+  /**
+   * Query the state of a table at a point in time.
+   * Uses DB temporal query when executor is available, otherwise falls back to in-memory events.
+   */
+  async queryAt(table: string, timestamp: number): Promise<Record<string, unknown>[]> {
+    if (!this.options.db) {
+      return this.getEventsInRange(timestamp, timestamp)
+        .filter((e) => e.table === table)
+        .map((e) => e.after ?? {})
+    }
+    const sql = buildTemporalQuerySQL(table, timestamp)
+    const result = await this.options.db(sql, [])
+    return result.rows
   }
 
   /**

@@ -70,6 +70,7 @@ export interface EventStoreOptions {
   maxEventsPerStream?: number
   enableReplayDebugging?: boolean
   projectionBatchSize?: number
+  db?: QueryExecutor
 }
 
 export interface AppendResult {
@@ -107,6 +108,8 @@ export interface EventStoreStats {
   projectionCount: number
   avgEventsPerStream: number
 }
+
+export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
 
 // ── Error ──────────────────────────────────────────────────────────────────
 
@@ -343,19 +346,27 @@ export class EventStore {
   private commandHandlers = new Map<string, CommandHandler>()
   private subscribers = new Map<string, Set<(event: DomainEvent) => void>>()
   private globalVersion = 0
+  private readonly db?: QueryExecutor
 
   constructor(options: EventStoreOptions = {}) {
     this.snapshotInterval = options.snapshotInterval ?? 100
     this.maxEventsPerStream = options.maxEventsPerStream ?? 10000
     this.enableReplay = options.enableReplayDebugging ?? true
     this.projections = new ProjectionEngine()
+    this.db = options.db
   }
 
-  append(
+  async initTables(): Promise<void> {
+    if (!this.db) return
+    const sql = buildCreateEventStoreTablesSQL()
+    await this.db(sql, [])
+  }
+
+  async append(
     streamId: string,
     events: Array<{ type: string; data: unknown; metadata?: EventMetadata }>,
     expectedVersion?: number,
-  ): AppendResult {
+  ): Promise<AppendResult> {
     const stream = this.streams.get(streamId) || {
       streamId,
       type: "",
@@ -415,8 +426,41 @@ export class EventStore {
     this.streams.set(streamId, stream)
 
     // Auto-snapshot
-    if (stream.version % this.snapshotInterval === 0) {
+    const snapshotThresholdReached = stream.version % this.snapshotInterval === 0
+    if (snapshotThresholdReached) {
       this.createSnapshot(streamId)
+    }
+
+    // Persist to DB if configured
+    if (this.db) {
+      for (const event of written) {
+        const sql = buildAppendEventSQL()
+        const params = [event.id, event.streamId, event.type, event.data, event.metadata, event.version]
+        await this.db(sql, params).catch((err: unknown) => {
+          if (process.env.NODE_ENV !== "production") {
+            console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+          }
+        })
+      }
+
+      const upsertStreamSQL = buildUpsertStreamSQL()
+      await this.db(upsertStreamSQL, [streamId, stream.type, stream.version]).catch((err: unknown) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+        }
+      })
+
+      if (snapshotThresholdReached) {
+        const snapshot = this.getLatestSnapshot(streamId)
+        if (snapshot) {
+          const snapshotSQL = buildSaveSnapshotSQL()
+          await this.db(snapshotSQL, [snapshot.streamId, snapshot.version, snapshot.state]).catch((err: unknown) => {
+            if (process.env.NODE_ENV !== "production") {
+              console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+            }
+          })
+        }
+      }
     }
 
     return { streamId, version: stream.version, eventsWritten: written.length }
@@ -502,7 +546,7 @@ export class EventStore {
     this.commandHandlers.set(handler.type, handler)
   }
 
-  executeCommand(streamId: string, type: string, command: unknown): AppendResult {
+  async executeCommand(streamId: string, type: string, command: unknown): Promise<AppendResult> {
     const handler = this.commandHandlers.get(type)
     if (!handler) {
       throw new EventSourcingError(`No handler for command: ${type}`, "UNKNOWN_COMMAND")
@@ -523,7 +567,7 @@ export class EventStore {
     )
 
     const newEvents = handler.handle(command, currentState)
-    return this.append(
+    return await this.append(
       streamId,
       newEvents.map((e) => ({ type: e.type, data: e.data, metadata: e.metadata })),
     )

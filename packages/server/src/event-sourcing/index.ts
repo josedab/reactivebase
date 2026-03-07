@@ -26,4 +26,5 @@ export type {
   CommandHandler,
   ReadModel,
   EventStoreStats,
+  QueryExecutor,
 } from "./event-sourcing.js"

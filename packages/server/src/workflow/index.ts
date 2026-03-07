@@ -13,8 +13,10 @@ export {
   buildGetWaitingWorkflowsSQL,
 } from "./workflow.js"
 export type {
+  QueryExecutor,
   WorkflowDefinition,
   WorkflowOptions,
+  WorkflowEngineOptions,
   WorkflowInstance,
   WorkflowStatus,
   StepRecord,

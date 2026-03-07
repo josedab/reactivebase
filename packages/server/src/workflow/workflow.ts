@@ -20,6 +20,8 @@
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+
 export type WorkflowStatus = "pending" | "running" | "completed" | "failed" | "cancelled" | "waiting"
 export type StepStatus = "pending" | "running" | "completed" | "failed" | "skipped" | "compensating"
 
@@ -36,6 +38,11 @@ export interface WorkflowOptions {
   maxRetries?: number
   /** Whether to run compensation steps on failure (default: true) */
   compensateOnFailure?: boolean
+}
+
+export interface WorkflowEngineOptions {
+  /** Optional database executor for durable persistence */
+  db?: QueryExecutor
 }
 
 export interface WorkflowInstance {
@@ -161,13 +168,16 @@ export class WorkflowContext {
   private _currentStep: string | null = null
   private _waitingFor: string | null = null
   private _cancelled = false
+  private _onStepComplete?: (ctx: WorkflowContext) => Promise<void>
 
   constructor(
     readonly workflowId: string,
     readonly workflowName: string,
     existingSteps: StepRecord[] = [],
+    onStepComplete?: (ctx: WorkflowContext) => Promise<void>,
   ) {
     this.steps = existingSteps
+    this._onStepComplete = onStepComplete
   }
 
   /**
@@ -210,6 +220,14 @@ export class WorkflowContext {
         // Register compensation
         if (options?.compensate) {
           this.compensations.push({ name, fn: options.compensate })
+        }
+
+        if (this._onStepComplete) {
+          await this._onStepComplete(this).catch((err: unknown) => {
+            if (process.env.NODE_ENV !== "production") {
+              console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+            }
+          })
         }
 
         return result
@@ -260,6 +278,14 @@ export class WorkflowContext {
     record.status = "completed"
     record.completedAt = Date.now()
     record.durationMs = record.completedAt - record.startedAt!
+
+    if (this._onStepComplete) {
+      await this._onStepComplete(this).catch((err: unknown) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+        }
+      })
+    }
   }
 
   /**
@@ -348,6 +374,20 @@ export class WorkflowEngine {
   private definitions = new Map<string, WorkflowDefinition>()
   private instances = new Map<string, WorkflowInstance>()
   private instanceCounter = 0
+  private db?: QueryExecutor
+
+  constructor(options?: WorkflowEngineOptions) {
+    this.db = options?.db
+  }
+
+  /**
+   * Initialize persistence tables. No-op if db is not configured.
+   */
+  async initTables(): Promise<void> {
+    if (!this.db) return
+    const sql = generateWorkflowTableSQL()
+    await this.db(sql, [])
+  }
 
   /**
    * Register a workflow definition.
@@ -381,6 +421,15 @@ export class WorkflowEngine {
     }
 
     this.instances.set(instance.id, instance)
+
+    if (this.db) {
+      const { sql, params } = buildInsertWorkflowSQL(instance)
+      await this.db(sql, params).catch((err: unknown) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+        }
+      })
+    }
 
     await this.executeWorkflow(instance, definition)
     return instance
@@ -429,6 +478,16 @@ export class WorkflowEngine {
 
     instance.status = "cancelled"
     instance.completedAt = Date.now()
+
+    if (this.db) {
+      const { sql, params } = buildUpdateWorkflowSQL(instance)
+      this.db(sql, params).catch((err: unknown) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+        }
+      })
+    }
+
     return true
   }
 
@@ -448,6 +507,48 @@ export class WorkflowEngine {
     return all
   }
 
+  /**
+   * Recover incomplete workflows from the database and resume them.
+   * Returns the count of recovered workflow instances.
+   */
+  async recoverWorkflows(): Promise<number> {
+    if (!this.db) return 0
+
+    const { rows } = await this.db(
+      `SELECT * FROM _reactivebase_workflows WHERE status IN ('pending', 'running', 'waiting') ORDER BY started_at ASC`,
+      [],
+    )
+
+    let recovered = 0
+    for (const row of rows) {
+      const instance: WorkflowInstance = {
+        id: row.id as string,
+        workflowName: row.workflow_name as string,
+        status: row.status as WorkflowStatus,
+        args: typeof row.args === "string" ? JSON.parse(row.args as string) : row.args,
+        steps: typeof row.steps === "string" ? JSON.parse(row.steps as string) : (row.steps as StepRecord[]),
+        currentStep: (row.current_step as string) ?? null,
+        startedAt: Number(row.started_at),
+        completedAt: row.completed_at != null ? Number(row.completed_at) : null,
+        error: (row.error as string) ?? null,
+        retryCount: Number(row.retry_count ?? 0),
+        waitingFor: (row.waiting_for as string) ?? null,
+      }
+
+      this.instances.set(instance.id, instance)
+
+      const definition = this.definitions.get(instance.workflowName)
+      if (definition && (instance.status === "running" || instance.status === "pending")) {
+        instance.status = "running"
+        await this.executeWorkflow(instance, definition)
+      }
+
+      recovered++
+    }
+
+    return recovered
+  }
+
   get instanceCount(): number {
     return this.instances.size
   }
@@ -457,7 +558,20 @@ export class WorkflowEngine {
   }
 
   private async executeWorkflow(instance: WorkflowInstance, definition: WorkflowDefinition): Promise<void> {
-    const ctx = new WorkflowContext(instance.id, instance.workflowName, instance.steps)
+    const onStepComplete = this.db
+      ? async (ctx: WorkflowContext) => {
+          instance.steps = ctx.stepRecords
+          instance.currentStep = ctx.currentStep
+          const { sql, params } = buildUpdateWorkflowSQL(instance)
+          await this.db!(sql, params).catch((err: unknown) => {
+            if (process.env.NODE_ENV !== "production") {
+              console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+            }
+          })
+        }
+      : undefined
+
+    const ctx = new WorkflowContext(instance.id, instance.workflowName, instance.steps, onStepComplete)
     const options = definition.options ?? {}
 
     try {
@@ -467,12 +581,31 @@ export class WorkflowEngine {
       instance.completedAt = Date.now()
       instance.steps = ctx.stepRecords
       instance.currentStep = null
+
+      if (this.db) {
+        const { sql, params } = buildUpdateWorkflowSQL(instance)
+        await this.db(sql, params).catch((err: unknown) => {
+          if (process.env.NODE_ENV !== "production") {
+            console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+          }
+        })
+      }
     } catch (error: unknown) {
       if (error instanceof WorkflowWaitingError) {
         instance.status = "waiting"
         instance.waitingFor = error.eventName
         instance.steps = ctx.stepRecords
         instance.currentStep = ctx.currentStep
+
+        if (this.db) {
+          const { sql, params } = buildUpdateWorkflowSQL(instance)
+          await this.db(sql, params).catch((err: unknown) => {
+            if (process.env.NODE_ENV !== "production") {
+              console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+            }
+          })
+        }
+
         return
       }
 
@@ -480,6 +613,16 @@ export class WorkflowEngine {
         instance.status = "cancelled"
         instance.completedAt = Date.now()
         instance.steps = ctx.stepRecords
+
+        if (this.db) {
+          const { sql, params } = buildUpdateWorkflowSQL(instance)
+          await this.db(sql, params).catch((err: unknown) => {
+            if (process.env.NODE_ENV !== "production") {
+              console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+            }
+          })
+        }
+
         return
       }
 
@@ -500,6 +643,15 @@ export class WorkflowEngine {
       instance.status = "failed"
       instance.error = error instanceof Error ? error.message : String(error)
       instance.completedAt = Date.now()
+
+      if (this.db) {
+        const { sql, params } = buildUpdateWorkflowSQL(instance)
+        await this.db(sql, params).catch((err: unknown) => {
+          if (process.env.NODE_ENV !== "production") {
+            console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+          }
+        })
+      }
     }
   }
 }

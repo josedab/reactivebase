@@ -21,6 +21,7 @@ export type {
   TimeTravelDiff,
   DiffEntry,
   TimeTravelOptions,
+  QueryExecutor,
   AuditEntry,
   AuditFilter,
   AuditTrailOptions,
