@@ -21,7 +21,8 @@ export interface ServerVersion {
   registeredAt: Date
 }
 
-export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+import type { QueryExecutor } from "../types/index.js"
+export type { QueryExecutor } from "../types/index.js"
 
 export interface BlueGreenDeploymentConfig {
   canaryPercentage: number

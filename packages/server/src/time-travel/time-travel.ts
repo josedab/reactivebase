@@ -65,7 +65,8 @@ export interface DiffEntry {
 }
 
 /** Executes a SQL query and returns rows. Used for optional DB persistence. */
-export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+import type { QueryExecutor } from "../types/index.js"
+export type { QueryExecutor } from "../types/index.js"
 
 export interface TimeTravelOptions {
   /** Retention period in days (default: 7) */

@@ -16,7 +16,8 @@ import type { MetricsCollector } from "../metrics/metrics.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+import type { QueryExecutor } from "../types/index.js"
+export type { QueryExecutor } from "../types/index.js"
 
 export interface DashboardApiOptions {
   db?: QueryExecutor

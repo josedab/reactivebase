@@ -20,7 +20,8 @@
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+import type { QueryExecutor } from "../types/index.js"
+export type { QueryExecutor } from "../types/index.js"
 
 export type WorkflowStatus = "pending" | "running" | "completed" | "failed" | "cancelled" | "waiting"
 export type StepStatus = "pending" | "running" | "completed" | "failed" | "skipped" | "compensating"

@@ -7,7 +7,8 @@ import { createHmac, randomUUID } from "node:crypto"
 
 // ── Storage & DB Types ─────────────────────────────────────────────────────
 
-export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+import type { QueryExecutor } from "../types/index.js"
+export type { QueryExecutor } from "../types/index.js"
 
 export interface FileStorageBackend {
   write(key: string, data: Buffer | Uint8Array, contentType: string): Promise<void>
