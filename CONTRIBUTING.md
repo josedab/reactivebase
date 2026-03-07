@@ -2,6 +2,8 @@
 
 Thank you for considering contributing to ReactiveBase! This guide will help you get started.
 
+> 📖 **New to the codebase?** Start with the [Architecture Onboarding Guide](docs/ONBOARDING.md) for a high-level overview of the 16 packages and 85+ server modules.
+
 ## Development Setup
 
 > **Node.js compatibility:** ReactiveBase requires Node.js ≥ 20. CI tests against Node 20 and 22. The `.nvmrc` pins to `20` as the minimum supported version. If you use `nvm`, run `nvm use` to switch automatically.

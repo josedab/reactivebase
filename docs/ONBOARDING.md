@@ -2,6 +2,8 @@
 
 Welcome! This guide helps you make your first contribution to ReactiveBase.
 
+> 🛠 **Ready to contribute?** See [CONTRIBUTING.md](../CONTRIBUTING.md) for setup instructions, coding standards, and the PR process.
+
 ## Architecture Overview (5 min read)
 
 ```

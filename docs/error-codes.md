@@ -2,6 +2,8 @@
 
 All custom error classes across `@reactivebase/*` packages, grouped by module.
 
+> **Handling errors**: All ReactiveBase errors extend `ReactiveBaseError` and include a `code` property for programmatic handling. Use `error.code` in catch blocks to distinguish error types.
+
 ## Core Errors
 
 These errors are defined in `packages/server/src/errors.ts` and form the foundation of ReactiveBase's error hierarchy.
@@ -18,6 +20,45 @@ These errors are defined in `packages/server/src/errors.ts` and form the foundat
 | `QueryContextRequiredError` | `QUERY_CONTEXT_REQUIRED`  | ctx.query() requires a query resolution context                               |
 | `InvalidMessageError`       | `INVALID_MESSAGE`         | Invalid message: ${detail}                                                    |
 | `SchemaValidationError`     | `SCHEMA_VALIDATION_ERROR` | (dynamic message)                                                             |
+
+### Core Error Resolution Guide
+
+#### `ReadOnlyError`
+
+- **Cause**: Calling `db.insert()`, `db.update()`, `db.delete()`, or `ctx.emit()` inside a `query()` handler.
+- **Fix**: Move write operations to a `mutation()` handler. Queries are read-only by design to support automatic subscription tracking.
+
+```typescript
+// ❌ Wrong: writing inside a query
+export const getBadData = query(async (ctx) => {
+  await ctx.db.insert("logs", { event: "read" }) // ReadOnlyError!
+})
+
+// ✅ Correct: use a mutation for writes
+export const logRead = mutation(async (ctx) => {
+  await ctx.db.insert("logs", { event: "read" })
+})
+```
+
+#### `RecordNotFoundError`
+
+- **Cause**: Querying a record by ID that doesn't exist in the table.
+- **Fix**: Check for `null` before accessing the record, or use `db.get()` which returns `null` instead of throwing.
+
+#### `CircularDependencyError`
+
+- **Cause**: Query A calls `ctx.query(B)`, which calls `ctx.query(A)`, creating an infinite loop.
+- **Fix**: Refactor to break the cycle. Extract shared logic into a helper function, or restructure the query dependency graph.
+
+#### `EmitOutsideMutationError`
+
+- **Cause**: Calling `ctx.emit("event", payload)` inside a `query()` or `action()` handler instead of a `mutation()`.
+- **Fix**: The transactional outbox pattern requires events to be emitted within a transaction. Move `ctx.emit()` calls into mutation handlers.
+
+#### `SchemaValidationError`
+
+- **Cause**: Invalid schema definition — duplicate table names, missing column types, invalid index references, or foreign key pointing to non-existent table.
+- **Fix**: Check the error message for the specific validation failure. Common issues: duplicate table names in `defineSchema()`, index columns that don't exist in the table, or `v.id("tableName")` referencing a table not defined in the schema.
 
 ## GraphQL Package (`@reactivebase/graphql`)
 

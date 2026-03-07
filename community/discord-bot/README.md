@@ -1,37 +1,26 @@
 # ReactiveBase Discord Bot
 
-FAQ answering, issue triage, and community metrics for the ReactiveBase Discord server.
+> **Status: Planned** — This bot is not yet implemented. The module contains the FAQ index and architecture design for future development.
 
-## Features
+Community support bot for the ReactiveBase Discord server.
 
-- **FAQ matching** — searches docs and answers common questions automatically
-- **Issue triage** — links Discord reports to GitHub issues with labels
-- **Community metrics** — tracks active members, questions answered, response time
+## Planned Features
+
+- **FAQ matching** — search docs and answer common questions automatically
 - **Slash commands** — `/docs <topic>`, `/example <name>`, `/status`
+- **Issue triage** — link Discord reports to GitHub issues
 
-## Setup
+## Contributing
 
-```bash
-cd community/discord-bot
-npm install
-cp .env.example .env
-# Add DISCORD_BOT_TOKEN and DISCORD_GUILD_ID
-npm run dev
-```
+Want to help build this? See the [contributing guide](../../CONTRIBUTING.md) or open an issue.
 
-## Commands
+The `src/faq-bot.ts` file contains the FAQ index structure that will power the bot's search functionality. The implementation will use [discord.js](https://discord.js.org/) when built.
 
-| Command | Description |
-|---------|-------------|
-| `/docs <query>` | Search docs and return relevant page |
-| `/example <name>` | Link to an example app |
-| `/status` | Show ReactiveBase server status |
-| `/report <description>` | Create a GitHub issue from Discord |
-
-## Environment Variables
+## Architecture
 
 ```
-DISCORD_BOT_TOKEN=your-bot-token
-DISCORD_GUILD_ID=your-server-id
-GITHUB_TOKEN=optional-for-issue-creation
+src/
+  faq-bot.ts    # FAQ index and search logic (implemented)
+  bot.ts        # Discord.js client (not yet implemented)
+  commands.ts   # Slash command handlers (not yet implemented)
 ```

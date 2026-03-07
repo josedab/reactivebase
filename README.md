@@ -17,7 +17,7 @@
 
 <!-- BENCHMARK_START -->
 
-### Benchmark Results
+### Internal Operation Benchmarks
 
 | Operation                        | Avg Latency | P95 Latency | Throughput     |
 | -------------------------------- | ----------- | ----------- | -------------- |
@@ -28,7 +28,7 @@
 | Invalidation (100 subscriptions) | 3.8 ms      | 6.5 ms      | 2,600 ops/sec  |
 | Batch insert (100 rows)          | 12 ms       | 18 ms       | 83 ops/sec     |
 
-> Measured on Node.js 20 / PostgreSQL 16 / Apple M2, single-server. Run `npm run benchmark` to reproduce on your hardware.
+> Measures ReactiveBase internal operations (query building, subscription registry, invalidation evaluation) on Node.js 20 / Apple M2. End-to-end latency including Postgres will vary by database configuration. Run `npm run benchmark` to reproduce on your hardware.
 
 <!-- BENCHMARK_END -->
 
@@ -364,29 +364,29 @@ export default defineConfig({
 
 ### Database Options
 
-| Option                       | Type     | Default | Description                                               |
-| ---------------------------- | -------- | ------- | --------------------------------------------------------- |
-| `database.connectionString`  | `string` | —       | PostgreSQL connection string (**required**)                |
-| `database.poolSize`          | `number` | `20`    | Maximum number of connections in the database pool         |
+| Option                      | Type     | Default | Description                                        |
+| --------------------------- | -------- | ------- | -------------------------------------------------- |
+| `database.connectionString` | `string` | —       | PostgreSQL connection string (**required**)        |
+| `database.poolSize`         | `number` | `20`    | Maximum number of connections in the database pool |
 
 ### Redis Options
 
-| Option      | Type     | Default | Description                                  |
-| ----------- | -------- | ------- | -------------------------------------------- |
+| Option      | Type     | Default | Description                                    |
+| ----------- | -------- | ------- | ---------------------------------------------- |
 | `redis.url` | `string` | —       | Redis URL for multi-server pub/sub and caching |
 
 ### Auth Options
 
-| Option           | Type       | Default | Description                                      |
-| ---------------- | ---------- | ------- | ------------------------------------------------ |
-| `auth.providers` | `array`    | `[]`    | Authentication providers (e.g., JWT, OAuth)       |
+| Option           | Type    | Default | Description                                 |
+| ---------------- | ------- | ------- | ------------------------------------------- |
+| `auth.providers` | `array` | `[]`    | Authentication providers (e.g., JWT, OAuth) |
 
 ### Dev Options
 
-| Option             | Type     | Default  | Description                              |
-| ------------------ | -------- | -------- | ---------------------------------------- |
-| `dev.dashboardPort`| `number` | `4001`   | Port for the development dashboard       |
-| `dev.logLevel`     | `string` | `"info"` | Log level: `debug`, `info`, `warn`, `error` |
+| Option              | Type     | Default  | Description                                 |
+| ------------------- | -------- | -------- | ------------------------------------------- |
+| `dev.dashboardPort` | `number` | `4001`   | Port for the development dashboard          |
+| `dev.logLevel`      | `string` | `"info"` | Log level: `debug`, `info`, `warn`, `error` |
 
 ### CDC (Change Data Capture) Options
 
