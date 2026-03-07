@@ -64,6 +64,8 @@ describe("diffSchema", () => {
       columns: [
         { table: "users", column: "id", dataType: "text", isNullable: false, defaultValue: null },
         { table: "users", column: "name", dataType: "text", isNullable: false, defaultValue: null },
+        { table: "users", column: "_createdAt", dataType: "timestamptz", isNullable: false, defaultValue: null },
+        { table: "users", column: "_updatedAt", dataType: "timestamptz", isNullable: false, defaultValue: null },
         // email and role are missing
       ],
       indexes: [],
@@ -143,11 +145,15 @@ describe("diffSchema", () => {
         { table: "users", column: "name", dataType: "text", isNullable: false, defaultValue: null },
         { table: "users", column: "email", dataType: "text", isNullable: false, defaultValue: null },
         { table: "users", column: "role", dataType: "text", isNullable: false, defaultValue: null },
+        { table: "users", column: "_createdAt", dataType: "timestamptz", isNullable: false, defaultValue: null },
+        { table: "users", column: "_updatedAt", dataType: "timestamptz", isNullable: false, defaultValue: null },
         { table: "tasks", column: "id", dataType: "text", isNullable: false, defaultValue: null },
         { table: "tasks", column: "title", dataType: "text", isNullable: false, defaultValue: null },
         { table: "tasks", column: "done", dataType: "boolean", isNullable: false, defaultValue: null },
         { table: "tasks", column: "priority", dataType: "text", isNullable: false, defaultValue: null },
         { table: "tasks", column: "assigneeId", dataType: "text", isNullable: false, defaultValue: null },
+        { table: "tasks", column: "_createdAt", dataType: "timestamptz", isNullable: false, defaultValue: null },
+        { table: "tasks", column: "_updatedAt", dataType: "timestamptz", isNullable: false, defaultValue: null },
       ],
       indexes: [
         { table: "users", name: "users_by_email", columns: ["email"], unique: true },

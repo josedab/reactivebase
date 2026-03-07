@@ -8,6 +8,7 @@ import {
   buildUpdateQueryStatsSQL,
   buildDataBrowserQuerySQL,
 } from "../dashboard/query-inspector.js"
+import { validateReadOnlySQL } from "../dashboard/dashboard-api.js"
 import type { MutationReplayEntry } from "../dashboard/query-inspector.js"
 
 describe("DashboardV2Engine", () => {
@@ -224,7 +225,7 @@ describe("SQL builders", () => {
   it("buildQueryMutationLogSQL generates filtered query", () => {
     const { sql, params } = buildQueryMutationLogSQL({ mutationName: "test", table: "tasks" })
     expect(sql).toContain("WHERE")
-    expect(params).toHaveLength(2)
+    expect(params).toHaveLength(3)
   })
 
   it("buildUpdateQueryStatsSQL generates upsert", () => {
@@ -261,5 +262,106 @@ describe("SQL builders", () => {
     })
     expect(sql).toContain("IS NULL")
     expect(params).toHaveLength(2)
+  })
+})
+
+describe("validateReadOnlySQL", () => {
+  // Should PASS (return null)
+  it("allows simple SELECT", () => {
+    expect(validateReadOnlySQL("SELECT * FROM users")).toBeNull()
+  })
+
+  it("allows SELECT with WHERE", () => {
+    expect(validateReadOnlySQL("SELECT id, name FROM users WHERE active = true")).toBeNull()
+  })
+
+  it("allows SELECT with JOIN", () => {
+    expect(validateReadOnlySQL("SELECT u.name FROM users u JOIN orders o ON u.id = o.user_id")).toBeNull()
+  })
+
+  it("allows SELECT with CTE", () => {
+    expect(
+      validateReadOnlySQL("WITH recent AS (SELECT * FROM orders WHERE date > '2024-01-01') SELECT * FROM recent"),
+    ).toBeNull()
+  })
+
+  it("allows EXPLAIN SELECT", () => {
+    expect(validateReadOnlySQL("EXPLAIN SELECT * FROM users")).toBeNull()
+  })
+
+  it("allows EXPLAIN ANALYZE SELECT", () => {
+    expect(validateReadOnlySQL("EXPLAIN ANALYZE SELECT * FROM users")).toBeNull()
+  })
+
+  // Should REJECT (return error string)
+  it("rejects INSERT", () => {
+    expect(validateReadOnlySQL("INSERT INTO users VALUES (1, 'admin')")).not.toBeNull()
+  })
+
+  it("rejects UPDATE", () => {
+    expect(validateReadOnlySQL("UPDATE users SET admin = true")).not.toBeNull()
+  })
+
+  it("rejects DELETE", () => {
+    expect(validateReadOnlySQL("DELETE FROM users")).not.toBeNull()
+  })
+
+  it("rejects DROP TABLE", () => {
+    expect(validateReadOnlySQL("DROP TABLE users")).not.toBeNull()
+  })
+
+  it("rejects TRUNCATE", () => {
+    expect(validateReadOnlySQL("TRUNCATE users")).not.toBeNull()
+  })
+
+  // INJECTION VECTORS
+  it("rejects CTE with INSERT (CTE injection)", () => {
+    expect(validateReadOnlySQL("WITH x AS (INSERT INTO users VALUES (1) RETURNING *) SELECT * FROM x")).not.toBeNull()
+  })
+
+  it("rejects CTE with DELETE", () => {
+    expect(validateReadOnlySQL("WITH x AS (DELETE FROM users RETURNING *) SELECT * FROM x")).not.toBeNull()
+  })
+
+  it("rejects semicolon chaining", () => {
+    expect(validateReadOnlySQL("SELECT 1; DELETE FROM users")).not.toBeNull()
+  })
+
+  it("rejects EXPLAIN DELETE", () => {
+    expect(validateReadOnlySQL("EXPLAIN DELETE FROM users")).not.toBeNull()
+  })
+
+  it("rejects EXPLAIN INSERT", () => {
+    expect(validateReadOnlySQL("EXPLAIN INSERT INTO users VALUES (1)")).not.toBeNull()
+  })
+
+  it("rejects ALTER TABLE", () => {
+    expect(validateReadOnlySQL("ALTER TABLE users ADD COLUMN admin BOOLEAN")).not.toBeNull()
+  })
+
+  it("rejects CREATE TABLE", () => {
+    expect(validateReadOnlySQL("CREATE TABLE evil (id INT)")).not.toBeNull()
+  })
+
+  it("rejects BEGIN/COMMIT", () => {
+    expect(validateReadOnlySQL("BEGIN")).not.toBeNull()
+    expect(validateReadOnlySQL("COMMIT")).not.toBeNull()
+  })
+
+  it("rejects SET commands", () => {
+    expect(validateReadOnlySQL("SET role TO 'admin'")).not.toBeNull()
+  })
+
+  it("rejects empty query", () => {
+    expect(validateReadOnlySQL("")).not.toBeNull()
+    expect(validateReadOnlySQL("   ")).not.toBeNull()
+  })
+
+  it("rejects GRANT", () => {
+    expect(validateReadOnlySQL("GRANT ALL ON users TO public")).not.toBeNull()
+  })
+
+  it("rejects COPY", () => {
+    expect(validateReadOnlySQL("COPY users TO '/tmp/dump'")).not.toBeNull()
   })
 })

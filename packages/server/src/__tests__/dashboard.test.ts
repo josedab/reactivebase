@@ -44,8 +44,8 @@ describe("schemaToVisualModel", () => {
     const model = schemaToVisualModel(schema)
     const tasks = model.tables.find((t) => t.name === "tasks")!
 
-    // Should have id + 5 defined columns
-    expect(tasks.columns.length).toBe(6)
+    // Should have id + 5 defined columns + 2 system timestamps (_createdAt, _updatedAt)
+    expect(tasks.columns.length).toBe(8)
 
     const idCol = tasks.columns.find((c) => c.name === "id")!
     expect(idCol.isId).toBe(true)
