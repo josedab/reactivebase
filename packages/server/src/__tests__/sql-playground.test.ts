@@ -134,6 +134,97 @@ Execution Time: 0.523 ms`
       expect(plan.nodes.length).toBeGreaterThan(0)
       expect(plan.totalCost).toBeGreaterThan(0)
     })
+
+    it("parses JSON-format EXPLAIN output", () => {
+      const jsonPlan = JSON.stringify([
+        {
+          Plan: {
+            "Node Type": "Index Scan",
+            "Relation Name": "tasks",
+            "Alias": "tasks",
+            "Startup Cost": 0.29,
+            "Total Cost": 8.3,
+            "Plan Rows": 1,
+            "Plan Width": 128,
+            "Index Name": "idx_tasks_done",
+            "Filter": "(done = false)",
+          },
+          "Planning Time": 0.052,
+          "Execution Time": 0.112,
+        },
+      ])
+
+      const plan = playground.parsePlan(jsonPlan)
+      expect(plan.nodes).toHaveLength(1)
+      expect(plan.nodes[0].type).toBe("Index Scan")
+      expect(plan.nodes[0].relation).toBe("tasks")
+      expect(plan.nodes[0].indexName).toBe("idx_tasks_done")
+      expect(plan.nodes[0].filter).toBe("(done = false)")
+      expect(plan.nodes[0].totalCost).toBeCloseTo(8.3)
+      expect(plan.planningTimeMs).toBeCloseTo(0.052)
+      expect(plan.actualTimeMs).toBeCloseTo(0.112)
+    })
+
+    it("parses nested JSON plan with children", () => {
+      const jsonPlan = JSON.stringify([
+        {
+          Plan: {
+            "Node Type": "Hash Join",
+            "Startup Cost": 1.05,
+            "Total Cost": 38.15,
+            "Plan Rows": 10,
+            "Plan Width": 256,
+            "Join Filter": "(tasks.user_id = users.id)",
+            Plans: [
+              {
+                "Node Type": "Seq Scan",
+                "Relation Name": "tasks",
+                "Startup Cost": 0,
+                "Total Cost": 35.5,
+                "Plan Rows": 550,
+                "Plan Width": 128,
+              },
+              {
+                "Node Type": "Hash",
+                "Startup Cost": 1.04,
+                "Total Cost": 1.04,
+                "Plan Rows": 1,
+                "Plan Width": 128,
+                Plans: [
+                  {
+                    "Node Type": "Seq Scan",
+                    "Relation Name": "users",
+                    "Startup Cost": 0,
+                    "Total Cost": 1.04,
+                    "Plan Rows": 1,
+                    "Plan Width": 128,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ])
+
+      const plan = playground.parsePlan(jsonPlan)
+      expect(plan.nodes).toHaveLength(1)
+      expect(plan.nodes[0].type).toBe("Hash Join")
+      expect(plan.nodes[0].children).toHaveLength(2)
+      expect(plan.nodes[0].children[0].type).toBe("Seq Scan")
+      expect(plan.nodes[0].children[0].relation).toBe("tasks")
+      expect(plan.nodes[0].children[1].type).toBe("Hash")
+      expect(plan.nodes[0].children[1].children).toHaveLength(1)
+      expect(plan.nodes[0].children[1].children[0].relation).toBe("users")
+    })
+
+    it("falls back to text parsing for invalid JSON", () => {
+      const raw = `Seq Scan on tasks  (cost=0.00..35.50 rows=550 width=128)
+Planning Time: 0.089 ms`
+
+      const plan = playground.parsePlan(raw)
+      expect(plan.nodes).toHaveLength(1)
+      expect(plan.nodes[0].planRows).toBe(550)
+    })
   })
 
   describe("suggestIndexes", () => {

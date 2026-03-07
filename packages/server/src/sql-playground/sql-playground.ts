@@ -241,8 +241,75 @@ export class SqlPlayground {
 
   /**
    * Parse a raw EXPLAIN output into structured plan nodes.
+   * Supports both JSON format (EXPLAIN (FORMAT JSON)) and text format.
+   * JSON format is preferred as it's more reliable for complex plans.
    */
   parsePlan(explainOutput: string): QueryPlan {
+    const trimmed = explainOutput.trim()
+
+    // Try JSON format first (more reliable)
+    if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+      try {
+        return this.parsePlanJson(trimmed)
+      } catch {
+        // Fall through to text parsing
+      }
+    }
+
+    return this.parsePlanText(trimmed)
+  }
+
+  /**
+   * Parse JSON-format EXPLAIN output (EXPLAIN (FORMAT JSON)).
+   */
+  private parsePlanJson(jsonOutput: string): QueryPlan {
+    const parsed = JSON.parse(jsonOutput) as Array<{ Plan: JsonPlanNode; "Planning Time"?: number; "Execution Time"?: number }>
+    const planData = Array.isArray(parsed) ? parsed[0] : (parsed as unknown as { Plan: JsonPlanNode; "Planning Time"?: number; "Execution Time"?: number })
+
+    const rootPlan = planData.Plan
+    const nodes: PlanNode[] = []
+
+    const walkNode = (jp: JsonPlanNode): PlanNode => {
+      const node: PlanNode = {
+        type: jp["Node Type"] ?? "Unknown",
+        relation: jp["Relation Name"],
+        alias: jp["Alias"],
+        startupCost: jp["Startup Cost"] ?? 0,
+        totalCost: jp["Total Cost"] ?? 0,
+        planRows: jp["Plan Rows"] ?? 0,
+        planWidth: jp["Plan Width"] ?? 0,
+        actualRows: jp["Actual Rows"],
+        actualTimeMs: jp["Actual Total Time"],
+        children: [],
+        indexName: jp["Index Name"],
+        filter: jp["Filter"],
+        joinFilter: jp["Join Filter"],
+        sortKey: jp["Sort Key"],
+      }
+
+      if (jp.Plans) {
+        node.children = jp.Plans.map(walkNode)
+      }
+
+      return node
+    }
+
+    const rootNode = walkNode(rootPlan)
+    nodes.push(rootNode)
+
+    return {
+      raw: jsonOutput,
+      nodes,
+      totalCost: rootNode.totalCost,
+      planningTimeMs: planData["Planning Time"],
+      actualTimeMs: planData["Execution Time"],
+    }
+  }
+
+  /**
+   * Parse text-format EXPLAIN output (default Postgres format).
+   */
+  private parsePlanText(explainOutput: string): QueryPlan {
     const lines = explainOutput.split("\n").filter((l) => l.trim().length > 0)
     const nodes: PlanNode[] = []
     let totalCost = 0
@@ -536,4 +603,22 @@ export interface QueryAnalysis {
   hasLimit: boolean
   complexity: "simple" | "moderate" | "complex"
   warnings: string[]
+}
+
+/** JSON structure returned by EXPLAIN (FORMAT JSON) */
+interface JsonPlanNode {
+  "Node Type"?: string
+  "Relation Name"?: string
+  "Alias"?: string
+  "Startup Cost"?: number
+  "Total Cost"?: number
+  "Plan Rows"?: number
+  "Plan Width"?: number
+  "Actual Rows"?: number
+  "Actual Total Time"?: number
+  "Index Name"?: string
+  "Filter"?: string
+  "Join Filter"?: string
+  "Sort Key"?: string[]
+  Plans?: JsonPlanNode[]
 }
