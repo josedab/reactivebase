@@ -123,6 +123,17 @@ export const s = {
         v._checks.push((val) => (re.test(val as string) ? null : `Must match ${re}`))
         return this
       },
+      url() {
+        v._checks.push((val) => {
+          try {
+            new URL(val as string)
+            return null
+          } catch {
+            return "Invalid URL"
+          }
+        })
+        return this
+      },
     })
   },
 
@@ -186,6 +197,115 @@ export const s = {
       },
       maxLength(n: number) {
         v._checks.push((val) => ((val as unknown[]).length > n ? `Max items: ${n}` : null))
+        return this
+      },
+    })
+  },
+
+  /**
+   * Create a required ID reference field validator.
+   * Validates that the value is a non-empty string.
+   *
+   * @param table - Optional table name for documentation purposes
+   * @returns An ID field validator
+   */
+  id(_table?: string) {
+    const v = createFieldValidator("string", true)
+    v._checks.push((val) => {
+      if (typeof val !== "string" || val.length === 0) return "Must be a non-empty ID string"
+      return null
+    })
+    return Object.assign(v, {
+      optional() {
+        v._required = false
+        return this
+      },
+    })
+  },
+
+  /**
+   * Create a required enum field validator restricted to specific values.
+   *
+   * @param allowedValues - The set of allowed string values
+   * @returns An enum field validator
+   */
+  enum<T extends string>(allowedValues: readonly T[]) {
+    const v = createFieldValidator("string", true)
+    v._checks.push((val) => {
+      if (!(allowedValues as readonly string[]).includes(val as string)) {
+        return `Must be one of: ${allowedValues.join(", ")}`
+      }
+      return null
+    })
+    return Object.assign(v, {
+      optional() {
+        v._required = false
+        return this
+      },
+    })
+  },
+
+  /**
+   * Create a required nested object field validator.
+   * Validates that the value is an object and recursively validates its fields.
+   *
+   * @param schema - The nested validation schema
+   * @returns An object field validator
+   */
+  object(schema: ValidationSchema) {
+    const v = createFieldValidator("object", true)
+    v._checks.push((val) => {
+      if (typeof val !== "object" || val === null || Array.isArray(val)) {
+        return "Must be an object"
+      }
+      const obj = val as Record<string, unknown>
+      const errors: string[] = []
+      for (const [field, fieldValidator] of Object.entries(schema)) {
+        const fieldValue = obj[field]
+        if (fieldValidator._required && (fieldValue === undefined || fieldValue === null)) {
+          errors.push(`${field}: Required`)
+          continue
+        }
+        if (fieldValue === undefined || fieldValue === null) continue
+        const typeError = checkType(fieldValue, fieldValidator._type)
+        if (typeError) {
+          errors.push(`${field}: ${typeError}`)
+          continue
+        }
+        for (const check of fieldValidator._checks) {
+          const msg = check(fieldValue)
+          if (msg) errors.push(`${field}: ${msg}`)
+        }
+      }
+      return errors.length > 0 ? errors.join("; ") : null
+    })
+    return Object.assign(v, {
+      optional() {
+        v._required = false
+        return this
+      },
+    })
+  },
+
+  /**
+   * Create a required URL field validator.
+   * Validates that the value is a valid URL using the URL constructor.
+   *
+   * @returns A URL field validator
+   */
+  url() {
+    const v = createFieldValidator("string", true)
+    v._checks.push((val) => {
+      try {
+        new URL(val as string)
+        return null
+      } catch {
+        return "Invalid URL"
+      }
+    })
+    return Object.assign(v, {
+      optional() {
+        v._required = false
         return this
       },
     })

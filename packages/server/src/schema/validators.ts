@@ -18,6 +18,10 @@ export type ValidatorType =
   | "vector"
   | "computed"
   | "virtual"
+  | "url"
+  | "uuid"
+  | "email"
+  | "regex"
 
 export interface ValidatorOptions {
   default?: unknown
@@ -34,6 +38,10 @@ export interface ValidatorOptions {
   __searchWeight?: "A" | "B" | "C" | "D"
   /** @internal Search language */
   __searchLanguage?: string
+  /** @internal Regex pattern source for v.regex() */
+  __regexPattern?: string
+  /** @internal Regex pattern flags for v.regex() */
+  __regexFlags?: string
 }
 
 /** Function signature for computed/virtual field derivation */
@@ -239,6 +247,48 @@ export const v = {
       __searchWeight: options.weight,
       __searchLanguage: options.language,
     })
+  },
+
+  /**
+   * Define a URL column. Stored as `text` with URL format validation at schema level.
+   *
+   * @param options - Validator options such as default
+   * @returns A URL validator mapping to Postgres `text`
+   */
+  url(options: ValidatorOptions = {}): Validator<string> {
+    return createValidator("url", "text", options)
+  },
+
+  /**
+   * Define a UUID column. Stored as Postgres `uuid` type for efficient storage and indexing.
+   *
+   * @param options - Validator options; use `default: "gen_random_uuid()"` for auto-generation
+   * @returns A UUID validator mapping to Postgres `uuid`
+   */
+  uuid(options: ValidatorOptions & { default?: "gen_random_uuid()" | string } = {}): Validator<string> {
+    return createValidator("uuid", "uuid", options)
+  },
+
+  /**
+   * Define an email column. Stored as `text` with email format validation at schema level.
+   *
+   * @param options - Validator options such as default
+   * @returns An email validator mapping to Postgres `text`
+   */
+  email(options: ValidatorOptions = {}): Validator<string> {
+    return createValidator("email", "text", options)
+  },
+
+  /**
+   * Define a string column with a regex constraint at schema level.
+   * The pattern is stored in options and enforced during validation.
+   *
+   * @param pattern - The regular expression pattern strings must match
+   * @param options - Validator options such as default
+   * @returns A regex-constrained string validator mapping to Postgres `text`
+   */
+  regex(pattern: RegExp, options: ValidatorOptions = {}): Validator<string> {
+    return createValidator("regex", "text", { ...options, __regexPattern: pattern.source, __regexFlags: pattern.flags })
   },
 
   /**
