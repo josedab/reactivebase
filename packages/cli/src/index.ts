@@ -72,9 +72,11 @@ async function main(): Promise<void> {
         case "--status":
           await migrateStatus(options)
           break
-        case "--rollback":
-          console.log("Rollback not yet implemented.")
+        case "--rollback": {
+          const { migrateRollback } = await import("./commands/migrate.js")
+          await migrateRollback(options)
           break
+        }
         case "--preview":
           await migratePreview({ ...options, usePglite: args.includes("--pglite") })
           break

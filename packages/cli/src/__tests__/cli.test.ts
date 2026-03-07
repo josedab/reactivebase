@@ -20,11 +20,12 @@ describe("command module exports", () => {
     expect(typeof mod.writeGeneratedFiles).toBe("function")
   })
 
-  it("migrate command exports migrateGenerate, migrateApply, migrateStatus", async () => {
+  it("migrate command exports migrateGenerate, migrateApply, migrateStatus, migrateRollback", async () => {
     const mod = await import("../commands/migrate.js")
     expect(typeof mod.migrateGenerate).toBe("function")
     expect(typeof mod.migrateApply).toBe("function")
     expect(typeof mod.migrateStatus).toBe("function")
+    expect(typeof mod.migrateRollback).toBe("function")
   })
 
   it("migrate-safe command exports migrateSafe", async () => {

@@ -350,6 +350,88 @@ describe("migrateStatus without DB", () => {
   })
 })
 
+// ─── extractDownSection ──────────────────────────────────────────────────────
+
+describe("extractDownSection", () => {
+  it("extracts DOWN section after -- DOWN marker", async () => {
+    const { extractDownSection } = await import("../commands/migrate.js")
+    const sql = "CREATE TABLE users (id INT);\n\n-- DOWN\nDROP TABLE users;"
+    const down = extractDownSection(sql)
+    expect(down).toBe("\nDROP TABLE users;")
+  })
+
+  it("returns empty string when no DOWN marker", async () => {
+    const { extractDownSection } = await import("../commands/migrate.js")
+    const sql = "CREATE TABLE users (id INT);"
+    expect(extractDownSection(sql)).toBe("")
+  })
+
+  it("handles case-insensitive DOWN marker", async () => {
+    const { extractDownSection } = await import("../commands/migrate.js")
+    const sql = "CREATE TABLE x;\n-- down\nDROP TABLE x;"
+    expect(extractDownSection(sql)).toBe("\nDROP TABLE x;")
+  })
+
+  it("handles DOWN marker with extra whitespace", async () => {
+    const { extractDownSection } = await import("../commands/migrate.js")
+    const sql = "CREATE TABLE x;\n--   DOWN  \nDROP TABLE x;"
+    expect(extractDownSection(sql)).toBe("  \nDROP TABLE x;")
+  })
+
+  it("only captures content after the first DOWN marker", async () => {
+    const { extractDownSection } = await import("../commands/migrate.js")
+    const sql = "UP stuff;\n-- DOWN\nDROP first;\n-- DOWN\nDROP second;"
+    const down = extractDownSection(sql)
+    expect(down).toContain("DROP first;")
+    expect(down).toContain("DROP second;")
+  })
+})
+
+// ─── migrateRollback without DB ─────────────────────────────────────────────
+
+describe("migrateRollback without DB", () => {
+  let tmpDir: string
+  let consoleSpy: ReturnType<typeof vi.spyOn>
+  let consoleErrSpy: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    tmpDir = createTmpDir()
+    consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {})
+    consoleErrSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    cleanupDir(tmpDir)
+    vi.restoreAllMocks()
+  })
+
+  it("reports no migrations directory", async () => {
+    const { migrateRollback } = await import("../commands/migrate.js")
+    await migrateRollback({ projectDir: tmpDir, connectionString: "skip" })
+    expect(consoleSpy).toHaveBeenCalledWith("No migrations directory found.")
+  })
+
+  it("exits when no DATABASE_URL", async () => {
+    mkdirSync(join(tmpDir, "migrations"), { recursive: true })
+    writeFileSync(join(tmpDir, "migrations", "001_test.sql"), "-- UP\n-- DOWN\n")
+
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation((() => {
+      throw new Error("exit")
+    }) as never)
+
+    const { migrateRollback } = await import("../commands/migrate.js")
+    await expect(migrateRollback({ projectDir: tmpDir })).rejects.toThrow("exit")
+
+    expect(consoleErrSpy).toHaveBeenCalledWith(expect.stringContaining("DATABASE_URL"))
+    exitSpy.mockRestore()
+  })
+
+  it("exports migrateRollback function", async () => {
+    const mod = await import("../commands/migrate.js")
+    expect(typeof mod.migrateRollback).toBe("function")
+  })
+})
+
 // ─── seed helpers ────────────────────────────────────────────────────────────
 
 describe("seed helpers", () => {

@@ -241,6 +241,93 @@ export async function migrateStatus(options: MigrateCommandOptions): Promise<voi
   }
 }
 
+export async function migrateRollback(options: MigrateCommandOptions): Promise<void> {
+  const migrationsDir = join(options.projectDir, "migrations")
+  if (!existsSync(migrationsDir)) {
+    console.log("No migrations directory found.")
+    return
+  }
+
+  const connectionString = options.connectionString ?? process.env.DATABASE_URL
+  if (!connectionString) {
+    console.error("Error: DATABASE_URL environment variable is required for rollback.")
+    console.error("  Set it in your .env file or pass --connection-string.\n")
+    process.exit(1)
+  }
+
+  const { default: pg } = (await import("pg" as string)) as {
+    default: { Pool: new (config: { connectionString: string }) => PgPool }
+  }
+  const pool = new pg.Pool({ connectionString })
+
+  try {
+    // Ensure tracking table exists
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS _reactivebase_migrations (
+        version TEXT PRIMARY KEY,
+        filename TEXT NOT NULL,
+        applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        checksum TEXT
+      )
+    `)
+
+    // Find the last applied migration
+    const result = await pool.query(
+      `SELECT version, filename FROM _reactivebase_migrations ORDER BY version DESC LIMIT 1`,
+    )
+
+    if (result.rows.length === 0) {
+      console.log("No applied migrations to roll back.")
+      return
+    }
+
+    const lastMigration = result.rows[0] as { version: string; filename: string }
+    const migrationFile = join(migrationsDir, lastMigration.filename)
+
+    if (!existsSync(migrationFile)) {
+      console.error(`Error: Migration file not found: ${lastMigration.filename}`)
+      console.error("  The migration was applied but the file has been deleted.")
+      process.exit(1)
+    }
+
+    const sql = readFileSync(migrationFile, "utf-8")
+    const downSql = extractDownSection(sql)
+
+    // Strip comment-only lines to check if there's actual SQL
+    const strippedDown = downSql
+      .split("\n")
+      .filter((line) => {
+        const trimmed = line.trim()
+        return trimmed.length > 0 && !trimmed.startsWith("--")
+      })
+      .join("\n")
+      .trim()
+
+    if (!strippedDown) {
+      console.error(`Error: Migration ${lastMigration.filename} has no DOWN section with SQL statements.`)
+      console.error("  Add rollback SQL after the '-- DOWN' marker in the migration file.")
+      process.exit(1)
+    }
+
+    console.log(`  ▸ Rolling back: ${lastMigration.filename}`)
+
+    try {
+      await pool.query("BEGIN")
+      await pool.query(downSql)
+      await pool.query(`DELETE FROM _reactivebase_migrations WHERE version = $1`, [lastMigration.version])
+      await pool.query("COMMIT")
+      console.log(`    ✓ Rolled back successfully`)
+    } catch (error: unknown) {
+      await pool.query("ROLLBACK").catch(() => {})
+      console.error(`    ✗ Rollback failed: ${error instanceof Error ? error.message : error}`)
+      console.error(`    The migration was NOT rolled back. Fix the DOWN SQL and retry.`)
+      process.exit(1)
+    }
+  } finally {
+    await pool.end()
+  }
+}
+
 function findSchemaPath(projectDir: string): string | null {
   const candidates = ["schema.ts", "convex/schema.ts", "src/schema.ts"]
   for (const candidate of candidates) {
@@ -305,6 +392,16 @@ export function extractUpSection(sql: string): string {
     return sql.substring(0, match.index)
   }
   return sql
+}
+
+// Helper: extract DOWN section from migration SQL (after -- DOWN marker)
+export function extractDownSection(sql: string): string {
+  const downMarker = /^--\s*DOWN\b/im
+  const match = downMarker.exec(sql)
+  if (match) {
+    return sql.substring(match.index + match[0].length)
+  }
+  return ""
 }
 
 // Simple string hash for migration checksums
