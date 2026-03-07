@@ -119,4 +119,43 @@ describe("SessionStore", () => {
     expect(store.sessionCount).toBe(2)
     expect(store.getSession(s1.sessionToken)).toBeUndefined()
   })
+
+  it("rejects resume when connection identity mismatches", () => {
+    const store = new SessionStore()
+    const session = store.createSession("conn-original")
+
+    store.recordDelta(session.sessionToken, { subscriptionId: "sub1", data: {}, version: 1 })
+
+    // Different connection tries to hijack the session
+    const result = store.resumeSession(session.sessionToken, 0, "conn-hijacker")
+
+    expect(result.success).toBe(false)
+    expect(result.error).toContain("identity mismatch")
+    expect(result.missedDeltas).toHaveLength(0)
+  })
+
+  it("allows resume when connection identity matches", () => {
+    const store = new SessionStore()
+    const session = store.createSession("conn-original")
+
+    store.recordDelta(session.sessionToken, { subscriptionId: "sub1", data: {}, version: 1 })
+
+    const result = store.resumeSession(session.sessionToken, 0, "conn-original")
+
+    expect(result.success).toBe(true)
+    expect(result.missedDeltas).toHaveLength(1)
+  })
+
+  it("allows resume without connection identity check for backward compatibility", () => {
+    const store = new SessionStore()
+    const session = store.createSession("conn-original")
+
+    store.recordDelta(session.sessionToken, { subscriptionId: "sub1", data: {}, version: 1 })
+
+    // No connectionId provided — backward compatible
+    const result = store.resumeSession(session.sessionToken, 0)
+
+    expect(result.success).toBe(true)
+    expect(result.missedDeltas).toHaveLength(1)
+  })
 })

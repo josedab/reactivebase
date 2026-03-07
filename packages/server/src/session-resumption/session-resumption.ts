@@ -157,8 +157,10 @@ export class SessionStore {
   /**
    * Attempt to resume a session with a token.
    * Returns missed deltas since the given sequence number.
+   * When connectionId is provided, verifies the resuming client matches
+   * the original connection to prevent session hijacking.
    */
-  resumeSession(sessionToken: string, lastKnownSequence: number): ResumptionResult {
+  resumeSession(sessionToken: string, lastKnownSequence: number, connectionId?: string): ResumptionResult {
     const session = this.sessions.get(sessionToken)
 
     if (!session) {
@@ -179,6 +181,17 @@ export class SessionStore {
         missedDeltas: [],
         subscriptions: [],
         error: "Session expired",
+      }
+    }
+
+    // Verify connection identity if provided
+    if (connectionId && session.connectionId !== connectionId) {
+      return {
+        success: false,
+        sessionToken,
+        missedDeltas: [],
+        subscriptions: [],
+        error: "Connection identity mismatch",
       }
     }
 
