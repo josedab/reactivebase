@@ -11,6 +11,11 @@
  */
 
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto"
+import { CloudPlatformNotFoundError, CloudPlatformLimitError, CloudPlatformConflictError, CloudPlatformError } from "../errors.js"
+
+/** Executes a SQL query and returns rows. Used for optional DB persistence. */
+import type { QueryExecutor } from "../types/index.js"
+export type { QueryExecutor } from "../types/index.js"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -23,6 +28,8 @@ export interface CloudPlatformOptions {
   maxProjectsPerOrg?: number
   /** Max environments per project (default: 10) */
   maxEnvsPerProject?: number
+  /** Optional: persist cloud platform data to a database (e.g. Postgres) */
+  db?: QueryExecutor
 }
 
 export type ProjectPlan = "free" | "starter" | "pro" | "enterprise"
@@ -183,9 +190,177 @@ const PLAN_BASE_COST_CENTS: Record<ProjectPlan, number> = {
   enterprise: 49900, // $499/mo
 }
 
+// ─── Persistence SQL ─────────────────────────────────────────────────────────
+
+export function generateCloudPlatformTableSQL(): string {
+  return `
+CREATE TABLE IF NOT EXISTS _reactivebase_cloud_projects (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  plan TEXT NOT NULL CHECK (plan IN ('free', 'starter', 'pro', 'enterprise')),
+  org_id TEXT NOT NULL,
+  region TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL CHECK (status IN ('creating', 'active', 'suspended', 'deleting')),
+  database_url TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS _reactivebase_cloud_environments (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES _reactivebase_cloud_projects(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  is_production BOOLEAN NOT NULL DEFAULT FALSE,
+  status TEXT NOT NULL CHECK (status IN ('provisioning', 'active', 'sleeping', 'error')),
+  url TEXT,
+  database_url TEXT,
+  variables JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS _reactivebase_cloud_deployments (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES _reactivebase_cloud_projects(id) ON DELETE CASCADE,
+  environment_id TEXT NOT NULL REFERENCES _reactivebase_cloud_environments(id) ON DELETE CASCADE,
+  source TEXT NOT NULL CHECK (source IN ('git', 'upload', 'cli')),
+  ref TEXT,
+  commit_sha TEXT,
+  status TEXT NOT NULL CHECK (status IN ('queued', 'building', 'deploying', 'active', 'failed', 'rolled-back')),
+  build_logs JSONB NOT NULL DEFAULT '[]',
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at TIMESTAMPTZ,
+  url TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_cloud_envs_project
+  ON _reactivebase_cloud_environments(project_id);
+
+CREATE INDEX IF NOT EXISTS idx_cloud_deployments_project
+  ON _reactivebase_cloud_deployments(project_id);
+
+CREATE INDEX IF NOT EXISTS idx_cloud_deployments_env
+  ON _reactivebase_cloud_deployments(environment_id);
+`.trim()
+}
+
+export function buildInsertProjectSQL(project: CloudProjectRecord): { sql: string; params: unknown[] } {
+  return {
+    sql: `INSERT INTO _reactivebase_cloud_projects
+  (id, name, plan, org_id, region, description, status, database_url, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    params: [
+      project.id,
+      project.name,
+      project.plan,
+      project.orgId,
+      project.region,
+      project.description,
+      project.status,
+      project.databaseUrl,
+      project.createdAt,
+      project.updatedAt,
+    ],
+  }
+}
+
+export function buildUpdateProjectSQL(
+  projectId: string,
+  updates: Partial<CloudProjectRecord>,
+): { sql: string; params: unknown[] } {
+  const setClauses: string[] = []
+  const params: unknown[] = []
+  let idx = 1
+
+  if (updates.plan !== undefined) { setClauses.push(`plan = $${idx++}`); params.push(updates.plan) }
+  if (updates.status !== undefined) { setClauses.push(`status = $${idx++}`); params.push(updates.status) }
+  if (updates.databaseUrl !== undefined) { setClauses.push(`database_url = $${idx++}`); params.push(updates.databaseUrl) }
+  if (updates.updatedAt !== undefined) { setClauses.push(`updated_at = $${idx++}`); params.push(updates.updatedAt) }
+
+  params.push(projectId)
+  return {
+    sql: `UPDATE _reactivebase_cloud_projects SET ${setClauses.join(", ")} WHERE id = $${idx}`,
+    params,
+  }
+}
+
+export function buildDeleteProjectSQL(projectId: string): { sql: string; params: unknown[] } {
+  return {
+    sql: `DELETE FROM _reactivebase_cloud_projects WHERE id = $1`,
+    params: [projectId],
+  }
+}
+
+export function buildInsertEnvironmentSQL(env: EnvironmentRecord): { sql: string; params: unknown[] } {
+  return {
+    sql: `INSERT INTO _reactivebase_cloud_environments
+  (id, project_id, name, is_production, status, url, database_url, variables, created_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)`,
+    params: [
+      env.id,
+      env.projectId,
+      env.name,
+      env.isProduction,
+      env.status,
+      env.url,
+      env.databaseUrl,
+      JSON.stringify(env.variables),
+      env.createdAt,
+    ],
+  }
+}
+
+export function buildDeleteEnvironmentSQL(envId: string): { sql: string; params: unknown[] } {
+  return {
+    sql: `DELETE FROM _reactivebase_cloud_environments WHERE id = $1`,
+    params: [envId],
+  }
+}
+
+export function buildInsertDeploymentSQL(deployment: DeploymentRecord): { sql: string; params: unknown[] } {
+  return {
+    sql: `INSERT INTO _reactivebase_cloud_deployments
+  (id, project_id, environment_id, source, ref, commit_sha, status, build_logs, started_at, completed_at, url)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11)`,
+    params: [
+      deployment.id,
+      deployment.projectId,
+      deployment.environmentId,
+      deployment.source,
+      deployment.ref,
+      deployment.commitSha,
+      deployment.status,
+      JSON.stringify(deployment.buildLogs),
+      deployment.startedAt,
+      deployment.completedAt,
+      deployment.url,
+    ],
+  }
+}
+
+export function buildUpdateDeploymentSQL(
+  deploymentId: string,
+  updates: Partial<DeploymentRecord>,
+): { sql: string; params: unknown[] } {
+  const setClauses: string[] = []
+  const params: unknown[] = []
+  let idx = 1
+
+  if (updates.status !== undefined) { setClauses.push(`status = $${idx++}`); params.push(updates.status) }
+  if (updates.completedAt !== undefined) { setClauses.push(`completed_at = $${idx++}`); params.push(updates.completedAt) }
+  if (updates.url !== undefined) { setClauses.push(`url = $${idx++}`); params.push(updates.url) }
+  if (updates.buildLogs !== undefined) { setClauses.push(`build_logs = $${idx++}::jsonb`); params.push(JSON.stringify(updates.buildLogs)) }
+
+  params.push(deploymentId)
+  return {
+    sql: `UPDATE _reactivebase_cloud_deployments SET ${setClauses.join(", ")} WHERE id = $${idx}`,
+    params,
+  }
+}
+
 // ─── Cloud Platform ──────────────────────────────────────────────────────────
 
-const DEFAULT_OPTIONS: Required<Omit<CloudPlatformOptions, "billingProvider">> & {
+const DEFAULT_OPTIONS: Required<Omit<CloudPlatformOptions, "billingProvider" | "db">> & {
   billingProvider: BillingProvider | null
 } = {
   region: "us-east-1",
@@ -200,6 +375,7 @@ const DEFAULT_OPTIONS: Required<Omit<CloudPlatformOptions, "billingProvider">> &
  */
 export class CloudPlatform {
   private options: typeof DEFAULT_OPTIONS
+  private db?: QueryExecutor
   private projects = new Map<string, CloudProjectRecord>()
   private environments = new Map<string, EnvironmentRecord>()
   private deployments = new Map<string, DeploymentRecord>()
@@ -209,6 +385,7 @@ export class CloudPlatform {
 
   constructor(options: CloudPlatformOptions = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options } as typeof DEFAULT_OPTIONS
+    this.db = options.db
   }
 
   private generateId(prefix: string): string {
@@ -223,7 +400,7 @@ export class CloudPlatform {
     // Enforce per-org project limit to prevent unbounded resource consumption
     const orgProjects = [...this.projects.values()].filter((p) => p.orgId === orgId)
     if (orgProjects.length >= this.options.maxProjectsPerOrg) {
-      throw new Error(`Organization has reached the maximum of ${this.options.maxProjectsPerOrg} projects`)
+      throw new CloudPlatformLimitError(`Organization has reached the maximum of ${this.options.maxProjectsPerOrg} projects`)
     }
 
     const project: CloudProjectRecord = {
@@ -248,6 +425,12 @@ export class CloudPlatform {
     project.databaseUrl = `postgresql://rb_${project.id}:****@db.${project.region}.reactivebase.cloud:5432/rb_${project.id}`
     project.updatedAt = new Date().toISOString()
 
+    // Best-effort DB persistence (fire-and-forget)
+    if (this.db) {
+      const { sql, params } = buildInsertProjectSQL(project)
+      this.db(sql, params).catch(() => {})
+    }
+
     return project
   }
 
@@ -262,16 +445,22 @@ export class CloudPlatform {
 
   async updateProjectPlan(projectId: string, plan: ProjectPlan): Promise<CloudProjectRecord> {
     const project = this.projects.get(projectId)
-    if (!project) throw new Error(`Project ${projectId} not found`)
+    if (!project) throw new CloudPlatformNotFoundError("Project", projectId)
 
     project.plan = plan
     project.updatedAt = new Date().toISOString()
+
+    if (this.db) {
+      const { sql, params } = buildUpdateProjectSQL(projectId, { plan, updatedAt: project.updatedAt })
+      this.db(sql, params).catch(() => {})
+    }
+
     return project
   }
 
   async deleteProject(projectId: string): Promise<void> {
     const project = this.projects.get(projectId)
-    if (!project) throw new Error(`Project ${projectId} not found`)
+    if (!project) throw new CloudPlatformNotFoundError("Project", projectId)
 
     project.status = "deleting"
 
@@ -286,19 +475,24 @@ export class CloudPlatform {
     this.projects.delete(projectId)
     this.teamMembers.delete(projectId)
     this.usage.delete(projectId)
+
+    if (this.db) {
+      const { sql, params } = buildDeleteProjectSQL(projectId)
+      this.db(sql, params).catch(() => {})
+    }
   }
 
   // ─── Environments ────────────────────────────────────────────────────────
 
   async createEnvironment(projectId: string, config: EnvironmentConfig): Promise<EnvironmentRecord> {
     const project = this.projects.get(projectId)
-    if (!project) throw new Error(`Project ${projectId} not found`)
+    if (!project) throw new CloudPlatformNotFoundError("Project", projectId)
 
     // Environment count is plan-gated (e.g., free plan allows only 2)
     const projectEnvs = [...this.environments.values()].filter((e) => e.projectId === projectId)
     const limits = this.getPlanLimits(project.plan)
     if (projectEnvs.length >= limits.maxEnvironments) {
-      throw new Error(
+      throw new CloudPlatformLimitError(
         `Project has reached the maximum of ${limits.maxEnvironments} environments for ${project.plan} plan`,
       )
     }
@@ -323,6 +517,11 @@ export class CloudPlatform {
     env.url = `https://${project.name}-${env.name}.reactivebase.cloud`
     env.databaseUrl = `postgresql://rb_${env.id}:****@db.${project.region}.reactivebase.cloud:5432/rb_${env.id}`
 
+    if (this.db) {
+      const { sql, params } = buildInsertEnvironmentSQL(env)
+      this.db(sql, params).catch(() => {})
+    }
+
     return env
   }
 
@@ -336,19 +535,24 @@ export class CloudPlatform {
 
   async deleteEnvironment(envId: string): Promise<void> {
     const env = this.environments.get(envId)
-    if (!env) throw new Error(`Environment ${envId} not found`)
-    if (env.isProduction) throw new Error("Cannot delete production environment directly")
+    if (!env) throw new CloudPlatformNotFoundError("Environment", envId)
+    if (env.isProduction) throw new CloudPlatformConflictError("Cannot delete production environment directly")
     this.environments.delete(envId)
+
+    if (this.db) {
+      const { sql, params } = buildDeleteEnvironmentSQL(envId)
+      this.db(sql, params).catch(() => {})
+    }
   }
 
   // ─── Deployments ─────────────────────────────────────────────────────────
 
   async deploy(projectId: string, envId: string, config: DeploymentConfig): Promise<DeploymentRecord> {
     const project = this.projects.get(projectId)
-    if (!project) throw new Error(`Project ${projectId} not found`)
+    if (!project) throw new CloudPlatformNotFoundError("Project", projectId)
 
     const env = this.environments.get(envId)
-    if (!env) throw new Error(`Environment ${envId} not found`)
+    if (!env) throw new CloudPlatformNotFoundError("Environment", envId)
 
     const deployment: DeploymentRecord = {
       id: this.generateId("deploy"),
@@ -378,6 +582,11 @@ export class CloudPlatform {
     deployment.completedAt = new Date().toISOString()
     deployment.url = env.url
 
+    if (this.db) {
+      const { sql, params } = buildInsertDeploymentSQL(deployment)
+      this.db(sql, params).catch(() => {})
+    }
+
     return deployment
   }
 
@@ -393,8 +602,14 @@ export class CloudPlatform {
 
   async rollbackDeployment(deploymentId: string): Promise<DeploymentRecord> {
     const deployment = this.deployments.get(deploymentId)
-    if (!deployment) throw new Error(`Deployment ${deploymentId} not found`)
+    if (!deployment) throw new CloudPlatformNotFoundError("Deployment", deploymentId)
     deployment.status = "rolled-back"
+
+    if (this.db) {
+      const { sql, params } = buildUpdateDeploymentSQL(deploymentId, { status: "rolled-back" })
+      this.db(sql, params).catch(() => {})
+    }
+
     return deployment
   }
 
@@ -402,10 +617,10 @@ export class CloudPlatform {
 
   addTeamMember(projectId: string, member: Omit<TeamMember, "invitedAt" | "acceptedAt">): TeamMember {
     const members = this.teamMembers.get(projectId)
-    if (!members) throw new Error(`Project ${projectId} not found`)
+    if (!members) throw new CloudPlatformNotFoundError("Project", projectId)
 
     const existing = members.find((m) => m.userId === member.userId)
-    if (existing) throw new Error(`User ${member.userId} is already a member`)
+    if (existing) throw new CloudPlatformConflictError(`User ${member.userId} is already a member`)
 
     const newMember: TeamMember = {
       ...member,
@@ -418,11 +633,11 @@ export class CloudPlatform {
 
   removeTeamMember(projectId: string, userId: string): void {
     const members = this.teamMembers.get(projectId)
-    if (!members) throw new Error(`Project ${projectId} not found`)
+    if (!members) throw new CloudPlatformNotFoundError("Project", projectId)
 
     const idx = members.findIndex((m) => m.userId === userId)
-    if (idx === -1) throw new Error(`User ${userId} not found in project`)
-    if (members[idx].role === "owner") throw new Error("Cannot remove project owner")
+    if (idx === -1) throw new CloudPlatformNotFoundError("User", userId)
+    if (members[idx].role === "owner") throw new CloudPlatformConflictError("Cannot remove project owner")
     members.splice(idx, 1)
   }
 
@@ -434,7 +649,7 @@ export class CloudPlatform {
 
   recordUsage(projectId: string, usage: Omit<UsageRecord, "projectId" | "period">): UsageRecord {
     const project = this.projects.get(projectId)
-    if (!project) throw new Error(`Project ${projectId} not found`)
+    if (!project) throw new CloudPlatformNotFoundError("Project", projectId)
 
     const period = new Date().toISOString().slice(0, 7) // YYYY-MM
     const record: UsageRecord = {
@@ -526,7 +741,7 @@ export class CloudPlatform {
    */
   createApiKey(projectId: string, config: ApiKeyConfig): ApiKeyRecord {
     const project = this.projects.get(projectId)
-    if (!project) throw new Error(`Project ${projectId} not found`)
+    if (!project) throw new CloudPlatformNotFoundError("Project", projectId)
 
     const keyValue = `rb_${config.type}_${randomId()}`
     const record: ApiKeyRecord = {
@@ -575,7 +790,7 @@ export class CloudPlatform {
    */
   revokeApiKey(keyId: string): void {
     const record = this.apiKeys.get(keyId)
-    if (!record) throw new Error(`API key ${keyId} not found`)
+    if (!record) throw new CloudPlatformNotFoundError("API key", keyId)
     record.revokedAt = new Date().toISOString()
   }
 
@@ -603,8 +818,8 @@ export class CloudPlatform {
     name: string,
   ): Promise<{ customerId: string; subscriptionId: string }> {
     const project = this.projects.get(projectId)
-    if (!project) throw new Error(`Project ${projectId} not found`)
-    if (!this.options.billingProvider) throw new Error("No billing provider configured")
+    if (!project) throw new CloudPlatformNotFoundError("Project", projectId)
+    if (!this.options.billingProvider) throw new CloudPlatformError("No billing provider configured")
 
     const customerId = await this.options.billingProvider.createCustomer(email, name)
     const subscriptionId = await this.options.billingProvider.createSubscription(customerId, project.plan)
@@ -616,7 +831,7 @@ export class CloudPlatform {
    * Report current usage to billing provider for usage-based billing.
    */
   async reportUsageToBilling(projectId: string, subscriptionId: string): Promise<void> {
-    if (!this.options.billingProvider) throw new Error("No billing provider configured")
+    if (!this.options.billingProvider) throw new CloudPlatformError("No billing provider configured")
 
     const usage = this.getUsage(projectId)
     if (!usage) return
@@ -633,10 +848,10 @@ export class CloudPlatform {
    */
   configureAutoScale(projectId: string, config: AutoScaleConfig): void {
     const project = this.projects.get(projectId)
-    if (!project) throw new Error(`Project ${projectId} not found`)
+    if (!project) throw new CloudPlatformNotFoundError("Project", projectId)
 
-    if (config.minInstances < 0) throw new Error("minInstances must be non-negative")
-    if (config.maxInstances < config.minInstances) throw new Error("maxInstances must be >= minInstances")
+    if (config.minInstances < 0) throw new CloudPlatformError("minInstances must be non-negative")
+    if (config.maxInstances < config.minInstances) throw new CloudPlatformError("maxInstances must be >= minInstances")
 
     this.autoScaleConfigs.set(projectId, config)
   }

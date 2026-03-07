@@ -24,6 +24,10 @@ export const ERROR_HTTP_STATUS: Record<string, number> = {
   PAGINATION_ERROR: 400,
   SHUTDOWN_IN_PROGRESS: 503,
   INTERNAL_ERROR: 500,
+  CLOUD_PLATFORM_ERROR: 400,
+  CLOUD_PLATFORM_NOT_FOUND: 404,
+  CLOUD_PLATFORM_LIMIT: 429,
+  CLOUD_PLATFORM_CONFLICT: 409,
 }
 
 // ── Serialization format ─────────────────────────────────────────────────────
@@ -150,5 +154,33 @@ export class ShutdownError extends ReactiveBaseError {
   constructor() {
     super("Server is shutting down — try again later", "SHUTDOWN_IN_PROGRESS")
     this.name = "ShutdownError"
+  }
+}
+
+export class CloudPlatformError extends ReactiveBaseError {
+  constructor(message: string, details?: Record<string, unknown>) {
+    super(message, "CLOUD_PLATFORM_ERROR", details)
+    this.name = "CloudPlatformError"
+  }
+}
+
+export class CloudPlatformNotFoundError extends ReactiveBaseError {
+  constructor(resourceType: string, resourceId: string) {
+    super(`${resourceType} ${resourceId} not found`, "CLOUD_PLATFORM_NOT_FOUND", { resourceType, resourceId })
+    this.name = "CloudPlatformNotFoundError"
+  }
+}
+
+export class CloudPlatformLimitError extends ReactiveBaseError {
+  constructor(message: string, details?: Record<string, unknown>) {
+    super(message, "CLOUD_PLATFORM_LIMIT", details)
+    this.name = "CloudPlatformLimitError"
+  }
+}
+
+export class CloudPlatformConflictError extends ReactiveBaseError {
+  constructor(message: string, details?: Record<string, unknown>) {
+    super(message, "CLOUD_PLATFORM_CONFLICT", details)
+    this.name = "CloudPlatformConflictError"
   }
 }

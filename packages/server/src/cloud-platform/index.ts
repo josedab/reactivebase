@@ -1,6 +1,17 @@
-export { CloudPlatform } from "./cloud-platform.js"
+export {
+  CloudPlatform,
+  generateCloudPlatformTableSQL,
+  buildInsertProjectSQL,
+  buildUpdateProjectSQL,
+  buildDeleteProjectSQL,
+  buildInsertEnvironmentSQL,
+  buildDeleteEnvironmentSQL,
+  buildInsertDeploymentSQL,
+  buildUpdateDeploymentSQL,
+} from "./cloud-platform.js"
 
 export type {
+  QueryExecutor as CloudPlatformQueryExecutor,
   CloudPlatformOptions,
   ProjectPlan,
   CloudProjectConfig,
