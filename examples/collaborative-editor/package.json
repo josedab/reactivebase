@@ -2,11 +2,17 @@
   "name": "reactivebase-collaborative-editor",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "reactivebase dev", "build": "tsc", "generate": "reactivebase generate" },
-  "dependencies": {
-    "@reactivebase/server": "*",
-    "@reactivebase/client": "*",
-    "@reactivebase/react": "*"
+  "scripts": {
+    "dev": "reactivebase dev",
+    "build": "tsc",
+    "generate": "reactivebase generate"
   },
-  "devDependencies": { "typescript": "^5.7.0" }
+  "dependencies": {
+    "@reactivebase/server": "^0.1.0",
+    "@reactivebase/client": "^0.1.0",
+    "@reactivebase/react": "^0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
 }

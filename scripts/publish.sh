@@ -62,9 +62,14 @@ for pkg in "${PACKAGES[@]}"; do
 
   if [ "$MODE" = "--real" ]; then
     cd "$pkg"
-    npm publish --access public 2>&1 || echo "(already published)"
+    if npm publish --access public 2>&1; then
+      echo "✅"
+    else
+      echo "❌ FAILED"
+      echo "  Publish failed for $name@$VERSION. Stopping."
+      exit 1
+    fi
     cd - > /dev/null
-    echo "✅"
   else
     cd "$pkg"
     npm pack --dry-run 2>&1 | tail -1

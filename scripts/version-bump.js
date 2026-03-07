@@ -31,12 +31,15 @@ const dirs = readdirSync(packagesDir).filter((name) => {
 })
 
 let updated = 0
+const packageNames = new Set()
 
+// First pass: collect all package names and update versions
 for (const dir of dirs) {
   const pkgPath = join(packagesDir, dir, "package.json")
   try {
     const raw = readFileSync(pkgPath, "utf-8")
     const pkg = JSON.parse(raw)
+    packageNames.add(pkg.name)
     const oldVersion = pkg.version
     pkg.version = version
     writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n")
@@ -45,6 +48,39 @@ for (const dir of dirs) {
   } catch {
     // Skip directories without package.json
   }
+}
+
+// Second pass: resolve workspace:* dependencies to the new version
+let depsFixed = 0
+for (const dir of dirs) {
+  const pkgPath = join(packagesDir, dir, "package.json")
+  try {
+    const raw = readFileSync(pkgPath, "utf-8")
+    const pkg = JSON.parse(raw)
+    let changed = false
+
+    for (const depField of ["dependencies", "devDependencies", "peerDependencies"]) {
+      const deps = pkg[depField]
+      if (!deps) continue
+      for (const [name, ver] of Object.entries(deps)) {
+        if (packageNames.has(name) && typeof ver === "string" && ver.startsWith("workspace:")) {
+          deps[name] = `^${version}`
+          changed = true
+          depsFixed++
+        }
+      }
+    }
+
+    if (changed) {
+      writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n")
+    }
+  } catch {
+    // Skip
+  }
+}
+
+if (depsFixed > 0) {
+  console.log(`\nResolved ${depsFixed} workspace:* dependencies to ^${version}`)
 }
 
 console.log(`\nUpdated ${updated} packages to v${version}`)

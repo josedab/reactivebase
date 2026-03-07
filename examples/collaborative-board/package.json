@@ -8,9 +8,9 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@reactivebase/server": "*",
-    "@reactivebase/client": "*",
-    "@reactivebase/react": "*"
+    "@reactivebase/server": "^0.1.0",
+    "@reactivebase/client": "^0.1.0",
+    "@reactivebase/react": "^0.1.0"
   },
   "devDependencies": {
     "typescript": "^5.7.0"

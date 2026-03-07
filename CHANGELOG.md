@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_No unreleased changes._
+
+## [0.1.0] — 2026-03-06
+
 ### Added
 
 - **CRDT collaboration** — conflict-free replicated data types (LWW registers, G/PN counters, OR-Sets, RGA) for offline-first collaboration

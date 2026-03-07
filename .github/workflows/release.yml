@@ -25,15 +25,20 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
 
       - name: Test
         run: npm run test
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
 
       - name: Publish to npm
         run: |
           for pkg in packages/server packages/client packages/state packages/react packages/vue packages/svelte packages/nextjs packages/edge packages/testing packages/cli packages/reactivebase packages/create-reactivebase packages/migrate-from-prisma packages/graphql packages/react-native; do
             cd $pkg
-            npm publish --access public || true
+            echo "Publishing $(node -e "console.log(require('./package.json').name)")..."
+            npm publish --access public
             cd -
           done
         env:
