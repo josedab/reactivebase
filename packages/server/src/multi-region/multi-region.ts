@@ -27,6 +27,8 @@ export interface RegionConfig {
   weight?: number
   maxLatencyMs?: number
   metadata?: Record<string, unknown>
+  /** Optional HTTP endpoint for health checks and replication (e.g. "https://us-east.example.com") */
+  endpoint?: string
 }
 
 export interface RegionManagerOptions {
@@ -497,16 +499,86 @@ export class RegionManager {
     return conflict
   }
 
-  private performHealthChecks(): void {
-    for (const [id, region] of this.regions) {
-      if (id === this.regionId) {
+  private async performHealthChecks(): Promise<void> {
+    const checks = this.configs.map(async (config) => {
+      const region = this.regions.get(config.id)
+      if (!region) return
+
+      if (config.id === this.regionId) {
         region.status = "healthy"
         region.latencyMs = 0
         region.lastHealthCheck = Date.now()
-      } else {
-        // In a real implementation, this would ping the remote region
+        return
+      }
+
+      if (!config.endpoint) {
+        // No endpoint configured — keep existing status, just update timestamp
+        region.lastHealthCheck = Date.now()
+        return
+      }
+
+      const start = performance.now()
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000)
+
+        const response = await fetch(`${config.endpoint}/health`, {
+          signal: controller.signal,
+          method: "GET",
+        })
+        clearTimeout(timeoutId)
+
+        const latency = performance.now() - start
+        region.latencyMs = Math.round(latency)
+        region.status = response.ok ? "healthy" : "degraded"
+        region.lastHealthCheck = Date.now()
+      } catch {
+        region.status = "unreachable"
+        region.latencyMs = Infinity
         region.lastHealthCheck = Date.now()
       }
+    })
+
+    await Promise.allSettled(checks)
+    this.router.updateTopology([...this.regions.values()])
+    this.options.onTopologyChange?.(this.getTopology())
+  }
+
+  /**
+   * Send pending replication events to a specific target region.
+   * Returns the number of events successfully sent.
+   */
+  async sendEvents(targetRegionId: string): Promise<number> {
+    const config = this.configs.find((c) => c.id === targetRegionId)
+    if (!config?.endpoint) return 0
+
+    const events = this.eventBuffer.filter((e) => e.targetRegion === targetRegionId || e.targetRegion === "*")
+    if (events.length === 0) return 0
+
+    try {
+      const response = await fetch(`${config.endpoint}/replicate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ events, sourceRegion: this.regionId }),
+      })
+
+      if (response.ok) {
+        this.acknowledgeEvents(events.map((e) => e.id))
+        return events.length
+      }
+    } catch {
+      // Replication failed; events remain in buffer for retry
+    }
+
+    return 0
+  }
+
+  /**
+   * Receive a batch of replication events from another region.
+   */
+  receiveReplicatedEvents(events: ReplicationEvent[], _sourceRegion: string): void {
+    for (const event of events) {
+      this.receiveEvent(event)
     }
   }
 }

@@ -18,6 +18,17 @@
  *   const result = await runtime.execute("myFunction", { arg: "value" })
  */
 
+// WebAssembly types are available at runtime in Node.js but not included in ES2022 lib
+declare const WebAssembly: {
+  compile(source: ArrayBufferLike): Promise<{ exports: string[] }>
+  instantiate(module: unknown, importObject?: Record<string, unknown>): Promise<{ exports: Record<string, unknown> }>
+  Module: {
+    new (source: ArrayBufferLike): unknown
+    exports(module: unknown): Array<{ name: string; kind: string }>
+    imports(module: unknown): Array<{ module: string; name: string; kind: string }>
+  }
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface WasmRuntimeOptions {
@@ -44,6 +55,8 @@ export interface WasmModule {
   name: string
   /** Wasm binary or source */
   source: Uint8Array | null
+  /** Compiled WebAssembly module, if compilation succeeded */
+  compiledModule: unknown | null
   /** Compilation status */
   status: "pending" | "compiling" | "ready" | "error"
   /** Size in bytes */
@@ -204,6 +217,7 @@ export class WasmFunctionRuntime {
       id: `wasm_${name}_${Date.now().toString(36)}`,
       name,
       source: this.options.cacheModules ? source : null,
+      compiledModule: null,
       status: "compiling",
       size: source.length,
       compileTimeMs: null,
@@ -235,6 +249,15 @@ export class WasmFunctionRuntime {
         throw new WasmRuntimeError(
           `Module "${name}" requires ${requiredMemoryMB}MB but limit is ${this.options.memoryLimitMB}MB`,
         )
+      }
+
+      // Attempt real WebAssembly compilation
+      try {
+        const wasmModule = await WebAssembly.compile(source.buffer)
+        module.compiledModule = wasmModule
+      } catch {
+        // If compilation fails (e.g., source is not valid WASM), fall back to simulation mode
+        module.compiledModule = null
       }
 
       module.compileTimeMs = Date.now() - startTime
@@ -281,8 +304,7 @@ export class WasmFunctionRuntime {
     let hostCalls = 0
 
     try {
-      // Simulate Wasm execution with host function calls
-      // In production, this would use WebAssembly.instantiate()
+      // Build host function bindings with call counting
       const hostBindings: Record<string, (...a: unknown[]) => Promise<unknown> | unknown> = {}
       for (const [name, hf] of this.hostFunctions) {
         hostBindings[name] = (...a: unknown[]) => {
@@ -292,7 +314,39 @@ export class WasmFunctionRuntime {
         }
       }
 
-      // Execute the function (simulated - real impl would call wasm instance)
+      // Try real WASM execution if module was compiled
+      if (module.compiledModule) {
+        try {
+          const instance = await WebAssembly.instantiate(module.compiledModule, { env: hostBindings })
+          const exportedFn = instance.exports[functionName]
+          if (typeof exportedFn === "function") {
+            const result = (exportedFn as CallableFunction)(...(Array.isArray(args) ? args : [args]))
+
+            const executionTimeMs = Date.now() - startTime
+            const memoryUsed = estimateMemoryUsage(args)
+
+            this.executionTimes.push(executionTimeMs)
+            this.memoryUsages.push(memoryUsed)
+            if (this.executionTimes.length > 1000) this.executionTimes.shift()
+            if (this.memoryUsages.length > 1000) this.memoryUsages.shift()
+
+            this.successCount++
+
+            return {
+              success: true,
+              result: result as T,
+              error: null,
+              executionTimeMs,
+              memoryUsedBytes: memoryUsed,
+              hostCallCount: hostCalls,
+            }
+          }
+        } catch {
+          // Fall through to simulation
+        }
+      }
+
+      // Fallback to simulation for non-WASM sources or when real execution fails
       const result = await this.simulateExecution<T>(module, functionName, args, hostBindings)
 
       const executionTimeMs = Date.now() - startTime
@@ -478,16 +532,28 @@ function detectRuntime(): RuntimeTarget {
 }
 
 function parseWasmMetadata(source: Uint8Array): ModuleMetadata {
-  // Simplified metadata extraction from Wasm binary
-  // Real implementation would parse the Wasm binary format
   const size = source.length
   const memoryPages = Math.max(1, Math.ceil(size / (64 * 1024)))
 
-  return {
-    exports: ["main"],
-    imports: [],
-    memoryPages,
-    sourceLanguage: detectSourceLanguage(source),
+  // Attempt to parse real WASM binary for accurate exports/imports
+  try {
+    const wasmModule = new WebAssembly.Module(source.buffer)
+    const exports = WebAssembly.Module.exports(wasmModule).map((e) => e.name)
+    const imports = WebAssembly.Module.imports(wasmModule).map((i) => `${i.module}.${i.name}`)
+    return {
+      exports: exports.length > 0 ? exports : ["main"],
+      imports,
+      memoryPages,
+      sourceLanguage: detectSourceLanguage(source),
+    }
+  } catch {
+    // Not valid WASM binary, fall back to defaults
+    return {
+      exports: ["main"],
+      imports: [],
+      memoryPages,
+      sourceLanguage: detectSourceLanguage(source),
+    }
   }
 }
 

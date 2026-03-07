@@ -60,9 +60,13 @@ export interface TimeBucket {
   field: string
 }
 
+export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+
 export interface MaterializedViewOptions {
   /** Refresh debounce in ms */
   refreshDebounceMs?: number
+  /** Optional database query executor for real SQL execution */
+  db?: QueryExecutor
 }
 
 // ─── SQL Generation ──────────────────────────────────────────────────────────
@@ -197,6 +201,11 @@ export class MaterializedViewEngine {
   private refreshTimers = new Map<string, ReturnType<typeof setTimeout>>()
   private debounceTimers = new Map<string, ReturnType<typeof setTimeout>>()
   private listeners = new Map<string, Set<(data: Record<string, unknown>[]) => void>>()
+  private db?: QueryExecutor
+
+  constructor(options?: MaterializedViewOptions) {
+    this.db = options?.db
+  }
 
   /**
    * Register a materialized view definition.
@@ -237,7 +246,11 @@ export class MaterializedViewEngine {
         viewName,
         setTimeout(() => {
           this.debounceTimers.delete(viewName)
-          this.triggerRefresh(viewName)
+          this.triggerRefresh(viewName).catch((err: unknown) => {
+            if (process.env.NODE_ENV !== "production") {
+              console.debug("[ReactiveBase] View refresh error:", err instanceof Error ? err.message : err)
+            }
+          })
         }, debounceMs),
       )
     }
@@ -245,10 +258,25 @@ export class MaterializedViewEngine {
 
   /**
    * Manually refresh a view (for "manual" strategy or on-demand).
+   * When a db executor is available, executes the refresh SQL against the database.
    */
-  triggerRefresh(viewName: string): void {
+  async triggerRefresh(viewName: string): Promise<void> {
     const viewState = this.state.get(viewName)
     if (!viewState) return
+
+    if (this.db) {
+      const sql = generateRefreshSQL(viewName, true)
+      try {
+        await this.db(sql, [])
+      } catch {
+        const fallbackSql = generateRefreshSQL(viewName, false)
+        await this.db(fallbackSql, []).catch((err: unknown) => {
+          if (process.env.NODE_ENV !== "production") {
+            console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+          }
+        })
+      }
+    }
 
     viewState.lastRefreshedAt = Date.now()
     viewState.refreshCount++
@@ -320,6 +348,47 @@ export class MaterializedViewEngine {
       statements.push(generateMaterializedViewSQL(def))
     }
     return statements.join("\n\n")
+  }
+
+  /**
+   * Create all registered views in the database.
+   * No-op if no db executor is configured.
+   */
+  async initializeViews(): Promise<void> {
+    if (!this.db) return
+    for (const [name, def] of this.views) {
+      const sql = generateMaterializedViewSQL(def)
+      await this.db(sql, []).catch((err: unknown) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+        }
+      })
+      // Create indexes on groupBy columns
+      if (def.groupBy && def.groupBy.length > 0) {
+        const indexSql = generateViewIndexSQL(name, def.groupBy)
+        await this.db(indexSql, []).catch((err: unknown) => {
+          if (process.env.NODE_ENV !== "production") {
+            console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+          }
+        })
+      }
+    }
+  }
+
+  /**
+   * Drop a view from the engine and optionally from the database.
+   */
+  async dropView(viewName: string): Promise<void> {
+    this.state.delete(viewName)
+    this.views.delete(viewName)
+    if (this.db) {
+      const sql = generateDropViewSQL(viewName)
+      await this.db(sql, []).catch((err: unknown) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+        }
+      })
+    }
   }
 
   /**

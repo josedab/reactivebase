@@ -233,3 +233,170 @@ describe("MaterializedViewEngine", () => {
     expect(engine.viewCount).toBe(1)
   })
 })
+
+describe("MaterializedViewEngine with DB executor", () => {
+  function createMockDb() {
+    const calls: { sql: string; params: unknown[] }[] = []
+    const errors: string[] = []
+    const db = async (sql: string, params: unknown[]) => {
+      calls.push({ sql, params })
+      const fail = errors.shift()
+      if (fail) throw new Error(fail)
+      return { rows: [] }
+    }
+    return { db, calls, errors }
+  }
+
+  it("triggerRefresh executes REFRESH MATERIALIZED VIEW SQL", async () => {
+    const { db, calls } = createMockDb()
+    const engine = new MaterializedViewEngine({ db })
+    engine.register(defineMaterializedView({ name: "stats", source: "tasks", refreshStrategy: "manual" }))
+
+    await engine.triggerRefresh("stats")
+
+    expect(calls).toHaveLength(1)
+    expect(calls[0].sql).toContain("REFRESH MATERIALIZED VIEW")
+    expect(calls[0].sql).toContain("CONCURRENTLY")
+    expect(calls[0].sql).toContain('"stats"')
+    expect(engine.getState("stats")!.refreshCount).toBe(1)
+  })
+
+  it("triggerRefresh falls back to non-concurrent refresh on error", async () => {
+    const { db, calls, errors } = createMockDb()
+    errors.push("concurrent refresh not supported")
+    const engine = new MaterializedViewEngine({ db })
+    engine.register(defineMaterializedView({ name: "stats", source: "tasks", refreshStrategy: "manual" }))
+
+    await engine.triggerRefresh("stats")
+
+    expect(calls).toHaveLength(2)
+    expect(calls[0].sql).toContain("CONCURRENTLY")
+    expect(calls[1].sql).not.toContain("CONCURRENTLY")
+    expect(calls[1].sql).toContain("REFRESH MATERIALIZED VIEW")
+    expect(engine.getState("stats")!.refreshCount).toBe(1)
+  })
+
+  it("triggerRefresh updates state even when both concurrent and fallback fail", async () => {
+    const { db, calls, errors } = createMockDb()
+    errors.push("concurrent fail")
+    errors.push("non-concurrent fail")
+    const engine = new MaterializedViewEngine({ db })
+    engine.register(defineMaterializedView({ name: "stats", source: "tasks", refreshStrategy: "manual" }))
+
+    await engine.triggerRefresh("stats")
+
+    expect(calls).toHaveLength(2)
+    expect(engine.getState("stats")!.refreshCount).toBe(1)
+    expect(engine.getState("stats")!.lastRefreshedAt).toBeGreaterThan(0)
+  })
+
+  it("initializeViews creates all registered views in the database", async () => {
+    const { db, calls } = createMockDb()
+    const engine = new MaterializedViewEngine({ db })
+    engine.register(
+      defineMaterializedView({
+        name: "v1",
+        source: "tasks",
+        groupBy: ["team_id"],
+        aggregations: { total: { fn: "count", field: "*" } },
+        refreshStrategy: "manual",
+      }),
+    )
+    engine.register(defineMaterializedView({ name: "v2", source: "users", refreshStrategy: "manual" }))
+
+    await engine.initializeViews()
+
+    const createCalls = calls.filter((c) => c.sql.includes("CREATE MATERIALIZED VIEW"))
+    expect(createCalls).toHaveLength(2)
+    expect(calls.some((c) => c.sql.includes('"v1"') && c.sql.includes("CREATE MATERIALIZED VIEW"))).toBe(true)
+    expect(calls.some((c) => c.sql.includes('"v2"') && c.sql.includes("CREATE MATERIALIZED VIEW"))).toBe(true)
+    // v1 has groupBy, so an index should also be created
+    expect(calls.some((c) => c.sql.includes("CREATE INDEX") && c.sql.includes('"team_id"'))).toBe(true)
+  })
+
+  it("initializeViews is a no-op without db", async () => {
+    const engine = new MaterializedViewEngine()
+    engine.register(defineMaterializedView({ name: "v1", source: "tasks", refreshStrategy: "manual" }))
+
+    await engine.initializeViews()
+
+    expect(engine.viewCount).toBe(1)
+  })
+
+  it("dropView executes DROP SQL and removes state", async () => {
+    const { db, calls } = createMockDb()
+    const engine = new MaterializedViewEngine({ db })
+    engine.register(defineMaterializedView({ name: "stats", source: "tasks", refreshStrategy: "manual" }))
+
+    await engine.dropView("stats")
+
+    expect(calls).toHaveLength(1)
+    expect(calls[0].sql).toContain('DROP MATERIALIZED VIEW IF EXISTS "stats"')
+    expect(engine.getState("stats")).toBeUndefined()
+    expect(engine.getDefinition("stats")).toBeUndefined()
+    expect(engine.viewCount).toBe(0)
+  })
+
+  it("dropView cleans up state even without db", async () => {
+    const engine = new MaterializedViewEngine()
+    engine.register(defineMaterializedView({ name: "stats", source: "tasks", refreshStrategy: "manual" }))
+
+    await engine.dropView("stats")
+
+    expect(engine.getState("stats")).toBeUndefined()
+    expect(engine.getDefinition("stats")).toBeUndefined()
+    expect(engine.viewCount).toBe(0)
+  })
+
+  it("triggerRefresh without db only updates in-memory state", async () => {
+    const engine = new MaterializedViewEngine()
+    engine.register(defineMaterializedView({ name: "stats", source: "tasks", refreshStrategy: "manual" }))
+
+    let notified = false
+    engine.subscribe("stats", () => {
+      notified = true
+    })
+
+    await engine.triggerRefresh("stats")
+
+    expect(engine.getState("stats")!.refreshCount).toBe(1)
+    expect(engine.getState("stats")!.lastRefreshedAt).toBeGreaterThan(0)
+    expect(notified).toBe(true)
+  })
+
+  it("triggerRefresh is a no-op for unknown view names", async () => {
+    const { db, calls } = createMockDb()
+    const engine = new MaterializedViewEngine({ db })
+
+    await engine.triggerRefresh("nonexistent")
+
+    expect(calls).toHaveLength(0)
+  })
+
+  it("dropView gracefully handles db errors", async () => {
+    const { db, errors } = createMockDb()
+    errors.push("connection refused")
+    const engine = new MaterializedViewEngine({ db })
+    engine.register(defineMaterializedView({ name: "stats", source: "tasks", refreshStrategy: "manual" }))
+
+    await engine.dropView("stats")
+
+    // State is still cleaned up despite DB error
+    expect(engine.getState("stats")).toBeUndefined()
+    expect(engine.viewCount).toBe(0)
+  })
+
+  it("initializeViews continues after individual view creation failure", async () => {
+    const { db, calls, errors } = createMockDb()
+    errors.push("already exists")
+    const engine = new MaterializedViewEngine({ db })
+    engine.register(defineMaterializedView({ name: "v1", source: "tasks", refreshStrategy: "manual" }))
+    engine.register(defineMaterializedView({ name: "v2", source: "users", refreshStrategy: "manual" }))
+
+    await engine.initializeViews()
+
+    // Both views attempted even though v1 failed
+    const createCalls = calls.filter((c) => c.sql.includes("CREATE MATERIALIZED VIEW"))
+    expect(createCalls).toHaveLength(2)
+  })
+})

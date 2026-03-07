@@ -5,6 +5,17 @@
 
 import { createHmac, randomUUID } from "node:crypto"
 
+// ── Storage & DB Types ─────────────────────────────────────────────────────
+
+export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+
+export interface FileStorageBackend {
+  write(key: string, data: Buffer | Uint8Array, contentType: string): Promise<void>
+  read(key: string): Promise<Buffer>
+  delete(key: string): Promise<void>
+  exists(key: string): Promise<boolean>
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface MediaFile {
@@ -113,6 +124,8 @@ export interface MediaPipelineOptions {
   cdn?: CdnConfig
   transformConcurrency?: number
   signedUrlTtl?: number
+  db?: QueryExecutor
+  storage?: FileStorageBackend
 }
 
 export interface MediaPipelineStats {
@@ -356,6 +369,8 @@ export class MediaPipeline {
   readonly validator: UploadValidator
   private readonly defaultBucket: string
   private readonly maxFileSize: number
+  private readonly db?: QueryExecutor
+  private readonly storage?: FileStorageBackend
   private stats: MediaPipelineStats = {
     totalFiles: 0,
     totalSize: 0,
@@ -368,6 +383,8 @@ export class MediaPipeline {
   constructor(options: MediaPipelineOptions = {}) {
     this.defaultBucket = options.defaultBucket ?? "default"
     this.maxFileSize = options.maxFileSize ?? 100 * 1024 * 1024
+    this.db = options.db
+    this.storage = options.storage
     this.urls = new ReactiveUrlBuilder("/media", options.cdn)
     this.validator = new UploadValidator({
       maxSize: this.maxFileSize,
@@ -380,10 +397,11 @@ export class MediaPipeline {
     mimeType: string
     size: number
     uploadedBy: string
+    data?: Buffer | Uint8Array
     metadata?: Partial<MediaMetadata>
     bucket?: string
     prefix?: string
-  }): UploadResult {
+  }): UploadResult | Promise<UploadResult> {
     const { filename, mimeType, size, uploadedBy } = params
     const bucket = params.bucket ?? this.defaultBucket
 
@@ -419,11 +437,43 @@ export class MediaPipeline {
 
     this.notifySubscribers(file)
 
-    return {
+    const result: UploadResult = {
       file,
       uploadUrl: `/upload/${id}`,
       signedUrl: this.urls.buildSignedUrl(storageKey),
     }
+
+    const hasAsyncWork = (this.storage && params.data) || this.db
+    if (!hasAsyncWork) {
+      return result
+    }
+
+    return (async () => {
+      if (this.storage && params.data) {
+        await this.storage.write(file.storageKey, params.data!, file.mimeType)
+      }
+      if (this.db) {
+        const sql = buildInsertFileSQL()
+        const dbParams = [
+          file.id,
+          file.filename,
+          file.mimeType,
+          file.size,
+          file.storageKey,
+          file.bucket,
+          file.url,
+          file.cdnUrl || null,
+          JSON.stringify(file.metadata),
+          file.uploadedBy,
+        ]
+        await this.db(sql, dbParams).catch((err: unknown) => {
+          if (process.env.NODE_ENV !== "production") {
+            console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+          }
+        })
+      }
+      return result
+    })()
   }
 
   addVariant(
@@ -482,7 +532,7 @@ export class MediaPipeline {
     return this.urls.buildUrl(file.storageKey, transform)
   }
 
-  deleteFile(id: string): boolean {
+  deleteFile(id: string): boolean | Promise<boolean> {
     const file = this.files.get(id)
     if (!file) return false
 
@@ -491,7 +541,37 @@ export class MediaPipeline {
     this.stats.variantCount -= file.variants.length
 
     this.files.delete(id)
-    return true
+
+    const hasAsyncWork = this.storage || this.db
+    if (!hasAsyncWork) {
+      return true
+    }
+
+    return (async () => {
+      if (this.storage) {
+        await this.storage.delete(file.storageKey).catch((err: unknown) => {
+          if (process.env.NODE_ENV !== "production") {
+            console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+          }
+        })
+        for (const variant of file.variants) {
+          await this.storage.delete(variant.storageKey).catch((err: unknown) => {
+            if (process.env.NODE_ENV !== "production") {
+              console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+            }
+          })
+        }
+      }
+      if (this.db) {
+        const sql = buildDeleteFileSQL()
+        await this.db(sql, [id]).catch((err: unknown) => {
+          if (process.env.NODE_ENV !== "production") {
+            console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+          }
+        })
+      }
+      return true
+    })()
   }
 
   listFiles(bucket?: string, limit: number = 50, offset: number = 0): MediaFile[] {
@@ -509,6 +589,21 @@ export class MediaPipeline {
 
   getStats(): MediaPipelineStats {
     return { ...this.stats }
+  }
+
+  async getFileData(fileId: string): Promise<Buffer | null> {
+    const file = this.getFile(fileId)
+    if (!file) return null
+    if (this.storage && file.storageKey) {
+      return this.storage.read(file.storageKey)
+    }
+    return null
+  }
+
+  async initTables(): Promise<void> {
+    if (!this.db) return
+    const sql = buildCreateMediaTablesSQL()
+    await this.db(sql, [])
   }
 
   private notifySubscribers(file: MediaFile): void {

@@ -47,6 +47,8 @@ export interface LogicalReplicatorOptions {
   checkpointIntervalMs?: number
   /** Callback for replication status changes */
   onStatusChange?: (status: ReplicatorStatus) => void
+  /** Query executor for database operations (enables live replication when provided) */
+  db?: QueryExecutor
 }
 
 export type ReplicatorStatus = "disconnected" | "connecting" | "streaming" | "catchingUp" | "error" | "stopped"
@@ -99,6 +101,9 @@ export interface ReplicationStats {
 }
 
 export type ChangeHandler = (changes: WalChange[]) => Promise<void> | void
+
+/** A function that executes SQL and returns rows. Enables live replication when provided. */
+export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
 
 // ─── LSN Utilities ───────────────────────────────────────────────────────────
 
@@ -535,7 +540,7 @@ export class ChangeBatcher {
 
 // ─── Logical Replicator ──────────────────────────────────────────────────────
 
-const DEFAULT_OPTIONS: Required<LogicalReplicatorOptions> = {
+const DEFAULT_OPTIONS: Required<Omit<LogicalReplicatorOptions, "db">> = {
   connectionString: "",
   slotName: "reactivebase_slot",
   publicationName: "reactivebase_pub",
@@ -553,12 +558,13 @@ const DEFAULT_OPTIONS: Required<LogicalReplicatorOptions> = {
  * Provides setup utilities, WAL streaming, and LSN management.
  */
 export class LogicalReplicator {
-  private options: Required<LogicalReplicatorOptions>
+  private options: Required<Omit<LogicalReplicatorOptions, "db">> & Pick<LogicalReplicatorOptions, "db">
   private status: ReplicatorStatus = "disconnected"
   private decoder = new WalDecoder()
   private batcher: ChangeBatcher
   private changeHandler: ChangeHandler | null = null
   private lastConfirmedLsn: string | null = null
+  private pollTimer: ReturnType<typeof setInterval> | null = null
   private startedAt: number = 0
 
   private stats: ReplicationStats = {
@@ -728,18 +734,55 @@ export class LogicalReplicator {
   }
 
   /**
-   * Start the change batcher. Call this after setting up the replication connection.
+   * Start the replicator. When a db executor is provided, creates the publication
+   * and replication slot, then begins polling for WAL changes. Without a db
+   * executor, operates in stub mode (batcher only, for manual processWalData calls).
    */
-  start(): void {
+  async start(): Promise<void> {
     this.startedAt = Date.now()
+
+    if (!this.options.db) {
+      // Stub mode — no database connection
+      this.setStatus("streaming")
+      this.batcher.start()
+      return
+    }
+
+    const db = this.options.db
+    this.setStatus("connecting")
+
+    // 1. Create publication (if not exists)
+    try {
+      const tableClause =
+        this.options.tables.length === 0
+          ? "FOR ALL TABLES"
+          : `FOR TABLE ${this.options.tables.map((t) => `"${t}"`).join(", ")}`
+      await db(`CREATE PUBLICATION IF NOT EXISTS "${this.options.publicationName}" ${tableClause}`, [])
+    } catch (err: unknown) {
+      if (!(err instanceof Error) || !err.message.includes("already exists")) throw err
+    }
+
+    // 2. Create replication slot (if not exists)
+    try {
+      await db(`SELECT pg_create_logical_replication_slot($1, 'pgoutput')`, [this.options.slotName])
+    } catch (err: unknown) {
+      if (!(err instanceof Error) || !err.message.includes("already exists")) throw err
+    }
+
+    // 3. Start polling for changes
     this.setStatus("streaming")
     this.batcher.start()
+    this.pollTimer = setInterval(() => void this.pollChanges(), this.options.pollIntervalMs)
   }
 
   /**
-   * Stop the replicator and flush pending changes.
+   * Stop the replicator, clear the poll timer, and flush pending changes.
    */
   async stop(): Promise<void> {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer)
+      this.pollTimer = null
+    }
     this.batcher.stop()
     await this.batcher.flush()
     this.setStatus("stopped")
@@ -773,6 +816,29 @@ export class LogicalReplicator {
   /** Get the WAL decoder instance for inspection */
   getDecoder(): WalDecoder {
     return this.decoder
+  }
+
+  private async pollChanges(): Promise<void> {
+    if (!this.options.db || this.status !== "streaming") return
+    try {
+      const { rows } = await this.options.db(
+        `SELECT * FROM pg_logical_slot_get_changes($1, NULL, NULL, 'proto_version', '1', 'publication_names', $2)`,
+        [this.options.slotName, this.options.publicationName],
+      )
+      for (const row of rows) {
+        const lsn = String(row.lsn ?? "0/0")
+        const raw = row.data
+        const buf =
+          raw instanceof Buffer
+            ? raw
+            : typeof raw === "string" && raw.startsWith("\\x")
+              ? Buffer.from(raw.slice(2), "hex")
+              : Buffer.from(String(raw ?? ""), "utf8")
+        this.processWalData(lsn, buf)
+      }
+    } catch {
+      this.stats.errorsCount++
+    }
   }
 
   private async handleBatch(changes: WalChange[]): Promise<void> {

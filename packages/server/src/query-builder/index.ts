@@ -1,4 +1,10 @@
-export { QueryBuilder, CountQueryBuilder, AggregateQueryBuilder, createQueryBuilder } from "./query-builder.js"
+export {
+  QueryBuilder,
+  CountQueryBuilder,
+  AggregateQueryBuilder,
+  createQueryBuilder,
+  PaginationError,
+} from "./query-builder.js"
 export type {
   WhereOperator,
   OrderDirection,
@@ -14,6 +20,8 @@ export type {
   AggregationColumn,
   HavingClause,
   AggregateResult,
+  PaginationOptions,
+  PaginatedResult,
 } from "./query-builder.js"
 export { resolveRelations, buildQueryWithIncludes, buildIncludeSubquery } from "./relation-resolver.js"
 export type { ResolvedRelation } from "./relation-resolver.js"

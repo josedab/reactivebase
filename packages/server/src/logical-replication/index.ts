@@ -3,6 +3,7 @@ export { LogicalReplicator, WalDecoder, ChangeBatcher, parseLsn, formatLsn, comp
 export type {
   LogicalReplicatorOptions,
   ParameterizedQuery,
+  QueryExecutor,
   ReplicatorStatus,
   WalChange,
   WalColumnInfo,

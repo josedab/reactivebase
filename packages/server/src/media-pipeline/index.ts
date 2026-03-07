@@ -27,4 +27,6 @@ export type {
   SignedUrlOptions,
   MediaPipelineOptions,
   MediaPipelineStats,
+  QueryExecutor,
+  FileStorageBackend,
 } from "./media-pipeline.js"

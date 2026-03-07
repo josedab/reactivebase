@@ -3,6 +3,8 @@
  * Tracks table access for reactivity dependency tracking.
  */
 
+import { PaginationError } from "../errors.js"
+
 export type WhereOperator = "=" | "!=" | ">" | "<" | ">=" | "<=" | "in" | "like" | "ilike"
 export type OrderDirection = "asc" | "desc"
 
@@ -43,6 +45,8 @@ export interface QueryPlan {
   offsetValue?: number
   includes: Record<string, IncludeConfig>
   vectorSearch?: VectorSearchClause
+  /** @internal Cursor pagination state */
+  _cursorWhere?: { cols: string[]; vals: unknown[]; direction: string; orderCols?: OrderByClause[] }
 }
 
 export interface IncludeConfig {
@@ -253,6 +257,170 @@ export class QueryBuilder<TRow = Record<string, unknown>> {
   }
 
   /**
+   * Build a cursor-based paginated query.
+   *
+   * Requires at least one `orderBy()` clause. Uses the sort columns plus the `id`
+   * column as a tie-breaker to produce deterministic, keyset-based pagination.
+   *
+   * @param options - Pagination options (cursor, limit)
+   * @param pkColumn - Primary key column used as tie-breaker. Default: `"id"`.
+   * @returns A built query that fetches `limit + 1` rows (the extra row detects `hasMore`)
+   */
+  buildPaginated(options: PaginationOptions, pkColumn: string = "id"): BuiltQuery {
+    if (this.plan.orderByClauses.length === 0) {
+      throw new PaginationError("Cursor pagination requires at least one orderBy() clause")
+    }
+    if (!Number.isInteger(options.limit) || options.limit < 1) {
+      throw new PaginationError("Pagination limit must be a positive integer")
+    }
+
+    const clone = this.clone()
+
+    // Ensure tie-breaker column is in ORDER BY
+    const hasPkInOrder = clone.plan.orderByClauses.some((o) => o.column === pkColumn)
+    if (!hasPkInOrder) {
+      clone.plan.orderByClauses.push({ column: pkColumn, direction: "asc" })
+    }
+
+    // Apply cursor filter if provided
+    if (options.cursor) {
+      const cursor = decodeCursor(options.cursor)
+      const orderCols = clone.plan.orderByClauses
+
+      if (cursor.v.length !== orderCols.length - (hasPkInOrder ? 0 : 1)) {
+        // Cursor was created from a different sort; still usable if pk is present
+        // Fall through and use just the pk tie-breaker
+      }
+
+      // Build a (col1, col2, ..., pk) > (val1, val2, ..., pkVal) row-value comparison
+      // This is the standard keyset pagination pattern
+      const cols = orderCols.map((o) => `"${o.column}"`)
+      const vals: unknown[] = [...cursor.v, cursor.id]
+
+      // For each sort column, determine direction for the comparison
+      // Row-value comparison works correctly when all columns are ASC.
+      // For mixed directions, we use individual comparisons.
+      const allAsc = orderCols.every((o) => o.direction === "asc")
+      const allDesc = orderCols.every((o) => o.direction === "desc")
+
+      if (allAsc) {
+        // Simple row-value: (col1, col2, pk) > ($1, $2, $3)
+        const paramRefs = vals.map((v) => {
+          clone.plan.whereClauses.push({
+            column: "__cursor__",
+            operator: "=",
+            value: v,
+            paramIndex: 0,
+          })
+          return v
+        })
+        // We'll inject the cursor WHERE directly in the build output
+        clone.plan._cursorWhere = { cols, vals: paramRefs, direction: ">" }
+      } else if (allDesc) {
+        clone.plan._cursorWhere = { cols, vals: [...cursor.v, cursor.id], direction: "<" }
+      } else {
+        // Mixed directions: build individual OR/AND conditions
+        clone.plan._cursorWhere = { cols, vals: [...cursor.v, cursor.id], direction: "mixed", orderCols }
+      }
+
+      // Remove the __cursor__ placeholder clauses
+      clone.plan.whereClauses = clone.plan.whereClauses.filter((c) => c.column !== "__cursor__")
+    }
+
+    // Fetch one extra row to detect hasMore
+    clone.plan.limitValue = options.limit + 1
+    clone.plan.offsetValue = undefined
+
+    return clone.buildWithCursor()
+  }
+
+  private buildWithCursor(): BuiltQuery {
+    const params: unknown[] = []
+    const parts: string[] = []
+
+    // SELECT
+    const columns =
+      this.plan.selectedColumns.length > 0
+        ? this.plan.selectedColumns.map((c) => `"${c}"`).join(", ")
+        : `"${this.plan.table}".*`
+    parts.push(`SELECT ${columns}`)
+
+    // FROM
+    parts.push(`FROM "${this.plan.table}"`)
+
+    // JOINs
+    for (const join of this.plan.joinClauses) {
+      parts.push(
+        `${join.type} JOIN "${join.table}" ON "${this.plan.table}"."${join.fromColumn}" = "${join.table}"."${join.toColumn}"`,
+      )
+    }
+
+    // WHERE
+    const conditions: string[] = []
+    for (const clause of this.plan.whereClauses) {
+      params.push(clause.value)
+      const paramRef = `$${params.length}`
+      if (clause.operator === "in") {
+        conditions.push(`"${clause.column}" = ANY(${paramRef})`)
+      } else {
+        conditions.push(`"${clause.column}" ${clause.operator} ${paramRef}`)
+      }
+    }
+
+    // Cursor WHERE
+    if (this.plan._cursorWhere) {
+      const cw = this.plan._cursorWhere
+      const paramRefs = cw.vals.map((v: unknown) => {
+        params.push(v)
+        return `$${params.length}`
+      })
+
+      if (cw.direction === ">" || cw.direction === "<") {
+        conditions.push(`(${cw.cols.join(", ")}) ${cw.direction} (${paramRefs.join(", ")})`)
+      } else {
+        // Mixed sort directions: build compound condition
+        // For (A ASC, B DESC, pk ASC) with cursor (a, b, id):
+        //   (A > $a) OR (A = $a AND B < $b) OR (A = $a AND B = $b AND pk > $id)
+        const orderCols = cw.orderCols as OrderByClause[]
+        const orParts: string[] = []
+        for (let i = 0; i < cw.cols.length; i++) {
+          const andParts: string[] = []
+          for (let j = 0; j < i; j++) {
+            andParts.push(`${cw.cols[j]} = ${paramRefs[j]}`)
+          }
+          const dir = orderCols[i]?.direction ?? "asc"
+          const op = dir === "asc" ? ">" : "<"
+          andParts.push(`${cw.cols[i]} ${op} ${paramRefs[i]}`)
+          orParts.push(`(${andParts.join(" AND ")})`)
+        }
+        conditions.push(`(${orParts.join(" OR ")})`)
+      }
+    }
+
+    if (conditions.length > 0) {
+      parts.push(`WHERE ${conditions.join(" AND ")}`)
+    }
+
+    // GROUP BY
+    if (this.plan.groupByColumns.length > 0) {
+      parts.push(`GROUP BY ${this.plan.groupByColumns.map((c) => `"${c}"`).join(", ")}`)
+    }
+
+    // ORDER BY
+    if (this.plan.orderByClauses.length > 0) {
+      const orders = this.plan.orderByClauses.map((o) => `"${o.column}" ${o.direction.toUpperCase()}`)
+      parts.push(`ORDER BY ${orders.join(", ")}`)
+    }
+
+    // LIMIT
+    if (this.plan.limitValue !== undefined) {
+      parts.push(`LIMIT ${this.plan.limitValue}`)
+    }
+
+    return { sql: parts.join("\n"), params, plan: { ...this.plan } }
+  }
+
+  /**
    * Build the SQL query and parameters.
    */
   build(): BuiltQuery {
@@ -391,6 +559,36 @@ export class QueryBuilder<TRow = Record<string, unknown>> {
     return keys
   }
 
+  /**
+   * Process raw rows from a `buildPaginated()` query into a `PaginatedResult`.
+   * The query fetches `limit + 1` rows — this method trims the extra row
+   * and constructs the next cursor.
+   *
+   * @param rows - Raw rows returned from the paginated query
+   * @param limit - The page size (same value passed to `buildPaginated`)
+   * @param orderByCols - Column names used in ORDER BY (excluding the pk tie-breaker)
+   * @param pkColumn - Primary key column name. Default: `"id"`.
+   * @returns A paginated result with data, nextCursor, and hasMore
+   */
+  static toPaginatedResult<T extends Record<string, unknown>>(
+    rows: T[],
+    limit: number,
+    orderByCols: string[],
+    pkColumn: string = "id",
+  ): PaginatedResult<T> {
+    const hasMore = rows.length > limit
+    const data = hasMore ? rows.slice(0, limit) : rows
+
+    let nextCursor: string | null = null
+    if (hasMore && data.length > 0) {
+      const lastRow = data[data.length - 1]
+      const sortValues = orderByCols.map((col) => lastRow[col])
+      nextCursor = encodeCursor({ v: sortValues, id: String(lastRow[pkColumn]) })
+    }
+
+    return { data, nextCursor, hasMore }
+  }
+
   private clone(): QueryBuilder<TRow> {
     const cloned = new QueryBuilder<TRow>(this.plan.table)
     cloned.plan = {
@@ -406,6 +604,50 @@ export class QueryBuilder<TRow = Record<string, unknown>> {
     return cloned
   }
 }
+
+// ─── Cursor-Based Pagination ─────────────────────────────────────────────────
+
+export interface PaginationOptions {
+  /** Opaque cursor from a previous page. Omit for the first page. */
+  cursor?: string
+  /** Number of items per page. */
+  limit: number
+}
+
+export interface PaginatedResult<T = Record<string, unknown>> {
+  /** The rows on this page. */
+  data: T[]
+  /** Opaque cursor to pass for the next page, or `null` if no more pages. */
+  nextCursor: string | null
+  /** Whether there are more results after this page. */
+  hasMore: boolean
+}
+
+interface CursorPayload {
+  /** Values of the sort columns for the last row */
+  v: unknown[]
+  /** Primary key of the last row (tie-breaker) */
+  id: string
+}
+
+function encodeCursor(payload: CursorPayload): string {
+  return Buffer.from(JSON.stringify(payload)).toString("base64url")
+}
+
+function decodeCursor(cursor: string): CursorPayload {
+  try {
+    const json = Buffer.from(cursor, "base64url").toString("utf-8")
+    const parsed = JSON.parse(json)
+    if (!parsed || !Array.isArray(parsed.v) || typeof parsed.id !== "string") {
+      throw new Error("malformed")
+    }
+    return parsed as CursorPayload
+  } catch {
+    throw new PaginationError(`Invalid pagination cursor`)
+  }
+}
+
+export { PaginationError }
 
 /**
  * Count query builder - returns COUNT(*) instead of rows.
