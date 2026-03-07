@@ -176,10 +176,22 @@ describe("mapPrismaType", () => {
     expect(mapPrismaType("DateTime").validator).toBe("v.timestamp()")
   })
 
-  it("maps unknown types as relations", () => {
+  it("maps unknown PascalCase types with guidance note", () => {
     const result = mapPrismaType("User")
-    expect(result.validator).toContain("v.id")
-    expect(result.notes).toBeDefined()
+    expect(result.validator).toBe("v.string()")
+    expect(result.notes).toContain("Prisma enum or model")
+  })
+
+  it("maps Unsupported types to custom validators", () => {
+    const result = mapPrismaType('Unsupported("citext")')
+    expect(result.validator).toContain("custom")
+    expect(result.validator).toContain("citext")
+    expect(result.notes).toContain("Unsupported")
+  })
+
+  it("maps Bytes to bytea custom type", () => {
+    const result = mapPrismaType("Bytes")
+    expect(result.validator).toContain("bytea")
   })
 })
 

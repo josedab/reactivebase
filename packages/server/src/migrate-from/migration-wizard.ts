@@ -274,11 +274,32 @@ const DRIZZLE_TYPE_MAP: Record<string, { validator: string; tsType: string }> = 
 export function mapPrismaType(prismaType: string): { validator: string; tsType: string; notes?: string } {
   const mapped = PRISMA_TYPE_MAP[prismaType]
   if (mapped) return mapped
-  // Check if it's a relation (model name)
+
+  // Handle Prisma Unsupported("...") type
+  if (prismaType.startsWith("Unsupported")) {
+    const innerMatch = /Unsupported\("([^"]+)"\)/.exec(prismaType)
+    const pgType = innerMatch ? innerMatch[1] : "unknown"
+    return {
+      validator: `v.custom<unknown>("${pgType}")`,
+      tsType: "unknown",
+      notes: `Unsupported Prisma type mapped to custom Postgres type: ${pgType}`,
+    }
+  }
+
+  // Handle enum types (PascalCase names that aren't known scalar types)
+  // Prisma enums are PascalCase and don't match any built-in type
+  if (/^[A-Z][a-zA-Z0-9]*$/.test(prismaType)) {
+    return {
+      validator: `v.string()`,
+      tsType: "string",
+      notes: `Prisma enum or model "${prismaType}" — verify if this should be v.enum(...) or v.id("${prismaType.toLowerCase()}s")`,
+    }
+  }
+
   return {
-    validator: `v.id("${prismaType.toLowerCase()}s")`,
-    tsType: "string",
-    notes: `Assumed relation to ${prismaType}`,
+    validator: `v.custom<unknown>("${prismaType}")`,
+    tsType: "unknown",
+    notes: `Unknown Prisma type: ${prismaType}`,
   }
 }
 
