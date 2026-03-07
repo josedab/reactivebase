@@ -300,6 +300,70 @@ export class ReactiveBaseInstrumentation {
     }
   }
 
+  /**
+   * Instrument an action execution.
+   * Actions are background operations that may take longer than queries/mutations.
+   */
+  instrumentAction(actionName: string, fn: () => Promise<unknown>): Promise<unknown> {
+    if (!this.options.traceQueries) return fn()
+
+    const span = this.startSpan(`action.${actionName}`, {
+      "reactivebase.type": "action",
+      "reactivebase.action": actionName,
+    })
+    this.incrementCounter("reactivebase_actions_total", { action: actionName })
+
+    return fn()
+      .then((result) => {
+        this.endSpan(span.spanId, "ok")
+        return result
+      })
+      .catch((error: Error) => {
+        this.endSpan(span.spanId, "error", { "error.message": error.message })
+        this.incrementCounter("reactivebase_errors_total", { type: "action", action: actionName })
+        throw error
+      })
+  }
+
+  /**
+   * Create middleware that auto-instruments all function executions.
+   * Attach this to the server's middleware pipeline for zero-config observability.
+   *
+   * @example
+   * const otel = new ReactiveBaseInstrumentation({ serviceName: 'my-app' })
+   * server.use(otel.middleware())
+   */
+  middleware(): {
+    name: string
+    before: (ctx: { functionName: string; functionType: string }) => { span: SpanContext }
+    after: (ctx: { functionName: string; functionType: string }, state: { span: SpanContext }) => void
+    onError: (ctx: { functionName: string; functionType: string }, error: Error, state: { span: SpanContext }) => void
+  } {
+    return {
+      name: "reactivebase-otel",
+      before: (ctx) => {
+        const span = this.startSpan(`${ctx.functionType}.${ctx.functionName}`, {
+          "reactivebase.type": ctx.functionType,
+          "reactivebase.function": ctx.functionName,
+        })
+        this.incrementCounter(`reactivebase_${ctx.functionType}s_total`, {
+          [ctx.functionType]: ctx.functionName,
+        })
+        return { span }
+      },
+      after: (_ctx, state) => {
+        this.endSpan(state.span.spanId, "ok")
+      },
+      onError: (ctx, error, state) => {
+        this.endSpan(state.span.spanId, "error", { "error.message": error.message })
+        this.incrementCounter("reactivebase_errors_total", {
+          type: ctx.functionType,
+          [ctx.functionType]: ctx.functionName,
+        })
+      },
+    }
+  }
+
   // ─── CDC & IVM Metrics ─────────────────────────────────────────────────────
 
   /**
