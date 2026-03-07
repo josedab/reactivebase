@@ -257,27 +257,38 @@ export class MetricsCollector {
 
 /**
  * Efficient latency tracker using a circular buffer.
+ * Overwrites oldest entries when full, avoiding O(n) array shifts.
  */
 class LatencyTracker {
-  private buffer: number[] = []
-  private maxSize = 10_000
+  private buffer: number[]
+  private maxSize: number
+  private writeIndex = 0
+  private count = 0
+
+  constructor(maxSize = 10_000) {
+    this.maxSize = maxSize
+    this.buffer = new Array<number>(maxSize)
+  }
 
   record(latencyMs: number): void {
-    if (this.buffer.length >= this.maxSize) {
-      this.buffer.shift()
-    }
-    this.buffer.push(latencyMs)
+    this.buffer[this.writeIndex] = latencyMs
+    this.writeIndex = (this.writeIndex + 1) % this.maxSize
+    if (this.count < this.maxSize) this.count++
   }
 
   average(): number {
-    if (this.buffer.length === 0) return 0
-    return this.buffer.reduce((a, b) => a + b, 0) / this.buffer.length
+    if (this.count === 0) return 0
+    let sum = 0
+    for (let i = 0; i < this.count; i++) {
+      sum += this.buffer[i]
+    }
+    return sum / this.count
   }
 
   percentile(p: number): number {
-    if (this.buffer.length === 0) return 0
-    const sorted = [...this.buffer].sort((a, b) => a - b)
-    const idx = Math.ceil((p / 100) * sorted.length) - 1
-    return sorted[Math.max(0, idx)]
+    if (this.count === 0) return 0
+    const values = this.buffer.slice(0, this.count).sort((a, b) => a - b)
+    const idx = Math.ceil((p / 100) * values.length) - 1
+    return values[Math.max(0, idx)]
   }
 }

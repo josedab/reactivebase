@@ -117,4 +117,19 @@ describe("MetricsCollector", () => {
     expect(snap.mutations.totalExecuted).toBe(0)
     expect(snap.subscriptions.currentActive).toBe(0)
   })
+
+  it("circular buffer wraps correctly under heavy load", () => {
+    const metrics = new MetricsCollector()
+
+    // Record more than the default 10K buffer size
+    for (let i = 0; i < 15_000; i++) {
+      metrics.recordQuery("query:heavy", i % 100)
+    }
+
+    const snap = metrics.getSnapshot()
+    expect(snap.queries.totalExecuted).toBe(15_000)
+    // Average should be computed from the last 10K entries (indices 5000-14999)
+    expect(snap.queries.avgLatencyMs).toBeGreaterThan(0)
+    expect(snap.queries.p99LatencyMs).toBeGreaterThan(0)
+  })
 })
