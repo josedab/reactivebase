@@ -24,6 +24,14 @@
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
+  "peerDependencies": {
+    "pg": "^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "pg": {
+      "optional": true
+    }
+  },
   "license": "MIT",
   "publishConfig": {
     "access": "public"

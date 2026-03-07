@@ -286,10 +286,14 @@ describe.skip("migrate command", () => {
 describe("seed command", () => {
   let tmpDir: string
   let consoleSpy: ReturnType<typeof vi.spyOn>
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>
+  let processExitSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
     tmpDir = createTmpDir()
     consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {})
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    processExitSpy = vi.spyOn(process, "exit").mockImplementation((() => {}) as unknown as (code?: number) => never)
   })
 
   afterEach(() => {
@@ -318,7 +322,7 @@ describe("seed command", () => {
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("No .seed.ts or .seed.js files"))
     })
 
-    it("lists seed files when found", async () => {
+    it("requires DATABASE_URL when seed files exist", async () => {
       const { seedRun } = await import("../commands/seed.js")
       const seedsDir = join(tmpDir, "seeds")
       mkdirSync(seedsDir)
@@ -326,8 +330,20 @@ describe("seed command", () => {
       writeFileSync(join(seedsDir, "posts.seed.ts"), "export default {}")
 
       await seedRun({ projectDir: tmpDir })
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("users.seed.ts"))
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("posts.seed.ts"))
+      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("DATABASE_URL"))
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+    })
+
+    it("lists seed files when connectionString is provided", async () => {
+      const { seedRun } = await import("../commands/seed.js")
+      const seedsDir = join(tmpDir, "seeds")
+      mkdirSync(seedsDir)
+      writeFileSync(join(seedsDir, "users.seed.ts"), "export default {}")
+      writeFileSync(join(seedsDir, "posts.seed.ts"), "export default {}")
+
+      await seedRun({ projectDir: tmpDir, connectionString: "postgres://localhost/test" })
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("users"))
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("posts"))
     })
 
     it("respects environment option", async () => {
@@ -336,15 +352,23 @@ describe("seed command", () => {
       mkdirSync(seedsDir)
       writeFileSync(join(seedsDir, "users.seed.ts"), "export default {}")
 
-      await seedRun({ projectDir: tmpDir, environment: "test" })
+      await seedRun({ projectDir: tmpDir, environment: "test", connectionString: "postgres://localhost/test" })
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("environment: test"))
     })
   })
 
   describe("seedReset", () => {
-    it("logs reset message", async () => {
+    it("requires DATABASE_URL", async () => {
       const { seedReset } = await import("../commands/seed.js")
       await seedReset({ projectDir: tmpDir })
+      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("DATABASE_URL"))
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+    })
+
+    it("logs reset message when seeds dir exists", async () => {
+      const { seedReset } = await import("../commands/seed.js")
+      mkdirSync(join(tmpDir, "seeds"))
+      await seedReset({ projectDir: tmpDir, connectionString: "postgres://localhost/test" })
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Resetting seed data"))
     })
   })

@@ -3,7 +3,7 @@
  * without requiring a database or running server.
  */
 
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { mkdirSync, rmSync } from "node:fs"
 
 // ─── Command module exports ─────────────────────────────────────────────────
@@ -112,9 +112,22 @@ describe("dev command", () => {
     const tmpDir = "/tmp/rb-dev-test-" + Date.now()
     mkdirSync(tmpDir, { recursive: true })
 
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {})
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation((() => {
+      throw new Error("process.exit called")
+    }) as never)
+
     try {
       await devServer({ port: 0, projectDir: tmpDir })
+    } catch {
+      // Expected: process.exit(1) throws due to mock when DATABASE_URL is missing
     } finally {
+      consoleSpy.mockRestore()
+      logSpy.mockRestore()
+      warnSpy.mockRestore()
+      exitSpy.mockRestore()
       rmSync(tmpDir, { recursive: true, force: true })
     }
   })

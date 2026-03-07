@@ -3,26 +3,16 @@
  * with hot reload and type generation.
  */
 
-import { existsSync } from "node:fs"
+import { existsSync, watch } from "node:fs"
 import { join, resolve } from "node:path"
 import { writeGeneratedFiles } from "./generate.js"
 
-/** Options for the `reactivebase dev` command. */
 export interface DevCommandOptions {
-  /** Port for the HTTP/WebSocket dev server */
   port: number
-  /** Path to the project root directory */
   projectDir: string
-  /** Minimum log level for console output (default: "info") */
   logLevel?: "debug" | "info" | "warn" | "error"
 }
 
-/**
- * Start the ReactiveBase development server with hot reload and type generation.
- *
- * @param options - Dev server options including port, project directory, and log level
- * @returns Resolves when the server is ready for connections
- */
 export async function devServer(options: DevCommandOptions): Promise<void> {
   const projectDir = resolve(options.projectDir)
 
@@ -38,16 +28,98 @@ export async function devServer(options: DevCommandOptions): Promise<void> {
     console.warn("Type generation warning:", error instanceof Error ? error.message : error)
   }
 
-  // Check for config file
-  const configPath = join(projectDir, "reactivebase.config.ts")
-  if (!existsSync(configPath)) {
-    console.log("\nNo reactivebase.config.ts found. Using defaults.")
-    console.log("Create a config file to customize your server settings.\n")
+  // Load database config from environment
+  const databaseUrl = process.env.DATABASE_URL
+  if (!databaseUrl) {
+    console.error("\n✗ DATABASE_URL environment variable is required.")
+    console.error("  Set it in your .env file or environment:\n")
+    console.error("  export DATABASE_URL=postgresql://user:pass@localhost:5432/mydb\n")
+    process.exit(1)
   }
 
-  console.log(`\n✓ ReactiveBase dev server ready`)
-  console.log(`  API:       http://localhost:${options.port}`)
-  console.log(`  WebSocket: ws://localhost:${options.port}/ws`)
-  console.log(`  Health:    http://localhost:${options.port}/health`)
-  console.log(`\nWaiting for connections...\n`)
+  // Dynamically import and start the server
+  try {
+    const { createReactiveBaseServer } = (await import("@reactivebase/server" as string)) as {
+      createReactiveBaseServer: (config: {
+        database: { connectionString: string; poolSize?: number }
+        server?: { port: number; hostname?: string }
+        dev?: { logLevel?: string }
+      }) => Promise<{ close: () => Promise<void> }>
+    }
+
+    const server = await createReactiveBaseServer({
+      database: {
+        connectionString: databaseUrl,
+        poolSize: 5,
+      },
+      server: {
+        port: options.port,
+        hostname: "localhost",
+      },
+      dev: {
+        logLevel: options.logLevel ?? "info",
+      },
+    })
+
+    console.log(`\n✓ ReactiveBase dev server ready`)
+    console.log(`  API:       http://localhost:${options.port}`)
+    console.log(`  WebSocket: ws://localhost:${options.port}/ws`)
+    console.log(`  Dashboard: http://localhost:${options.port}/dashboard`)
+    console.log(`  Health:    http://localhost:${options.port}/health`)
+    console.log(`\nWaiting for connections...\n`)
+
+    // Watch for schema changes and regenerate types
+    const convexDir = join(projectDir, "convex")
+    if (existsSync(convexDir)) {
+      const watcher = watch(convexDir, { recursive: true }, (_event, filename) => {
+        if (filename && (filename.endsWith(".ts") || filename.endsWith(".js"))) {
+          console.log(`\n♻ File changed: ${filename}`)
+          try {
+            writeGeneratedFiles(projectDir)
+            console.log("  Types regenerated ✓")
+          } catch (error: unknown) {
+            console.warn("  Type generation warning:", error instanceof Error ? error.message : error)
+          }
+        }
+      })
+
+      // Graceful shutdown
+      const shutdown = async () => {
+        console.log("\nShutting down...")
+        watcher.close()
+        await server.close().catch(() => {})
+        process.exit(0)
+      }
+
+      process.on("SIGINT", shutdown)
+      process.on("SIGTERM", shutdown)
+    }
+
+    // Keep the process alive
+    await new Promise(() => {})
+  } catch (error: unknown) {
+    // If server can't be started (e.g. no Postgres), fall back to type-gen only mode
+    console.warn("\n⚠ Could not start server:", error instanceof Error ? error.message : error)
+    console.log("  Running in type-generation only mode.")
+    console.log(`\n  API:       http://localhost:${options.port} (not available)`)
+    console.log(`  WebSocket: ws://localhost:${options.port}/ws (not available)`)
+    console.log(`\nWaiting for file changes...\n`)
+
+    // Still watch for schema changes
+    const convexDir = join(projectDir, "convex")
+    if (existsSync(convexDir)) {
+      watch(convexDir, { recursive: true }, (_event, filename) => {
+        if (filename && (filename.endsWith(".ts") || filename.endsWith(".js"))) {
+          try {
+            writeGeneratedFiles(projectDir)
+            console.log(`♻ Regenerated types for ${filename}`)
+          } catch {
+            // Silently continue
+          }
+        }
+      })
+    }
+
+    await new Promise(() => {})
+  }
 }

@@ -209,13 +209,17 @@ async function main(): Promise<void> {
         projectDir: process.cwd(),
         profile: args.includes("--profile") ? getFlag("--profile", "") : undefined,
         environment: getFlag("--env", "dev"),
+        connectionString: process.env.DATABASE_URL,
       })
       break
     }
 
     case "seed:reset": {
       const { seedReset } = await import("./commands/seed.js")
-      await seedReset({ projectDir: process.cwd() })
+      await seedReset({
+        projectDir: process.cwd(),
+        connectionString: process.env.DATABASE_URL,
+      })
       break
     }
 
