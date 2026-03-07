@@ -173,6 +173,38 @@ export type {
   PresenceAvatarsState,
 } from "./components.js"
 
+// Collaboration & CRDT stores
+export {
+  collabTextStore,
+  collabListStore,
+  collabMapStore,
+  collabCounterStore,
+  cursorsStore,
+  typingUsersStore,
+} from "./collaboration.js"
+export type {
+  CollabTextState,
+  CollabTextActions,
+  CollabTextStore,
+  CollabListState,
+  CollabListActions,
+  CollabListStore,
+  CollabMapState,
+  CollabMapActions,
+  CollabMapStore,
+  CollabCounterState,
+  CollabCounterActions,
+  CollabCounterStore,
+  CursorData,
+  CursorsState,
+  CursorsActions,
+  CursorsStore,
+  TypingUser,
+  TypingUsersState,
+  TypingUsersActions,
+  TypingUsersStore,
+} from "./collaboration.js"
+
 // ─── Local-First Stores ──────────────────────────────────────────────────────
 
 export interface LocalQueryFilter {

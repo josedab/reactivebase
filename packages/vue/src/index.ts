@@ -181,6 +181,26 @@ export type {
   UsePresenceAvatarsReturn,
 } from "./components.js"
 
+// Collaboration composables (CRDT + awareness)
+export {
+  useCollabText,
+  useCollabList,
+  useCollabMap,
+  useCollabCounter,
+  useCursors,
+  useTypingUsers,
+} from "./collaboration.js"
+export type {
+  CursorData,
+  TypingUser,
+  UseCollabTextReturn,
+  UseCollabListReturn,
+  UseCollabMapReturn,
+  UseCollabCounterReturn,
+  UseCursorsReturn,
+  UseTypingUsersReturn,
+} from "./collaboration.js"
+
 // ─── Local-First Composables ─────────────────────────────────────────────────
 
 export interface LocalQueryFilter {
