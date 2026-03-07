@@ -57,6 +57,8 @@ export type ErrorHook = (ctx: MiddlewareContext, error: Error) => Promise<void> 
 
 export interface Middleware {
   name: string
+  /** Execution priority — lower numbers run first. Default: 100. */
+  priority?: number
   before?: BeforeHook
   after?: AfterHook
   onError?: ErrorHook
@@ -66,12 +68,41 @@ export class MiddlewareManager {
   private middlewares: Middleware[] = []
 
   /**
-   * Register a middleware.
+   * Register a middleware. Middlewares are sorted by priority (ascending)
+   * at execution time. Default priority is 100.
    *
    * @param middleware - The middleware to register
    */
   use(middleware: Middleware): void {
     this.middlewares.push(middleware)
+    this.middlewares.sort((a, b) => (a.priority ?? 100) - (b.priority ?? 100))
+  }
+
+  /**
+   * Remove a middleware by name.
+   *
+   * @param name - The name of the middleware to remove
+   * @returns `true` if the middleware was found and removed
+   */
+  remove(name: string): boolean {
+    const index = this.middlewares.findIndex((mw) => mw.name === name)
+    if (index === -1) return false
+    this.middlewares.splice(index, 1)
+    return true
+  }
+
+  /**
+   * Check if a middleware with the given name is registered.
+   */
+  has(name: string): boolean {
+    return this.middlewares.some((mw) => mw.name === name)
+  }
+
+  /**
+   * Get a registered middleware by name.
+   */
+  get(name: string): Middleware | undefined {
+    return this.middlewares.find((mw) => mw.name === name)
   }
 
   /**

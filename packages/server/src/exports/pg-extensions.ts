@@ -15,7 +15,7 @@ export type {
 
 // Extension-Aware Schema Types & Query Builder
 export {
-  v,
+  v as extV,
   generateExtensionColumnDDL,
   ExtensionQueryBuilder,
   extQuery,

@@ -17,6 +17,6 @@ export type {
   BatchTestResult,
   SingleTestResult,
   PolicyCoverage,
-  DryRunResult,
+  DryRunResult as PermissionsDryRunResult,
   DryRunTableResult,
 } from "../permissions-playground/index.js"

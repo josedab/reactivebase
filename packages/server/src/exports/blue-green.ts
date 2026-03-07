@@ -16,7 +16,7 @@ export type {
 // Schema Versioning & Traffic Splitting
 export { SchemaVersionRegistry, SchemaVersionError } from "../blue-green/index.js"
 export type {
-  SchemaVersion,
+  SchemaVersion as BlueGreenSchemaVersion,
   SchemaVersionStatus,
   SchemaVersionSchema,
   TrafficSplitConfig,
@@ -24,7 +24,7 @@ export type {
   VersionNegotiationResult,
   CanaryConfig,
   CanaryState,
-  MigrationPlan,
-  MigrationStep,
-  RegistryStats,
+  MigrationPlan as BlueGreenMigrationPlan,
+  MigrationStep as BlueGreenMigrationStep,
+  RegistryStats as BlueGreenRegistryStats,
 } from "../blue-green/index.js"

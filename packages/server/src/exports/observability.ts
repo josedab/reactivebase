@@ -9,8 +9,8 @@ export type {
   SloDefinition,
   SloStatus,
   PrometheusMetric,
-  GrafanaDashboard,
-  GrafanaPanel,
+  GrafanaDashboard as OtelGrafanaDashboard,
+  GrafanaPanel as OtelGrafanaPanel,
   SubscriptionInstrumentation,
   MetricsResponse,
 } from "../observability/index.js"

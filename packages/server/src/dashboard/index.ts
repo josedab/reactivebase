@@ -45,6 +45,10 @@ export type {
 // Migration Wizard UI
 export { generateMigrationWizardHTML } from "./migration-wizard.js"
 
+// Dashboard API Handler
+export { createDashboardApiHandler } from "./dashboard-api.js"
+export type { DashboardApiOptions, DashboardApiResponse, QueryExecutor } from "./dashboard-api.js"
+
 // Live Dashboard
 export {
   LiveDashboard,
