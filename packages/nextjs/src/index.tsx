@@ -820,3 +820,292 @@ export function StreamingPartialQuery<T = unknown>({ query, args, fallback, chil
 
   return <>{children(data, { isLive, isPartial: !isLive && data !== undefined })}</>
 }
+
+// ─── Pages Router Helpers ─────────────────────────────────────────────────────
+
+/**
+ * Configuration for Pages Router helpers.
+ * Can be set once via configurePagesRouter() or passed to each helper.
+ */
+let _pagesConfig: { serverUrl: string; token?: string } | null = null
+
+/**
+ * Configure the default server URL and token for Pages Router helpers.
+ * Call this once in your _app.tsx or a shared config module.
+ *
+ * @example
+ * ```typescript
+ * // lib/reactivebase.ts
+ * import { configurePagesRouter } from "@reactivebase/nextjs"
+ * configurePagesRouter({
+ *   serverUrl: process.env.REACTIVEBASE_URL || "http://localhost:4000",
+ *   token: process.env.REACTIVEBASE_TOKEN,
+ * })
+ * ```
+ */
+export function configurePagesRouter(config: { serverUrl: string; token?: string }): void {
+  _pagesConfig = config
+}
+
+function getPagesConfig(overrides?: { serverUrl?: string; token?: string }): { serverUrl: string; token?: string } {
+  const serverUrl = overrides?.serverUrl ?? _pagesConfig?.serverUrl ?? process.env.REACTIVEBASE_URL
+  if (!serverUrl) {
+    throw new Error(
+      "ReactiveBase: No server URL configured. Call configurePagesRouter() or set REACTIVEBASE_URL environment variable.",
+    )
+  }
+  return {
+    serverUrl,
+    token: overrides?.token ?? _pagesConfig?.token ?? process.env.REACTIVEBASE_TOKEN,
+  }
+}
+
+/**
+ * Helper for getServerSideProps that preloads one or more queries.
+ * Returns props containing serializable PreloadedQueryResult objects.
+ *
+ * @example
+ * ```typescript
+ * // pages/tasks.tsx
+ * import { withServerSideQueries, usePreloadedQuery } from "@reactivebase/nextjs"
+ *
+ * export const getServerSideProps = withServerSideQueries({
+ *   tasks: { query: "listTasks", args: { status: "active" } },
+ *   user: { query: "getCurrentUser" },
+ * })
+ *
+ * export default function TasksPage({ tasks, user }) {
+ *   const taskList = usePreloadedQuery(tasks)
+ *   const currentUser = usePreloadedQuery(user)
+ *   return <div>...</div>
+ * }
+ * ```
+ */
+export function withServerSideQueries<TQueries extends Record<string, { query: string; args?: unknown }>>(
+  queries: TQueries,
+  options?: { serverUrl?: string; token?: string },
+): () => Promise<{
+  props: { [K in keyof TQueries]: PreloadedQueryResult }
+}> {
+  return async () => {
+    const config = getPagesConfig(options)
+    const props: Record<string, PreloadedQueryResult> = {}
+
+    const entries = Object.entries(queries)
+    const results = await Promise.allSettled(
+      entries.map(([_, q]) => preloadQuery(config.serverUrl, q.query, q.args ?? {}, { token: config.token })),
+    )
+
+    for (let i = 0; i < entries.length; i++) {
+      const [key] = entries[i]
+      const result = results[i]
+      if (result.status === "fulfilled") {
+        props[key] = result.value
+      } else {
+        throw new Error(`Failed to preload query "${entries[i][1].query}": ${result.reason}`)
+      }
+    }
+
+    return { props: props as { [K in keyof TQueries]: PreloadedQueryResult } }
+  }
+}
+
+/**
+ * Helper for getStaticProps that preloads queries at build time.
+ * Supports revalidation for ISR (Incremental Static Regeneration).
+ *
+ * @example
+ * ```typescript
+ * // pages/posts/[slug].tsx
+ * import { withStaticQueries } from "@reactivebase/nextjs"
+ *
+ * export const getStaticProps = withStaticQueries(
+ *   { post: { query: "getPost", args: { slug: "hello-world" } } },
+ *   { revalidate: 60 }
+ * )
+ * ```
+ */
+export function withStaticQueries<TQueries extends Record<string, { query: string; args?: unknown }>>(
+  queries: TQueries,
+  options?: { serverUrl?: string; token?: string; revalidate?: number | false },
+): () => Promise<{
+  props: { [K in keyof TQueries]: PreloadedQueryResult }
+  revalidate?: number | false
+}> {
+  return async () => {
+    const config = getPagesConfig(options)
+    const props: Record<string, PreloadedQueryResult> = {}
+
+    const entries = Object.entries(queries)
+    const results = await Promise.allSettled(
+      entries.map(([_, q]) => preloadQuery(config.serverUrl, q.query, q.args ?? {}, { token: config.token })),
+    )
+
+    for (let i = 0; i < entries.length; i++) {
+      const [key] = entries[i]
+      const result = results[i]
+      if (result.status === "fulfilled") {
+        props[key] = result.value
+      } else {
+        throw new Error(`Failed to preload query "${entries[i][1].query}": ${result.reason}`)
+      }
+    }
+
+    return {
+      props: props as { [K in keyof TQueries]: PreloadedQueryResult },
+      ...(options?.revalidate !== undefined ? { revalidate: options.revalidate } : {}),
+    }
+  }
+}
+
+// ─── Error Boundary ──────────────────────────────────────────────────────────
+
+export interface QueryErrorBoundaryProps {
+  /** Render function for the error state. Receives the error and a retry callback. */
+  fallback: (error: Error, retry: () => void) => ReactNode
+  /** Child components that may throw during rendering (e.g., Suspense queries). */
+  children: ReactNode
+  /** Called when an error is caught. Use for logging/telemetry. */
+  onError?: (error: Error) => void
+}
+
+interface ErrorBoundaryState {
+  error: Error | null
+  retryCount: number
+}
+
+/**
+ * Error boundary specifically designed for ReactiveBase query failures.
+ * Catches errors thrown by `usePreloadedQuery`, `useServerQuery`, and
+ * Suspense resources, then renders a fallback with a retry mechanism.
+ *
+ * @example
+ * ```tsx
+ * <QueryErrorBoundary fallback={(err, retry) => (
+ *   <div>
+ *     <p>Failed to load: {err.message}</p>
+ *     <button onClick={retry}>Retry</button>
+ *   </div>
+ * )}>
+ *   <Suspense fallback={<Loading />}>
+ *     <TaskList />
+ *   </Suspense>
+ * </QueryErrorBoundary>
+ * ```
+ */
+import { Component } from "react"
+
+export class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: QueryErrorBoundaryProps) {
+    super(props)
+    this.state = { error: null, retryCount: 0 }
+  }
+
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    return { error }
+  }
+
+  componentDidCatch(error: Error): void {
+    this.props.onError?.(error)
+  }
+
+  private retry = () => {
+    this.setState((prev) => ({ error: null, retryCount: prev.retryCount + 1 }))
+  }
+
+  render() {
+    if (this.state.error) {
+      return this.props.fallback(this.state.error, this.retry)
+    }
+    return this.props.children
+  }
+}
+
+// ─── Request Deduplication ───────────────────────────────────────────────────
+
+const inflightRequests = new Map<string, Promise<unknown>>()
+
+function deduplicationKey(serverUrl: string, queryName: string, args: unknown): string {
+  return `${serverUrl}::${queryName}::${JSON.stringify(args)}`
+}
+
+/**
+ * Deduplicated version of `preloadQuery` that coalesces identical concurrent
+ * requests into a single network call. Subsequent calls with the same query
+ * name and args during the same render pass share the same promise.
+ *
+ * The cache entry is removed once the request completes, so subsequent
+ * non-concurrent calls will make fresh requests.
+ *
+ * @param serverUrl - The ReactiveBase server URL
+ * @param queryName - Name of the query to preload
+ * @param args - Arguments to pass to the query
+ * @param options - Optional configuration including auth token
+ * @returns A preloaded query result, shared with concurrent identical calls
+ */
+export async function deduplicatedPreloadQuery<T = unknown>(
+  serverUrl: string,
+  queryName: string,
+  args: unknown = {},
+  options: { token?: string } = {},
+): Promise<PreloadedQueryResult<T>> {
+  const key = deduplicationKey(serverUrl, queryName, args)
+
+  const existing = inflightRequests.get(key)
+  if (existing) {
+    return existing as Promise<PreloadedQueryResult<T>>
+  }
+
+  const promise = preloadQuery<T>(serverUrl, queryName, args, options).finally(() => {
+    inflightRequests.delete(key)
+  })
+
+  inflightRequests.set(key, promise)
+  return promise
+}
+
+// ─── Cache Revalidation Helper ───────────────────────────────────────────────
+
+/**
+ * Revalidate cached queries by tag. Wraps Next.js `revalidateTag()` for
+ * ReactiveBase-specific cache management.
+ *
+ * Call from a Server Action or Route Handler to bust the cache for
+ * queries loaded with matching `tags`.
+ *
+ * @example
+ * ```typescript
+ * // app/actions.ts
+ * "use server"
+ * import { revalidateReactiveBase } from "@reactivebase/nextjs"
+ *
+ * export async function createTask(data: FormData) {
+ *   // ... create task ...
+ *   revalidateReactiveBase("tasks")
+ * }
+ * ```
+ *
+ * @param tag - The cache tag to revalidate (must match a tag passed to `loadQuery`)
+ */
+export function revalidateReactiveBase(tag: string): void {
+  // Dynamic import to avoid bundling server-only code in client builds
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { revalidateTag } = require("next/cache")
+    revalidateTag(tag)
+  } catch {
+    // Silently ignore if not running in a Next.js server context.
+    // This allows the function to be imported in shared modules.
+  }
+}
+
+/**
+ * Revalidate multiple cache tags at once.
+ *
+ * @param tags - Array of cache tags to revalidate
+ */
+export function revalidateReactiveBaseTags(tags: string[]): void {
+  for (const tag of tags) {
+    revalidateReactiveBase(tag)
+  }
+}
