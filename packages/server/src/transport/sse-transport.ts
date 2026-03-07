@@ -205,8 +205,8 @@ export class SseTransportServer {
 
     try {
       connection.writer.end()
-    } catch {
-      // Writer may already be closed
+    } catch (err: unknown) {
+      /* intentional: cleanup errors are non-critical */
     }
 
     this.connections.delete(connectionId)
@@ -301,7 +301,8 @@ export class SseTransportServer {
           this.totalEventsDelivered++
           delivered++
         }
-      } catch {
+      } catch (err: unknown) {
+        console.debug("[SSE] pushUpdate write failed:", err instanceof Error ? err.message : err)
         this.removeConnection(connectionId)
       }
     }
@@ -350,8 +351,8 @@ export class SseTransportServer {
     for (const connection of Array.from(this.connections.values())) {
       try {
         connection.writer.end()
-      } catch {
-        // Ignore close errors
+      } catch (err: unknown) {
+        /* intentional: cleanup errors are non-critical */
       }
     }
     this.connections.clear()
@@ -370,7 +371,8 @@ export class SseTransportServer {
       sseString += "\n"
 
       return connection.writer.write(sseString)
-    } catch {
+    } catch (err: unknown) {
+      console.debug("[SSE] sendEvent failed:", err instanceof Error ? err.message : err)
       this.removeConnection(connection.id)
       return false
     }
@@ -386,7 +388,8 @@ export class SseTransportServer {
     for (const entry of missed) {
       try {
         connection.writer.write(`id: ${entry.id}\nevent: ${entry.event}\ndata: ${entry.data}\n\n`)
-      } catch {
+      } catch (err: unknown) {
+        console.debug("[SSE] replayEvents write failed:", err instanceof Error ? err.message : err)
         this.removeConnection(connection.id)
         return
       }
@@ -400,7 +403,8 @@ export class SseTransportServer {
       for (const connection of Array.from(this.connections.values())) {
         try {
           connection.writer.write(comment)
-        } catch {
+        } catch (err: unknown) {
+          console.debug("[SSE] heartbeat write failed:", err instanceof Error ? err.message : err)
           this.removeConnection(connection.id)
         }
       }
@@ -587,7 +591,8 @@ export class EdgeSseStream {
 
     try {
       this.controller.enqueue(this.encoder.encode(message))
-    } catch {
+    } catch (err: unknown) {
+      console.debug("[SSE] edge send enqueue failed:", err instanceof Error ? err.message : err)
       this.close()
     }
   }
@@ -599,7 +604,8 @@ export class EdgeSseStream {
     if (this.closed || !this.controller) return
     try {
       this.controller.enqueue(this.encoder.encode(`: ${text}\n\n`))
-    } catch {
+    } catch (err: unknown) {
+      console.debug("[SSE] edge sendComment enqueue failed:", err instanceof Error ? err.message : err)
       this.close()
     }
   }
@@ -613,8 +619,8 @@ export class EdgeSseStream {
     this.stopHeartbeat()
     try {
       this.controller?.close()
-    } catch {
-      // Already closed
+    } catch (err: unknown) {
+      /* intentional: cleanup errors are non-critical */
     }
   }
 

@@ -255,8 +255,8 @@ export class WasmFunctionRuntime {
       try {
         const wasmModule = await WebAssembly.compile(source.buffer)
         module.compiledModule = wasmModule
-      } catch {
-        // If compilation fails (e.g., source is not valid WASM), fall back to simulation mode
+      } catch (err: unknown) {
+        console.debug("[WASM] compilation fallback to simulation:", err instanceof Error ? err.message : err)
         module.compiledModule = null
       }
 
@@ -341,8 +341,8 @@ export class WasmFunctionRuntime {
               hostCallCount: hostCalls,
             }
           }
-        } catch {
-          // Fall through to simulation
+        } catch (err: unknown) {
+          console.debug("[WASM] execution fallback to simulation:", err instanceof Error ? err.message : err)
         }
       }
 
@@ -444,7 +444,8 @@ export class WasmFunctionRuntime {
         const source = new Uint8Array(Buffer.from(mod.source, "base64"))
         await this.compile(mod.name, source)
         loaded.push(mod.name)
-      } catch {
+      } catch (err: unknown) {
+        console.debug("[WASM] bundle module compile failed:", err instanceof Error ? err.message : err)
         failed.push(mod.name)
       }
     }
@@ -525,8 +526,8 @@ function detectRuntime(): RuntimeTarget {
     if (typeof process !== "undefined" && process.versions?.node) {
       return "node"
     }
-  } catch {
-    // Detection failed
+  } catch (err: unknown) {
+    /* intentional: detection failure defaults to node */
   }
   return "node"
 }
@@ -546,8 +547,8 @@ function parseWasmMetadata(source: Uint8Array): ModuleMetadata {
       memoryPages,
       sourceLanguage: detectSourceLanguage(source),
     }
-  } catch {
-    // Not valid WASM binary, fall back to defaults
+  } catch (err: unknown) {
+    console.debug("[WASM] metadata parse fallback to defaults:", err instanceof Error ? err.message : err)
     return {
       exports: ["main"],
       imports: [],

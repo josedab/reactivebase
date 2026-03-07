@@ -103,7 +103,8 @@ export interface ReplicationStats {
 export type ChangeHandler = (changes: WalChange[]) => Promise<void> | void
 
 /** A function that executes SQL and returns rows. Enables live replication when provided. */
-export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+import type { QueryExecutor } from "../types/index.js"
+export type { QueryExecutor } from "../types/index.js"
 
 // ─── LSN Utilities ───────────────────────────────────────────────────────────
 
@@ -432,7 +433,8 @@ export class WalDecoder {
       case 114: // json
         try {
           return JSON.parse(value)
-        } catch {
+        } catch (err: unknown) {
+          console.debug("[Replication] JSON parse fallback for column value:", err instanceof Error ? err.message : err)
           return value
         }
       default:
@@ -836,7 +838,8 @@ export class LogicalReplicator {
               : Buffer.from(String(raw ?? ""), "utf8")
         this.processWalData(lsn, buf)
       }
-    } catch {
+    } catch (err: unknown) {
+      console.debug("[Replication] WAL polling failed:", err instanceof Error ? err.message : err)
       this.stats.errorsCount++
     }
   }
@@ -852,7 +855,8 @@ export class LogicalReplicator {
       if (lastChange) {
         this.lastConfirmedLsn = lastChange.lsn
       }
-    } catch {
+    } catch (err: unknown) {
+      console.debug("[Replication] batch handler failed:", err instanceof Error ? err.message : err)
       this.stats.errorsCount++
       this.setStatus("error")
     }
