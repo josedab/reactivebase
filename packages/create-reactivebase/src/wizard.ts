@@ -5,6 +5,8 @@
  */
 
 import { createInterface } from "node:readline"
+import { todoSchemaTs, todoFunctionsTs, todoServerTs, todoReadmeMd } from "./templates/todo.js"
+import { chatSchemaTs, chatFunctionsTs, chatServerTs, chatReadmeMd } from "./templates/chat.js"
 
 export interface WizardOptions {
   projectName: string
@@ -171,4 +173,33 @@ export function generateEnvFile(options: WizardOptions): string {
   }
 
   return lines.join("\n") + "\n"
+}
+
+/**
+ * Generate template files (schema, functions, server, readme) for the selected template.
+ * Returns a map of relative file paths to file content.
+ * Returns an empty map for "blank" template.
+ */
+export function scaffoldTemplate(options: WizardOptions): Record<string, string> {
+  switch (options.template) {
+    case "todo":
+      return {
+        "convex/schema.ts": todoSchemaTs,
+        "convex/functions.ts": todoFunctionsTs,
+        "server.ts": todoServerTs,
+        "README.md": todoReadmeMd,
+      }
+    case "chat":
+      return {
+        "convex/schema.ts": chatSchemaTs,
+        "convex/functions.ts": chatFunctionsTs,
+        "server.ts": chatServerTs,
+        "README.md": chatReadmeMd,
+      }
+    case "ai-search":
+      return {}
+    case "blank":
+    default:
+      return {}
+  }
 }

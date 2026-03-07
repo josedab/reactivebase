@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { runWizard, generateDependencies, generateConfigFile, generateEnvFile } from "../wizard.js"
+import { runWizard, generateDependencies, generateConfigFile, generateEnvFile, scaffoldTemplate } from "../wizard.js"
 import type { WizardOptions } from "../wizard.js"
 
 describe("wizard exports", () => {
@@ -113,5 +113,62 @@ describe("generateEnvFile", () => {
     }
     const env = generateEnvFile(options)
     expect(env).toContain("JWT_SECRET")
+  })
+})
+
+describe("scaffoldTemplate", () => {
+  it("returns empty map for blank template", () => {
+    const files = scaffoldTemplate({
+      projectName: "test",
+      framework: "react",
+      auth: "none",
+      database: "pglite",
+      template: "blank",
+    })
+    expect(Object.keys(files)).toHaveLength(0)
+  })
+
+  it("returns schema, functions, server, readme for todo template", () => {
+    const files = scaffoldTemplate({
+      projectName: "test",
+      framework: "react",
+      auth: "none",
+      database: "pglite",
+      template: "todo",
+    })
+    expect(files["convex/schema.ts"]).toContain("defineSchema")
+    expect(files["convex/functions.ts"]).toContain("listTasks")
+    expect(files["server.ts"]).toContain("createReactiveBaseServer")
+    expect(files["README.md"]).toContain("Todo")
+  })
+
+  it("returns schema, functions, server, readme for chat template", () => {
+    const files = scaffoldTemplate({
+      projectName: "test",
+      framework: "react",
+      auth: "jwt",
+      database: "pglite",
+      template: "chat",
+    })
+    expect(files["convex/schema.ts"]).toContain("rooms")
+    expect(files["convex/schema.ts"]).toContain("messages")
+    expect(files["convex/functions.ts"]).toContain("sendMessage")
+    expect(files["server.ts"]).toContain("createReactiveBaseServer")
+    expect(files["README.md"]).toContain("Chat")
+  })
+
+  it("returns empty map for ai-search template (not yet implemented)", () => {
+    const files = scaffoldTemplate({
+      projectName: "test",
+      framework: "react",
+      auth: "none",
+      database: "pglite",
+      template: "ai-search",
+    })
+    expect(Object.keys(files)).toHaveLength(0)
+  })
+
+  it("exports scaffoldTemplate function", () => {
+    expect(typeof scaffoldTemplate).toBe("function")
   })
 })
