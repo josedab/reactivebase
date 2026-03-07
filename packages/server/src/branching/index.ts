@@ -22,6 +22,7 @@ export type {
   BranchConflict,
   SeedDataConfig,
   GitHubPRConfig,
+  QueryExecutor,
 } from "./branching.js"
 
 export { NeonBranchingAdapter, NeonBranchingError } from "./neon-branching.js"

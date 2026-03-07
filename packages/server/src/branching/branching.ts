@@ -16,6 +16,8 @@
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+
 export interface DatabaseBranchingOptions {
   /** Branching strategy (default: "schema") */
   strategy?: BranchStrategy
@@ -29,6 +31,8 @@ export interface DatabaseBranchingOptions {
   neonProjectId?: string
   /** Auto-delete branch after PR merge (default: true) */
   autoDeleteOnMerge?: boolean
+  /** Optional query executor for real database operations */
+  db?: QueryExecutor
 }
 
 export type BranchStrategy = "schema" | "neon" | "database"
@@ -212,9 +216,10 @@ export function buildInsertBranchSQL(branch: BranchRecord): { sql: string; param
 
 // ─── Database Branching Engine ───────────────────────────────────────────────
 
-const DEFAULT_OPTIONS: Required<Omit<DatabaseBranchingOptions, "neonApiKey" | "neonProjectId">> & {
+const DEFAULT_OPTIONS: Required<Omit<DatabaseBranchingOptions, "neonApiKey" | "neonProjectId" | "db">> & {
   neonApiKey: string | null
   neonProjectId: string | null
+  db: QueryExecutor | null
 } = {
   strategy: "schema",
   defaultBranch: "main",
@@ -222,15 +227,18 @@ const DEFAULT_OPTIONS: Required<Omit<DatabaseBranchingOptions, "neonApiKey" | "n
   neonApiKey: null,
   neonProjectId: null,
   autoDeleteOnMerge: true,
+  db: null,
 }
 
 export class DatabaseBranching {
   private options: typeof DEFAULT_OPTIONS
   private branches = new Map<string, BranchRecord>()
   private currentBranch: string
+  private db: QueryExecutor | null
 
   constructor(options: DatabaseBranchingOptions = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options } as typeof DEFAULT_OPTIONS
+    this.db = this.options.db ?? null
     this.currentBranch = this.options.defaultBranch
 
     // Create the default branch record
@@ -256,6 +264,13 @@ export class DatabaseBranching {
 
   get branchCount(): number {
     return this.branches.size
+  }
+
+  /** Initialize the branches metadata table. Requires a db executor. */
+  async initTables(): Promise<void> {
+    if (!this.db) return
+    const sql = generateBranchTableSQL()
+    await this.db(sql, [])
   }
 
   // ─── Branch CRUD ────────────────────────────────────────────────────────
@@ -316,6 +331,36 @@ export class DatabaseBranching {
       branch.connectionString = `postgresql://rb_${name}:****@branch-${branch.neonBranchId}.neon.tech:5432/reactivebase`
     }
 
+    // Execute real schema operations when a DB executor is available
+    if (this.db) {
+      const createSchemaResult = buildCreateBranchSchemaSQL(schemaName)
+      await this.db(createSchemaResult.sql, createSchemaResult.params)
+
+      // Copy table structures from parent
+      const parentRecord = this.branches.get(parentBranch)
+      const parentSchema = parentRecord?.schemaName ?? "public"
+      const { sql: listSql, params: listParams } = buildListTablesInSchemaSQL(parentSchema)
+      const tables = await this.db(listSql, listParams)
+      for (const table of tables.rows) {
+        const tableName = table.table_name as string
+        const copyResult = buildCopyTableSchemaSQL(parentSchema, schemaName, tableName)
+        await this.db(copyResult.sql, copyResult.params)
+        if (options?.seedConfig?.copyTables?.includes(tableName)) {
+          const maxRows = options.seedConfig.maxRowsPerTable ?? 10000
+          const dataResult = buildCopyTableDataSQL(parentSchema, schemaName, tableName, maxRows)
+          await this.db(dataResult.sql, dataResult.params)
+        }
+      }
+
+      // Persist branch record
+      const { sql: insertSql, params: insertParams } = buildInsertBranchSQL(branch)
+      await this.db(insertSql, insertParams).catch((err: unknown) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+        }
+      })
+    }
+
     branch.status = "active"
     branch.seeded = true
 
@@ -360,6 +405,90 @@ export class DatabaseBranching {
     if (!source) throw new BranchingError(`Branch "${sourceBranch}" not found`)
     if (!target) throw new BranchingError(`Branch "${targetBranch}" not found`)
 
+    if (this.db) {
+      const columnQuery = `SELECT table_name, column_name, data_type, is_nullable
+       FROM information_schema.columns
+       WHERE table_schema = $1
+       ORDER BY table_name, ordinal_position`
+
+      const sourceSchema = source.schemaName ?? "public"
+      const targetSchema = target.schemaName ?? "public"
+
+      const sourceTablesResult = await this.db(columnQuery, [sourceSchema])
+      const targetTablesResult = await this.db(columnQuery, [targetSchema])
+
+      const schemaChanges: SchemaChange[] = []
+
+      const sourceMap = new Map<string, Map<string, { dataType: string; nullable: string }>>()
+      for (const row of sourceTablesResult.rows) {
+        const tableName = row.table_name as string
+        if (!sourceMap.has(tableName)) sourceMap.set(tableName, new Map())
+        sourceMap.get(tableName)!.set(row.column_name as string, {
+          dataType: row.data_type as string,
+          nullable: row.is_nullable as string,
+        })
+      }
+
+      const targetMap = new Map<string, Map<string, { dataType: string; nullable: string }>>()
+      for (const row of targetTablesResult.rows) {
+        const tableName = row.table_name as string
+        if (!targetMap.has(tableName)) targetMap.set(tableName, new Map())
+        targetMap.get(tableName)!.set(row.column_name as string, {
+          dataType: row.data_type as string,
+          nullable: row.is_nullable as string,
+        })
+      }
+
+      // Tables added in target
+      for (const [table] of targetMap) {
+        if (!sourceMap.has(table)) {
+          schemaChanges.push({ type: "table_added", table, details: `Table ${table} added in ${targetBranch}` })
+        }
+      }
+
+      // Tables removed in target
+      for (const [table] of sourceMap) {
+        if (!targetMap.has(table)) {
+          schemaChanges.push({ type: "table_removed", table, details: `Table ${table} removed in ${targetBranch}` })
+        }
+      }
+
+      // Column-level changes in common tables
+      for (const [table, sourceCols] of sourceMap) {
+        const targetCols = targetMap.get(table)
+        if (!targetCols) continue
+
+        for (const [col, sourceSpec] of sourceCols) {
+          const targetSpec = targetCols.get(col)
+          if (!targetSpec) {
+            schemaChanges.push({ type: "column_removed", table, column: col, details: `Column ${col} removed` })
+          } else if (sourceSpec.dataType !== targetSpec.dataType) {
+            schemaChanges.push({
+              type: "column_modified",
+              table,
+              column: col,
+              details: `Type changed from ${sourceSpec.dataType} to ${targetSpec.dataType}`,
+            })
+          }
+        }
+
+        for (const [col] of targetCols) {
+          if (!sourceCols.has(col)) {
+            schemaChanges.push({ type: "column_added", table, column: col, details: `Column ${col} added` })
+          }
+        }
+      }
+
+      return {
+        sourceBranch,
+        targetBranch,
+        schemaChanges,
+        dataChanges: [],
+        conflictsDetected: schemaChanges.some((c) => c.type === "column_removed" || c.type === "column_modified"),
+        conflicts: [],
+      }
+    }
+
     return {
       sourceBranch,
       targetBranch,
@@ -402,6 +531,15 @@ export class DatabaseBranching {
 
     const branch = this.branches.get(name)
     if (!branch) throw new BranchingError(`Branch "${name}" not found`)
+
+    if (this.db && branch.schemaName) {
+      const { sql, params } = buildDropBranchSchemaSQL(branch.schemaName)
+      await this.db(sql, params).catch((err: unknown) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+        }
+      })
+    }
 
     if (this.currentBranch === name) {
       this.currentBranch = this.options.defaultBranch

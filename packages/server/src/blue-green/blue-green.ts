@@ -21,6 +21,8 @@ export interface ServerVersion {
   registeredAt: Date
 }
 
+export type QueryExecutor = (sql: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+
 export interface BlueGreenDeploymentConfig {
   canaryPercentage: number
   errorRateThreshold: number
@@ -29,6 +31,7 @@ export interface BlueGreenDeploymentConfig {
   healthCheckIntervalMs: number
   drainTimeoutMs: number
   minHealthyDuration: number
+  db?: QueryExecutor
 }
 
 const DEFAULT_DEPLOYMENT_CONFIG: BlueGreenDeploymentConfig = {
@@ -65,6 +68,34 @@ export interface RollbackReason {
   readonly trigger: "error_rate" | "manual" | "health_check" | "timeout"
   readonly details: string
   readonly timestamp: Date
+}
+
+// ── Schema ───────────────────────────────────────────────────────────────────
+
+export function generateDeploymentTableSQL(): string {
+  return `
+CREATE TABLE IF NOT EXISTS _reactivebase_deployments (
+  id TEXT PRIMARY KEY,
+  blue_version TEXT NOT NULL,
+  green_version TEXT,
+  phase TEXT NOT NULL DEFAULT 'blue_only',
+  canary_percent INTEGER NOT NULL DEFAULT 0,
+  blue_error_count INTEGER NOT NULL DEFAULT 0,
+  green_error_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS _reactivebase_subscription_migrations (
+  id TEXT PRIMARY KEY,
+  deployment_id TEXT NOT NULL,
+  subscription_id TEXT NOT NULL,
+  from_version TEXT NOT NULL,
+  to_version TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  error TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);`.trim()
 }
 
 // ── Version Router ───────────────────────────────────────────────────────────
@@ -177,8 +208,14 @@ export class SubscriptionMigrator {
    */
   async processBatch(
     batchSize: number,
-    migrateFn: (migration: SubscriptionMigration) => Promise<boolean>,
+    migrateFn?: (migration: SubscriptionMigration) => Promise<boolean>,
   ): Promise<{ migrated: number; failed: number }> {
+    const defaultMigrateFn = async (migration: SubscriptionMigration): Promise<boolean> => {
+      // Default: mark as migrated. Real apps override this.
+      migration.status = "completed"
+      return true
+    }
+    const fn = migrateFn ?? defaultMigrateFn
     const pending = this.migrations.filter((m) => m.status === "pending").slice(0, batchSize)
     let migrated = 0
     let failed = 0
@@ -186,7 +223,7 @@ export class SubscriptionMigrator {
     for (const migration of pending) {
       migration.status = "migrating"
       try {
-        const success = await migrateFn(migration)
+        const success = await fn(migration)
         if (success) {
           migration.status = "completed"
           migrated++
@@ -235,9 +272,13 @@ export class DeploymentCoordinator {
   private config: BlueGreenDeploymentConfig
   private handlers = new Set<DeploymentEventHandler>()
   private healthCheckTimer: ReturnType<typeof setInterval> | null = null
+  private db?: QueryExecutor
+  private deploymentId: string
 
   constructor(config: Partial<BlueGreenDeploymentConfig> = {}) {
     this.config = { ...DEFAULT_DEPLOYMENT_CONFIG, ...config }
+    this.db = this.config.db
+    this.deploymentId = `deploy_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
     this.router = new VersionRouter()
     this.migrator = new SubscriptionMigrator()
     this.state = {
@@ -285,6 +326,8 @@ export class DeploymentCoordinator {
     this.router.setVersions(oldVersion, newVersion, this.config.canaryPercentage)
 
     this.emit({ type: "phase_changed", data: { phase: "canary", percentage: this.config.canaryPercentage } })
+
+    this.persistState()
   }
 
   /**
@@ -309,6 +352,8 @@ export class DeploymentCoordinator {
     } else {
       this.emit({ type: "phase_changed", data: { phase: "rolling", percentage: this.state.currentPercentage } })
     }
+
+    this.persistState()
   }
 
   /**
@@ -368,6 +413,8 @@ export class DeploymentCoordinator {
       type: "rollback_triggered",
       data: { reason: reason.trigger, details: reason.details },
     })
+
+    this.persistState()
   }
 
   /**
@@ -396,6 +443,49 @@ export class DeploymentCoordinator {
   onEvent(handler: DeploymentEventHandler): () => void {
     this.handlers.add(handler)
     return () => this.handlers.delete(handler)
+  }
+
+  /**
+   * Initialize deployment tracking tables. Call once at startup.
+   */
+  async initTables(): Promise<void> {
+    if (!this.db) return
+    const statements = generateDeploymentTableSQL()
+      .split(";")
+      .filter((s) => s.trim())
+    for (const stmt of statements) {
+      await this.db(stmt, [])
+    }
+  }
+
+  /**
+   * Recover deployment state from the database.
+   */
+  async recoverState(): Promise<void> {
+    if (!this.db) return
+    const result = await this.db("SELECT * FROM _reactivebase_deployments WHERE id = $1", [this.deploymentId])
+    if (result.rows.length > 0) {
+      const row = result.rows[0]
+      this.state.phase = row.phase as DeploymentPhase
+      this.state.oldVersion = (row.blue_version as string) ?? null
+      this.state.newVersion = (row.green_version as string) ?? null
+      this.state.currentPercentage = (row.canary_percent as number) ?? 0
+    }
+  }
+
+  private persistState(): void {
+    if (!this.db) return
+    this.db(
+      `INSERT INTO _reactivebase_deployments (id, blue_version, green_version, phase, canary_percent) 
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (id) DO UPDATE SET 
+         green_version = $3, phase = $4, canary_percent = $5, updated_at = NOW()`,
+      [this.deploymentId, this.state.oldVersion, this.state.newVersion, this.state.phase, this.state.currentPercentage],
+    ).catch((err: unknown) => {
+      if (process.env.NODE_ENV !== "production") {
+        console.debug("[ReactiveBase] DB persistence error:", err instanceof Error ? err.message : err)
+      }
+    })
   }
 
   private emit(event: Parameters<DeploymentEventHandler>[0]): void {
