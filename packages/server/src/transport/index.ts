@@ -46,3 +46,7 @@ export type {
   NegotiationResult,
   EdgeSseOptions,
 } from "./sse-transport.js"
+
+// Graceful Shutdown
+export { ShutdownCoordinator, createShutdownCoordinator } from "./shutdown.js"
+export type { ShutdownHook, ShutdownPhase, ShutdownCoordinatorOptions } from "./shutdown.js"
