@@ -176,3 +176,141 @@ describe("createAction", () => {
     expect(client.runAction).toHaveBeenCalledWith("sendEmail", { to: "user@example.com" })
   })
 })
+
+// ─── localQueryStore ────────────────────────────────────────────────────────
+
+describe("localQueryStore", () => {
+  it("returns a readable store with subscribe method", async () => {
+    vi.resetModules()
+    vi.mock("@reactivebase/client", () => ({
+      ReactiveBaseClient: vi.fn().mockImplementation(() => ({
+        subscribe: vi.fn(() => () => {}),
+        mutate: vi.fn(async () => ({ rows: [{ id: 1 }] })),
+        runAction: vi.fn(),
+        disconnect: vi.fn(),
+      })),
+    }))
+
+    const { initReactiveBase, localQueryStore } = await import("../index.js")
+    initReactiveBase({ url: "ws://localhost:4000" })
+
+    const store = localQueryStore("tasks")
+    expect(typeof store.subscribe).toBe("function")
+  })
+
+  it("emits loading state initially then data", async () => {
+    vi.resetModules()
+    vi.mock("@reactivebase/client", () => ({
+      ReactiveBaseClient: vi.fn().mockImplementation(() => ({
+        subscribe: vi.fn(() => () => {}),
+        mutate: vi.fn(async () => ({ rows: [{ id: 1, title: "Test" }] })),
+        runAction: vi.fn(),
+        disconnect: vi.fn(),
+      })),
+    }))
+
+    const { initReactiveBase, localQueryStore } = await import("../index.js")
+    initReactiveBase({ url: "ws://localhost:4000" })
+
+    const emissions: Array<{ loading: boolean; data: unknown }> = []
+    const store = localQueryStore("tasks")
+
+    const unsub = store.subscribe((value) => {
+      emissions.push({ loading: value.loading, data: value.data })
+    })
+
+    // Wait for async query to resolve
+    await new Promise((r) => setTimeout(r, 20))
+
+    expect(emissions[0].loading).toBe(true)
+    expect(emissions.length).toBeGreaterThanOrEqual(2)
+    expect(emissions[emissions.length - 1].loading).toBe(false)
+
+    unsub()
+  })
+
+  it("cleans up on unsubscribe", async () => {
+    vi.resetModules()
+    vi.mock("@reactivebase/client", () => ({
+      ReactiveBaseClient: vi.fn().mockImplementation(() => ({
+        subscribe: vi.fn(() => () => {}),
+        mutate: vi.fn(async () => ({ rows: [] })),
+        runAction: vi.fn(),
+        disconnect: vi.fn(),
+      })),
+    }))
+
+    const { initReactiveBase, localQueryStore } = await import("../index.js")
+    initReactiveBase({ url: "ws://localhost:4000" })
+
+    const store = localQueryStore("tasks")
+    const unsub = store.subscribe(() => {})
+    expect(() => unsub()).not.toThrow()
+  })
+})
+
+// ─── localMutationHandle ────────────────────────────────────────────────────
+
+describe("localMutationHandle", () => {
+  it("returns a mutate function", async () => {
+    vi.resetModules()
+    vi.mock("@reactivebase/client", () => ({
+      ReactiveBaseClient: vi.fn().mockImplementation(() => ({
+        subscribe: vi.fn(() => () => {}),
+        mutate: vi.fn(async () => "inserted-id"),
+        runAction: vi.fn(),
+        disconnect: vi.fn(),
+      })),
+    }))
+
+    const { initReactiveBase, localMutationHandle } = await import("../index.js")
+    initReactiveBase({ url: "ws://localhost:4000" })
+
+    const { mutate } = localMutationHandle("tasks")
+    expect(typeof mutate).toBe("function")
+  })
+
+  it("calls client.mutate with __local_mutation and correct args", async () => {
+    vi.resetModules()
+    vi.mock("@reactivebase/client", () => ({
+      ReactiveBaseClient: vi.fn().mockImplementation(() => ({
+        subscribe: vi.fn(() => () => {}),
+        mutate: vi.fn(async () => "new-id"),
+        runAction: vi.fn(),
+        disconnect: vi.fn(),
+      })),
+    }))
+
+    const { initReactiveBase, localMutationHandle, getReactiveBaseClient } = await import("../index.js")
+    initReactiveBase({ url: "ws://localhost:4000" })
+
+    const { mutate } = localMutationHandle("tasks")
+    await mutate("insert", { id: "t1", title: "Buy milk" })
+
+    const client = getReactiveBaseClient()
+    expect(client.mutate).toHaveBeenCalledWith("__local_mutation", {
+      table: "tasks",
+      operation: "insert",
+      data: { id: "t1", title: "Buy milk" },
+    })
+  })
+
+  it("returns mutation result", async () => {
+    vi.resetModules()
+    vi.mock("@reactivebase/client", () => ({
+      ReactiveBaseClient: vi.fn().mockImplementation(() => ({
+        subscribe: vi.fn(() => () => {}),
+        mutate: vi.fn(async () => "generated-id-123"),
+        runAction: vi.fn(),
+        disconnect: vi.fn(),
+      })),
+    }))
+
+    const { initReactiveBase, localMutationHandle } = await import("../index.js")
+    initReactiveBase({ url: "ws://localhost:4000" })
+
+    const { mutate } = localMutationHandle("tasks")
+    const result = await mutate("insert", { title: "Test" })
+    expect(result).toBe("generated-id-123")
+  })
+})

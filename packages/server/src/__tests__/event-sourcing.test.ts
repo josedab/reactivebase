@@ -52,7 +52,27 @@ describe("event-sourcing", () => {
     expect(error.code).toBe("TEST_CODE")
   })
 
-  it.todo("should test error propagation with event metadata")
+  it("should test error propagation with event metadata", () => {
+    const error = new EventSourcingError("Stream conflict on append", "CONCURRENCY_CONFLICT", "stream-42")
+    expect(error).toBeInstanceOf(Error)
+    expect(error).toBeInstanceOf(EventSourcingError)
+    expect(error.message).toBe("Stream conflict on append")
+    expect(error.code).toBe("CONCURRENCY_CONFLICT")
+    expect(error.streamId).toBe("stream-42")
+
+    const errorNoStream = new EventSourcingError("Projection failed", "PROJECTION_ERROR")
+    expect(errorNoStream.code).toBe("PROJECTION_ERROR")
+    expect(errorNoStream.streamId).toBeUndefined()
+
+    // Verify errors propagate correctly in try/catch
+    try {
+      throw error
+    } catch (e) {
+      expect(e).toBeInstanceOf(EventSourcingError)
+      expect((e as EventSourcingError).code).toBe("CONCURRENCY_CONFLICT")
+      expect((e as EventSourcingError).streamId).toBe("stream-42")
+    }
+  })
 
   // ── DB Persistence Tests ───────────────────────────────────────────────
 

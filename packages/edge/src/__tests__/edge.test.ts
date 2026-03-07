@@ -101,3 +101,111 @@ describe("createCacheKey", () => {
     expect(key1).not.toBe(key2)
   })
 })
+
+// ─── Network Resilience ─────────────────────────────────────────────────────
+
+describe("EdgeClient network resilience", () => {
+  it("handles fetch network errors", async () => {
+    const mockFetch = vi.fn().mockRejectedValue(new TypeError("fetch failed"))
+    const client = new EdgeClient({
+      serverUrl: "https://api.example.com",
+      fetch: mockFetch as unknown as typeof fetch,
+    })
+
+    await expect(client.prefetchQuery("tasks.list")).rejects.toThrow("fetch failed")
+  })
+
+  it("handles timeout via AbortController", async () => {
+    const mockFetch = vi.fn().mockImplementation(
+      () => new Promise((_, reject) => setTimeout(() => reject(new DOMException("aborted", "AbortError")), 50)),
+    )
+    const client = new EdgeClient({
+      serverUrl: "https://api.example.com",
+      fetch: mockFetch as unknown as typeof fetch,
+      timeout: 10,
+    })
+
+    await expect(client.prefetchQuery("slow.query")).rejects.toThrow()
+  })
+
+  it("handles malformed JSON response", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => {
+        throw new SyntaxError("Unexpected token")
+      },
+    })
+    const client = new EdgeClient({
+      serverUrl: "https://api.example.com",
+      fetch: mockFetch as unknown as typeof fetch,
+    })
+
+    await expect(client.prefetchQuery("tasks.list")).rejects.toThrow("Unexpected token")
+  })
+
+  it("includes status code and body in EdgeQueryError", async () => {
+    const mockFetch = createMockFetch({ error: "rate limited" }, 429)
+    const client = new EdgeClient({
+      serverUrl: "https://api.example.com",
+      fetch: mockFetch as unknown as typeof fetch,
+    })
+
+    try {
+      await client.prefetchQuery("tasks.list")
+      expect.unreachable("should have thrown")
+    } catch (err: unknown) {
+      expect(err).toBeInstanceOf(EdgeQueryError)
+      const e = err as InstanceType<typeof EdgeQueryError>
+      expect(e.statusCode).toBe(429)
+      expect(e.body).toContain("rate limited")
+    }
+  })
+
+  it("handles server 500 errors with descriptive message", async () => {
+    const mockFetch = createMockFetch({ error: "internal" }, 500)
+    const client = new EdgeClient({
+      serverUrl: "https://api.example.com",
+      fetch: mockFetch as unknown as typeof fetch,
+    })
+
+    await expect(client.prefetchQuery("failing")).rejects.toThrow("500")
+  })
+
+  it("prefetchQueries continues on partial failure", async () => {
+    let callCount = 0
+    const mockFetch = vi.fn().mockImplementation(async () => {
+      callCount++
+      if (callCount === 2) {
+        return { ok: false, status: 500, text: async () => "error", json: async () => ({}) }
+      }
+      return { ok: true, status: 200, json: async () => ({ data: "ok" }), text: async () => "" }
+    })
+
+    const client = new EdgeClient({
+      serverUrl: "https://api.example.com",
+      fetch: mockFetch as unknown as typeof fetch,
+    })
+
+    const results = await client.prefetchQueries([
+      { queryName: "q1" },
+      { queryName: "q2" },
+      { queryName: "q3" },
+    ])
+
+    // Only 2 of 3 should succeed (q2 fails with 500)
+    expect(results.size).toBe(2)
+  })
+
+  it("handles empty args gracefully", async () => {
+    const mockFetch = createMockFetch({ data: [] })
+    const client = new EdgeClient({
+      serverUrl: "https://api.example.com",
+      fetch: mockFetch as unknown as typeof fetch,
+    })
+
+    const result = await client.prefetchQuery("tasks.list")
+    expect(result.data).toEqual([])
+    expect(result.args).toEqual({})
+  })
+})

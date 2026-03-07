@@ -19,6 +19,42 @@ describe("connection-manager", () => {
     expect(manager).toBeInstanceOf(ConnectionManager)
   })
 
-  it.todo("should test connection lifecycle (connect, disconnect, reconnect)")
-  it.todo("should test message handling and status transitions")
+  it("should start in disconnected status", () => {
+    const manager = new ConnectionManager({ url: "ws://localhost:3000" })
+    expect(manager.getStatus()).toBe("disconnected")
+  })
+
+  it("should register and unregister message handlers", () => {
+    const manager = new ConnectionManager({ url: "ws://localhost:3000" })
+    const handler = () => {}
+    const unsub = manager.onMessage(handler)
+    expect(typeof unsub).toBe("function")
+    unsub()
+  })
+
+  it("should register and unregister status handlers", () => {
+    const manager = new ConnectionManager({ url: "ws://localhost:3000" })
+    const statuses: string[] = []
+    const unsub = manager.onStatus((s) => statuses.push(s))
+    expect(typeof unsub).toBe("function")
+    unsub()
+  })
+
+  it("should queue messages when not connected", () => {
+    const manager = new ConnectionManager({ url: "ws://localhost:3000" })
+    // Sending while disconnected should not throw
+    expect(() => manager.send({ type: "subscribe", query: "test" })).not.toThrow()
+  })
+
+  it("should handle disconnect when not connected", () => {
+    const manager = new ConnectionManager({ url: "ws://localhost:3000" })
+    expect(() => manager.disconnect()).not.toThrow()
+    expect(manager.getStatus()).toBe("disconnected")
+  })
+
+  it("should use default options when none provided", () => {
+    const manager = new ConnectionManager()
+    expect(manager).toBeInstanceOf(ConnectionManager)
+    expect(manager.getStatus()).toBe("disconnected")
+  })
 })

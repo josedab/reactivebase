@@ -27,7 +27,28 @@ describe("workflow-studio", () => {
     expect(builtInTemplates.length).toBeGreaterThan(0)
   })
 
-  it.todo("should test that templates contain valid workflow definitions")
+  it("should test that templates contain valid workflow definitions", () => {
+    for (const template of builtInTemplates) {
+      expect(template.id).toBeTruthy()
+      expect(template.name).toBeTruthy()
+      expect(template.description).toBeTruthy()
+      expect(template.category).toBeTruthy()
+      expect(Array.isArray(template.tags)).toBe(true)
+      expect(template.design).toBeDefined()
+      expect(template.design.name).toBeTruthy()
+      expect(Array.isArray(template.design.nodes)).toBe(true)
+      expect(template.design.nodes.length).toBeGreaterThan(0)
+      expect(Array.isArray(template.design.edges)).toBe(true)
+
+      // Each node should have required properties
+      for (const node of template.design.nodes) {
+        expect(node.id).toBeTruthy()
+        expect(node.type).toBeTruthy()
+        expect(node.label).toBeTruthy()
+        expect(node.position).toBeDefined()
+      }
+    }
+  })
 
   it("should generate valid workflow studio tables SQL", () => {
     const sql = buildCreateWorkflowStudioTablesSQL()
@@ -35,5 +56,17 @@ describe("workflow-studio", () => {
     expect(sql.toUpperCase()).toContain("CREATE")
   })
 
-  it.todo("should test SQL includes workflow design and execution tables")
+  it("should test SQL includes workflow design and execution tables", () => {
+    const sql = buildCreateWorkflowStudioTablesSQL()
+    const upper = sql.toUpperCase()
+    expect(upper).toContain("_RB_WF_DESIGNS")
+    expect(upper).toContain("_RB_WF_EXECUTIONS")
+    expect(upper).toContain("_RB_WF_DEBUG_SNAPSHOTS")
+    expect(upper).toContain("_RB_WF_TEMPLATES")
+    expect(upper).toContain("WORKFLOW_ID")
+    expect(upper).toContain("STATUS")
+    expect(upper).toContain("NODE_STATES")
+    expect(upper).toContain("VARIABLES")
+    expect(upper).toContain("INDEX")
+  })
 })
